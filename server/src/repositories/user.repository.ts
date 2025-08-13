@@ -1,0 +1,96 @@
+import { UserModel, IUser } from "../models/user.model";
+import { IUserRepository } from "../core/interfaces/repositories/IUserRepository";
+
+export class UserRepository implements IUserRepository {
+  async createUser(data: Partial<IUser>) {
+    return await UserModel.create(data);
+  }
+
+  async findByEmail(email: string) {
+    return await UserModel.findOne({ email }).exec();
+  }
+
+  async findByGoogleId(googleId: string): Promise<IUser | null> {
+    return UserModel.findOne({ googleId }).exec();
+  }
+
+  async findAll(skip: number, limit: number) {
+    return await UserModel.find()
+      .skip(skip)
+      .limit(limit)
+      .select("name email phone isVerified isBanned role goals motivationLevel equipment assignedTrainer gymId isPrivate streak xp achievements createdAt");
+  }
+
+  async findUsers(
+    page: number,
+    limit: number,
+    search: string,
+    isBanned?: string,
+    isVerified?: string,
+    startDate?: string,
+    endDate?: string
+  ) {
+    const query: any = {};
+
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (isBanned === "active") query.isBanned = false;
+    if (isBanned === "banned") query.isBanned = true;
+    if (isVerified === "verified") query.isVerified = true;
+    if (isVerified === "unverified") query.isVerified = false;
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = new Date(startDate);
+      if (endDate) query.createdAt.$lte = new Date(endDate);
+    }
+
+
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      UserModel.find(query)
+        .skip(skip)
+        .limit(limit)
+        .select("name email phone role isVerified isBanned createdAt")
+        .lean(),
+      UserModel.countDocuments(query),
+    ]);
+
+
+    return {
+      users,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async count() {
+    return await UserModel.countDocuments();
+  }
+
+  async updateUser(id: string, update: Partial<IUser>) {
+    await UserModel.findByIdAndUpdate(id, { $set: update })
+  }
+
+  async updateStatusAndIncrementVersion(id: string, updateData: Partial<IUser>): Promise<IUser | null> {
+    return await UserModel.findByIdAndUpdate(
+      id,
+      { $set: updateData, $inc: { tokenVersion: 1 } },
+      { new: true }
+    );
+  }
+
+  async updateStatus(id: string, updateData: Partial<IUser>): Promise<IUser | null> {
+    return await UserModel.findByIdAndUpdate(id, updateData, { new: true });
+  }
+  async findById(id: string) {
+    return UserModel.findById(id).select("-password");
+  }
+}

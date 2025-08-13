@@ -1,0 +1,59 @@
+import mongoose, { Schema, Document } from "mongoose";
+
+export interface ITrainer extends Document {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  isVerified: boolean;
+  isBanned: boolean;
+  role: "trainer";
+  gymId?: mongoose.Types.ObjectId;
+  clients: mongoose.Types.ObjectId[];
+  bio: string;
+  location:string;
+  specialization:string;
+  tokenVersion?:number;
+  experience:string;
+  badges: string[];
+  rating: number;
+  certificate: string;
+  profileImage: string;
+  profileStatus: "pending" | "approved" | "rejected" | "active" | "suspended";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const TrainerSchema: Schema<ITrainer> = new Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    phone: { type: String, required: true },
+    isVerified: { type: Boolean, default: false },
+    isBanned: { type: Boolean, default: false },
+    role: { type: String, default: "trainer" },
+    gymId: { type: mongoose.Schema.Types.ObjectId, ref: "Gym" },
+    clients: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    bio: { type: String, default: "" },
+    location: { type: String, default: "" },
+    specialization: { type: String, default: "" },
+    tokenVersion: { type: Number, default: 0 },
+    experience: { type: String, default: "" },
+    badges: [{ type: String }],
+    rating: { type: Number, default: 0 },
+    certificate: { type: String },
+    profileImage: { type: String },
+    profileStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected", "active", "suspended"],
+      default: "pending",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export default mongoose.model<ITrainer>("Trainer", TrainerSchema);
