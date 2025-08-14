@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, MessageCircle, Star, ShieldCheck, Search } from "lucide-react";
+import { MapPin, MessageCircle, Star, ShieldCheck, Search, Clock, Users, Award } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers } from "@/services/userService";
+import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 
 type Trainer = {
     id: string;
@@ -27,10 +28,10 @@ export default function Trainers() {
     const [search, setSearch] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const limit = 5;
+    const limit = 8;
 
     useEffect(() => {
-        document.title = "TrainUp - Trainers";
+        document.title = "TrainUp - Find Your Perfect Trainer";
     }, []);
 
     useEffect(() => {
@@ -41,7 +42,7 @@ export default function Trainers() {
         return () => clearTimeout(debounce);
     }, [page, search]);
 
-    async function fetchTrainers() {
+       async function fetchTrainers() {
         setIsLoading(true);
         setError(null);
         try {
@@ -59,7 +60,7 @@ export default function Trainers() {
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(e.target.value);
-        setPage(1); // Reset to first page on new search
+        setPage(1);
     };
 
     const handlePageChange = (newPage: number) => {
@@ -69,141 +70,315 @@ export default function Trainers() {
     };
 
     return (
-        <main className="container py-8 space-y-6 dark dark:bg-background">
-            <header className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <h1 className="font-display text-2xl md:text-3xl font-extrabold">Find a Trainer</h1>
-                <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search trainers..."
-                        value={search}
-                        onChange={handleSearch}
-                        className="pl-9 bg-secondary/40"
-                    />
+        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+            <SiteHeader/>
+            <main className="relative container mx-auto px-4 py-12 space-y-8">
+                {/* Header Section */}
+                <div className="text-center space-y-6 mb-12">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
+                        <Award className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-primary">Premium Certified Trainers</span>
+                    </div>
+                    
+                    <div className="space-y-4">
+                        <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
+                            Find Your Perfect Trainer
+                        </h1>
+                        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                            Connect with world-class fitness professionals who will transform your journey
+                        </p>
+                    </div>
+
+                    {/* Search Section */}
+                    <div className="max-w-md mx-auto">
+                        <div className="relative group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-1 shadow-lg">
+                                <div className="relative">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                    <Input
+                                        placeholder="Search by name, specialty, or location..."
+                                        value={search}
+                                        onChange={handleSearch}
+                                        className="pl-12 pr-4 py-6 bg-transparent border-0 text-base font-medium placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-primary/30"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </header>
 
-            {isLoading && (
-                <p className="text-center text-muted-foreground animate-pulse">Loading trainers...</p>
-            )}
-            {error && (
-                <p className="text-center text-destructive">{error}</p>
-            )}
-            {!isLoading && !error && trainers.length === 0 && (
-                <p className="text-center text-muted-foreground">No trainers found.</p>
-            )}
+                {/* Loading State */}
+                {isLoading && (
+                    <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                        <div className="relative">
+                            <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                            <div className="absolute inset-0 w-12 h-12 border-2 border-transparent border-t-accent rounded-full animate-pulse "></div>
+                        </div>
+                        <p className="text-muted-foreground font-medium">Finding your perfect trainers...</p>
+                    </div>
+                )}
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {trainers.map((t) => (
-                    <TrainerCard key={t.id} trainer={t} />
-                ))}
-            </div>
+                {/* Error State */}
+                {error && (
+                    <div className="text-center py-16">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-destructive/10 rounded-full border border-destructive/20 mb-4">
+                            <span className="text-destructive font-medium">{error}</span>
+                        </div>
+                    </div>
+                )}
 
-            {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(page - 1)}
-                        disabled={page === 1}
-                    >
-                        Previous
-                    </Button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                {/* Empty State */}
+                {!isLoading && !error && trainers.length === 0 && (
+                    <div className="text-center py-16 space-y-4">
+                        <div className="w-24 h-24 mx-auto bg-muted/30 rounded-full flex items-center justify-center mb-6">
+                            <Search className="h-10 w-10 text-muted-foreground/50" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-foreground">No trainers found</h3>
+                        <p className="text-muted-foreground">Try adjusting your search criteria or browse all trainers</p>
+                    </div>
+                )}
+
+                {/* Trainer Grid */}
+                {!isLoading && !error && trainers.length > 0 && (
+                    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {trainers.map((trainer, index) => (
+                            <TrainerCard key={trainer.id} trainer={trainer} index={index} />
+                        ))}
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && !isLoading && (
+                    <div className="flex items-center justify-center gap-2 mt-12">
                         <Button
-                            key={p}
-                            variant={p === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handlePageChange(p)}
+                            variant="outline"
+                            size="default"
+                            onClick={() => handlePageChange(page - 1)}
+                            disabled={page === 1}
+                            className="px-6 font-medium hover:bg-primary/5 border-border/50"
                         >
-                            {p}
+                            Previous
                         </Button>
-                    ))}
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(page + 1)}
-                        disabled={page === totalPages}
-                    >
-                        Next
-                    </Button>
-                </div>
-            )}
-        </main>
+                        
+                        <div className="flex items-center gap-1 mx-4">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                let pageNum;
+                                if (totalPages <= 5) {
+                                    pageNum = i + 1;
+                                } else if (page <= 3) {
+                                    pageNum = i + 1;
+                                } else if (page >= totalPages - 2) {
+                                    pageNum = totalPages - 4 + i;
+                                } else {
+                                    pageNum = page - 2 + i;
+                                }
+                                
+                                return (
+                                    <Button
+                                        key={pageNum}
+                                        variant={pageNum === page ? "default" : "ghost"}
+                                        size="sm"
+                                        onClick={() => handlePageChange(pageNum)}
+                                        className={`w-10 h-10 font-medium transition-all duration-200 ${
+                                            pageNum === page 
+                                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" 
+                                                : "hover:bg-secondary/80"
+                                        }`}
+                                    >
+                                        {pageNum}
+                                    </Button>
+                                );
+                            })}
+                        </div>
+                        
+                        <Button
+                            variant="outline"
+                            size="default"
+                            onClick={() => handlePageChange(page + 1)}
+                            disabled={page === totalPages}
+                            className="px-6 font-medium hover:bg-primary/5 border-border/50"
+                        >
+                            Next
+                        </Button>
+                    </div>
+                )}
+            </main>
+        </div>
     );
 }
 
-function TrainerCard({ trainer }: { trainer: Trainer }) {
+function TrainerCard({ trainer, index }: { trainer: any; index: number }) {
     const [open, setOpen] = useState(false);
-
-    // Truncate bio to ~60 characters
-    const truncatedBio = trainer.bio.length > 30 ? trainer.bio.slice(0, 30) + "..." : trainer.bio;
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     return (
-        <Card className="relative overflow-hidden animate-slide-down hover-scale min-w-[250px] max-w-[300px] mx-auto">
-            <div className="relative w-full h-[250px] sm:h-[280px] md:h-[300px] aspect-square">
+        <Card className={`group relative overflow-hidden bg-card/40 backdrop-blur-sm border-border/50 hover:border-border transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2`}
+              style={{ 
+                  animationDelay: `${index * 100}ms`,
+                  animation: 'slideUp 0.6s ease-out forwards'
+              }}>
+            
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            
+            {/* Image Section */}
+            <div className="relative w-full h-72 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
+                
+                {!imageLoaded && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted/30 animate-pulse flex items-center justify-center">
+                        <Users className="h-12 w-12 text-muted-foreground/30" />
+                    </div>
+                )}
+                
                 <img
                     src={trainer.profileImage}
                     alt={trainer.name}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${
+                        imageLoaded ? 'opacity-100' : 'opacity-0'
+                    }`}
                     loading="lazy"
+                    onLoad={() => setImageLoaded(true)}
                 />
-                <div className="absolute inset-x-0 bottom-0 bg-black/50 text-white p-3 sm:p-4">
-                    <div className="space-y-1.5">
-                        <h2 className="text-lg sm:text-xl font-bold font-display tracking-wide text-shadow">
+                
+                {/* Rating Badge */}
+                <div className="absolute top-4 right-4 z-20">
+                    <div className="flex items-center gap-1 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-full border border-white/20">
+                        <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                        <span className="text-white text-sm font-semibold">{trainer.rating}</span>
+                    </div>
+                </div>
+                
+                {/* Specialty Badge */}
+                <div className="absolute top-4 left-4 z-20">
+                    <Badge variant="secondary" className="bg-white/90 text-foreground border-0 shadow-lg font-medium">
+                        {trainer.specialty}
+                    </Badge>
+                </div>
+                
+                {/* Bottom Info Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 z-20 p-6 space-y-3">
+                    <div className="space-y-2">
+                        <h3 className="text-xl font-bold text-white drop-shadow-lg">
                             {trainer.name}
-                        </h2>
-                        <p className="text-xs sm:text-sm font-medium text-shadow">{trainer.specialty}</p>
-                        <div className="flex items-center gap-2 text-xs sm:text-sm">
-                            <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-accent" />
-                            <span className="text-shadow">{trainer.rating}</span>
-                            <span className="mx-2 text-gray-300">•</span>
-                            <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-accent" />
-                            <span className="text-shadow">{trainer.location}</span>
+                        </h3>
+                        <div className="flex items-center gap-2 text-white/90">
+                            <MapPin className="h-4 w-4 text-accent drop-shadow" />
+                            <span className="text-sm font-medium drop-shadow">{trainer.location}</span>
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-200 text-shadow line-clamp-2">{truncatedBio}</p>
                     </div>
                 </div>
             </div>
-            <CardContent className="pt-4">
-                <div className="flex items-center justify-between">
-                    <Badge variant="secondary">{trainer.price}</Badge>
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <Button size="sm">View</Button>
-                        </DialogTrigger>
-                        <DialogContent className="animate-slide-down">
-                            <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2">
-                                    {trainer.name}
-                                    <Badge className="bg-accent text-accent-foreground">{trainer.price}</Badge>
-                                </DialogTitle>
-                            </DialogHeader>
-                            <div className="grid gap-3">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <ShieldCheck className="h-4 w-4 text-accent" /> {trainer.specialty}
+
+            {/* Card Content */}
+            <CardContent className="p-6 space-y-4">
+                <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                        {trainer.bio}
+                    </p>
+                    
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-lg font-bold text-primary">{trainer.price}</span>
+                        </div>
+                        
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <Button 
+                                    size="sm" 
+                                    className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
+                                >
+                                    View Profile
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                                <DialogHeader className="space-y-4">
+                                    <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                                        <img
+                                            src={trainer.profileImage}
+                                            alt={trainer.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                                        <div className="absolute bottom-4 left-4 right-4">
+                                            <DialogTitle className="text-2xl font-bold text-white drop-shadow-lg mb-2">
+                                                {trainer.name}
+                                            </DialogTitle>
+                                            <div className="flex items-center gap-4 text-white/90">
+                                                <div className="flex items-center gap-1">
+                                                    <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                                                    <span className="font-semibold">{trainer.rating}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <MapPin className="h-4 w-4" />
+                                                    <span className="text-sm">{trainer.location}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </DialogHeader>
+                                
+                                <div className="space-y-6 pt-2">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                                <ShieldCheck className="h-4 w-4 text-primary" />
+                                                Specialty
+                                            </div>
+                                            <Badge variant="outline" className="font-medium">
+                                                {trainer.specialty}
+                                            </Badge>
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                                <Clock className="h-4 w-4 text-primary" />
+                                                Session Rate
+                                            </div>
+                                            <div className="text-2xl font-bold text-primary">
+                                                {trainer.price}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="space-y-3">
+                                        <h4 className="font-semibold text-lg">About {trainer.name.split(' ')[0]}</h4>
+                                        <p className="text-muted-foreground leading-relaxed">
+                                            {trainer.bio}
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="flex gap-3 pt-4 border-t border-border/50">
+                                        <Button
+                                            className="flex-1 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold py-6"
+                                            onClick={() => {
+                                                toast.success(`Booking request sent to ${trainer.name}!`, {
+                                                    description: "They'll get back to you within 24 hours"
+                                                });
+                                                setOpen(false);
+                                            }}
+                                        >
+                                            Book Session
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            className="px-6 py-6 hover:bg-secondary/80 border-border/50 transition-all duration-300"
+                                            onClick={() => {
+                                                toast("Chat feature coming soon!", {
+                                                    description: "We're working on direct messaging"
+                                                });
+                                            }}
+                                        >
+                                            <MessageCircle className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
-                                <p className="text-sm">{trainer.bio}</p>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <MapPin className="h-4 w-4 text-accent" /> {trainer.location}
-                                </div>
-                                <div className="flex gap-2 pt-2">
-                                    <Button
-                                        className="bg-accent text-accent-foreground"
-                                        onClick={() => toast.success("Hired (static)")}
-                                    >
-                                        Hire
-                                    </Button>
-                                    <Button
-                                        variant="secondary"
-                                        onClick={() => toast("Chat feature coming soon")}
-                                    >
-                                        <MessageCircle className="h-4 w-4 mr-2" /> Chat
-                                    </Button>
-                                </div>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </div>
             </CardContent>
         </Card>

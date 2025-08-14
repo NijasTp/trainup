@@ -26,8 +26,7 @@ export class TrainerRepository implements ITrainerRepository {
     startDate?: string,
     endDate?: string
   ) {
-    console.log("Repository received params:", { skip, limit, search, isBanned, isVerified, startDate, endDate });
-
+ 
     const query: any = {};
 
     if (search) {
@@ -47,8 +46,6 @@ export class TrainerRepository implements ITrainerRepository {
       if (startDate) query.createdAt.$gte = new Date(startDate);
       if (endDate) query.createdAt.$lte = new Date(endDate);
     }
-
-    console.log("MongoDB query:", query);
 
     return await TrainerModel.find(query)
       .skip(skip)
@@ -78,7 +75,7 @@ export class TrainerRepository implements ITrainerRepository {
       if (endDate) query.createdAt.$lte = new Date(endDate);
     }
 
-    console.log("MongoDB count query:", query);
+
 
     return await TrainerModel.countDocuments(query).exec();
   }

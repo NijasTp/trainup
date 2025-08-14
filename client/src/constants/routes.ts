@@ -11,7 +11,12 @@ export const ROUTES = {
   USER_VERIFY_OTP: "/verify-otp",
   USER_TRAINER_PAGE:'/trainers',
   USER_WORKOUTS_PAGE:'/workouts',
+  USER_ADD_WORKOUT:'/workouts/add',
+  USER_ADD_WORKOUT_SESSION:'/workouts/add-session',
+  USER_EDIT_WORKOUT_SESSION:'/workouts/:id',
+  USER_START_WORKOUT:'/workouts/:id/start',
   CALLBACK:"/callback",
+  USER_NOT_FOUND:"*",
 
   // Trainer Routes
   TRAINER_LOGIN: "/trainer/login",

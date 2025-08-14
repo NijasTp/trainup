@@ -4,6 +4,7 @@ import { IWorkoutDay } from "../../../models/workoutDay.model";
 
 export interface IWorkoutService {
   createSession(payload: Partial<IWorkoutSession>): Promise<IWorkoutSession>;
+  getSession(id: string): Promise<IWorkoutSession | null>;
   updateSession(id: string, payload: Partial<IWorkoutSession>): Promise<IWorkoutSession | null>;
   deleteSession(id: string): Promise<void>;
   createDay(userId: string, date: string): Promise<IWorkoutDay>;

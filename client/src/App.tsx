@@ -41,6 +41,9 @@ import Trainers from './pages/user/Trainers';
 import Workouts from './pages/user/Workouts';
 import AddWorkoutPage from './pages/user/AddWorkouts';
 import AddSessionPage from './pages/user/AddWorkoutSession';
+import NotFound from './pages/user/NotFound';
+import EditSessionPage from './pages/user/UserWorkoutEdit';
+import StartSessionPage from './pages/user/StartWorkoutPage';
 
 function App() {
   return (
@@ -57,8 +60,11 @@ function App() {
         <Route path={ROUTES.USER_VERIFY_OTP} element={<PreventLoggedIn><VerifyOtp /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_TRAINER_PAGE} element={<ProtectedRoute><Trainers /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WORKOUTS_PAGE} element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
-        <Route path={'/workouts/add'} element={<ProtectedRoute><AddWorkoutPage /></ProtectedRoute>} />
-        <Route path={'/workouts/add-session'} element={<ProtectedRoute><AddSessionPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_ADD_WORKOUT} element={<ProtectedRoute><AddWorkoutPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_ADD_WORKOUT_SESSION} element={<ProtectedRoute><AddSessionPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_EDIT_WORKOUT_SESSION} element={<ProtectedRoute><EditSessionPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_START_WORKOUT} element={<ProtectedRoute><StartSessionPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_NOT_FOUND} element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
 
         {/* Trainer Routes */}
         <Route path={ROUTES.TRAINER_LOGIN} element={<TrainerPreventLoggedIn><TrainerLogin /></TrainerPreventLoggedIn>} />

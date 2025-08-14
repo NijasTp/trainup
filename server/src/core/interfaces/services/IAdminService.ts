@@ -9,4 +9,5 @@ export interface IAdminService {
     accessToken:string,
    refreshToken:string
   }>;
+  updateTokenVersion(adminId: string): Promise<void>;
 }

@@ -10,8 +10,10 @@ const workoutController = container.get<WorkoutController>(TYPES.WorkoutControll
 
 // Sessions
 router.post("/sessions", authMiddleware, workoutController.createSession.bind(workoutController));
-router.patch("/sessions/:id", authMiddleware, workoutController.updateSession.bind(workoutController));
-router.delete("/sessions/:id", authMiddleware, workoutController.deleteSession.bind(workoutController));
+router
+.get("/sessions/:id", authMiddleware, workoutController.getSession.bind(workoutController))
+.patch("/sessions/:id", authMiddleware, workoutController.updateSession.bind(workoutController))
+.delete("/sessions/:id", authMiddleware, workoutController.deleteSession.bind(workoutController))
 
 // Workout days
 router.post("/days", authMiddleware, workoutController.createOrGetDay.bind(workoutController)); 

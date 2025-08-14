@@ -17,7 +17,6 @@ export class UserController implements IUserController {
   constructor(
     @inject(TYPES.IUserService) private userService: IUserService,
     @inject(TYPES.IOtpService) private otpService: IOTPService,
-    @inject(TYPES.IUserRepository) private userRepo: IUserRepository,
     @inject(TYPES.ITrainerService) private trainerService: ITrainerService,
     @inject(TYPES.IJwtService) private jwtService: IJwtService,
 
@@ -177,7 +176,7 @@ async getTrainers(req: Request, res: Response): Promise<void> {
       this.jwtService.setTokens(res, accessToken, refreshToken)
 
       res.status(STATUS_CODE.OK).json({ accessToken, refreshToken });
-      console.log("Refreshed access token");
+
       return
     } catch (err) {
       res.status(STATUS_CODE.FORBIDDEN).json({ error: 'Invalid or expired refresh token' });

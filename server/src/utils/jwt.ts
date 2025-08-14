@@ -27,7 +27,6 @@ export class JwtService implements IJwtService {
     if (!JWT_SECRET) {
       throw new Error('JWT SECRET is not defined in environment variables.');
     }
-    console.log('Using JWT_SECRET:', JWT_SECRET);
     return jwt.verify(token, JWT_SECRET);
   }
   
