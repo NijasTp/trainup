@@ -9,6 +9,7 @@ const router = Router();
 const adminController = container.get<AdminController>(TYPES.AdminController);
 
 router.post("/login", adminController.login.bind(adminController));
+router.get('/session',authMiddleware,adminController.checkSession.bind(adminController));
 
 
 router.get("/trainers",authMiddleware,roleMiddleware(['admin']), adminController.getAllTrainers.bind(adminController));

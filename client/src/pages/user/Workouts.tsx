@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Dumbbell, Plus, Target } from "lucide-react"
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { format, addDays, subDays, isToday } from "date-fns";
+import { format, addDays, subDays, isToday, differenceInMinutes, parse } from "date-fns";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
@@ -135,6 +135,13 @@ function WorkoutSessionCard({
   focusedSessionId: string | null;
 }) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  
+  // Calculate if Start button should be shown (within 20 minutes of session time)
+  const now = new Date();
+  const sessionDateTime = parse(`${session.date} ${session.time}`, "yyyy-MM-dd HH:mm", new Date());
+  const timeDifference = differenceInMinutes(now, sessionDateTime);
+  const canStartSession = Math.abs(timeDifference) <= 20;
+  const isSessionPast = timeDifference > 20;
 
   return (
     <Dialog>
@@ -166,21 +173,25 @@ function WorkoutSessionCard({
                 </Badge>
               </CardTitle>
               <div className="flex gap-2">
-                <Link to={`/workouts/${session._id}/start`}>
-                <Button
-                  className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  Start
-                </Button>
-                </Link>
-                <Link to={`/workouts/${session._id}`}>
-                <Button
-                  variant="outline"
-                  className="bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"
-                >
-                  Edit
-                </Button>
-                </Link>
+                {canStartSession && (
+                  <Link to={`/workouts/${session._id}/start`}>
+                    <Button
+                      className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      Start
+                    </Button>
+                  </Link>
+                )}
+                {!isSessionPast && (
+                  <Link to={`/workouts/${session._id}`}>
+                    <Button
+                      variant="outline"
+                      className="bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"
+                    >
+                      Edit
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -192,7 +203,7 @@ function WorkoutSessionCard({
                     key={exercise.id}
                     className="flex items-center gap-4 p-2 rounded-lg hover:bg-secondary/20"
                   >
-                    <div className="relative w-16 h-16">
+                    <div className="relative w darb w-16 h-16">
                       {!imageLoaded && (
                         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted/30 animate-pulse flex items-center justify-center rounded-md">
                           <Dumbbell className="h-8 w-8 text-muted-foreground/30" />
@@ -309,18 +320,20 @@ function WorkoutSessionCard({
             </div>
           )}
         </div>
-        <div className="sticky bottom-0 bg-background py-4">
-          <Button
-            className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
-            onClick={() => {
-              toast.success(`Started session: ${session.name}`, {
-                description: "Track your progress in the app!",
-              });
-            }}
-          >
-            Start Session
-          </Button>
-        </div>
+        {canStartSession && (
+          <div className="sticky bottom-0 bg-background py-4">
+            <Button
+              className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
+              onClick={() => {
+                toast.success(`Started session: ${session.name}`, {
+                  description: "Track your progress in the app!",
+                });
+              }}
+            >
+              Start Session
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -5,7 +5,10 @@ import { IAdminService } from '../core/interfaces/services/IAdminService'
 import { ITrainerService } from '../core/interfaces/services/ITrainerService'
 import { IUserService } from '../core/interfaces/services/IUserService'
 import { PaginatedTrainers } from '../core/interfaces/services/ITrainerService'
-import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService'
+import {
+  IJwtService,
+  JwtPayload
+} from '../core/interfaces/services/IJwtService'
 import { IGymService } from '../core/interfaces/services/IGymService'
 import { STATUS_CODE } from '../constants/status'
 // import { JwtTokenUtil } from "../utils/jwtToken.util";
@@ -162,6 +165,17 @@ export class AdminController {
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
         .json({ message: 'Failed to update user ban status' })
+    }
+  }
+
+  checkSession = async (req: Request, res: Response) => {
+    try {
+      const user = req.user as { id: string; role: string }
+      res.json({ valid: true, id: user.id, role: user.role })
+    } catch (err) {
+      res
+        .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
+        .json({ error: 'Server error' })
     }
   }
 

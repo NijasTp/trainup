@@ -29,6 +29,7 @@ export interface IWorkoutSession {
   _id: string;
   name: string;
   givenBy: "trainer" | "user";
+  isDone:boolean;
   trainerId?: string;
   userId: string;
   date?: string;

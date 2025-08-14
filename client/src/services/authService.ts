@@ -19,6 +19,7 @@ export const checkUserSession = async () => {
   return response.data;
 }
 
+
 export const signup = async (name: string, email: string, password: string, otp: string) => {
   return await API.post("/user/verify-otp", {
     email,
@@ -122,6 +123,11 @@ export const gymVerifyOtp = async (formData: FormData) => {
 
 export const gymLogout= async ()=>{
   await API.post('/gym/logout')
+}
+
+export const checkAdminSession = async () => {
+  const response = await API.get('/admin/session', { withCredentials: true });
+  return response.data;
 }
 
 export const loginAdmin = async (email: string, password: string) => {

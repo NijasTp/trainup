@@ -190,7 +190,7 @@ export default function StartSessionPage() {
         setCurrentExerciseIndex(currentExerciseIndex + 1);
       } else {
         localStorage.removeItem(`workout-progress-${id}`);
-        navigate(`/workout/${id}/success`);
+        navigate(`/workouts/${id}/success`, { state: {  totalWorkoutTime } });
       }
     }
   }

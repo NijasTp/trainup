@@ -32,7 +32,6 @@ export const roleMiddleware = (allowedRoles: string[]) => {
 
 export const authMiddleware: RequestHandler = async (req, res, next) => {
   try {
-    // Check cookie first, then Authorization header
     const token =
       req.cookies?.accessToken ||
       req.headers.authorization?.split(" ")[1];

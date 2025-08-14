@@ -44,6 +44,8 @@ import AddSessionPage from './pages/user/AddWorkoutSession';
 import NotFound from './pages/user/NotFound';
 import EditSessionPage from './pages/user/UserWorkoutEdit';
 import StartSessionPage from './pages/user/StartWorkoutPage';
+import SuccessPage from './pages/user/WorkoutSuccess';
+import Diets from './pages/user/Diets';
 
 function App() {
   return (
@@ -64,6 +66,8 @@ function App() {
         <Route path={ROUTES.USER_ADD_WORKOUT_SESSION} element={<ProtectedRoute><AddSessionPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_EDIT_WORKOUT_SESSION} element={<ProtectedRoute><EditSessionPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_START_WORKOUT} element={<ProtectedRoute><StartSessionPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_WORKOUT_SUCCESS} element={<ProtectedRoute><SuccessPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_DIET} element={<ProtectedRoute><Diets /></ProtectedRoute>} />
         <Route path={ROUTES.USER_NOT_FOUND} element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
 
         {/* Trainer Routes */}

@@ -15,6 +15,11 @@ export const ROUTES = {
   USER_ADD_WORKOUT_SESSION:'/workouts/add-session',
   USER_EDIT_WORKOUT_SESSION:'/workouts/:id',
   USER_START_WORKOUT:'/workouts/:id/start',
+  USER_WORKOUT_SUCCESS:'/workouts/:id/success',
+
+  USER_DIET:'/diets',
+
+
   CALLBACK:"/callback",
   USER_NOT_FOUND:"*",
 
@@ -35,7 +40,7 @@ export const ROUTES = {
   GYM_WAITLIST: "/gym/waitlist",
   GYM_DASHBOARD: "/gym/dashboard",
 
-  // Admin Routes
+  /* Admin Routes */
   ADMIN_LOGIN: "/admin/login",
   ADMIN_DASHBOARD: "/admin/dashboard",
   ADMIN_TRAINERS: "/admin/trainers",
