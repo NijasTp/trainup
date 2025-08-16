@@ -2,9 +2,10 @@ import { inject, injectable } from "inversify";
 import { TemplateRepository } from "../repositories/dietTemplate.repository";
 import { ITemplate } from "../models/dietTemplate.model";
 import TYPES from "../core/types/types";
+import { IDietTemplateService } from "../core/interfaces/services/IDietTemplateService";
 
 @injectable()
-export class DietTemplateService{
+export class DietTemplateService implements IDietTemplateService{
   constructor(@inject(TYPES.ITemplateRepository) private repo: TemplateRepository) {}
 
   createTemplate(adminId: string, payload: Partial<ITemplate>) {

@@ -44,6 +44,15 @@ import { WorkoutController } from "../../controllers/workout.controller";
 import { WorkoutService } from "../../services/workout.services";
 import { WorkoutDayRepository } from "../../repositories/workoutDay.repository";
 import { WorkoutSessionRepository } from "../../repositories/workout.repository";
+import { DietDayRepository } from "../../repositories/diet.repository";
+import { DietService } from "../../services/diet.services";
+import { TemplateRepository } from "../../repositories/dietTemplate.repository";
+import { DietTemplateService } from "../../services/dietTemplate.services";
+import { DietController } from "../../controllers/diet.controller";
+import { IDietDayRepository } from "../interfaces/repositories/IDietRepository";
+import { ITemplateRepository } from "../interfaces/repositories/IDietTemplateRepository";
+import { IDietService } from "../interfaces/services/IDietService";
+import { IDietTemplateService } from "../interfaces/services/IDietTemplateService";
 
 
 // Create container 
@@ -72,6 +81,12 @@ container.bind<IWorkoutSessionRepository>(TYPES.WorkoutSessionRepository).to(Wor
 container.bind<IWorkoutDayRepository>(TYPES.WorkoutDayRepository).to(WorkoutDayRepository);
 container.bind<IWorkoutService>(TYPES.WorkoutService).to(WorkoutService);
 container.bind<WorkoutController>(TYPES.WorkoutController).to(WorkoutController);
+
+container.bind<IDietDayRepository>(TYPES.IDietDayRepository).to(DietDayRepository);
+container.bind<IDietService>(TYPES.IDietService).to(DietService);
+container.bind<ITemplateRepository>(TYPES.ITemplateRepository).to(TemplateRepository); 
+container.bind<IDietTemplateService>(TYPES.ITemplateService).to(DietTemplateService);
+container.bind<DietController>(TYPES.DietController).to(DietController);
 
 container.bind<IOTPService>(TYPES.IOtpService).to(OtpService);
 container.bind<IOtpRepository>(TYPES.IOtpRepository).to(OtpRepository);

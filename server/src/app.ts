@@ -6,6 +6,7 @@ import fileUpload from 'express-fileupload';
 import trainerRoutes from './routes/trainer.route'
 import gymRoutes from './routes/gym.route'
 import workoutRoutes from './routes/workout.routes'
+import dietRoutes from './routes/diet.routes'
 import dotenv from "dotenv";
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -34,6 +35,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/trainer", trainerRoutes)
 app.use("/api/gym", gymRoutes)
 app.use("/api/workout", workoutRoutes)
+app.use("/api/diet", dietRoutes);
 
 
 export default app;
