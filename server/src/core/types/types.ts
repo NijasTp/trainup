@@ -18,6 +18,17 @@ const TYPES = {
   WorkoutService: Symbol.for("WorkoutService"),
   WorkoutController: Symbol.for("WorkoutController"),
   
+  
+  IDietDayRepository: Symbol.for("IDietDayRepository"),
+  DietDayRepository: Symbol.for("DietDayRepository"),
+  IDietService: Symbol.for("IDietService"),
+  DietService: Symbol.for("DietService"),
+  TemplateRepository: Symbol.for("TemplateRepository"),
+  ITemplateRepository: Symbol.for("ITemplateRepository"),
+  TemplateService: Symbol.for("TemplateService"),
+  ITemplateService: Symbol.for("ITemplateService"),
+  DietController: Symbol.for("DietController"),
+  
   IAdminService: Symbol.for("IAdminService"),
   IAdminRepository: Symbol.for("IAdminRepository"),
   IAdminController: Symbol.for("IAdminController"),

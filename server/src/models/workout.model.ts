@@ -20,7 +20,6 @@ export interface IWorkoutSession extends Document {
   date?: string;
   time?: string;
   exercises: IExercise[];
-  tags?: string[];
   goal?: string;
   notes?: string; // trainer sessions
   createdAt: Date;
@@ -52,7 +51,6 @@ const WorkoutSessionSchema = new Schema<IWorkoutSession>(
     date: { type: String },
     time: { type: String },
     exercises: { type: [ExerciseSchema], default: [] },
-    tags: { type: [String], default: [] },
     goal: { type: String },
     notes: { type: String },
   },
