@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,98 +8,95 @@ import { CheckCircle2 } from "lucide-react";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { InfoModal } from "@/components/user/general/InfoModal";
+import api from "@/lib/axios";
 
-// Mock data interfaces
+// Interface based on API response
 interface Meal {
-  id: string;
+  _id: string;
   name: string;
-  image: string;
   calories: number;
   protein: number;
   carbs: number;
-  fat: number;
-  description: string;
+  fats: number;
+  time: string;
   isEaten: boolean;
+  source: "trainer" | "user";
+  usedBy: string;
+  sourceId: string;
+  createdAt: string;
+  updatedAt: string;
+  nutritions: any[]; // Adjust type as needed
   eatenTime?: string;
+  image?: string; // Optional, since not in API example
+  description?: string; // Optional, since not in API example
 }
 
-// Mock data
-const initialTrainerMeals: Meal[] = [
-  {
-    id: "1",
-    name: "Breakfast Oatmeal",
-    image: "https://example.com/oatmeal.jpg",
-    calories: 350,
-    protein: 12,
-    carbs: 55,
-    fat: 8,
-    description: "Nutritious oatmeal with fruits and nuts. Provides sustained energy throughout the morning.",
-    isEaten: false,
-  },
-  {
-    id: "2",
-    name: "Lunch Grilled Chicken Salad",
-    image: "https://example.com/salad.jpg",
-    calories: 450,
-    protein: 35,
-    carbs: 20,
-    fat: 25,
-    description: "Fresh salad with grilled chicken, mixed greens, tomatoes, cucumbers, and light dressing.",
-    isEaten: false,
-  },
-  {
-    id: "3",
-    name: "Dinner Quinoa Bowl",
-    image: "https://example.com/quinoa.jpg",
-    calories: 500,
-    protein: 20,
-    carbs: 70,
-    fat: 15,
-    description: "Quinoa base with roasted vegetables, avocado, and a tahini sauce for added flavor.",
-    isEaten: false,
-  },
-];
-
-const initialUserMeals: Meal[] = [
-  {
-    id: "4",
-    name: "Snack Apple with Peanut Butter",
-    image: "https://example.com/apple-pb.jpg",
-    calories: 250,
-    protein: 8,
-    carbs: 30,
-    fat: 15,
-    description: "Fresh apple slices paired with natural peanut butter for a quick protein boost.",
-    isEaten: false,
-  },
-  {
-    id: "5",
-    name: "Evening Yogurt Parfait",
-    image: "https://example.com/yogurt.jpg",
-    calories: 300,
-    protein: 15,
-    carbs: 40,
-    fat: 10,
-    description: "Layered Greek yogurt with fresh berries, granola, and a drizzle of honey.",
-    isEaten: false,
-  },
-];
-
+interface ApiResponse {
+  _id: string;
+  user: string;
+  date: string;
+  meals: Meal[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
 
 export default function Diets() {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
-  const [trainerDiet, setTrainerDiet] = useState<Meal[]>(initialTrainerMeals);
-  const [userDiet, setUserDiet] = useState<Meal[]>(initialUserMeals);
+  const [trainerDiet, setTrainerDiet] = useState<Meal[]>([]);
+  const [userDiet, setUserDiet] = useState<Meal[]>([]);
   const [currentView, setCurrentView] = useState<'trainer' | 'self'>('trainer');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch 
+  useEffect(() => {
+    const fetchMeals = async () => {
+      try {
+        const today = new Date().toISOString().split('T')[0]; 
+        const response = await api.post<ApiResponse>('/diet/', {
+          date: today,
+        });
+
+        const data = response.data;
+        const meals = data.meals || [];
+ 
+        const trainerMeals = meals
+          .filter((meal) => meal.source === 'trainer')
+          .map((meal) => ({
+            ...meal,
+            image: meal.image || 'https://example.com/placeholder.jpg', // Default placeholder if no image
+            description: meal.description || 'No description available.', // Default if no description
+          }));
+        const userMeals = meals
+          .filter((meal) => meal.source === 'user')
+          .map((meal) => ({
+            ...meal,
+            image: meal.image || 'https://example.com/placeholder.jpg', // Default placeholder if no image
+            description: meal.description || 'No description available.', // Default if no description
+          }));
+
+        setTrainerDiet(trainerMeals);
+        setUserDiet(userMeals);
+        setLoading(false);
+      } catch (err) {
+        setError('Error fetching meals. Please try again later.');
+        setLoading(false);
+      }
+    };
+
+    fetchMeals();
+  }, []);
 
   const handleMarkEaten = (mealId: string, isTrainer: boolean) => {
     const now = new Date();
     const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     
+    // Update local state
     if (isTrainer) {
       setTrainerDiet((prev) =>
         prev.map((meal) =>
-          meal.id === mealId 
+          meal._id === mealId 
             ? { ...meal, isEaten: !meal.isEaten, eatenTime: !meal.isEaten ? time : undefined } 
             : meal
         )
@@ -106,16 +104,39 @@ export default function Diets() {
     } else {
       setUserDiet((prev) =>
         prev.map((meal) =>
-          meal.id === mealId 
+          meal._id === mealId 
             ? { ...meal, isEaten: !meal.isEaten, eatenTime: !meal.isEaten ? time : undefined } 
             : meal
         )
       );
     }
+
+    // TODO: Add API call to update meal status on the server using axios
+    // Example:
+    // axios.patch(`http://localhost:3000/api/diet/meal/${mealId}`, {
+    //   isEaten: !currentIsEaten,
+    //   eatenTime: time,
+    // });
   };
 
   const meals = currentView === 'trainer' ? trainerDiet : userDiet;
   const otherMealsCount = currentView === 'trainer' ? userDiet.length : trainerDiet.length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading meals...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
@@ -177,52 +198,58 @@ export default function Diets() {
             {currentView === 'trainer' ? 'Assigned by Trainer' : 'Assigned by Myself'}
           </h2>
           <div className="space-y-4">
-            {meals.map((meal) => (
-              <Card
-                key={meal.id}
-                className={`group relative bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer ${
-                  meal.isEaten ? "bg-green-500/10 border-green-500/50" : ""
-                }`}
-                onClick={() => setSelectedMeal(meal)}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                <CardContent className="flex items-center gap-4 p-6">
-                  <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
-                      src={meal.image}
-                      alt={meal.name}
-                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
-                    />
-                    {meal.isEaten && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                        <CheckCircle2 className="h-12 w-12 text-green-500" />
+            {meals.length === 0 ? (
+              <p className="text-center text-muted-foreground">No meals assigned for this category.</p>
+            ) : (
+              meals.map((meal) => (
+                <Card
+                  key={meal._id}
+                  className={`group relative bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer ${
+                    meal.isEaten ? "bg-green-500/10 border-green-500/50" : ""
+                  }`}
+                  onClick={() => setSelectedMeal(meal)}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                  <CardContent className="flex items-center gap-4 p-6">
+                    {meal.image && (
+                      <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                        <img
+                          src={meal.image}
+                          alt={meal.name}
+                          className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                        />
+                        {meal.isEaten && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                            <CheckCircle2 className="h-12 w-12 text-green-500" />
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <h3 className="text-xl font-semibold text-foreground">{meal.name}</h3>
-                    <p className="text-sm text-muted-foreground">{meal.calories} kcal • Protein: {meal.protein}g • Carbs: {meal.carbs}g • Fat: {meal.fat}g</p>
-                    {meal.isEaten && meal.eatenTime && (
-                      <p className="text-xs text-green-500 font-medium">Eaten at {meal.eatenTime}</p>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMarkEaten(meal.id, currentView === 'trainer');
-                    }}
-                    className={`px-4 py-2 font-medium transition-all duration-300 ${
-                      meal.isEaten 
-                        ? "bg-green-500/20 border-green-500 text-green-500 hover:bg-green-500/30" 
-                        : "hover:bg-primary/10 border-primary/30"
-                    }`}
-                  >
-                    {meal.isEaten ? "Uneat" : "Mark Eaten"}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="flex-1 space-y-1">
+                      <h3 className="text-xl font-semibold text-foreground">{meal.name}</h3>
+                      <p className="text-sm text-muted-foreground">{meal.calories} kcal • Protein: {meal.protein}g • Carbs: {meal.carbs}g • Fat: {meal.fats}g</p>
+                      {meal.isEaten && meal.eatenTime && (
+                        <p className="text-xs text-green-500 font-medium">Eaten at {meal.eatenTime}</p>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMarkEaten(meal._id, currentView === 'trainer');
+                      }}
+                      className={`px-4 py-2 font-medium transition-all duration-300 ${
+                        meal.isEaten 
+                          ? "bg-green-500/20 border-green-500 text-green-500 hover:bg-green-500/30" 
+                          : "hover:bg-primary/10 border-primary/30"
+                      }`}
+                    >
+                      {meal.isEaten ? "Uneat" : "Mark Eaten"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </section>
       </main>
@@ -233,20 +260,24 @@ export default function Diets() {
         <Dialog open={!!selectedMeal} onOpenChange={() => setSelectedMeal(null)}>
           <DialogContent className="max-w-lg bg-card/95 backdrop-blur-md border-primary/30 shadow-2xl">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold  bg-gradient-to-r from-primary to-primary/90 bg-clip-text text-transparent">
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/90 bg-clip-text text-transparent">
                 {selectedMeal.name}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6 p-4">
-              <div className="relative w-full h-48 rounded-xl overflow-hidden">
-                <img
-                  src={selectedMeal.image}
-                  alt={selectedMeal.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-              </div>
-              <p className="text-muted-foreground leading-relaxed">{selectedMeal.description}</p>
+              {selectedMeal.image && (
+                <div className="relative w-full h-48 rounded-xl overflow-hidden">
+                  <img
+                    src={selectedMeal.image}
+                    alt={selectedMeal.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                </div>
+              )}
+              {selectedMeal.description && (
+                <p className="text-muted-foreground leading-relaxed">{selectedMeal.description}</p>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1 p-3 bg-primary/10 rounded-lg">
                   <p className="text-sm font-medium text-muted-foreground">Calories</p>
@@ -262,7 +293,7 @@ export default function Diets() {
                 </div>
                 <div className="space-y-1 p-3 bg-primary/10 rounded-lg">
                   <p className="text-sm font-medium text-muted-foreground">Fat</p>
-                  <p className="text-2xl font-bold text-primary">{selectedMeal.fat}g</p>
+                  <p className="text-2xl font-bold text-primary">{selectedMeal.fats}g</p>
                 </div>
               </div>
               {selectedMeal.isEaten && selectedMeal.eatenTime && (
