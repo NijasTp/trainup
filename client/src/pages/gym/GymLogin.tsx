@@ -60,7 +60,7 @@ const GymLogin: React.FC = () => {
       
     } catch (error: any) {
       setErrors({
-        general: error.response?.data?.message || 'Invalid email or password. Please try again.'
+        general: error.response?.data?.error || 'Invalid email or password. Please try again.'
       });
     } finally {
       setLoading(false);

@@ -29,7 +29,6 @@ interface WorkoutSession {
   date: string;
   time: string;
   exercises: Exercise[];
-  tags: string[];
   goal?: string;
   notes?: string;
 }
@@ -139,19 +138,7 @@ function WorkoutSessionCard({ session, index }: { session: WorkoutSession; index
         ) : (
           <p className="text-muted-foreground">No exercises in this session yet.</p>
         )}
-        {session.tags.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {session.tags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="bg-white/90 text-foreground border-0 shadow-lg"
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
+
         {session.goal && (
           <div className="mt-4 flex items-center gap-2">
             <Target className="h-4 w-4 text-primary" />

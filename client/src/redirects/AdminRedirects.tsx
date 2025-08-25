@@ -3,7 +3,7 @@ import type { RootState } from "@/redux/store";
 import { checkAdminSession } from "@/services/authService";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 export const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -19,13 +19,13 @@ export const AdminPreventLoggedIn: React.FC<AdminPreventLoggedInProps> = ({ chil
   const dispatch = useDispatch();
   const { isAuthenticated } = useSelector((state: RootState) => state.adminAuth);
   const [checking, setChecking] = useState(true);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const checkSession = async () => {
       if (isAuthenticated) {
         try {
           await checkAdminSession();
-          console.log("Session is valid");
+          navigate('/admin/dashboard')
         } catch (error: any) {
           console.error("Session check failed:", error);
 

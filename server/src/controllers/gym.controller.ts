@@ -5,21 +5,21 @@ import { IGymService } from "../core/interfaces/services/IGymService";
 import { IOTPService } from "../core/interfaces/services/IOtpService";
 import { JwtService } from "../utils/jwt";
 import { UploadedFile } from "express-fileupload";
-import { IJwtService } from "../core/interfaces/services/IJwtService";
+import { IJwtService, JwtPayload } from "../core/interfaces/services/IJwtService";
 import { STATUS_CODE } from "../constants/status";
 
 @injectable()
 export class GymController {
   constructor(
-    @inject(TYPES.IGymService) private gymService: IGymService,
-    @inject(TYPES.IOtpService) private otpService: IOTPService,
-    @inject(TYPES.IJwtService) private jwtService: IJwtService
+    @inject(TYPES.IGymService) private _gymService: IGymService,
+    @inject(TYPES.IOtpService) private _otpService: IOTPService,
+    @inject(TYPES.IJwtService) private _jwtService: IJwtService
   ) { }
 
   requestOtp = async (req: Request, res: Response) => {
     const { email } = req.body;
     try {
-      await this.otpService.requestOtp(email, 'gym');
+      await this._otpService.requestOtp(email, 'gym');
       res.status(STATUS_CODE.OK).json({ message: "OTP sent to email" });
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message });
@@ -30,9 +30,9 @@ export class GymController {
     const { email, otp, name, password, location } = req.body;
 
     try {
-      await this.otpService.verifyOtp(email, otp);
+      await this._otpService.verifyOtp(email, otp);
 
-      const { gym, accessToken, refreshToken } = await this.gymService.registerGym(
+      const { gym, accessToken, refreshToken } = await this._gymService.registerGym(
         {
           name,
           email,
@@ -46,7 +46,7 @@ export class GymController {
         }
       );
 
-      this.jwtService.setTokens(res, accessToken, refreshToken);
+      this._jwtService.setTokens(res, accessToken, refreshToken);
       res.status(STATUS_CODE.CREATED).json({ gym });
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message });
@@ -55,13 +55,14 @@ export class GymController {
 
   async getData(req: Request, res: Response) {
     try {
-      const gymId = req.user?.id;
+      const jwtUser = req.user as JwtPayload
+      const gymId = jwtUser.id;
       if (!gymId) {
         res.status(STATUS_CODE.BAD_REQUEST).json({ error: "Invalid gym ID" });
         return
       }
 
-      const data = await this.gymService.getGymData(gymId);
+      const data = await this._gymService.getGymData(gymId);
       res.status(STATUS_CODE.OK).json(data)
       return
     } catch (error: any) {
@@ -74,8 +75,8 @@ export class GymController {
   login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     try {
-      const { gym, accessToken, refreshToken } = await this.gymService.loginGym(email, password);
-      this.jwtService.setTokens(res, accessToken, refreshToken);
+      const { gym, accessToken, refreshToken } = await this._gymService.loginGym(email, password);
+      this._jwtService.setTokens(res, accessToken, refreshToken);
       res.status(STATUS_CODE.OK).json({ gym });
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message });
@@ -86,7 +87,7 @@ export class GymController {
 
     async logout(req: Request, res: Response) {
     try {
-      this.jwtService.clearTokens(res);
+      this._jwtService.clearTokens(res);
        res.status(STATUS_CODE.OK).json({ message: "Logged out successfully" });
        return
     } catch (error) {

@@ -1,107 +1,104 @@
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { AdminLayout } from "@/components/admin/AdminLayout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search , ChevronLeft, ChevronRight, Loader2, Building2, Ban, FileText } from "lucide-react"
-import { useNavigate } from "react-router-dom"
-import { getGyms, toggleGymBan } from "@/services/gymService"
-import { getGymApplication } from "@/services/adminService"
-
+import type React from "react";
+import { useState, useEffect } from "react";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, ChevronLeft, ChevronRight, Loader2, Building2, Ban, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { getGyms, toggleGymBan } from "@/services/gymService";
+import { getGymApplication } from "@/services/adminService";
 
 interface IGym {
-  _id: string
-  role: "gym"
-  name: string | null
-  email: string | null
-  password: string | null
-  announcements: { title: string; message: string; date: Date }[]
-  location: string | null
-  certificate: string
-  isVerified: boolean
-  isBanned?: boolean
-  trainers?: string[] | null
-  members?: string[] | null
-  createdAt: Date | null
-  updatedAt: Date | null
-  images: string[] | null
-  profileImage: string | null
+  _id: string;
+  role: "gym";
+  name: string | null;
+  email: string | null;
+  password: string | null;
+  announcements: { title: string; message: string; date: Date }[];
+  location: string | null;
+  certificate: string;
+  verifyStatus: "pending" | "approved" | "rejected";
+  isBanned?: boolean;
+  trainers?: string[] | null;
+  members?: string[] | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  images: string[] | null;
+  profileImage: string | null;
 }
 
 interface GymResponse {
-  gyms: IGym[]
-  total: number
-  page: number
-  totalPages: number
+  gyms: IGym[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 const GymManagement = () => {
-  const [response, setResponse] = useState<GymResponse>({ gyms: [], total: 0, page: 1, totalPages: 1 })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchInput, setSearchInput] = useState("")
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const gymsPerPage = 10
-  const navigate = useNavigate()
+  const [response, setResponse] = useState<GymResponse>({ gyms: [], total: 0, page: 1, totalPages: 1 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const gymsPerPage = 10;
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchGyms = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-       
-        const res = await getGyms(currentPage,gymsPerPage, searchQuery)
-        setResponse(res as GymResponse)
-        setError(null)
+        const res = await getGyms(currentPage, gymsPerPage, searchQuery);
+        setResponse(res as GymResponse);
+        setError(null);
       } catch (err: any) {
-        console.error("Error fetching gyms:", err)
-        setError(err.response?.data?.message || "Failed to fetch gyms. Please try again.")
-        setResponse({ gyms: [], total: 0, page: 1, totalPages: 1 })
+        console.error("Error fetching gyms:", err);
+        setError(err.response?.data?.message || "Failed to fetch gyms. Please try again.");
+        setResponse({ gyms: [], total: 0, page: 1, totalPages: 1 });
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchGyms()
-  }, [currentPage, searchQuery])
+    fetchGyms();
+  }, [currentPage, searchQuery]);
 
   const handleSearch = () => {
-    setSearchQuery(searchInput)
-    setCurrentPage(1)
-  }
+    setSearchQuery(searchInput);
+    setCurrentPage(1);
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleSearch()
+      handleSearch();
     }
-  }
+  };
 
   const handleBanToggle = async (gymId: string, currentBanStatus: boolean) => {
-    setActionLoading(gymId)
+    setActionLoading(gymId);
     try {
-      await toggleGymBan(gymId,!currentBanStatus)
-      const res = await getGyms(currentPage, gymsPerPage, searchQuery)
-      setResponse(res as GymResponse)
+      await toggleGymBan(gymId, !currentBanStatus);
+      const res = await getGyms(currentPage, gymsPerPage, searchQuery);
+      setResponse(res as GymResponse);
     } catch (err) {
-      console.error("Error updating gym ban status:", err)
+      console.error("Error updating gym ban status:", err);
     } finally {
-      setActionLoading(null)
+      setActionLoading(null);
     }
-  }
+  };
 
+  const handleViewApplication = async (gymId: string) => {
+    try {
+      const application = await getGymApplication(gymId);
+      navigate(`/admin/gyms/${gymId}/application`, { state: { application } });
+    } catch (err) {
+      console.error("Error fetching gym application:", err);
+    }
+  };
 
-
- const handleViewApplication = async (gymId: string) => {
-  try {
-    const application = await getGymApplication(gymId);
-    navigate(`/admin/gyms/${gymId}/application`, { state: { application } });
-  } catch (err) {
-    console.error("Error fetching gym application:", err);
-  }
-};
   return (
     <AdminLayout>
       <div className="p-8">
@@ -120,9 +117,9 @@ const GymManagement = () => {
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#4B8B9B]" />
                 <Input
-                  placeholder="Search gyms by name, email, or location..."
+                  placeholder="Search gyms by name, email, or лакейшн..."
                   value={searchInput}
-                  onChange={(e:React.ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   className="pl-10 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
                 />
@@ -195,11 +192,15 @@ const GymManagement = () => {
                           <td className="py-4 px-4">
                             <div className="flex flex-col gap-1">
                               <span
-                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                  gym.isVerified ? "bg-green-900/30 text-green-400" : "bg-yellow-900/30 text-yellow-400"
+                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                                  gym.verifyStatus === "approved"
+                                    ? "bg-green-900/30 text-green-400"
+                                    : gym.verifyStatus === "rejected"
+                                    ? "bg-red-900/30 text-red-400"
+                                    : "bg-yellow-900/30 text-yellow-400"
                                 }`}
                               >
-                                {gym.isVerified ? "Verified" : "Unverified"}
+                                {gym.verifyStatus||"pending"}
                               </span>
                               {gym.isBanned && (
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-400">
@@ -211,7 +212,7 @@ const GymManagement = () => {
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2">
                               <Button
-                                variant='default'
+                                variant="default"
                                 onClick={() => handleBanToggle(gym._id, gym.isBanned || false)}
                                 disabled={actionLoading === gym._id}
                                 className="flex items-center gap-1 text-xs px-2 py-1"
@@ -231,14 +232,6 @@ const GymManagement = () => {
                                 <FileText className="h-3 w-3" />
                                 App
                               </Button>
-                              {/* <Button
-                                variant="outline"
-                                onClick={() => handleViewGym(gym._id)}
-                                className="flex items-center gap-1 text-xs px-2 py-1"
-                              >
-                                <Eye className="h-3 w-3" />
-                                View
-                              </Button> */}
                             </div>
                           </td>
                         </tr>
@@ -281,7 +274,7 @@ const GymManagement = () => {
         </Card>
       </div>
     </AdminLayout>
-  )
-}
+  );
+};
 
-export default GymManagement
+export default GymManagement;

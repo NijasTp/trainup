@@ -3,11 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, MessageCircle, Star, ShieldCheck, Search, Clock, Users, Award } from "lucide-react";
-import { toast } from "sonner";
+import { MapPin, Star, Search, Clock, Users, Award } from "lucide-react";
 import { getTrainers } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import { Link } from "react-router-dom";
 
 type Trainer = {
     id: string;
@@ -37,12 +36,12 @@ export default function Trainers() {
     useEffect(() => {
         const debounce = setTimeout(() => {
             fetchTrainers();
-        }, 300); 
+        }, 300);
 
         return () => clearTimeout(debounce);
     }, [page, search]);
 
-       async function fetchTrainers() {
+    async function fetchTrainers() {
         setIsLoading(true);
         setError(null);
         try {
@@ -72,7 +71,7 @@ export default function Trainers() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-            <SiteHeader/>
+            <SiteHeader />
             <main className="relative container mx-auto px-4 py-12 space-y-8">
                 {/* Header Section */}
                 <div className="text-center space-y-6 mb-12">
@@ -80,7 +79,7 @@ export default function Trainers() {
                         <Award className="h-4 w-4 text-primary" />
                         <span className="text-sm font-medium text-primary">Premium Certified Trainers</span>
                     </div>
-                    
+
                     <div className="space-y-4">
                         <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
                             Find Your Perfect Trainer
@@ -161,7 +160,7 @@ export default function Trainers() {
                         >
                             Previous
                         </Button>
-                        
+
                         <div className="flex items-center gap-1 mx-4">
                             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                                 let pageNum;
@@ -174,25 +173,24 @@ export default function Trainers() {
                                 } else {
                                     pageNum = page - 2 + i;
                                 }
-                                
+
                                 return (
                                     <Button
                                         key={pageNum}
                                         variant={pageNum === page ? "default" : "ghost"}
                                         size="sm"
                                         onClick={() => handlePageChange(pageNum)}
-                                        className={`w-10 h-10 font-medium transition-all duration-200 ${
-                                            pageNum === page 
-                                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" 
+                                        className={`w-10 h-10 font-medium transition-all duration-200 ${pageNum === page
+                                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                                                 : "hover:bg-secondary/80"
-                                        }`}
+                                            }`}
                                     >
                                         {pageNum}
                                     </Button>
                                 );
                             })}
                         </div>
-                        
+
                         <Button
                             variant="outline"
                             size="default"
@@ -210,39 +208,37 @@ export default function Trainers() {
 }
 
 function TrainerCard({ trainer, index }: { trainer: any; index: number }) {
-    const [open, setOpen] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
 
     return (
         <Card className={`group relative overflow-hidden bg-card/40 backdrop-blur-sm border-border/50 hover:border-border transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2`}
-              style={{ 
-                  animationDelay: `${index * 100}ms`,
-                  animation: 'slideUp 0.6s ease-out forwards'
-              }}>
-            
+            style={{
+                animationDelay: `${index * 100}ms`,
+                animation: 'slideUp 0.6s ease-out forwards'
+            }}>
+
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-            
+
             {/* Image Section */}
             <div className="relative w-full h-72 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
-                
+
                 {!imageLoaded && (
                     <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted/30 animate-pulse flex items-center justify-center">
                         <Users className="h-12 w-12 text-muted-foreground/30" />
                     </div>
                 )}
-                
+
                 <img
                     src={trainer.profileImage}
                     alt={trainer.name}
-                    className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${
-                        imageLoaded ? 'opacity-100' : 'opacity-0'
-                    }`}
+                    className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${imageLoaded ? 'opacity-100' : 'opacity-0'
+                        }`}
                     loading="lazy"
                     onLoad={() => setImageLoaded(true)}
                 />
-                
+
                 {/* Rating Badge */}
                 <div className="absolute top-4 right-4 z-20">
                     <div className="flex items-center gap-1 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-full border border-white/20">
@@ -250,14 +246,14 @@ function TrainerCard({ trainer, index }: { trainer: any; index: number }) {
                         <span className="text-white text-sm font-semibold">{trainer.rating}</span>
                     </div>
                 </div>
-                
+
                 {/* Specialty Badge */}
                 <div className="absolute top-4 left-4 z-20">
                     <Badge variant="secondary" className="bg-white/90 text-foreground border-0 shadow-lg font-medium">
                         {trainer.specialty}
                     </Badge>
                 </div>
-                
+
                 {/* Bottom Info Overlay */}
                 <div className="absolute bottom-0 left-0 right-0 z-20 p-6 space-y-3">
                     <div className="space-y-2">
@@ -278,106 +274,20 @@ function TrainerCard({ trainer, index }: { trainer: any; index: number }) {
                     <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
                         {trainer.bio}
                     </p>
-                    
+
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="text-lg font-bold text-primary">{trainer.price}</span>
                         </div>
-                        
-                        <Dialog open={open} onOpenChange={setOpen}>
-                            <DialogTrigger asChild>
-                                <Button 
-                                    size="sm" 
-                                    className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
-                                >
-                                    View Profile
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                                <DialogHeader className="space-y-4">
-                                    <div className="relative w-full h-48 rounded-lg overflow-hidden">
-                                        <img
-                                            src={trainer.profileImage}
-                                            alt={trainer.name}
-                                            className="w-full h-full object-cover"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                                        <div className="absolute bottom-4 left-4 right-4">
-                                            <DialogTitle className="text-2xl font-bold text-white drop-shadow-lg mb-2">
-                                                {trainer.name}
-                                            </DialogTitle>
-                                            <div className="flex items-center gap-4 text-white/90">
-                                                <div className="flex items-center gap-1">
-                                                    <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                                                    <span className="font-semibold">{trainer.rating}</span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <MapPin className="h-4 w-4" />
-                                                    <span className="text-sm">{trainer.location}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </DialogHeader>
-                                
-                                <div className="space-y-6 pt-2">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                                <ShieldCheck className="h-4 w-4 text-primary" />
-                                                Specialty
-                                            </div>
-                                            <Badge variant="outline" className="font-medium">
-                                                {trainer.specialty}
-                                            </Badge>
-                                        </div>
-                                        
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                                <Clock className="h-4 w-4 text-primary" />
-                                                Session Rate
-                                            </div>
-                                            <div className="text-2xl font-bold text-primary">
-                                                {trainer.price}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="space-y-3">
-                                        <h4 className="font-semibold text-lg">About {trainer.name.split(' ')[0]}</h4>
-                                        <p className="text-muted-foreground leading-relaxed">
-                                            {trainer.bio}
-                                        </p>
-                                    </div>
-                                    
-                                    <div className="flex gap-3 pt-4 border-t border-border/50">
-                                        <Button
-                                            className="flex-1 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold py-6"
-                                            onClick={() => {
-                                                toast.success(`Booking request sent to ${trainer.name}!`, {
-                                                    description: "They'll get back to you within 24 hours"
-                                                });
-                                                setOpen(false);
-                                            }}
-                                        >
-                                            Book Session
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            className="px-6 py-6 hover:bg-secondary/80 border-border/50 transition-all duration-300"
-                                            onClick={() => {
-                                                toast("Chat feature coming soon!", {
-                                                    description: "We're working on direct messaging"
-                                                });
-                                            }}
-                                        >
-                                            <MessageCircle className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
+                        <Link to={`/trainers/${trainer._id}`} className="hidden group-hover:block">
+                            <Button
+                                size="sm"
+                                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
+                            >
+                                View Profile
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </CardContent>

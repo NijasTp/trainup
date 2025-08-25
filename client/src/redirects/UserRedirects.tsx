@@ -13,6 +13,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const [checking, setChecking] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkSession = async () => {
@@ -25,9 +26,11 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           if (error.response?.status === 403 && error.response.data?.error === 'Banned') {
             toast.error('You are banned');
             dispatch(logout());
-          } else if (error.response?.status === 401) {
-            toast.error('Session expired',);
-            dispatch(logout());
+             navigate('/user/login');
+            } else if (error.response?.status === 401) {
+              toast.error('Session expired',);
+              dispatch(logout());
+              navigate('/user/login');
           }
         }
       }

@@ -46,12 +46,19 @@ import EditSessionPage from './pages/user/UserWorkoutEdit';
 import StartSessionPage from './pages/user/StartWorkoutPage';
 import SuccessPage from './pages/user/WorkoutSuccess';
 import Diets from './pages/user/Diets';
+import UserAddDiet from './pages/user/UserAddDiet';
+import RoleSelectionPage from './pages/user/ChooseLogin';
+import TemplateManagement from './pages/admin/TemplateManagement';
+import UserProfile from './pages/user/UserProfile';
+import UserDashboard from './pages/user/UserDashboard';
+import TrainerPage from './pages/user/IndividualTrainer';
 
 function App() {
   return (
     <>
       <ToastContainer />
       <Routes>
+        <Route path={ROUTES.CHOOSE_LOGIN} element={<PreventLoggedIn><RoleSelectionPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_LOGIN} element={<PreventLoggedIn><Login /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_FORGOT_PASSWORD} element={<PreventLoggedIn><ForgotPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_NEW_PASSWORD} element={<PreventLoggedIn><NewPasswordPage /></PreventLoggedIn>} />
@@ -59,8 +66,11 @@ function App() {
         <Route path={ROUTES.CALLBACK} element={<Callback />} />
         <Route path={ROUTES.USER_HOME} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_HOME_ALT} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_PROFILE} element={<ProtectedRoute><UserProfile/></ProtectedRoute>} />
+        <Route path={ROUTES.USER_DASHBOARD} element={<ProtectedRoute><UserDashboard/></ProtectedRoute>} />
         <Route path={ROUTES.USER_VERIFY_OTP} element={<PreventLoggedIn><VerifyOtp /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_TRAINER_PAGE} element={<ProtectedRoute><Trainers /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_INDIVIDUAL_TRAINER} element={<ProtectedRoute><TrainerPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WORKOUTS_PAGE} element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_WORKOUT} element={<ProtectedRoute><AddWorkoutPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_WORKOUT_SESSION} element={<ProtectedRoute><AddSessionPage /></ProtectedRoute>} />
@@ -68,6 +78,7 @@ function App() {
         <Route path={ROUTES.USER_START_WORKOUT} element={<ProtectedRoute><StartSessionPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WORKOUT_SUCCESS} element={<ProtectedRoute><SuccessPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_DIET} element={<ProtectedRoute><Diets /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_ADD_DIET} element={<ProtectedRoute><UserAddDiet /></ProtectedRoute>} />
         <Route path={ROUTES.USER_NOT_FOUND} element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
 
         {/* Trainer Routes */}
@@ -97,6 +108,7 @@ function App() {
         <Route path={ROUTES.ADMIN_USER_DETAILS} element={<AdminProtectedRoute><IndividualUser /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_GYMS} element={<AdminProtectedRoute><GymManagement /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_GYM_APPLICATION} element={<AdminProtectedRoute><GymApplication /></AdminProtectedRoute>} />
+        <Route path={ROUTES.ADMIN_TEMPLATE_MANAGEMENT} element={<AdminProtectedRoute><TemplateManagement /></AdminProtectedRoute>} />
       </Routes>
     </>
   );

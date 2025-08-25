@@ -25,7 +25,6 @@ router.patch("/users/:id",authMiddleware,roleMiddleware(['admin']), adminControl
 router.get("/gyms",authMiddleware,roleMiddleware(['admin']), adminController.getGyms.bind(adminController));
 router.get("/gyms/:id",authMiddleware,roleMiddleware(['admin']), adminController.getGymById.bind(adminController));
 router.patch("/gyms/:id",authMiddleware,roleMiddleware(['admin']), adminController.updateGymStatus.bind(adminController));
-router.patch('/gyms/:id/verify',authMiddleware,roleMiddleware(['admin']),adminController.verifyGym.bind(adminController));
 router.get("/gyms/:id/application",authMiddleware,roleMiddleware(['admin']), adminController.getGymApplication.bind(adminController));
 
 router.post('/logout',authMiddleware,roleMiddleware(['admin']), adminController.logout.bind(adminController))

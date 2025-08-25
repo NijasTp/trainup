@@ -27,7 +27,7 @@ export class GymRepository implements IGymRepository {
     const gyms = await GymModel.find(query)
       .skip((page - 1) * limit)
       .limit(limit)
-      .select("name email location isBanned isVerified profileImage createdAt")
+      .select("name email location isBanned verifyStatus profileImage createdAt")
       .lean();
 
     return {
@@ -44,9 +44,19 @@ export class GymRepository implements IGymRepository {
 }
 
   async updateStatus(id: string, updateData: Partial<IGym>): Promise<IGym | null> {
+    if (updateData.verifyStatus === "rejected") {
+      return await GymModel.findByIdAndUpdate(
+        id,
+        {
+          $set: updateData,
+          $inc: { rejectionCount: 1 },
+        },
+        { new: true }
+      );
+    }
+
     return await GymModel.findByIdAndUpdate(id, updateData, { new: true });
   }
-
 
   async findById(_id: string): Promise<IGym | null> {
     return GymModel.findById(_id);

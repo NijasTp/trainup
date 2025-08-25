@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dumbbell, Home } from "lucide-react";
 import { Link } from "react-router-dom";
-import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { toast } from "sonner";
 
@@ -29,7 +28,6 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-      <SiteHeader />
       <main className="relative container mx-auto px-4 py-12 space-y-8 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Card className="bg-card/80 backdrop-blur-sm border-border/50 w-full max-w-lg shadow-2xl">
           <CardHeader className="text-center">

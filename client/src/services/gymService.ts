@@ -28,8 +28,8 @@ export const toggleGymBan = async (gymId: string, isBanned: boolean) => {
   return res.data;
 };
 
-export const verifyGym = async (gymId: string) => {
-  const res = await API.patch(`/admin/gyms/${gymId}/verify`, { isVerified: true });
+export const verifyGym = async (gymId: string, payload: { verifyStatus: "approved" | "rejected"; rejectReason?: string }) => {
+  const res = await API.patch(`/admin/gyms/${gymId}`, payload);
   return res.data;
 };
 

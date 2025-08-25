@@ -8,6 +8,7 @@ import { passwordValidation } from "@/constants/validations";
 import { GoogleLoginButton } from "@/pages/user/GoogleLoginButton";
 import { useDispatch } from "react-redux";
 import { login } from "@/redux/slices/userAuthSlice";
+import debounce from "lodash.debounce";
 
 interface SignupFormProps {
   setError: (error: string) => void;
@@ -19,8 +20,9 @@ const SignupForm = ({ setError }: SignupFormProps) => {
   const [password, setPassword] = useState("");
   const [cpassword, setCPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isUsernameTaken, setIsUsernameTaken] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -28,11 +30,34 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     if (error) setError(error);
   }, [setError]);
 
+  const checkUsername = debounce(async (username: string) => {
+    if (!username.trim()) {
+      setIsUsernameTaken(false);
+      return;
+    }
+    try {
+      const response = await API.post("/user/check-username", { username });
+      setIsUsernameTaken(response.data.isAvailable);
+      console.log(response.data);
+    } catch (err) {
+      console.error("Username check failed:", err);
+    }
+  }, 500);
+
+  useEffect(() => {
+    checkUsername(name);
+    return () => checkUsername.cancel();
+  }, [name]);
+
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
 
     if (!name.trim()) {
       setError("Name is required");
+      return;
+    }
+    if (isUsernameTaken) {
+      setError("Username is already taken");
       return;
     }
     if (!email.trim()) {
@@ -65,7 +90,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     }
 
     try {
-      await API.post("/api/user/request-otp", { email });
+      await API.post("/user/request-otp", { email });
       navigate("/verify-otp", {
         state: { name, email, password },
       });
@@ -75,26 +100,31 @@ const SignupForm = ({ setError }: SignupFormProps) => {
   }
 
   const handleGoogleSuccess = (user: string) => {
-    dispatch(login(user))
-    navigate('/home')
+    dispatch(login(user));
+    navigate("/home");
   };
 
   const handleGoogleError = (error: any) => {
-    console.error('Google login error:', error);
-    alert('Google login failed. Please try again.');
+    console.error("Google login error:", error);
+    alert("Google login failed. Please try again.");
   };
 
   return (
     <>
       <form onSubmit={handleSignup} className="space-y-5">
-        <InputField
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Your Name"
-          icon="user"
-          name="name"
-        />
+        <div>
+          <InputField
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your Name"
+            icon="user"
+            name="name"
+          />
+          {isUsernameTaken && (
+            <p className="text-red-500 text-sm mt-1">Username is already taken</p>
+          )}
+        </div>
 
         <InputField
           type="email"

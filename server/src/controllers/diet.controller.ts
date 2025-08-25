@@ -5,6 +5,7 @@ import TYPES from '../core/types/types'
 import { STATUS_CODE as STATUS } from '../constants/status'
 import { MESSAGES } from '../constants/messages'
 import { DietTemplateService } from '../services/dietTemplate.services'
+import { JwtPayload } from '../core/interfaces/services/IJwtService'
 
 @injectable()
 export class DietController {
@@ -27,8 +28,8 @@ export class DietController {
 
   getDay = async (req: Request, res: Response) => {
     try {
-      const userId = req.params.userId || (req.user as any).id
-      const { date } = req.query as any
+      const userId =(req.user as JwtPayload).id
+      const { date } = req.params as any
       const day = await this.dietService.getDay(userId, date)
       if (!day) {
         res.status(STATUS.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND })

@@ -10,6 +10,7 @@ import dietRoutes from './routes/diet.routes'
 import dotenv from "dotenv";
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import { errorHandler } from "./middlewares/error.midleware";
 dotenv.config();
 
 const app = express();
@@ -36,6 +37,8 @@ app.use("/api/trainer", trainerRoutes)
 app.use("/api/gym", gymRoutes)
 app.use("/api/workout", workoutRoutes)
 app.use("/api/diet", dietRoutes);
+
+app.use(errorHandler);
 
 
 export default app;

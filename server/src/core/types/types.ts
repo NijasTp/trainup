@@ -6,6 +6,10 @@ const TYPES = {
   IUserService: Symbol.for("IUserService"),
   IUserRepository: Symbol.for("IUserRepository"),
   UserController:Symbol.for("UserController"),
+
+  PaymentController:Symbol.for("PaymentController"),
+  IPaymentRepository:Symbol.for("IPaymentRepository"),
+  IPaymentService:Symbol.for("IPaymentService"),
   
   TrainerController:Symbol.for("TrainerController"),
 

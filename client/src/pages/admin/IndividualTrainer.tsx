@@ -61,13 +61,11 @@ const IndividualTrainer = () => {
   const { id } = useParams();
   const location = useLocation();
 
-  // Set trainer from location state if available, else fetch from backend
   useEffect(() => {
     const stateTrainer = location.state?.trainer;
     if (stateTrainer) {
       setTrainer(stateTrainer);
     } else if (id) {
-      // fallback: fetch from backend
       const fetchTrainer = async () => {
         setLoading(true);
         try {

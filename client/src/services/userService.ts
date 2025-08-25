@@ -21,3 +21,11 @@ export const getTrainers = async (
 };
 
 
+export const getProfile = async () =>{
+  const res = await API.get('/user/get-profile')
+  return res.data
+}
+export const getTrainer = async (id: string) =>{
+  const res = await API.get(`/user/trainers/${id}`)
+  return res.data
+}

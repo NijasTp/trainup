@@ -16,20 +16,20 @@ import { STATUS_CODE } from '../constants/status'
 @injectable()
 export class AdminController {
   constructor (
-    @inject(TYPES.IAdminService) private adminService: IAdminService,
-    @inject(TYPES.ITrainerService) private trainerService: ITrainerService,
-    @inject(TYPES.IUserService) private userService: IUserService,
-    @inject(TYPES.IJwtService) private JwtService: IJwtService,
-    @inject(TYPES.IGymService) private gymService: IGymService
+    @inject(TYPES.IAdminService) private _adminService: IAdminService,
+    @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
+    @inject(TYPES.IUserService) private _userService: IUserService,
+    @inject(TYPES.IJwtService) private _JwtService: IJwtService,
+    @inject(TYPES.IGymService) private _gymService: IGymService
   ) {}
 
   async login (req: Request, res: Response) {
     try {
       const { email, password } = req.body
       const { accessToken, refreshToken, admin } =
-        await this.adminService.login(email, password)
+        await this._adminService.login(email, password)
       // Set cookies
-      this.JwtService.setTokens(res, accessToken, refreshToken)
+      this._JwtService.setTokens(res, accessToken, refreshToken)
 
       res.status(STATUS_CODE.OK).json({ admin })
       return
@@ -49,7 +49,7 @@ export class AdminController {
       const endDate = req.query.endDate as string | undefined
 
       const result: PaginatedTrainers =
-        await this.trainerService.getAllTrainers(
+        await this._trainerService.getAllTrainers(
           page,
           limit,
           search,
@@ -69,7 +69,7 @@ export class AdminController {
 
   async updateTrainer (req: Request, res: Response) {
     try {
-      const trainer = await this.trainerService.updateTrainerStatus(
+      const trainer = await this._trainerService.updateTrainerStatus(
         req.params.id,
         req.body
       )
@@ -83,7 +83,7 @@ export class AdminController {
 
   async getTrainerById (req: Request, res: Response) {
     try {
-      const trainer = await this.trainerService.getTrainerById(req.params.id)
+      const trainer = await this._trainerService.getTrainerById(req.params.id)
       res.json(trainer)
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -92,7 +92,7 @@ export class AdminController {
 
   async getTrainerApplication (req: Request, res: Response) {
     try {
-      const application = await this.trainerService.getTrainerApplication(
+      const application = await this._trainerService.getTrainerApplication(
         req.params.id
       )
       res.json(application)
@@ -111,7 +111,7 @@ export class AdminController {
       const startDate = req.query.startDate as string | undefined
       const endDate = req.query.endDate as string | undefined
 
-      const result = await this.userService.getAllUsers(
+      const result = await this._userService.getAllUsers(
         page,
         limit,
         search,
@@ -132,7 +132,7 @@ export class AdminController {
   async getUserById (req: Request, res: Response): Promise<void> {
     try {
       const id = req.params.id
-      const user = await this.userService.getUserById(id)
+      const user = await this._userService.getUserById(id)
       if (!user) {
         res.status(STATUS_CODE.NOT_FOUND).json({ message: 'User not found' })
         return
@@ -151,7 +151,7 @@ export class AdminController {
       const { id } = req.params
       const { isBanned } = req.body
 
-      const updatedUser = await this.userService.updateUserStatus(id, {
+      const updatedUser = await this._userService.updateUserStatus(id, {
         isBanned
       })
 
@@ -185,7 +185,7 @@ export class AdminController {
       const limit = parseInt(req.query.limit as string) || 10
       const searchQuery = (req.query.searchQuery as string) || ''
 
-      const result = await this.gymService.getAllGyms(page, limit, searchQuery)
+      const result = await this._gymService.getAllGyms(page, limit, searchQuery)
       res.status(STATUS_CODE.OK).json(result)
     } catch (err) {
       res
@@ -197,7 +197,7 @@ export class AdminController {
   async updateGymStatus (req: Request, res: Response) {
     try {
       const { id } = req.params
-      const updatedGym = await this.gymService.updateGymStatus(id, req.body)
+      const updatedGym = await this._gymService.updateGymStatus(id, req.body)
 
       if (!updatedGym) {
         res.status(STATUS_CODE.NOT_FOUND).json({ message: 'Gym not found' })
@@ -215,7 +215,7 @@ export class AdminController {
   async getGymApplication (req: Request, res: Response) {
     try {
       const { id } = req.params
-      const gym = await this.gymService.getGymApplication(id)
+      const gym = await this._gymService.getGymApplication(id)
 
       if (!gym) {
         res.status(STATUS_CODE.NOT_FOUND).json({ message: 'Gym not found' })
@@ -229,30 +229,11 @@ export class AdminController {
         .json({ message: 'Failed to fetch gym application' })
     }
   }
-  async verifyGym (req: Request, res: Response) {
-    try {
-      const { id } = req.params
-      const updatedGym = await this.gymService.updateGymStatus(id, {
-        isVerified: true
-      })
-
-      if (!updatedGym) {
-        res.status(STATUS_CODE.NOT_FOUND).json({ message: 'Gym not found' })
-        return
-      }
-
-      res.status(STATUS_CODE.OK).json(updatedGym)
-    } catch (err) {
-      res
-        .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
-        .json({ message: 'Failed to verify gym' })
-    }
-  }
 
   async getGymById (req: Request, res: Response) {
     try {
       const { id } = req.params
-      const gym = await this.gymService.getGymById(id)
+      const gym = await this._gymService.getGymById(id)
 
       if (!gym) {
         res.status(STATUS_CODE.NOT_FOUND).json({ message: 'Gym not found' })
@@ -268,9 +249,9 @@ export class AdminController {
   }
   logout (req: Request, res: Response) {
     try {
-      this.JwtService.clearTokens(res)
+      this._JwtService.clearTokens(res)
       let jwtUser = req.user as JwtPayload
-      this.adminService.updateTokenVersion(jwtUser.id)
+      this._adminService.updateTokenVersion(jwtUser.id)
       res.status(STATUS_CODE.OK).json({ message: 'Logged out successfully' })
     } catch (error: any) {
       console.error('Logout error:', error)

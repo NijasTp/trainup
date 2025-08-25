@@ -10,7 +10,7 @@ export class TrainerRepository implements ITrainerRepository {
   }
 
   async findById(id: string) {
-    return await TrainerModel.findById(id).exec();
+    return await TrainerModel.findById(id).select('-password');
   }
 
   async create(trainerData: Partial<ITrainer>) {

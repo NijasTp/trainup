@@ -1,5 +1,5 @@
 import type React from "react"
-import { Dumbbell, LayoutDashboard, Users, UserCheck, Building2, LogOut } from "lucide-react"
+import { Dumbbell, LayoutDashboard, Users, UserCheck, Building2, LogOut, FileText } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useDispatch } from "react-redux"
 import { logoutAdmin } from "@/services/authService"
@@ -21,7 +21,6 @@ interface AdminLayoutProps {
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
-
     const location = useLocation()
 
     const menuItems = [
@@ -29,6 +28,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { icon: Users, label: "Users", path: "/admin/users" },
         { icon: UserCheck, label: "Trainers", path: "/admin/trainers" },
         { icon: Building2, label: "Gyms", path: "/admin/gyms" },
+        { icon: FileText, label: "Templates", path: "/admin/templates" },
     ]
 
     const handleLogout = async () => {
@@ -38,7 +38,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             navigate("/admin/login")
         } catch (error: any) {
             console.log('error logout:', error)
-
         }
     }
 
@@ -65,7 +64,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                         const isActive = location.pathname === item.path
 
                         return (
-
                             <button
                                 key={item.path}
                                 onClick={() => navigate(item.path)}
@@ -77,8 +75,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                                 <Icon className="mr-3 h-5 w-5" />
                                 {item.label}
                             </button>
-
-
                         )
                     })}
                     <button
@@ -89,7 +85,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                         Logout
                     </button>
                 </nav>
-
             </div>
 
             {/* Main Content */}

@@ -1,14 +1,38 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-//interfaces
+interface XPLog {
+  amount: number;
+  reason: string;
+  date: string;
+}
+
+interface WeightLog {
+  weight: number;
+  date: string;
+}
 
 interface UserType {
   _id: string;
   name: string;
   email: string;
   profileImage?: string;
-  role:'user'|null;
-  experiences?: any[];
+  role: 'user' | null;
+  streak: number;
+  xp: number;
+  xpLogs: XPLog[];
+  weightHistory: WeightLog[];
+  achievements: string[];
+  activityLevel?: string | null;
+  equipment?: boolean;
+  equipmentAvailability?: boolean; // ✅ Added
+  goals?: string[];
+  height?: number | null;           // ✅ Added
+  weight?: number | null;           // ✅ Added
+  isBanned?: boolean;
+  isPrivate?: boolean;
+  isVerified?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface UserAuthState {
@@ -16,9 +40,6 @@ interface UserAuthState {
   isAuthenticated: boolean;
   loading: boolean;
 }
-//initial state
-
-
 
 const initialState: UserAuthState = {
   user: null,
@@ -37,8 +58,23 @@ export const userAuthSlice = createSlice({
         name: payload.name,
         email: payload.email,
         profileImage: payload.profileImage,
-        role: 'user',
-        experiences: payload.experiences || [],
+        role: payload.role || 'user',
+        streak: payload.streak || 0,
+        xp: payload.xp || 0,
+        xpLogs: payload.xpLogs || [],
+        weightHistory: payload.weightHistory || [],
+        achievements: payload.achievements || [],
+        activityLevel: payload.activityLevel || null,
+        equipment: payload.equipment || false,
+        equipmentAvailability: payload.equipmentAvailability || false,
+        goals: payload.goals || [],
+        height: payload.height || null, 
+        weight: payload.weight || null, 
+        isBanned: payload.isBanned || false,
+        isPrivate: payload.isPrivate || false,
+        isVerified: payload.isVerified || false,
+        createdAt: payload.createdAt,
+        updatedAt: payload.updatedAt,
       };
       state.isAuthenticated = true;
     },
@@ -49,9 +85,14 @@ export const userAuthSlice = createSlice({
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
+    updateUser: (state, action: PayloadAction<Partial<UserType>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
   },
 });
 
-export const { login, logout, setLoading } = userAuthSlice.actions;
+export const { login, logout, setLoading, updateUser } = userAuthSlice.actions;
 
 export default userAuthSlice.reducer;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Dumbbell, Plus, Target } from "lucide-react";
+import { ChevronLeft, ChevronRight, Dumbbell, Plus, Target, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ interface Exercise {
   reps: string;
   weight?: number;
   image?: string;
+  timeTaken?: number;
 }
 
 interface WorkoutSession {
@@ -29,9 +30,9 @@ interface WorkoutSession {
   date: string;
   time: string;
   exercises: Exercise[];
-  tags: string[];
   goal?: string;
   notes?: string;
+  isDone?: boolean;
 }
 
 interface WorkoutDay {
@@ -39,6 +40,13 @@ interface WorkoutDay {
   userId: string;
   date: string;
   sessions: WorkoutSession[];
+}
+
+function formatTime(seconds: number | undefined): string {
+  if (!seconds) return "0:00";
+  const min = Math.floor(seconds / 60);
+  const sec = seconds % 60;
+  return `${min}:${sec.toString().padStart(2, "0")}`;
 }
 
 function DateSelector({
@@ -162,18 +170,31 @@ function WorkoutSessionCard({
               <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <Dumbbell className="h-5 w-5 text-primary" />
                 {session.name} ({session.time})
-                <Badge
-                  className={
-                    session.givenBy === "trainer"
-                      ? "bg-primary/90 text-primary-foreground shadow-lg"
-                      : "bg-secondary/90 text-foreground shadow-lg"
-                  }
-                >
-                  {session.givenBy === "trainer" ? "Trainer" : "You"}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    className={
+                      session.givenBy === "trainer"
+                        ? "bg-primary/90 text-primary-foreground shadow-lg"
+                        : "bg-secondary/90 text-foreground shadow-lg"
+                    }
+                  >
+                    {session.givenBy === "trainer" ? "Trainer" : "You"}
+                  </Badge>
+                  {session.isDone ? (
+                    <Badge className="bg-green-500/90 text-white shadow-lg flex items-center gap-1">
+                      <CheckCircle className="h-4 w-4" />
+                      Done
+                    </Badge>
+                  ) : isSessionPast ? (
+                    <Badge className="bg-red-500/90 text-white shadow-lg flex items-center gap-1">
+                      <XCircle className="h-4 w-4" />
+                      Missed
+                    </Badge>
+                  ) : null}
+                </div>
               </CardTitle>
               <div className="flex gap-2">
-                {canStartSession && (
+                {canStartSession && !session.isDone && (
                   <Link to={`/workouts/${session._id}/start`}>
                     <Button
                       className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
@@ -182,7 +203,7 @@ function WorkoutSessionCard({
                     </Button>
                   </Link>
                 )}
-                {!isSessionPast && (
+                {!isSessionPast && !session.isDone && (
                   <Link to={`/workouts/${session._id}`}>
                     <Button
                       variant="outline"
@@ -203,14 +224,14 @@ function WorkoutSessionCard({
                     key={exercise.id}
                     className="flex items-center gap-4 p-2 rounded-lg hover:bg-secondary/20"
                   >
-                    <div className="relative w darb w-16 h-16">
+                    <div className="relative w-16 h-16">
                       {!imageLoaded && (
                         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted/30 animate-pulse flex items-center justify-center rounded-md">
                           <Dumbbell className="h-8 w-8 text-muted-foreground/30" />
                         </div>
                       )}
                       <img
-                        src={exercise.image||'https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp'}
+                        src={exercise.image || 'https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp'}
                         alt={exercise.name}
                         className={`h-16 w-16 object-cover rounded-md transition-opacity duration-500 ${
                           imageLoaded ? "opacity-100" : "opacity-0"
@@ -224,6 +245,7 @@ function WorkoutSessionCard({
                       <p className="text-sm text-muted-foreground">
                         {exercise.sets} sets • {exercise.reps}
                         {exercise.weight ? ` • ${exercise.weight}kg` : ""}
+                        {exercise.timeTaken ? ` • Time: ${formatTime(exercise.timeTaken)}` : ""}
                       </p>
                     </div>
                   </div>
@@ -231,15 +253,6 @@ function WorkoutSessionCard({
               </div>
             ) : (
               <p className="text-muted-foreground">No exercises added to this session yet.</p>
-            )}
-            {session.tags.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {session.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="bg-white/90 text-foreground border-0 shadow-lg">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
             )}
             {session.goal && (
               <div className="mt-4 flex items-center gap-2">
@@ -273,6 +286,17 @@ function WorkoutSessionCard({
                 >
                   {session.givenBy === "trainer" ? "Trainer" : "You"}
                 </Badge>
+                {session.isDone ? (
+                  <Badge className="bg-green-500/90 text-white flex items-center gap-1">
+                    <CheckCircle className="h-4 w-4" />
+                    Done
+                  </Badge>
+                ) : isSessionPast ? (
+                  <Badge className="bg-red-500/90 text-white flex items-center gap-1">
+                    <XCircle className="h-4 w-4" />
+                    Missed
+                  </Badge>
+                ) : null}
                 {session.goal && (
                   <div className="flex items-center gap-1">
                     <Target className="h-4 w-4" />
@@ -290,7 +314,7 @@ function WorkoutSessionCard({
               className="flex items-center gap-4 p-4 border-b border-border/60"
             >
               <img
-                src={exercise.image}
+                src={exercise.image || 'https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp'}
                 alt={exercise.name}
                 className="h-24 w-24 object-cover rounded-md"
                 loading="lazy"
@@ -300,6 +324,7 @@ function WorkoutSessionCard({
                 <p className="text-sm text-muted-foreground">
                   {exercise.sets} sets • {exercise.reps}
                   {exercise.weight ? ` • ${exercise.weight}kg` : ""}
+                  {exercise.timeTaken ? ` • Time: ${formatTime(exercise.timeTaken)}` : ""}
                 </p>
               </div>
             </div>
@@ -310,17 +335,8 @@ function WorkoutSessionCard({
               <p className="text-sm text-muted-foreground">{session.notes}</p>
             </div>
           )}
-          {session.tags.length > 0 && (
-            <div className="p-4 flex flex-wrap gap-2">
-              {session.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="bg-white/90 text-foreground border-0 shadow-lg">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
         </div>
-        {canStartSession && (
+        {canStartSession && !session.isDone && (
           <div className="sticky bottom-0 bg-background py-4">
             <Button
               className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
@@ -361,7 +377,7 @@ export default function WorkoutPage() {
       // If response is null (no WorkoutDay found), use an empty array with a default WorkoutDay
       const workoutDay = response ? [response] : [{ _id: "", userId: "", date: format(selectedDate, "yyyy-MM-dd"), sessions: [] }];
       setDailyWorkouts(workoutDay);
-      console.log("Fetched workouts:", workoutDay); // Log after state update
+      console.log("Fetched workouts:", workoutDay);
     } catch (err: any) {
       setError("Failed to fetch workouts");
       console.error("API error:", err);
@@ -389,7 +405,7 @@ export default function WorkoutPage() {
               parseInt(curr.time.replace(":", "")) - parseInt(now.replace(":", ""))
             );
             return currDiff < prevDiff ? curr : prev;
-          }, todayWorkouts.sessions[0]); // Use first session as initial value
+          }, todayWorkouts.sessions[0]);
         setFocusedSessionId(closestSession._id);
       } else {
         setFocusedSessionId(null);
@@ -404,7 +420,6 @@ export default function WorkoutPage() {
   )?.sessions.filter((session) => session.givenBy === filter) || [];
 
   return (
-    <div>
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <SiteHeader />
@@ -464,8 +479,7 @@ export default function WorkoutPage() {
           )
         )}
       </main>
-    </div>
       <SiteFooter />
-      </div>
+    </div>
   );
 }

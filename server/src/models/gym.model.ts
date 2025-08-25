@@ -9,7 +9,8 @@ export interface IGym extends Document {
     announcements: { title: string; message: string; date: Date }[];
     location: string | null;
     certificate: string;
-    isVerified: boolean;
+    verifyStatus: 'pending' | 'approved' | 'rejected';
+    rejectReason: string | null;
     isBanned:boolean;
     tokenVersion?:number;
     trainers?: Types.ObjectId[] | null;
@@ -31,7 +32,8 @@ const GymSchema = new Schema<IGym>({
         date: { type: Date, default: Date.now }
     }],
     location: { type: String },
-    isVerified: { type: Boolean, default: false },
+    verifyStatus: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+    rejectReason: { type: String },
     isBanned: { type: Boolean, default: false },
     tokenVersion: { type: Number, default: 0 },
     certificate: { type: String },

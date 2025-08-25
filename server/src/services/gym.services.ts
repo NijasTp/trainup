@@ -117,6 +117,7 @@ export class GymService implements IGymService {
   async loginGym(email: string, password: string) {
     const gym = await this.gymRepo.findByEmail(email);
     if (!gym) throw new Error("Gym not found");
+    if (gym.verifyStatus === 'rejected') throw new Error(`Gym verification was rejected: ${gym.rejectReason}`);
     const valid = await bcrypt.compare(password, gym.password!);
     if (!valid) throw new Error("Invalid credentials");
     const accessToken = this.jwtService.generateAccessToken(gym._id.toString(), gym.role, gym.tokenVersion?? 0);

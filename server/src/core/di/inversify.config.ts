@@ -53,6 +53,11 @@ import { IDietDayRepository } from "../interfaces/repositories/IDietRepository";
 import { ITemplateRepository } from "../interfaces/repositories/IDietTemplateRepository";
 import { IDietService } from "../interfaces/services/IDietService";
 import { IDietTemplateService } from "../interfaces/services/IDietTemplateService";
+import { PaymentRepository } from "../../repositories/payment.repository";
+import { PaymentService } from "../../services/payment.services";
+import { PaymentController } from "../../controllers/payment.controller";
+import { IPaymentRepository } from "../interfaces/repositories/IPaymentRepository";
+import { IPaymentService } from "../interfaces/services/IPaymentService";
 
 
 // Create container 
@@ -64,6 +69,10 @@ container.bind<IUserService>(TYPES.IUserService).to(UserService);
 container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepository);
 container.bind<OAuthClient>(TYPES.OAuthClient).to(OAuthClient);
 container.bind<PassportConfig>(TYPES.PassportConfig).to(PassportConfig).inSingletonScope();
+
+container.bind<IPaymentRepository>(TYPES.IPaymentRepository).to(PaymentRepository);
+container.bind<IPaymentService>(TYPES.IPaymentService).to(PaymentService);
+container.bind<PaymentController>(TYPES.PaymentController).to(PaymentController);
 
 container.bind<TrainerController>(TYPES.TrainerController).to(TrainerController)
 container.bind<ITrainerRepository>(TYPES.ITrainerRepository).to(TrainerRepository);

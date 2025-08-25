@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,8 +9,10 @@ import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { InfoModal } from "@/components/user/general/InfoModal";
 import api from "@/lib/axios";
+import { Link } from "react-router-dom";
+import { markEaten } from "@/services/dietServices";
+import { toast } from "react-toastify";
 
-// Interface based on API response
 interface Meal {
   _id: string;
   name: string;
@@ -25,10 +27,10 @@ interface Meal {
   sourceId: string;
   createdAt: string;
   updatedAt: string;
-  nutritions: any[]; // Adjust type as needed
+  nutritions: any[];
   eatenTime?: string;
-  image?: string; // Optional, since not in API example
-  description?: string; // Optional, since not in API example
+  image?: string;
+  description?: string;
 }
 
 interface ApiResponse {
@@ -49,31 +51,41 @@ export default function Diets() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch 
+  // Function to check if a meal is missed
+  const isMealMissed = (meal: Meal) => {
+    if (meal.isEaten) return false;
+    const now = new Date();
+    const [hours, minutes] = meal.time.split(':').map(Number);
+    const mealDate = new Date();
+    mealDate.setHours(hours, minutes, 0, 0);
+    return now > mealDate;
+  };
+
+  // Fetch meals
   useEffect(() => {
     const fetchMeals = async () => {
       try {
-        const today = new Date().toISOString().split('T')[0]; 
+        const today = new Date().toISOString().split('T')[0];
         const response = await api.post<ApiResponse>('/diet/', {
           date: today,
         });
 
         const data = response.data;
         const meals = data.meals || [];
- 
+
         const trainerMeals = meals
           .filter((meal) => meal.source === 'trainer')
           .map((meal) => ({
             ...meal,
-            image: meal.image || 'https://example.com/placeholder.jpg', // Default placeholder if no image
-            description: meal.description || 'No description available.', // Default if no description
+            image: meal.image || 'https://worldfoodtour.co.uk/wp-content/uploads/2013/06/neptune-placeholder-48.jpg',
+            description: meal.description || 'No description available.',
           }));
         const userMeals = meals
           .filter((meal) => meal.source === 'user')
           .map((meal) => ({
             ...meal,
-            image: meal.image || 'https://example.com/placeholder.jpg', // Default placeholder if no image
-            description: meal.description || 'No description available.', // Default if no description
+            image: meal.image || 'https://worldfoodtour.co.uk/wp-content/uploads/2013/06/neptune-placeholder-48.jpg',
+            description: meal.description || 'No description available.',
           }));
 
         setTrainerDiet(trainerMeals);
@@ -88,35 +100,33 @@ export default function Diets() {
     fetchMeals();
   }, []);
 
-  const handleMarkEaten = (mealId: string, isTrainer: boolean) => {
+  const handleMarkEaten = async (mealId: string, isTrainer: boolean) => {
     const now = new Date();
     const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    
-    // Update local state
+
     if (isTrainer) {
       setTrainerDiet((prev) =>
         prev.map((meal) =>
-          meal._id === mealId 
-            ? { ...meal, isEaten: !meal.isEaten, eatenTime: !meal.isEaten ? time : undefined } 
+          meal._id === mealId
+            ? { ...meal, isEaten: !meal.isEaten, eatenTime: !meal.isEaten ? time : undefined }
             : meal
         )
       );
     } else {
       setUserDiet((prev) =>
         prev.map((meal) =>
-          meal._id === mealId 
-            ? { ...meal, isEaten: !meal.isEaten, eatenTime: !meal.isEaten ? time : undefined } 
+          meal._id === mealId
+            ? { ...meal, isEaten: !meal.isEaten, eatenTime: !meal.isEaten ? time : undefined }
             : meal
         )
       );
     }
 
-    // TODO: Add API call to update meal status on the server using axios
-    // Example:
-    // axios.patch(`http://localhost:3000/api/diet/meal/${mealId}`, {
-    //   isEaten: !currentIsEaten,
-    //   eatenTime: time,
-    // });
+   try {
+    await markEaten(now.toISOString().split('T')[0], mealId)
+   } catch (error:any) {
+    toast.error(error.response.data.error || 'Failed to mark meal as eaten');
+   }
   };
 
   const meals = currentView === 'trainer' ? trainerDiet : userDiet;
@@ -151,7 +161,15 @@ export default function Diets() {
             </h1>
             <InfoModal modalMessage="Click the 'Mark Eaten' button only after you have actually eaten the meal. This helps track your progress accurately." />
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <Link to="/diets/add">
+            <Button
+              variant="default"
+              className="relative px-6 py-3 font-medium transition-all duration-300"
+            >
+              Create Diet+
+            </Button>
+          </Link>
+          <p className="my-5 text-lg text-muted-foreground max-w-2xl mx-auto">
             View your trainer-assigned and self-assigned meals for today. Mark meals as eaten to track your intake.
           </p>
         </div>
@@ -161,11 +179,10 @@ export default function Diets() {
           <Button
             onClick={() => setCurrentView('trainer')}
             variant={currentView === 'trainer' ? "default" : "outline"}
-            className={`relative px-6 py-3 font-medium transition-all duration-300 ${
-              currentView === 'trainer' 
-                ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg" 
+            className={`relative px-6 py-3 font-medium transition-all duration-300 ${currentView === 'trainer'
+                ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg"
                 : "hover:bg-primary/10 border-primary/30"
-            }`}
+              }`}
           >
             Trainer Assigned
             {currentView !== 'trainer' && otherMealsCount > 0 && (
@@ -177,11 +194,10 @@ export default function Diets() {
           <Button
             onClick={() => setCurrentView('self')}
             variant={currentView === 'self' ? "default" : "outline"}
-            className={`relative px-6 py-3 font-medium transition-all duration-300 ${
-              currentView === 'self' 
-                ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg" 
+            className={`relative px-6 py-3 font-medium transition-all duration-300 ${currentView === 'self'
+                ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg"
                 : "hover:bg-primary/10 border-primary/30"
-            }`}
+              }`}
           >
             Self Assigned
             {currentView !== 'self' && otherMealsCount > 0 && (
@@ -204,9 +220,12 @@ export default function Diets() {
               meals.map((meal) => (
                 <Card
                   key={meal._id}
-                  className={`group relative bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer ${
-                    meal.isEaten ? "bg-green-500/10 border-green-500/50" : ""
-                  }`}
+                  className={`group relative bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer ${meal.isEaten
+                      ? "bg-green-500/10 border-green-500/50"
+                      : isMealMissed(meal)
+                        ? "bg-red-500/10 border-red-500/50"
+                        : ""
+                    }`}
                   onClick={() => setSelectedMeal(meal)}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
@@ -227,25 +246,30 @@ export default function Diets() {
                     )}
                     <div className="flex-1 space-y-1">
                       <h3 className="text-xl font-semibold text-foreground">{meal.name}</h3>
-                      <p className="text-sm text-muted-foreground">{meal.calories} kcal • Protein: {meal.protein}g • Carbs: {meal.carbs}g • Fat: {meal.fats}g</p>
-                      {meal.isEaten && meal.eatenTime && (
+                      <p className="text-sm text-muted-foreground">
+                        {meal.calories} kcal • Protein: {meal.protein}g • Carbs: {meal.carbs}g • Fat: {meal.fats}g • Time: {meal.time}
+                      </p>
+                      {meal.isEaten && meal.eatenTime ? (
                         <p className="text-xs text-green-500 font-medium">Eaten at {meal.eatenTime}</p>
-                      )}
+                      ) : isMealMissed(meal) ? (
+                        <p className="text-xs text-red-500 font-medium">Missed</p>
+                      ) : null}
                     </div>
                     <Button
                       variant="outline"
+                      disabled={meal.isEaten || isMealMissed(meal)} // disables when eaten or missed
                       onClick={(e) => {
                         e.stopPropagation();
                         handleMarkEaten(meal._id, currentView === 'trainer');
                       }}
-                      className={`px-4 py-2 font-medium transition-all duration-300 ${
-                        meal.isEaten 
-                          ? "bg-green-500/20 border-green-500 text-green-500 hover:bg-green-500/30" 
+                      className={`px-4 py-2 font-medium transition-all duration-300 ${isMealMissed(meal)
+                          ? "bg-red-500/20 border-red-500 text-red-500 hover:bg-red-500/30"
                           : "hover:bg-primary/10 border-primary/30"
-                      }`}
+                        }`}
                     >
-                      {meal.isEaten ? "Uneat" : "Mark Eaten"}
+                      {isMealMissed(meal) ? "Missed" : "Mark Eaten"}
                     </Button>
+
                   </CardContent>
                 </Card>
               ))
@@ -296,11 +320,19 @@ export default function Diets() {
                   <p className="text-2xl font-bold text-primary">{selectedMeal.fats}g</p>
                 </div>
               </div>
-              {selectedMeal.isEaten && selectedMeal.eatenTime && (
+              <div className="space-y-1 p-3 bg-primary/10 rounded-lg">
+                <p className="text-sm font-medium text-muted-foreground">Scheduled Time</p>
+                <p className="text-lg font-bold text-primary">{selectedMeal.time}</p>
+              </div>
+              {selectedMeal.isEaten && selectedMeal.eatenTime ? (
                 <div className="text-center text-green-500 font-medium">
                   Eaten at {selectedMeal.eatenTime}
                 </div>
-              )}
+              ) : isMealMissed(selectedMeal) ? (
+                <div className="text-center text-red-500 font-medium">
+                  Missed
+                </div>
+              ) : null}
               <Button
                 onClick={() => setSelectedMeal(null)}
                 className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"

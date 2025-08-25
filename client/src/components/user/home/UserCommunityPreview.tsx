@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 export function CommunityPreview() {
   const posts = [
@@ -22,8 +23,8 @@ export function CommunityPreview() {
   return (
     <section aria-labelledby="community">
       <div className="flex items-center justify-between mb-3">
-        <h2 id="community" className="text-xl font-semibold">Community</h2>
-        <a href="#" className="story-link text-sm text-muted-foreground">View all</a>
+        <h2 id="community" className="text-xl font-semibold">Diets</h2>
+        <Link to="/diets" className="story-link text-sm text-muted-foreground">View all</Link>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map((p, i) => (

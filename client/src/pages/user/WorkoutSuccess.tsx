@@ -18,6 +18,7 @@ interface ExerciseTime {
 interface LocationState {
   exerciseTimes: ExerciseTime[];
   totalWorkoutTime: number;
+  isDone: boolean;
 }
 
 export default function SuccessPage() {
@@ -26,16 +27,16 @@ export default function SuccessPage() {
   const location = useLocation();
   const state = location.state as LocationState | undefined;
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const workoutTime = state?.totalWorkoutTime
 
   useEffect(() => {
-    if(!workoutTime) {
-        toast.error('Please complete your workout before moving on.')
-        navigate('/workouts');
+    if (!state?.totalWorkoutTime || !state?.isDone) {
+      toast.error("Please complete your workout before moving on.");
+      navigate("/workouts");
+      return;
     }
+
     document.title = "TrainUp - Workout Complete!";
-    
-    // Trigger confetti animation
+
     const duration = 3 * 1000;
     const animationEnd = Date.now() + duration;
     const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
@@ -62,11 +63,17 @@ export default function SuccessPage() {
       });
     }, 250);
 
-    // Call updateWorkoutSession API
     async function markSessionAsDone() {
       try {
-        if (id) {
-          await updateWorkoutSession(id, { isDone: true });
+        if (id && state?.exerciseTimes && state.isDone) {
+          const exerciseUpdates = state.exerciseTimes.map((et) => ({
+            exerciseId: et.exerciseId,
+            timeTaken: et.duration,
+          }));
+          await updateWorkoutSession(id, {
+            isDone: true,
+            exerciseUpdates,
+          });
           toast.success("Workout marked as complete!", {
             description: "Your progress has been saved.",
           });
@@ -80,14 +87,16 @@ export default function SuccessPage() {
       }
     }
 
-    if (id) markSessionAsDone();
+    if (id && state.isDone) markSessionAsDone();
 
     return () => clearInterval(interval);
-  }, [id]);
+  }, [id, state, navigate]);
 
   const exerciseTimes = state?.exerciseTimes || [];
   const totalWorkoutTime = state?.totalWorkoutTime || 0;
-  const formattedTotalTime = `${Math.floor(totalWorkoutTime / 60)}:${(totalWorkoutTime % 60).toString().padStart(2, "0")}`;
+  const formattedTotalTime = `${Math.floor(totalWorkoutTime / 60)}:${(
+    totalWorkoutTime % 60
+  ).toString().padStart(2, "0")}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20 relative overflow-hidden">
@@ -150,12 +159,12 @@ export default function SuccessPage() {
                   <p className="text-muted-foreground text-center">No exercise times recorded.</p>
                 )}
               </div>
-              <Link to='/workouts'>
-              <Button
-                className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                Back to Workouts
-              </Button>
+              <Link to="/workouts">
+                <Button
+                  className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  Back to Workouts
+                </Button>
               </Link>
             </CardContent>
           </Card>

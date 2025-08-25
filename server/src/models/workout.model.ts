@@ -1,7 +1,7 @@
 import { Document, model, Schema, Types } from "mongoose";
 
 export interface IExercise {
-  id: string; 
+  id: string;
   name: string;
   image?: string;
   sets: number;
@@ -9,11 +9,12 @@ export interface IExercise {
   time?: string;
   rest?: string;
   notes?: string;
+  timeTaken?: number; 
 }
 
 export interface IWorkoutSession extends Document {
-  _id: Types.ObjectId;  
-  name: string; 
+  _id: Types.ObjectId;
+  name: string;
   givenBy: "trainer" | "user";
   trainerId?: Types.ObjectId | string;
   userId: Types.ObjectId | string;
@@ -21,13 +22,9 @@ export interface IWorkoutSession extends Document {
   time?: string;
   exercises: IExercise[];
   goal?: string;
-  notes?: string; // trainer sessions
-  createdAt: Date;
-  updatedAt: Date;
+  notes?: string;
+  isDone?: boolean; 
 }
-
-
-
 
 const ExerciseSchema = new Schema<IExercise>(
   {
@@ -39,6 +36,7 @@ const ExerciseSchema = new Schema<IExercise>(
     time: { type: String },
     rest: { type: String },
     notes: { type: String },
+    timeTaken: { type: Number },
   },
   { _id: false }
 );
@@ -48,11 +46,13 @@ const WorkoutSessionSchema = new Schema<IWorkoutSession>(
     name: { type: String, required: true },
     givenBy: { type: String, enum: ["trainer", "user"], required: true },
     trainerId: { type: Schema.Types.ObjectId, ref: "Trainer" },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     date: { type: String },
     time: { type: String },
     exercises: { type: [ExerciseSchema], default: [] },
     goal: { type: String },
     notes: { type: String },
+    isDone: { type: Boolean, default: false }, 
   },
   { timestamps: true }
 );

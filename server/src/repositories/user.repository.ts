@@ -1,27 +1,34 @@
-import { UserModel, IUser } from "../models/user.model";
-import { IUserRepository } from "../core/interfaces/repositories/IUserRepository";
+import { UserModel, IUser } from '../models/user.model'
+import { IUserRepository } from '../core/interfaces/repositories/IUserRepository'
 
 export class UserRepository implements IUserRepository {
-  async createUser(data: Partial<IUser>) {
-    return await UserModel.create(data);
+  async createUser (data: Partial<IUser>) {
+    return await UserModel.create(data)
   }
 
-  async findByEmail(email: string) {
-    return await UserModel.findOne({ email }).exec();
+  async findByEmail (email: string) {
+    return await UserModel.findOne({ email }).exec()
   }
 
-  async findByGoogleId(googleId: string): Promise<IUser | null> {
-    return UserModel.findOne({ googleId }).exec();
+  async checkUsername (username: string) {
+    const regex = new RegExp(`^${username}$`, 'i')
+    return await UserModel.findOne({ name: regex }).exec()
   }
 
-  async findAll(skip: number, limit: number) {
+  async findByGoogleId (googleId: string): Promise<IUser | null> {
+    return UserModel.findOne({ googleId }).exec()
+  }
+
+  async findAll (skip: number, limit: number) {
     return await UserModel.find()
       .skip(skip)
       .limit(limit)
-      .select("name email phone isVerified isBanned role goals motivationLevel equipment assignedTrainer gymId isPrivate streak xp achievements createdAt");
+      .select(
+        'name email phone isVerified isBanned role goals motivationLevel equipment assignedTrainer gymId isPrivate streak xp achievements createdAt'
+      )
   }
 
-  async findUsers(
+  async findUsers (
     page: number,
     limit: number,
     search: string,
@@ -30,67 +37,70 @@ export class UserRepository implements IUserRepository {
     startDate?: string,
     endDate?: string
   ) {
-    const query: any = {};
-
+    const query: any = {}
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-      ];
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ]
     }
 
-    if (isBanned === "active") query.isBanned = false;
-    if (isBanned === "banned") query.isBanned = true;
-    if (isVerified === "verified") query.isVerified = true;
-    if (isVerified === "unverified") query.isVerified = false;
+    if (isBanned === 'active') query.isBanned = false
+    if (isBanned === 'banned') query.isBanned = true
+    if (isVerified === 'verified') query.isVerified = true
+    if (isVerified === 'unverified') query.isVerified = false
     if (startDate || endDate) {
-      query.createdAt = {};
-      if (startDate) query.createdAt.$gte = new Date(startDate);
-      if (endDate) query.createdAt.$lte = new Date(endDate);
+      query.createdAt = {}
+      if (startDate) query.createdAt.$gte = new Date(startDate)
+      if (endDate) query.createdAt.$lte = new Date(endDate)
     }
 
-
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit
 
     const [users, total] = await Promise.all([
       UserModel.find(query)
         .skip(skip)
         .limit(limit)
-        .select("name email phone role isVerified isBanned createdAt")
+        .select('name email phone role isVerified isBanned createdAt')
         .lean(),
-      UserModel.countDocuments(query),
-    ]);
-
+      UserModel.countDocuments(query)
+    ])
 
     return {
       users,
       total,
       page,
-      totalPages: Math.ceil(total / limit),
-    };
+      totalPages: Math.ceil(total / limit)
+    }
   }
 
-  async count() {
-    return await UserModel.countDocuments();
+  async count () {
+    return await UserModel.countDocuments()
   }
 
-  async updateUser(id: string, update: Partial<IUser>) {
+  async updateUser (id: string, update: Partial<IUser>) {
     await UserModel.findByIdAndUpdate(id, { $set: update })
   }
 
-  async updateStatusAndIncrementVersion(id: string, updateData: Partial<IUser>): Promise<IUser | null> {
+  async updateStatusAndIncrementVersion (
+    id: string,
+    updateData: Partial<IUser>
+  ): Promise<IUser | null> {
     return await UserModel.findByIdAndUpdate(
       id,
       { $set: updateData, $inc: { tokenVersion: 1 } },
       { new: true }
-    );
+    )
   }
 
-  async updateStatus(id: string, updateData: Partial<IUser>): Promise<IUser | null> {
-    return await UserModel.findByIdAndUpdate(id, updateData, { new: true });
+  async updateStatus (
+    id: string,
+    updateData: Partial<IUser>
+  ): Promise<IUser | null> {
+    return await UserModel.findByIdAndUpdate(id, updateData, { new: true })
   }
-  async findById(id: string) {
-    return UserModel.findById(id).select("-password");
+  async findById (id: string) {
+    return UserModel.findById(id).select('-password')
   }
 }
