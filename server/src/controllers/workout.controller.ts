@@ -92,6 +92,31 @@ export class WorkoutController {
     }
   }
 
+    async trainerCreateSession(req: Request, res: Response) {
+    try {
+      const jwtUser = req.user as JwtPayload | undefined;
+      if (!jwtUser || jwtUser.role !== 'trainer') {
+         res.status(STATUS_CODE.UNAUTHORIZED).json({ error: 'Unauthorized: Trainer role required' });
+         return
+      }
+      const { clientId, name, date, time, goal, notes } = req.body;
+      if (!clientId || !name || !date || !time) {
+         res.status(STATUS_CODE.BAD_REQUEST).json({ error: 'Missing required fields' });
+         return
+      }
+      const session = await this.workoutService.trainerCreateSession(jwtUser.id, clientId, {
+        name,
+        date,
+        time,
+        goal,
+        notes,
+      });
+       res.status(STATUS_CODE.CREATED).json(session);
+    } catch (err: any) {
+       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message });
+    }
+  }
+
   getDay = async (req: Request, res: Response) => {
     try {
       const jwtUser = req.user as JwtPayload | undefined

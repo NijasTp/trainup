@@ -13,6 +13,7 @@ export const ROUTES = {
   USER_VERIFY_OTP: "/verify-otp",
   USER_TRAINER_PAGE:'/trainers',
   USER_INDIVIDUAL_TRAINER:'/trainers/:id',
+  MY_TRAINER_PROFILE:'/my-trainer/profile',
   USER_WORKOUTS_PAGE:'/workouts',
   USER_ADD_WORKOUT:'/workouts/add',
   USER_ADD_WORKOUT_SESSION:'/workouts/add-session',
@@ -36,6 +37,8 @@ export const ROUTES = {
   TRAINER_VERIFY_OTP: "/trainer/verify-otp",
   TRAINER_WAITLIST: "/trainer/waitlist",
   TRAINER_DASHBOARD: "/trainer/dashboard",
+  TRAINER_INDIVIDUAL_CLIENT: "/trainer/user/:id",
+  TRAINER_CLIENT_WORKOUT: "/trainer/workout/:clientId",
 
   // Gym Routes
   GYM_LOGIN: "/gym/login",

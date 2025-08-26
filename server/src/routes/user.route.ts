@@ -9,7 +9,6 @@ import { PaymentController } from "../controllers/payment.controller";
 const router = express.Router();
 
 const userController = container.get<UserController>(TYPES.UserController);
-const paymentController = container.get<PaymentController>(TYPES.PaymentController);
 
 //auth
 router.post("/refresh-token", userController.refreshAccessToken.bind(userController));
@@ -32,7 +31,7 @@ router.get('/get-profile',authMiddleware,roleMiddleware(['user']), userControlle
 
 router.get('/trainers', authMiddleware, roleMiddleware(['user']), userController.getTrainers.bind(userController));
 router.get('/trainers/:id', authMiddleware, roleMiddleware(['user']), userController.getIndividualTrainer.bind(userController));
-router.post("/create-order", (req, res) => paymentController.createOrder(req, res));
-router.post("/verify-payment", (req, res) => paymentController.verifyPayment(req, res));
+router.get("/my-trainer", authMiddleware, userController.getMyTrainer.bind(userController));
+router.post("/cancel-subscription", authMiddleware, userController.cancelSubscription.bind(userController));
 
 export default router;

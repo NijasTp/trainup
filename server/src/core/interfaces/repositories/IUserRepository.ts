@@ -23,7 +23,7 @@ export interface IUserRepository {
     endDate?: string
   ): Promise<any>
   count(): Promise<number>
-  updateUser(id: string, status: Partial<IUser>): Promise<void>
+  updateUser(id: string, data: Partial<IUser>): Promise<IUser | null>
   updateStatusAndIncrementVersion(
     id: string,
     status: Partial<IUser>

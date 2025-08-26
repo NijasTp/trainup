@@ -23,7 +23,8 @@ export interface IUser extends Document {
   goals?: string[];
   activityLevel?: string;
   equipment?: boolean;
-  assignedTrainer?: Types.ObjectId;
+  assignedTrainer?: Types.ObjectId | string | null;
+  subscriptionStartDate?: Date | null;
   gymId?: Types.ObjectId;
   isPrivate?: boolean;
   tokenVersion?: number;
@@ -60,6 +61,7 @@ const userSchema: Schema<IUser> = new Schema(
     activityLevel: { type: String, default: null },
     equipment: { type: Boolean, default: false },
     assignedTrainer: { type: Schema.Types.ObjectId, ref: "Trainer" },
+    subscriptionStartDate: { type: Date },
     gymId: { type: Schema.Types.ObjectId, ref: "Gym" },
     tokenVersion: { type: Number, default: 0 },
     isPrivate: { type: Boolean, default: false },

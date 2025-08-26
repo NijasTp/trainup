@@ -47,7 +47,7 @@ export class UserService implements IUserService {
   }
 
   async checkUsername (username: string) {
-    return await this.userRepo.checkUsername(username) ? true : false
+    return (await this.userRepo.checkUsername(username)) ? true : false
   }
 
   public async resetPassword (email: string, newPassword: string) {
@@ -171,5 +171,19 @@ export class UserService implements IUserService {
     }
 
     return await this.userRepo.updateStatus(id, updateData)
+  }
+
+  async updateUserTrainerId (userId: string, trainerId: string): Promise<void> {
+    await this.userRepo.updateUser(userId, {
+      assignedTrainer: trainerId,
+      subscriptionStartDate: new Date()
+    })
+  }
+  
+  async cancelSubscription (userId: string, trainerId: string): Promise<void> {
+    await this.userRepo.updateUser(userId, {
+      assignedTrainer: null,
+      subscriptionStartDate: null
+    })
   }
 }

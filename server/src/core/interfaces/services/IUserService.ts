@@ -31,4 +31,6 @@ export interface IUserService {
     updateData: Partial<IUser | null>
   ): Promise<IUser | null>
   getUserById(id: string): Promise<IUser | null>
+  updateUserTrainerId(userId: string, trainerId: string): Promise<void>;
+  cancelSubscription(userId: string, trainerId: string): Promise<void>;
 }

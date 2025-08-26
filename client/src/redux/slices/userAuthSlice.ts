@@ -24,12 +24,13 @@ interface UserType {
   achievements: string[];
   activityLevel?: string | null;
   equipment?: boolean;
-  equipmentAvailability?: boolean; // ✅ Added
+  equipmentAvailability?: boolean;
   goals?: string[];
-  height?: number | null;           // ✅ Added
-  weight?: number | null;           // ✅ Added
+  height?: number | null;           
+  weight?: number | null;           
   isBanned?: boolean;
   isPrivate?: boolean;
+  assignedTrainer?: string;
   isVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -70,6 +71,7 @@ export const userAuthSlice = createSlice({
         goals: payload.goals || [],
         height: payload.height || null, 
         weight: payload.weight || null, 
+        assignedTrainer: payload.assignedTrainer,
         isBanned: payload.isBanned || false,
         isPrivate: payload.isPrivate || false,
         isVerified: payload.isVerified || false,

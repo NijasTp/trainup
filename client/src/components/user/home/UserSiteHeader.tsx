@@ -22,7 +22,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = () => {
 
   const handleSignOut = async () => {
     dispatch(logout())
-    await logoutApi()
+     logoutApi()
     localStorage.removeItem("profilePrompted") // Clear profilePrompted on logout
     console.log("Successfully signed out")
     navigate("/login")
@@ -47,7 +47,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = () => {
           </div>
         </div>
 
-        {/* Right side actions */}
         <div className="ml-auto flex items-center gap-2">
           <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary/40">
             <Flame
@@ -56,7 +55,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = () => {
             <span className="text-sm font-medium">{user?.streak || 0}</span>
           </div>
 
-          {/* Notifications dropdown */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger className="p-2 rounded hover:bg-muted-foreground/5">
               <div className="relative">

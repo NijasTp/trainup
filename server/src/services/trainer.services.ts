@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import TYPES from "../core/types/types";
-import { ITrainerService } from "../core/interfaces/services/ITrainerService";
+import { ITrainerService, PaginatedClients } from "../core/interfaces/services/ITrainerService";
 import { ITrainerRepository } from "../core/interfaces/repositories/ITrainerRepository";
 import { PaginatedTrainers } from "../core/interfaces/services/ITrainerService";
 import { v2 as cloudinary } from "cloudinary";
@@ -185,5 +185,28 @@ export class TrainerService implements ITrainerService {
   async updateTrainerStatus(id: string, updateData: Partial<ITrainer>) {
     return await this.trainerRepo.updateStatus(id, updateData);
   }
+
+   async addClientToTrainer(trainerId: string, userId: string): Promise<void> {
+    await this.trainerRepo.addClient(trainerId, userId);
+  }
+      async removeClientFromTrainer(trainerId: string, userId: string): Promise<void> {
+        await this.trainerRepo.removeClient(trainerId, userId);
+    }
+
+        async getTrainerClients(
+        trainerId: string,
+        page: number,
+        limit: number,
+        search: string
+    ): Promise<PaginatedClients> {
+        const skip = (page - 1) * limit;
+        const { clients, total } = await this.trainerRepo.findClients(trainerId, skip, limit, search);
+        return {
+            clients,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+        };
+    }
 
 }

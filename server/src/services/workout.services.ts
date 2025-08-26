@@ -60,6 +60,32 @@ export class WorkoutService implements IWorkoutService {
   getSession (id: string) {
     return this.sessionRepo.findById(id)
   }
+    async trainerCreateSession(
+    trainerId: string,
+    clientId: string,
+    payload: Partial<IWorkoutSession>
+  ): Promise<IWorkoutSession> {
+    const sessionPayload = {
+      ...payload,
+      givenBy: "trainer" as const,
+      trainerId,
+      userId: clientId,
+    };
+
+    const session = await this.sessionRepo.create(sessionPayload);
+
+    let day = await this.workoutDayRepo.findByUserAndDate(clientId, payload.date!);
+    if (!day) {
+      day = await this.workoutDayRepo.create({
+        userId: clientId,
+        date: payload.date!,
+        sessions: [],
+      });
+    }
+    await this.workoutDayRepo.addSessionToDay(day._id.toString(), session._id.toString());
+
+    return session;
+  }
 
   async updateSession (id: string, payload: IWorkoutSessionPayload) {
     if (payload.notes && payload.givenBy && payload.givenBy !== 'trainer') {

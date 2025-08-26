@@ -1,5 +1,6 @@
 import { ITrainer } from "../../../models/trainer.model";
 import { UploadedFile } from "express-fileupload";
+import { IUser } from "../../../models/user.model";
 export interface PaginatedTrainers {
   trainers: ITrainer[];
   total: number;
@@ -15,6 +16,13 @@ export type TrainerBasicData = {
   bio?: string;
   certifications?: string[]; 
 };
+
+export interface PaginatedClients {
+    clients: IUser[];
+    total: number;
+    page: number;
+    totalPages: number;
+}
 
 export interface ITrainerService {
   loginTrainer(email: string, password: string): Promise<{ trainer: ITrainer, accessToken: string, refreshToken: string }>
@@ -49,4 +57,12 @@ getTrainerById(id: string): Promise<ITrainer | null>;
   ): Promise<any>;
   getTrainerApplication(id: string): Promise<Partial<ITrainer> | null>;
   updateTrainerStatus(id: string, updateData: Partial<ITrainer>): Promise<ITrainer | null>;
+  addClientToTrainer(trainerId: string, userId: string): Promise<void>;
+  removeClientFromTrainer(trainerId: string, userId: string): Promise<void>;
+      getTrainerClients(
+        trainerId: string,
+        page: number,
+        limit: number,
+        search: string
+    ): Promise<PaginatedClients>;
 }

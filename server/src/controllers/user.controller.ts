@@ -201,6 +201,35 @@ export class UserController implements IUserController {
     }
   }
 
+   async getMyTrainer(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = (req.user as JwtPayload).id; 
+            const user = await this.userService.getUserById(userId);
+            const trainer = await this.trainerService.getTrainerById(user!.assignedTrainer!.toString());
+            res.status(STATUS_CODE.OK).json({ trainer });
+        } catch (error: any) {
+            console.error("Error fetching my trainer:", error);
+            res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
+        }
+    }
+
+        async cancelSubscription(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = (req.user as JwtPayload).id;
+            const user = await this.userService.getUserById(userId);
+            if (!user || !user.assignedTrainer) {
+                res.status(STATUS_CODE.BAD_REQUEST).json({ message: "No active subscription found" });
+                return;
+            }
+            await this.userService.cancelSubscription(userId, user.assignedTrainer.toString());
+            await this.trainerService.removeClientFromTrainer(user.assignedTrainer.toString(), userId);
+            res.status(STATUS_CODE.OK).json({ message: "Subscription cancelled successfully" });
+        } catch (error: any) {
+            console.error("Error cancelling subscription:", error);
+            res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
+        }
+    }
+
   async getProfile (req: Request, res: Response) {
     try {
       const jwtUser = req.user as JwtPayload

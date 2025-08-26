@@ -1,6 +1,6 @@
 import { UserModel, IUser } from '../models/user.model'
 import { IUserRepository } from '../core/interfaces/repositories/IUserRepository'
-
+import { Types } from 'mongoose'
 export class UserRepository implements IUserRepository {
   async createUser (data: Partial<IUser>) {
     return await UserModel.create(data)
@@ -79,10 +79,12 @@ export class UserRepository implements IUserRepository {
     return await UserModel.countDocuments()
   }
 
-  async updateUser (id: string, update: Partial<IUser>) {
-    await UserModel.findByIdAndUpdate(id, { $set: update })
+  async updateUser(id: string, data: Partial<IUser>) {
+    if (data.assignedTrainer) {
+      data.assignedTrainer = new Types.ObjectId(data.assignedTrainer) as any;
+    }
+    return await UserModel.findByIdAndUpdate(id, { $set: data }, { new: true }).exec();
   }
-
   async updateStatusAndIncrementVersion (
     id: string,
     updateData: Partial<IUser>

@@ -20,4 +20,10 @@ router.post("/days", authMiddleware, workoutController.createOrGetDay.bind(worko
 router.post("/days/:date/sessions", authMiddleware, workoutController.addSessionToDay.bind(workoutController)); 
 router.get("/days/:date", authMiddleware, workoutController.getDay.bind(workoutController));
 
+router.post(
+  "/trainer-create-workout-session",
+  authMiddleware,
+  roleMiddleware(["trainer"]),
+  workoutController.trainerCreateSession.bind(workoutController)
+);
 export default router;

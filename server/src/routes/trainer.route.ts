@@ -20,5 +20,6 @@ router.post('/logout', trainerController.logout.bind(trainerController));
 //general
 
 router.get('/get-details',authMiddleware,roleMiddleware(['trainer']), trainerController.getData.bind(trainerController));
-
+router.get('/get-clients', authMiddleware, roleMiddleware(['trainer']), trainerController.getClients.bind(trainerController));
+router.get('/get-client/:id', authMiddleware, roleMiddleware(['trainer']), trainerController.getClient.bind(trainerController));
 export default router;

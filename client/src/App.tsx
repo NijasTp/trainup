@@ -17,7 +17,6 @@ import HomePage from './pages/user/HomePage';
 import ForgotPasswordPage from './components/user/ForgotPassword';
 import NewPasswordPage from './components/user/NewPassword';
 import TrainerLogin from './pages/trainer/TrainerLogin';
-import TrainerDashboard from './pages/trainer/TrainerDashboard';
 import TrainerApplyPage from './pages/trainer/TrainerApply';
 import TrainerVerifyOtp from './pages/trainer/TrainerVerifyOtp';
 import TrainerForgotPassword from './pages/trainer/TrainerForgotPassword';
@@ -52,6 +51,10 @@ import TemplateManagement from './pages/admin/TemplateManagement';
 import UserProfile from './pages/user/UserProfile';
 import UserDashboard from './pages/user/UserDashboard';
 import TrainerPage from './pages/user/IndividualTrainer';
+import MyTrainerProfile from './pages/user/MyTrainer';
+import TrainerClients from './pages/trainer/TrainerDashboard';
+import TrainerUserDetails from './pages/trainer/TrainerUserDetails';
+import TrainerAddWorkoutPage from './pages/trainer/TrainerAddWorkoutPage';
 
 function App() {
   return (
@@ -71,6 +74,7 @@ function App() {
         <Route path={ROUTES.USER_VERIFY_OTP} element={<PreventLoggedIn><VerifyOtp /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_TRAINER_PAGE} element={<ProtectedRoute><Trainers /></ProtectedRoute>} />
         <Route path={ROUTES.USER_INDIVIDUAL_TRAINER} element={<ProtectedRoute><TrainerPage /></ProtectedRoute>} />
+        <Route path={ROUTES.MY_TRAINER_PROFILE} element={<ProtectedRoute><MyTrainerProfile /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WORKOUTS_PAGE} element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_WORKOUT} element={<ProtectedRoute><AddWorkoutPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_WORKOUT_SESSION} element={<ProtectedRoute><AddSessionPage /></ProtectedRoute>} />
@@ -89,7 +93,9 @@ function App() {
         <Route path={ROUTES.TRAINER_APPLY} element={<TrainerPreventLoggedIn><TrainerApplyPage /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_VERIFY_OTP} element={<TrainerPreventLoggedIn><TrainerVerifyOtp /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_WAITLIST} element={<TrainerProtectedRoute><TrainerWaitlist /></TrainerProtectedRoute>} />
-        <Route path={ROUTES.TRAINER_DASHBOARD} element={<TrainerProtectedRoute><TrainerDashboard /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_DASHBOARD} element={<TrainerProtectedRoute><TrainerClients /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_INDIVIDUAL_CLIENT} element={<TrainerProtectedRoute><TrainerUserDetails /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_CLIENT_WORKOUT} element={<TrainerProtectedRoute><TrainerAddWorkoutPage /></TrainerProtectedRoute>} />
 
         {/* Gym Routes */}
         <Route path={ROUTES.GYM_LOGIN} element={<GymAuthRedirect><GymLogin /></GymAuthRedirect>} />

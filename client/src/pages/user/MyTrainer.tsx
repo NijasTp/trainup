@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,14 +14,14 @@ import {
     Phone,
     Mail,
     ArrowLeft,
-    Calendar,
     Shield,
     AlertTriangle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { getTrainer } from "@/services/userService";
-import { toast } from "sonner";
 import API from "@/lib/axios";
+import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { formatDistanceToNow, addMonths } from "date-fns";
 
 interface Trainer {
     _id: string;
@@ -51,11 +51,10 @@ interface Trainer {
 interface User {
     _id: string;
     assignedTrainer?: string;
+    subscriptionStartDate?: string;
 }
 
-export default function TrainerPage() {
-    const params = useParams();
-    const id = params?.id as string;
+export default function MyTrainerProfile() {
     const navigate = useNavigate();
     const [trainer, setTrainer] = useState<Trainer | null>(null);
     const [user, setUser] = useState<User | null>(null);
@@ -64,20 +63,20 @@ export default function TrainerPage() {
     const [imageLoaded, setImageLoaded] = useState(false);
 
     useEffect(() => {
-        document.title = "TrainUp - Trainer Profile";
-        fetchTrainer();
+        document.title = "TrainUp - My Trainer Profile";
+        fetchMyTrainer();
         fetchUser();
-    }, [id]);
+    }, []);
 
-    const fetchTrainer = async () => {
+    const fetchMyTrainer = async () => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await getTrainer(id);
-            setTrainer(response.trainer);
+            const response = await API.get("/user/my-trainer");
+            setTrainer(response.data.trainer);
             setIsLoading(false);
         } catch (err: any) {
-            console.error("Failed to fetch trainer:", err);
+            console.error("Failed to fetch my trainer:", err);
             setError("Failed to load trainer details");
             toast.error("Failed to load trainer details");
             setIsLoading(false);
@@ -86,83 +85,12 @@ export default function TrainerPage() {
 
     const fetchUser = async () => {
         try {
-            const response = await API.get("/user/get-profile");
+            const response = await API.get("/user/me");
             setUser(response.data.user);
         } catch (err: any) {
             console.error("Failed to fetch user:", err);
             toast.error("Failed to load user data");
         }
-    };
-
-    const handleBookNow = () => {
-        const script = document.createElement("script");
-        script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.async = true;
-        document.body.appendChild(script);
-
-        script.onload = async () => {
-            try {
-                const amount = trainer?.price ? parseFloat(trainer.price) : 5000;
-                const response = await API.post("/payment/create-order", {
-                    amount,
-                    currency: "INR",
-                    receipt: `booking_${Date.now()}`,
-                });
-                const order = response.data;
-
-                const options = {
-                    key: import.meta.env.VITE_RAZORPAY_KEY,
-                    amount: order.amount,
-                    currency: order.currency,
-                    name: "TrainUp",
-                    description: `Booking for ${trainer?.name}`,
-                    image: import.meta.env.VITE_LOGO_URL || "/logo.png",
-                    order_id: order.id,
-                    handler: async (response: any) => {
-                        try {
-                            const verifyResponse = await API.post("/payment/verify-payment", {
-                                orderId: response.razorpay_order_id,
-                                paymentId: response.razorpay_payment_id,
-                                signature: response.razorpay_signature,
-                                trainerId: id,
-                            });
-                            if (verifyResponse.data.success) {
-                                toast.success("Payment successful! Booking confirmed.");
-                                navigate("/my-trainer/profile");
-                            } else {
-                                toast.error("Payment verification failed");
-                            }
-                        } catch (err: any) {
-                            console.error("Payment verification failed:", err);
-                            toast.error("Failed to verify payment");
-                        }
-                    },
-                    prefill: {
-                        name: trainer?.name || "",
-                        email: trainer?.email || "",
-                        contact: trainer?.phone || "",
-                    },
-                    theme: {
-                        color: "#176B87",
-                    },
-                };
-                const rzp = new (window as any).Razorpay(options);
-                rzp.on("payment.failed", () => {
-                    toast.error("Payment failed. Please try again.");
-                });
-                rzp.open();
-            } catch (err: any) {
-                console.error("Failed to create order:", err);
-                toast.error("Failed to initiate payment");
-            } finally {
-                document.body.removeChild(script);
-            }
-        };
-
-        script.onerror = () => {
-            toast.error("Failed to load Razorpay SDK");
-            document.body.removeChild(script);
-        };
     };
 
     const handleChat = () => {
@@ -171,6 +99,25 @@ export default function TrainerPage() {
         } else {
             toast.error("No trainer found to chat with");
         }
+    };
+
+    const handleCancelSubscription = async () => {
+        try {
+            await API.post("/user/cancel-subscription");
+            toast.success("Subscription cancelled successfully");
+            setTrainer(null);
+            setUser(null);
+        } catch (err: any) {
+            console.error("Failed to cancel subscription:", err);
+            toast.error("Failed to cancel subscription");
+        }
+    };
+
+    const getRemainingTime = () => {
+        if (!user?.subscriptionStartDate) return "Unknown";
+        const startDate = new Date(user.subscriptionStartDate);
+        const endDate = addMonths(startDate, 1);
+        return formatDistanceToNow(endDate, { addSuffix: true });
     };
 
     if (isLoading) {
@@ -182,7 +129,7 @@ export default function TrainerPage() {
                         <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
                         <div className="absolute inset-0 w-16 h-16 border-2 border-transparent border-t-accent rounded-full animate-pulse"></div>
                     </div>
-                    <p className="text-muted-foreground font-medium text-lg">Loading trainer profile...</p>
+                    <p className="text-muted-foreground font-medium text-lg">Loading your trainer profile...</p>
                 </div>
             </div>
         );
@@ -196,12 +143,12 @@ export default function TrainerPage() {
                     <div className="w-24 h-24 mx-auto bg-muted/30 rounded-full flex items-center justify-center mb-6">
                         <Users className="h-10 w-10 text-muted-foreground/50" />
                     </div>
-                    <h3 className="text-2xl font-bold text-foreground">Trainer Not Found</h3>
-                    <p className="text-muted-foreground text-lg">{error || "The trainer you're looking for doesn't exist"}</p>
+                    <h3 className="text-2xl font-bold text-foreground">No Trainer Hired</h3>
+                    <p className="text-muted-foreground text-lg">{error || "You haven't hired a trainer yet"}</p>
                     <Link to="/trainers">
                         <Button className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300">
                             <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to Trainers
+                            Find a Trainer
                         </Button>
                     </Link>
                 </div>
@@ -209,34 +156,16 @@ export default function TrainerPage() {
         );
     }
 
-    const isSameTrainer = user?.assignedTrainer === id;
-    const hasTrainer = !!user?.assignedTrainer;
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
-            {hasTrainer && (
-                <div className="relative bg-yellow-500/10 border-b border-yellow-500/20 py-4 px-6 text-center">
-                    <div className="container mx-auto flex items-center justify-center gap-2 text-yellow-600">
-                        <AlertTriangle className="h-5 w-5" />
-                        <span className="font-medium">
-                            You already have a trainer assigned.{" "}
-                            <Link to="/my-trainer/profile" className="underline hover:text-yellow-700">
-                                View your trainer's profile
-                            </Link>{" "}
-                            or cancel your current subscription to book a new trainer.
-                        </span>
-                    </div>
-                </div>
-            )}
-
             <div className="relative border-b border-border/50 bg-card/20 backdrop-blur-sm">
                 <div className="container mx-auto px-4 py-6">
-                    <Link to="/trainers">
+                    <Link to="/dashboard">
                         <Button variant="ghost" className="group hover:bg-primary/5 transition-all duration-300">
                             <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                            Back to Trainers
+                            Back to Dashboard
                         </Button>
                     </Link>
                 </div>
@@ -281,7 +210,7 @@ export default function TrainerPage() {
                                     <div className="space-y-4">
                                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
                                             <Award className="h-4 w-4 text-primary" />
-                                            <span className="text-sm font-medium text-primary">Professional Trainer</span>
+                                            <span className="text-sm font-medium text-primary">Your Trainer</span>
                                         </div>
 
                                         <div className="space-y-3">
@@ -323,34 +252,6 @@ export default function TrainerPage() {
                                     </div>
 
                                     <div className="flex flex-wrap gap-4 pt-4">
-                                        {isSameTrainer ? (
-                                            <Button
-                                                disabled
-                                                size="lg"
-                                                className="bg-gray-500/50 cursor-not-allowed font-semibold px-8"
-                                            >
-                                                <Calendar className="h-5 w-5 mr-2" />
-                                                This is already your trainer
-                                            </Button>
-                                        ) : hasTrainer ? (
-                                            <Button
-                                                disabled
-                                                size="lg"
-                                                className="bg-gray-500/50 cursor-not-allowed font-semibold px-8"
-                                            >
-                                                <Calendar className="h-5 w-5 mr-2" />
-                                                You already have a trainer
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                onClick={handleBookNow}
-                                                size="lg"
-                                                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-8"
-                                            >
-                                                <Calendar className="h-5 w-5 mr-2" />
-                                                Book Session
-                                            </Button>
-                                        )}
                                         <Button
                                             variant="outline"
                                             size="lg"
@@ -358,28 +259,39 @@ export default function TrainerPage() {
                                             onClick={handleChat}
                                         >
                                             <MessageSquare className="h-5 w-5 mr-2" />
-                                            Message
+                                            Chat with Trainer
                                         </Button>
-                                        {isSameTrainer && (
-                                            <Link to="/my-trainer/profile">
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
                                                 <Button
-                                                    variant="outline"
+                                                    variant="destructive"
                                                     size="lg"
-                                                    className="border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300 font-medium px-8 bg-transparent"
+                                                    className="bg-red-500/90 hover:bg-red-600/90 transition-all duration-300 font-medium px-8"
                                                 >
-                                                    Go to Trainer Profile
+                                                    <AlertTriangle className="h-5 w-5 mr-2" />
+                                                    Cancel Subscription
                                                 </Button>
-                                            </Link>
-                                        )}
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent className="bg-card/90 backdrop-blur-sm border-border/50">
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle className="text-foreground">Confirm Subscription Cancellation</AlertDialogTitle>
+                                                    <AlertDialogDescription className="text-muted-foreground">
+                                                        Your subscription with {trainer.name} has {getRemainingTime()} remaining this month. 
+                                                        Cancelling now means you will lose the payment for the current period. Are you sure you want to proceed?
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel className="border-border/50 hover:bg-muted/50">Keep Subscription</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        className="bg-red-500/90 hover:bg-red-600/90"
+                                                        onClick={handleCancelSubscription}
+                                                    >
+                                                        Cancel Subscription
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </div>
-                                    {hasTrainer && !isSameTrainer && (
-                                        <p className="text-sm text-yellow-600 mt-2">
-                                            You already have a trainer assigned. Please cancel your current subscription to book this trainer.
-                                            <Link to="/my-trainer/profile" className="underline ml-1">
-                                                View your trainer's profile
-                                            </Link>
-                                        </p>
-                                    )}
                                 </div>
                             </div>
                         </CardHeader>
@@ -447,31 +359,6 @@ export default function TrainerPage() {
                                     <div className="text-3xl font-bold text-primary mb-2">{trainer.price || "₹5,000"}</div>
                                     <p className="text-muted-foreground">per month</p>
                                 </div>
-                                {isSameTrainer ? (
-                                    <Button
-                                        disabled
-                                        className="w-full bg-gray-500/50 cursor-not-allowed font-semibold"
-                                        size="lg"
-                                    >
-                                        This is already your trainer
-                                    </Button>
-                                ) : hasTrainer ? (
-                                    <Button
-                                        disabled
-                                        className="w-full bg-gray-500/50 cursor-not-allowed font-semibold"
-                                        size="lg"
-                                    >
-                                        You already have a trainer
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        onClick={handleBookNow}
-                                        className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
-                                        size="lg"
-                                    >
-                                        Book Now
-                                    </Button>
-                                )}
                             </CardContent>
                         </Card>
 
