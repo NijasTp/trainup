@@ -250,7 +250,7 @@ export class AdminController {
   logout (req: Request, res: Response) {
     try {
       this._JwtService.clearTokens(res)
-      let jwtUser = req.user as JwtPayload
+      const jwtUser = req.user as JwtPayload
       this._adminService.updateTokenVersion(jwtUser.id)
       res.status(STATUS_CODE.OK).json({ message: 'Logged out successfully' })
     } catch (error: any) {

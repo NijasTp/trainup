@@ -12,8 +12,8 @@ import { IUserService } from '../core/interfaces/services/IUserService'
 @injectable()
 export class TrainerController {
   constructor (
-    @inject(TYPES.ITrainerService) private trainerService: ITrainerService,
-    @inject(TYPES.IJwtService) private JwtService: IJwtService,
+    @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
+    @inject(TYPES.IJwtService) private _JwtService: IJwtService,
     @inject(TYPES.IOtpService) private otpService: IOTPService,
     @inject(TYPES.IUserService) private userService: IUserService
   ) {}
@@ -21,8 +21,8 @@ export class TrainerController {
     const { email, password } = req.body
     try {
       const { trainer, accessToken, refreshToken } =
-        await this.trainerService.loginTrainer(email, password)
-      this.JwtService.setTokens(res, accessToken, refreshToken)
+        await this._trainerService.loginTrainer(email, password)
+      this._JwtService.setTokens(res, accessToken, refreshToken)
       res.status(STATUS_CODE.OK).json({ trainer })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -33,7 +33,7 @@ export class TrainerController {
   forgotPassword = async (req: Request, res: Response) => {
     try {
       const { email } = req.body
-      await this.trainerService.forgotPassword(email)
+      await this._trainerService.forgotPassword(email)
       res.json({ message: 'OTP sent to email' })
     } catch (err: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
@@ -76,7 +76,7 @@ export class TrainerController {
   resetPassword = async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body
-      await this.trainerService.resetPassword(email, password)
+      await this._trainerService.resetPassword(email, password)
       res.json({ message: 'Password reset successfully' })
     } catch (err: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
@@ -131,8 +131,8 @@ export class TrainerController {
       }
 
       const { trainer, accessToken, refreshToken } =
-        await this.trainerService.applyAsTrainer(trainerData)
-      this.JwtService.setTokens(res, accessToken, refreshToken)
+        await this._trainerService.applyAsTrainer(trainerData)
+      this._JwtService.setTokens(res, accessToken, refreshToken)
       res.status(STATUS_CODE.CREATED).json({
         message: 'Application submitted successfully',
         trainer
@@ -153,7 +153,7 @@ export class TrainerController {
           .json({ error: 'Invalid trainer ID' })
         return
       }
-      const trainer = await this.trainerService.getTrainerById(id)
+      const trainer = await this._trainerService.getTrainerById(id)
       res.status(STATUS_CODE.OK).json({ trainer })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -170,7 +170,7 @@ export class TrainerController {
         return
       }
       const { page = 1, limit = 10, search = '' } = req.query
-      const clients = await this.trainerService.getTrainerClients(
+      const clients = await this._trainerService.getTrainerClients(
         trainerId,
         parseInt(page as string),
         parseInt(limit as string),
@@ -194,7 +194,7 @@ export class TrainerController {
 
   async logout (req: Request, res: Response) {
     try {
-      this.JwtService.clearTokens(res)
+      this._JwtService.clearTokens(res)
       res.status(STATUS_CODE.OK).json({ message: 'Logged out successfully' })
       return
     } catch (error) {

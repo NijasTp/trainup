@@ -10,15 +10,15 @@ import { JwtPayload } from "../core/interfaces/services/IJwtService";
 @injectable()
 export class PaymentController {
     constructor(
-        @inject(TYPES.IPaymentService) private paymentService: IPaymentService,
-        @inject(TYPES.IUserService) private userService: IUserService,
-        @inject(TYPES.ITrainerService) private trainerService: ITrainerService
+        @inject(TYPES.IPaymentService) private _paymentService: IPaymentService,
+        @inject(TYPES.IUserService) private _userService: IUserService,
+        @inject(TYPES.ITrainerService) private _trainerService: ITrainerService
     ) {}
 
     async createOrder(req: Request, res: Response): Promise<void> {
         try {
             const { amount, currency, receipt } = req.body;
-            const order = await this.paymentService.createOrder(amount, currency, receipt);
+            const order = await this._paymentService.createOrder(amount, currency, receipt);
             res.status(STATUS_CODE.OK).json(order);
         } catch (error: any) {
             res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
@@ -36,7 +36,7 @@ export class PaymentController {
                     return
             }
 
-            const isValid = await this.paymentService.verifyPayment(orderId, paymentId, signature);
+            const isValid = await this._paymentService.verifyPayment(orderId, paymentId, signature);
             if (!isValid) {
                  res
                     .status(STATUS_CODE.BAD_REQUEST)
@@ -45,7 +45,7 @@ export class PaymentController {
             }
 
             // Validate trainer exists
-            const trainer = await this.trainerService.getTrainerById(trainerId);
+            const trainer = await this._trainerService.getTrainerById(trainerId);
             if (!trainer) {
                  res
                     .status(STATUS_CODE.BAD_REQUEST)
@@ -54,7 +54,7 @@ export class PaymentController {
             }
 
             // Check if user has a trainer
-            const user = await this.userService.getUserById(userId);
+            const user = await this._userService.getUserById(userId);
             if (user?.assignedTrainer) {
                  res
                     .status(STATUS_CODE.BAD_REQUEST)
@@ -63,8 +63,8 @@ export class PaymentController {
             }
 
             // Update user and trainer
-            await this.userService.updateUserTrainerId(userId, trainerId);
-            await this.trainerService.addClientToTrainer(trainerId, userId);
+            await this._userService.updateUserTrainerId(userId, trainerId);
+            await this._trainerService.addClientToTrainer(trainerId, userId);
 
             res.status(STATUS_CODE.OK).json({
                 success: true,

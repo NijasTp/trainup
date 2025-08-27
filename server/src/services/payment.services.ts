@@ -6,17 +6,17 @@ import dotenv from 'dotenv'
 dotenv.config()
 @injectable()
 export class PaymentService implements IPaymentService {
-  private razorpay: Razorpay
+  private _razorpay: Razorpay
 
   constructor () {
-    this.razorpay = new Razorpay({
+    this._razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID!,
       key_secret: process.env.RAZORPAY_KEY_SECRET!
     })
   }
 
   async createOrder (amount: number, currency: string, receipt?: string) {
-    return await this.razorpay.orders.create({
+    return await this._razorpay.orders.create({
       amount: amount * 100,
       currency,
       receipt: receipt || `receipt_${Date.now()}`

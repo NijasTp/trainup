@@ -19,6 +19,7 @@ router
 router.post("/days", authMiddleware, workoutController.createOrGetDay.bind(workoutController)); 
 router.post("/days/:date/sessions", authMiddleware, workoutController.addSessionToDay.bind(workoutController)); 
 router.get("/days/:date", authMiddleware, workoutController.getDay.bind(workoutController));
+router.get("/trainer-get-days/:date", authMiddleware, workoutController.trainerGetDay.bind(workoutController));
 
 router.post(
   "/trainer-create-workout-session",

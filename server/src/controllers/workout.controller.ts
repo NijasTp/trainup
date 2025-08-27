@@ -9,7 +9,7 @@ import { JwtPayload } from '../core/interfaces/services/IJwtService'
 @injectable()
 export class WorkoutController {
   constructor (
-    @inject(TYPES.WorkoutService) private workoutService: IWorkoutService
+    @inject(TYPES.WorkoutService) private _workoutService: IWorkoutService
   ) {}
 
   createSession = async (req: Request, res: Response) => {
@@ -17,7 +17,7 @@ export class WorkoutController {
       const jwtUser = req.user as JwtPayload | undefined
       const payload = req.body
 
-      const created = await this.workoutService.createSession({
+      const created = await this._workoutService.createSession({
         ...payload,
         userId: jwtUser?.role === 'user' ? jwtUser.id : undefined,
         trainerId: jwtUser?.role === 'trainer' ? jwtUser.id : undefined,
@@ -33,7 +33,7 @@ export class WorkoutController {
   getSession = async (req: Request, res: Response) => {
     try {
       const id = req.params.id
-      const session = await this.workoutService.getSession(id)
+      const session = await this._workoutService.getSession(id)
       res.status(STATUS_CODE.OK).json(session)
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -43,7 +43,7 @@ export class WorkoutController {
   updateSession = async (req: Request, res: Response) => {
     try {
       const id = req.params.id
-      const updated = await this.workoutService.updateSession(id, req.body)
+      const updated = await this._workoutService.updateSession(id, req.body)
       res.status(STATUS_CODE.CREATED).json(updated)
     } catch (err: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
@@ -52,7 +52,7 @@ export class WorkoutController {
 
   deleteSession = async (req: Request, res: Response) => {
     try {
-      await this.workoutService.deleteSession(req.params.id)
+      await this._workoutService.deleteSession(req.params.id)
       res.status(STATUS_CODE.NO_CONTENT).end()
     } catch (err: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
@@ -65,7 +65,7 @@ export class WorkoutController {
       const userId = jwtUser!.id
 
       const { date } = req.body
-      const day = await this.workoutService.createDay(userId, date)
+      const day = await this._workoutService.createDay(userId, date)
 
       res.status(STATUS_CODE.OK).json(day)
     } catch (err: any) {
@@ -80,7 +80,7 @@ export class WorkoutController {
 
       const { date } = req.params
       const { sessionId } = req.body
-      const day = await this.workoutService.addSessionToDay(
+      const day = await this._workoutService.addSessionToDay(
         userId,
         date,
         sessionId
@@ -104,7 +104,7 @@ export class WorkoutController {
          res.status(STATUS_CODE.BAD_REQUEST).json({ error: 'Missing required fields' });
          return
       }
-      const session = await this.workoutService.trainerCreateSession(jwtUser.id, clientId, {
+      const session = await this._workoutService.trainerCreateSession(jwtUser.id, clientId, {
         name,
         date,
         time,
@@ -123,7 +123,21 @@ export class WorkoutController {
       const userId = jwtUser!.id
 
       const date = req.params.date
-      const day = await this.workoutService.getDay(userId, date)
+      const day = await this._workoutService.getDay(userId, date)
+
+      if (!day) {
+        res.status(STATUS_CODE.NOT_FOUND).json({ error: 'Not found' })
+      }
+      res.status(STATUS_CODE.OK).json(day)
+    } catch (err: any) {
+      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
+    }
+  }
+  trainerGetDay = async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.clientId as string
+      const date = req.params.date
+      const day = await this._workoutService.getDay(userId, date)
 
       if (!day) {
         res.status(STATUS_CODE.NOT_FOUND).json({ error: 'Not found' })

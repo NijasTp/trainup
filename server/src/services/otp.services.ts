@@ -11,12 +11,12 @@ import { ITrainerRepository } from "../core/interfaces/repositories/ITrainerRepo
 @injectable()
 export class OtpService implements IOTPService {
   constructor(
-    @inject(TYPES.IUserRepository) private userRepo: IUserRepository,
-    @inject(TYPES.ITrainerRepository) private trainerRepo: ITrainerRepository,
-    @inject(TYPES.IGymRepository) private gymRepo: IGymRepository,
-    @inject(TYPES.IAdminRepository) private adminRepo: IUserRepository,
-    @inject(TYPES.IOtpRepository) private otpRepo: IOtpRepository,
-    @inject(TYPES.IMailService) private mailService: IMailService
+    @inject(TYPES.IUserRepository) private _userRepo: IUserRepository,
+    @inject(TYPES.ITrainerRepository) private _trainerRepo: ITrainerRepository,
+    @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository,
+    @inject(TYPES.IAdminRepository) private _adminRepo: IUserRepository,
+    @inject(TYPES.IOtpRepository) private _otpRepo: IOtpRepository,
+    @inject(TYPES.IMailService) private _mailService: IMailService
   ) { }
 
   private generateOtp() {
@@ -26,13 +26,13 @@ export class OtpService implements IOTPService {
   private getRepoByRole(role: 'user' | 'trainer' | 'gym' | 'admin') {
   switch (role) {
     case 'user':
-      return this.userRepo;
+      return this._userRepo;
     case 'trainer':
-      return this.trainerRepo;
+      return this._trainerRepo;
     case 'gym':
-      return this.gymRepo;
+      return this._gymRepo;
     case 'admin':
-      return this.adminRepo;
+      return this._adminRepo;
     default:
       throw new Error("Invalid role");
   }
@@ -49,8 +49,8 @@ async requestOtp(email: string, role: 'user' | 'trainer' | 'gym' | 'admin') {
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
   console.log(`OTP sent to ${email}: ${otp}`);
-  await this.otpRepo.saveOtp(email, otp, expiresAt);
-  await this.mailService.sendMail(
+  await this._otpRepo.saveOtp(email, otp, expiresAt);
+  await this._mailService.sendMail(
     email,
     "Your OTP Code",
     sendOtpHtml(otp)
@@ -70,8 +70,8 @@ async requestForgotPasswordOtp(email: string, role: 'user' | 'trainer' | 'gym' |
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
   console.log(`OTP sent to ${email}: ${otp}`);
-  await this.otpRepo.saveOtp(email, otp, expiresAt);
-  await this.mailService.sendMail(
+  await this._otpRepo.saveOtp(email, otp, expiresAt);
+  await this._mailService.sendMail(
     email,
     "Trainup Forgot Password OTP Verification",
     sendOtpHtml(otp)
@@ -81,16 +81,16 @@ async requestForgotPasswordOtp(email: string, role: 'user' | 'trainer' | 'gym' |
 }
 
   async verifyOtp(email: string, otp: string) {
-    const record = await this.otpRepo.findOtpByEmail(email);
+    const record = await this._otpRepo.findOtpByEmail(email);
     if (!record) throw new Error("No OTP requested for this email");
     if (record.expiresAt < new Date()) throw new Error("OTP expired");
     if (record.otp !== otp) throw new Error("Invalid OTP");
 
-    await this.otpRepo.deleteOtp(record._id.toString());
+    await this._otpRepo.deleteOtp(record._id.toString());
     return true;
   }
 
   async clearOtp(email:string){
-    await this.otpRepo.deleteOtp(email)
+    await this._otpRepo.deleteOtp(email)
   }
 }

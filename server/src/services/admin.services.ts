@@ -9,12 +9,12 @@ import { IJwtService } from '../core/interfaces/services/IJwtService'
 @injectable()
 export class AdminService implements IAdminService {
   constructor (
-    @inject(TYPES.IAdminRepository) private adminRepository: IAdminRepository,
-    @inject(TYPES.IJwtService) private jwtService: IJwtService
+    @inject(TYPES.IAdminRepository) private _adminRepository: IAdminRepository,
+    @inject(TYPES.IJwtService) private _jwtService: IJwtService
   ) {}
 
   async login (email: string, password: string) {
-    const admin = await this.adminRepository.findByEmail(email)
+    const admin = await this._adminRepository.findByEmail(email)
     if (!admin) throw new Error('Invalid credentials')
 
     const isMatch = await bcrypt.compare(password, admin.password)
@@ -22,12 +22,12 @@ export class AdminService implements IAdminService {
 
     const adminId = admin._id as string
 
-    const accessToken = this.jwtService.generateAccessToken(
+    const accessToken = this._jwtService.generateAccessToken(
       adminId,
       admin.role,
       admin.tokenVersion ?? 0
     )
-    const refreshToken = this.jwtService.generateRefreshToken(
+    const refreshToken = this._jwtService.generateRefreshToken(
       adminId,
       admin.role,
       admin.tokenVersion ?? 0
@@ -46,13 +46,13 @@ export class AdminService implements IAdminService {
   }
 
   async updateTokenVersion (adminId: string): Promise<void> {
-    const admin = await this.adminRepository.findById(adminId)
+    const admin = await this._adminRepository.findById(adminId)
     if (!admin) {
       throw new Error('Admin not found')
     }
     
     const newTokenVersion = (admin.tokenVersion || 0) + 1
-    await this.adminRepository.updateById(adminId, {
+    await this._adminRepository.updateById(adminId, {
       tokenVersion: newTokenVersion
     })
   }

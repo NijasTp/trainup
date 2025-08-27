@@ -14,30 +14,30 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecret'
 export class UserService implements IUserService {
   private googleClient: OAuth2Client
   constructor (
-    @inject(TYPES.IUserRepository) private userRepo: IUserRepository,
-    @inject(TYPES.IJwtService) private jwtService: IJwtService
+    @inject(TYPES.IUserRepository) private _userRepo: IUserRepository,
+    @inject(TYPES.IJwtService) private _jwtService: IJwtService
   ) {
-    this.userRepo = userRepo
+    this._userRepo = _userRepo
     this.googleClient = new OAuth2Client(GOOGLE_CLIENT_ID)
   }
 
   public async registerUser (name: string, email: string, password: string) {
-    const existingUser = await this.userRepo.findByEmail(email)
+    const existingUser = await this._userRepo.findByEmail(email)
     if (existingUser) throw new Error('User already exists')
 
     const hashed = await bcrypt.hash(password, 10)
-    const user = await this.userRepo.createUser({
+    const user = await this._userRepo.createUser({
       name,
       email,
       password: hashed
     })
 
-    const accessToken = this.jwtService.generateAccessToken(
+    const accessToken = this._jwtService.generateAccessToken(
       user._id.toString(),
       user.role,
       user.tokenVersion ?? 0
     )
-    const refreshToken = this.jwtService.generateRefreshToken(
+    const refreshToken = this._jwtService.generateRefreshToken(
       user._id.toString(),
       user.role,
       user.tokenVersion ?? 0
@@ -47,11 +47,11 @@ export class UserService implements IUserService {
   }
 
   async checkUsername (username: string) {
-    return (await this.userRepo.checkUsername(username)) ? true : false
+    return (await this._userRepo.checkUsername(username)) ? true : false
   }
 
   public async resetPassword (email: string, newPassword: string) {
-    const user = await this.userRepo.findByEmail(email)
+    const user = await this._userRepo.findByEmail(email)
     if (!user) {
       throw new Error('User not found')
     }
@@ -59,13 +59,13 @@ export class UserService implements IUserService {
     const hashedPassword = await bcrypt.hash(newPassword, 10)
     user.password = hashedPassword
 
-    await this.userRepo.updateUser(user._id.toString(), {
+    await this._userRepo.updateUser(user._id.toString(), {
       password: hashedPassword
     })
   }
 
   public async loginUser (email: string, password: string) {
-    const user = await this.userRepo.findByEmail(email)
+    const user = await this._userRepo.findByEmail(email)
 
     if (!user) throw new Error('User not found')
     if (!user.password) throw new Error('User has no password')
@@ -74,12 +74,12 @@ export class UserService implements IUserService {
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) throw new Error('Invalid password')
 
-    const accessToken = this.jwtService.generateAccessToken(
+    const accessToken = this._jwtService.generateAccessToken(
       user._id.toString(),
       user.role,
       user.tokenVersion ?? 0
     )
-    const refreshToken = this.jwtService.generateRefreshToken(
+    const refreshToken = this._jwtService.generateRefreshToken(
       user._id.toString(),
       user.role,
       user.tokenVersion ?? 0
@@ -104,13 +104,13 @@ export class UserService implements IUserService {
     if (!googleId || !email) {
       throw new Error('Google token missing required fields')
     }
-    let user = await this.userRepo.findByGoogleId(googleId)
+    let user = await this._userRepo.findByGoogleId(googleId)
     if (!user) {
-      user = await this.userRepo.findByEmail(email)
+      user = await this._userRepo.findByEmail(email)
     }
 
     if (!user) {
-      user = await this.userRepo.createUser({
+      user = await this._userRepo.createUser({
         googleId,
         email,
         name
@@ -119,12 +119,12 @@ export class UserService implements IUserService {
       throw new Error('User is not linked to Google')
     }
 
-    const accessToken = this.jwtService.generateAccessToken(
+    const accessToken = this._jwtService.generateAccessToken(
       user._id.toString(),
       user.role,
       user.tokenVersion ?? 0
     )
-    const refreshToken = this.jwtService.generateRefreshToken(
+    const refreshToken = this._jwtService.generateRefreshToken(
       user._id.toString(),
       user.role,
       user.tokenVersion ?? 0
@@ -141,7 +141,7 @@ export class UserService implements IUserService {
     startDate?: string,
     endDate?: string
   ) {
-    return await this.userRepo.findUsers(
+    return await this._userRepo.findUsers(
       page,
       limit,
       search,
@@ -152,36 +152,37 @@ export class UserService implements IUserService {
     )
   }
   async getUserById (id: string) {
-    return await this.userRepo.findById(id)
+    return await this._userRepo.findById(id)
   }
 
   async incrementTokenVersion (id: string) {
-    return await this.userRepo.updateStatusAndIncrementVersion(id, {})
+    return await this._userRepo.updateStatusAndIncrementVersion(id, {})
   }
 
   async getProfile (id: string) {
-    return await this.userRepo.findById(id)
+    return await this._userRepo.findById(id)
   }
 
   async updateUserStatus (id: string, updateData: Partial<IUser>) {
     if (updateData.isBanned !== undefined) {
-      return await this.userRepo.updateStatusAndIncrementVersion(id, {
+      return await this._userRepo.updateStatusAndIncrementVersion(id, {
         isBanned: updateData.isBanned
       })
     }
 
-    return await this.userRepo.updateStatus(id, updateData)
+    return await this._userRepo.updateStatus(id, updateData)
   }
 
   async updateUserTrainerId (userId: string, trainerId: string): Promise<void> {
-    await this.userRepo.updateUser(userId, {
+    await this._userRepo.updateUser(userId, {
       assignedTrainer: trainerId,
       subscriptionStartDate: new Date()
     })
   }
   
   async cancelSubscription (userId: string, trainerId: string): Promise<void> {
-    await this.userRepo.updateUser(userId, {
+    if (!trainerId) return
+    await this._userRepo.updateUser(userId, {
       assignedTrainer: null,
       subscriptionStartDate: null
     })

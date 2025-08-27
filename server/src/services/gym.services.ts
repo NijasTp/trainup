@@ -11,8 +11,8 @@ import { IJwtService } from "../core/interfaces/services/IJwtService";
 @injectable()
 export class GymService implements IGymService {
   constructor(
-    @inject(TYPES.IGymRepository) private gymRepo: IGymRepository,
-    @inject(TYPES.IJwtService) private jwtService: IJwtService
+    @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository,
+    @inject(TYPES.IJwtService) private _jwtService: IJwtService
   ) { }
 
   async registerGym(
@@ -62,7 +62,7 @@ export class GymService implements IGymService {
       results.forEach((res) => imageUrls.push(res.secure_url));
     }
 
-    const gym = await this.gymRepo.createGym({
+    const gym = await this._gymRepo.createGym({
       ...data,
       password: hashedPassword,
       certificate: certificateUrl,
@@ -71,12 +71,12 @@ export class GymService implements IGymService {
     });
 
     // Generate tokens
-    const accessToken = this.jwtService.generateAccessToken(
+    const accessToken = this._jwtService.generateAccessToken(
       gym._id.toString(),
       gym.role,
       gym.tokenVersion?? 0
     );
-    const refreshToken = this.jwtService.generateRefreshToken(
+    const refreshToken = this._jwtService.generateRefreshToken(
       gym._id.toString(),
       gym.role,
       gym.tokenVersion ?? 0
@@ -86,22 +86,22 @@ export class GymService implements IGymService {
   }
 
     async getAllGyms(page: number, limit: number, searchQuery: string) {
-    return await this.gymRepo.findGyms(page, limit, searchQuery);
+    return await this._gymRepo.findGyms(page, limit, searchQuery);
   }
 
   async updateGymStatus(id: string, updateData: Partial<IGym>) {
-    return await this.gymRepo.updateStatus(id, updateData);
+    return await this._gymRepo.updateStatus(id, updateData);
   }
 
   async getGymById(id: string) {
-    return await this.gymRepo.findById(id);
+    return await this._gymRepo.findById(id);
   }
 
   async getGymData(gymId: string) {
-    const gymDetails = await this.gymRepo.getGymById(gymId);
-    const trainers = await this.gymRepo.getGymTrainers(gymId);
-    const members = await this.gymRepo.getGymMembers(gymId);
-    const announcements = await this.gymRepo.getGymAnnouncements(gymId);
+    const gymDetails = await this._gymRepo.getGymById(gymId);
+    const trainers = await this._gymRepo.getGymTrainers(gymId);
+    const members = await this._gymRepo.getGymMembers(gymId);
+    const announcements = await this._gymRepo.getGymAnnouncements(gymId);
 
     return {
       gymDetails,
@@ -111,25 +111,25 @@ export class GymService implements IGymService {
     };
   }
   async getGymApplication(id: string) {
-  return await this.gymRepo.findApplicationById(id);
+  return await this._gymRepo.findApplicationById(id);
 }
 
   async loginGym(email: string, password: string) {
-    const gym = await this.gymRepo.findByEmail(email);
+    const gym = await this._gymRepo.findByEmail(email);
     if (!gym) throw new Error("Gym not found");
     if (gym.verifyStatus === 'rejected') throw new Error(`Gym verification was rejected: ${gym.rejectReason}`);
     const valid = await bcrypt.compare(password, gym.password!);
     if (!valid) throw new Error("Invalid credentials");
-    const accessToken = this.jwtService.generateAccessToken(gym._id.toString(), gym.role, gym.tokenVersion?? 0);
-    const refreshToken = this.jwtService.generateRefreshToken(gym._id.toString(), gym.role, gym.tokenVersion?? 0);
+    const accessToken = this._jwtService.generateAccessToken(gym._id.toString(), gym.role, gym.tokenVersion?? 0);
+    const refreshToken = this._jwtService.generateRefreshToken(gym._id.toString(), gym.role, gym.tokenVersion?? 0);
     return { gym, accessToken, refreshToken };
   }
 
   async getProfile(id: string) {
-    return this.gymRepo.findById(id);
+    return this._gymRepo.findById(id);
   }
 
   async updateProfile(id: string, data: Partial<IGym>) {
-    return this.gymRepo.updateGym(id, data);
+    return this._gymRepo.updateGym(id, data);
   }
 }

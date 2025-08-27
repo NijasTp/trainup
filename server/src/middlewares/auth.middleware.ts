@@ -8,6 +8,7 @@ import { ITrainerRepository } from "../core/interfaces/repositories/ITrainerRepo
 import { IAdminRepository } from "../core/interfaces/repositories/IAdminRepository";
 import { IGymRepository } from "../core/interfaces/repositories/IGymRepository";
 import TYPES from "../core/types/types";
+import { ROLE } from "../constants/role";
 
 export const roleMiddleware = (allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -54,10 +55,10 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
 
     let account: any;
     switch (decoded.role) {
-      case "user": account = await userRepo.findById(decoded.id); break;
-      case "trainer": account = await trainerRepo.findById(decoded.id); break;
-      case "admin": account = await adminRepo.findById(decoded.id); break;
-      case "gym": account = await gymRepo.findById(decoded.id); break;
+      case ROLE.USER: account = await userRepo.findById(decoded.id); break;
+      case ROLE.TRAINER: account = await trainerRepo.findById(decoded.id); break;
+      case ROLE.ADMIN: account = await adminRepo.findById(decoded.id); break;
+      case ROLE.GYM: account = await gymRepo.findById(decoded.id); break;
     }
 
     if (!account || decoded.tokenVersion !== account.tokenVersion) {

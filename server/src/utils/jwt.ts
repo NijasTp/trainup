@@ -23,14 +23,14 @@ export class JwtService implements IJwtService {
     return jwt.sign({ id, role, tokenVersion }, JWT_REFRESH_SECRET, { expiresIn: "7d" });
   }
 
-  static verifyToken(token: string): any {
+  static verifyToken(token: string) {
     if (!JWT_SECRET) {
       throw new Error('JWT SECRET is not defined in environment variables.');
     }
     return jwt.verify(token, JWT_SECRET);
   }
   
-  verifyRefreshToken(token: string): any {
+  verifyRefreshToken(token: string) {
     if (!JWT_REFRESH_SECRET) {
       throw new Error('JWT REFRESH SECRET is not defined in environment variables.');
     }

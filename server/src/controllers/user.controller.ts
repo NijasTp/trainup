@@ -18,16 +18,16 @@ import { ITrainerService } from '../core/interfaces/services/ITrainerService'
 @injectable()
 export class UserController implements IUserController {
   constructor (
-    @inject(TYPES.IUserService) private userService: IUserService,
-    @inject(TYPES.IOtpService) private otpService: IOTPService,
-    @inject(TYPES.ITrainerService) private trainerService: ITrainerService,
-    @inject(TYPES.IJwtService) private jwtService: IJwtService
+    @inject(TYPES.IUserService) private _userService: IUserService,
+    @inject(TYPES.IOtpService) private _otpService: IOTPService,
+    @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
+    @inject(TYPES.IJwtService) private _jwtService: IJwtService
   ) {}
 
   requestOtp = async (req: Request, res: Response) => {
     const { email } = req.body
     try {
-      await this.otpService.requestOtp(email, 'user')
+      await this._otpService.requestOtp(email, 'user')
       res.status(STATUS_CODE.OK).json({ message: 'OTP sent to email' })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -38,11 +38,11 @@ export class UserController implements IUserController {
   verifyOtp = async (req: Request, res: Response) => {
     const { email, otp, name, password } = req.body
     try {
-      await this.otpService.verifyOtp(email, otp)
+      await this._otpService.verifyOtp(email, otp)
       const { user, accessToken, refreshToken } =
-        await this.userService.registerUser(name, email, password)
+        await this._userService.registerUser(name, email, password)
       // Set cookies
-      this.jwtService.setTokens(res, accessToken, refreshToken)
+      this._jwtService.setTokens(res, accessToken, refreshToken)
       res.status(STATUS_CODE.CREATED).json({ user })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -52,7 +52,7 @@ export class UserController implements IUserController {
 
   async checkUsername (req: Request, res: Response) {
     try {
-      const isAvailable = await this.userService.checkUsername(
+      const isAvailable = await this._userService.checkUsername(
         req.body.username
       )
       res.status(STATUS_CODE.OK).json({isAvailable})
@@ -64,7 +64,7 @@ export class UserController implements IUserController {
   forgotPassword = async (req: Request, res: Response) => {
     const { email } = req.body
     try {
-      await this.otpService.requestForgotPasswordOtp(email, 'user')
+      await this._otpService.requestForgotPasswordOtp(email, 'user')
       res.status(STATUS_CODE.OK).json({ message: 'OTP Successfully Sent' })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -74,7 +74,7 @@ export class UserController implements IUserController {
   verifyForgotPasswordOtp = async (req: Request, res: Response) => {
     const { email, otp } = req.body
     try {
-      await this.otpService.verifyOtp(email, otp)
+      await this._otpService.verifyOtp(email, otp)
       res
         .status(STATUS_CODE.OK)
         .json({ message: 'OTP verified. You can now reset your password.' })
@@ -86,7 +86,7 @@ export class UserController implements IUserController {
   resetPassword = async (req: Request, res: Response) => {
     const { email, newPassword } = req.body
     try {
-      await this.userService.resetPassword(email, newPassword)
+      await this._userService.resetPassword(email, newPassword)
       res.status(STATUS_CODE.OK).json({ message: 'Password reset successful' })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -101,8 +101,8 @@ export class UserController implements IUserController {
     }
     try {
       const { user, accessToken, refreshToken } =
-        await this.userService.loginWithGoogle(idToken)
-      this.jwtService.setTokens(res, accessToken, refreshToken)
+        await this._userService.loginWithGoogle(idToken)
+      this._jwtService.setTokens(res, accessToken, refreshToken)
       res.status(STATUS_CODE.OK).json({ user })
     } catch (error: any) {
       res
@@ -123,8 +123,8 @@ export class UserController implements IUserController {
 
         try {
           const { accessToken, refreshToken } =
-            await this.userService.loginWithGoogle(user)
-          this.jwtService.setTokens(res, accessToken, refreshToken)
+            await this._userService.loginWithGoogle(user)
+          this._jwtService.setTokens(res, accessToken, refreshToken)
           res.redirect(`http://localhost:5173/callback?token=${accessToken}`)
         } catch (error: any) {
           res.redirect(`http://localhost:5173/signup?error=${error.message}`)
@@ -137,9 +137,9 @@ export class UserController implements IUserController {
     const { email, password } = req.body
     try {
       const { user, accessToken, refreshToken } =
-        await this.userService.loginUser(email, password)
+        await this._userService.loginUser(email, password)
 
-      this.jwtService.setTokens(res, accessToken, refreshToken)
+      this._jwtService.setTokens(res, accessToken, refreshToken)
       res.status(STATUS_CODE.OK).json({ user })
     } catch (error: any) {
       res.status(STATUS_CODE.UNAUTHORIZED).json({ error: error.message })
@@ -161,7 +161,7 @@ export class UserController implements IUserController {
     const { email } = req.body
     console.log('Resending OTP to:', email)
     try {
-      await this.otpService.requestOtp(email, 'user')
+      await this._otpService.requestOtp(email, 'user')
       res.status(STATUS_CODE.OK).json({ message: 'OTP resent to email' })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -174,7 +174,7 @@ export class UserController implements IUserController {
       const limit = Number(req.query.limit) || 5
       const search = String(req.query.search || '')
 
-      const result = await this.trainerService.getAllTrainers(
+      const result = await this._trainerService.getAllTrainers(
         page,
         limit,
         search,
@@ -192,7 +192,7 @@ export class UserController implements IUserController {
 
   async getIndividualTrainer(req: Request, res: Response): Promise<void> {
     try {
-      const trainer = await this.trainerService.getTrainerById(req.params.id)
+      const trainer = await this._trainerService.getTrainerById(req.params.id)
       res.status(STATUS_CODE.OK).json({ trainer })
     }catch (error: any) {
       res
@@ -204,8 +204,8 @@ export class UserController implements IUserController {
    async getMyTrainer(req: Request, res: Response): Promise<void> {
         try {
             const userId = (req.user as JwtPayload).id; 
-            const user = await this.userService.getUserById(userId);
-            const trainer = await this.trainerService.getTrainerById(user!.assignedTrainer!.toString());
+            const user = await this._userService.getUserById(userId);
+            const trainer = await this._trainerService.getTrainerById(user!.assignedTrainer!.toString());
             res.status(STATUS_CODE.OK).json({ trainer });
         } catch (error: any) {
             console.error("Error fetching my trainer:", error);
@@ -216,13 +216,13 @@ export class UserController implements IUserController {
         async cancelSubscription(req: Request, res: Response): Promise<void> {
         try {
             const userId = (req.user as JwtPayload).id;
-            const user = await this.userService.getUserById(userId);
+            const user = await this._userService.getUserById(userId);
             if (!user || !user.assignedTrainer) {
                 res.status(STATUS_CODE.BAD_REQUEST).json({ message: "No active subscription found" });
                 return;
             }
-            await this.userService.cancelSubscription(userId, user.assignedTrainer.toString());
-            await this.trainerService.removeClientFromTrainer(user.assignedTrainer.toString(), userId);
+            await this._userService.cancelSubscription(userId, user.assignedTrainer.toString());
+            await this._trainerService.removeClientFromTrainer(user.assignedTrainer.toString(), userId);
             res.status(STATUS_CODE.OK).json({ message: "Subscription cancelled successfully" });
         } catch (error: any) {
             console.error("Error cancelling subscription:", error);
@@ -234,7 +234,7 @@ export class UserController implements IUserController {
     try {
       const jwtUser = req.user as JwtPayload
       const id = jwtUser.id
-      const user = await this.userService.getProfile(id)
+      const user = await this._userService.getProfile(id)
       res.status(STATUS_CODE.OK).json({ user })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -251,23 +251,23 @@ export class UserController implements IUserController {
     }
 
     try {
-      const decoded = this.jwtService.verifyRefreshToken(token) as {
+      const decoded = this._jwtService.verifyRefreshToken(token) as {
         id: string
         role: string
         tokenVersion: number
       }
 
-      const accessToken = this.jwtService.generateAccessToken(
+      const accessToken = this._jwtService.generateAccessToken(
         decoded.id,
         decoded.role,
         decoded.tokenVersion
       )
-      const refreshToken = this.jwtService.generateRefreshToken(
+      const refreshToken = this._jwtService.generateRefreshToken(
         decoded.id,
         decoded.role,
         decoded.tokenVersion
       )
-      this.jwtService.setTokens(res, accessToken, refreshToken)
+      this._jwtService.setTokens(res, accessToken, refreshToken)
 
       res.status(STATUS_CODE.OK).json({ accessToken, refreshToken })
 
@@ -283,8 +283,8 @@ export class UserController implements IUserController {
   logout = async (req: Request, res: Response) => {
     try {
       const user = req.user as JwtPayload
-      await this.userService.incrementTokenVersion(user.id)
-      this.jwtService.clearTokens(res)
+      await this._userService.incrementTokenVersion(user.id)
+      this._jwtService.clearTokens(res)
     } catch (error) {
       res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error })
     }

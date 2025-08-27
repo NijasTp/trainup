@@ -10,16 +10,26 @@ import { JwtPayload } from '../core/interfaces/services/IJwtService'
 @injectable()
 export class DietController {
   constructor (
-    @inject(TYPES.IDietService) private dietService: DietService,
-    @inject(TYPES.ITemplateService) private templateService: DietTemplateService
+    @inject(TYPES.IDietService) private _dietService: DietService,
+    @inject(TYPES.ITemplateService) private _templateService: DietTemplateService
   ) {}
 
-  // Create / get day
+
   createOrGetDay = async (req: Request, res: Response) => {
     try {
       const userId = req.params.userId || (req.user as any).id
       const { date } = req.body
-      const day = await this.dietService.createOrGetDay(userId, date)
+      const day = await this._dietService.createOrGetDay(userId, date)
+      res.status(STATUS.OK).json(day)
+    } catch (err: any) {
+      res.status(STATUS.BAD_REQUEST).json({ error: err.message })
+    }
+  }
+  trainerCreateOrGetDay = async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId as string
+      const { date } = req.body
+      const day = await this._dietService.createOrGetDay(userId, date)
       res.status(STATUS.OK).json(day)
     } catch (err: any) {
       res.status(STATUS.BAD_REQUEST).json({ error: err.message })
@@ -30,7 +40,7 @@ export class DietController {
     try {
       const userId =(req.user as JwtPayload).id
       const { date } = req.params as any
-      const day = await this.dietService.getDay(userId, date)
+      const day = await this._dietService.getDay(userId, date)
       if (!day) {
         res.status(STATUS.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND })
         return
@@ -41,13 +51,32 @@ export class DietController {
     }
   }
 
+   createDietSession = async (req: Request, res: Response) => {
+    try {
+      const actor = req.user as JwtPayload
+      if (actor.role !== 'trainer') {
+         res.status(STATUS.FORBIDDEN).json({ error: MESSAGES.FORBIDDEN })
+         return
+      }
+      const { userId, date } = req.body
+      if (!userId || !date) {
+         res.status(STATUS.BAD_REQUEST).json({ error: 'userId and date are required' })
+         return
+      }
+      const day = await this._dietService.createOrGetDay(userId, date)
+      res.status(STATUS.CREATED).json(day)
+    } catch (err: any) {
+      res.status(STATUS.BAD_REQUEST).json({ error: err.message })
+    }
+  }
+
   addMeal = async (req: Request, res: Response) => {
     try {
       const actor = req.user as any
-      const userId = req.params.userId || actor.id
+      const userId = req.params.userId 
       const { date } = req.params
       const payload = req.body
-      const day = await this.dietService.addMeal(actor, userId, date, payload)
+      const day = await this._dietService.addMeal(actor, userId, date, payload)
       res.status(STATUS.CREATED).json(day)
     } catch (err: any) {
       const code =
@@ -63,7 +92,7 @@ export class DietController {
       const actor = req.user as any
       const userId = req.params.userId || actor.id
       const { date, mealId } = req.params
-      const updated = await this.dietService.updateMeal(
+      const updated = await this._dietService.updateMeal(
         actor,
         userId,
         date,
@@ -89,7 +118,7 @@ export class DietController {
       const userId = req.params.userId || actor.id
       const { date, mealId } = req.params
       const { isEaten } = req.body
-      const updated = await this.dietService.markMealEaten(
+      const updated = await this._dietService.markMealEaten(
         actor,
         userId,
         date,
@@ -115,7 +144,7 @@ export class DietController {
       const actor = req.user as any
       const userId = req.params.userId || actor.id
       const { date, mealId } = req.params
-      const updated = await this.dietService.removeMeal(
+      const updated = await this._dietService.removeMeal(
         actor,
         userId,
         date,
@@ -144,7 +173,7 @@ export class DietController {
         return
       }
 
-      const created = await this.templateService.createTemplate(
+      const created = await this._templateService.createTemplate(
         actor.id,
         req.body
       )
@@ -156,7 +185,7 @@ export class DietController {
 
   listTemplates = async (req: Request, res: Response) => {
     try {
-      const templates = await this.templateService.listTemplates()
+      const templates = await this._templateService.listTemplates()
       res.json(templates)
     } catch (err: any) {
       res.status(STATUS.BAD_REQUEST).json({ error: err.message })
@@ -174,7 +203,7 @@ export class DietController {
         return
       }
 
-      const template = await this.templateService.getTemplate(templateId)
+      const template = await this._templateService.getTemplate(templateId)
       if (!template){
          res.status(STATUS.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND })
         return 
@@ -197,10 +226,10 @@ export class DietController {
       }))
 
       // ensure day exists and push all meals
-      await this.dietService.createOrGetDay(userId, date)
+      await this._dietService.createOrGetDay(userId, date)
       let day = null
       for (const meal of meals) {
-        day = await this.dietService.addMeal(actor, userId, date, meal as any)
+        day = await this._dietService.addMeal(actor, userId, date, meal as any)
       }
 
       res.status(STATUS.OK).json(day)

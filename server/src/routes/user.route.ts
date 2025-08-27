@@ -3,8 +3,6 @@ import container from "../core/di/inversify.config";
 import { UserController } from "../controllers/user.controller";
 import TYPES from "../core/types/types";
 import { authMiddleware, roleMiddleware } from "../middlewares/auth.middleware";
-import { Request, Response } from "express";
-import { PaymentController } from "../controllers/payment.controller";
 
 const router = express.Router();
 

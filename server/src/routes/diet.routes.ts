@@ -9,6 +9,9 @@ const dietController = container.get<DietController>(TYPES.DietController);
 
 router.get("/:date", authMiddleware, dietController.getDay.bind(dietController));
 router.post("/", authMiddleware, dietController.createOrGetDay.bind(dietController));
+router.post("/trainer-create-diet", authMiddleware, dietController.trainerCreateOrGetDay.bind(dietController));
+router.post("/trainer-create-diet-session", authMiddleware, dietController.createDietSession.bind(dietController))
+
 
 router.post("/:date/meals", authMiddleware, dietController.addMeal.bind(dietController));
 router.patch("/:date/meals/:mealId", authMiddleware, dietController.updateMeal.bind(dietController));

@@ -5,7 +5,6 @@ import { IWorkoutService } from '../core/interfaces/services/IWorkoutService'
 import { IWorkoutSessionRepository } from '../core/interfaces/repositories/IWorkoutSessionRepository'
 import { IWorkoutDayRepository } from '../core/interfaces/repositories/IWorkoutDayRepository'
 import { IWorkoutSession } from '../models/workout.model'
-import { IWorkoutDay } from '../models/workoutDay.model'
 
 interface IExerciseUpdate {
   exerciseId: string
@@ -20,9 +19,9 @@ interface IWorkoutSessionPayload extends Partial<IWorkoutSession> {
 export class WorkoutService implements IWorkoutService {
   constructor (
     @inject(TYPES.WorkoutSessionRepository)
-    private sessionRepo: IWorkoutSessionRepository,
+    private _sessionRepo: IWorkoutSessionRepository,
     @inject(TYPES.WorkoutDayRepository)
-    private workoutDayRepo: IWorkoutDayRepository
+    private _workoutDayRepo: IWorkoutDayRepository
   ) {}
 
   async createSession (
@@ -32,23 +31,23 @@ export class WorkoutService implements IWorkoutService {
       throw new Error('Only trainers can provide notes')
     }
 
-    const session = await this.sessionRepo.create(payload)
+    const session = await this._sessionRepo.create(payload)
 
     if (payload.givenBy === 'user') {
-      let day = await this.workoutDayRepo.findByUserAndDate(
+      let day = await this._workoutDayRepo.findByUserAndDate(
         payload.userId?.toString()!,
         payload.date!
       )
 
       if (!day) {
-        day = await this.workoutDayRepo.create({
+        day = await this._workoutDayRepo.create({
           userId: payload.userId!,
           date: payload.date!,
           sessions: []
         })
       }
 
-      await this.workoutDayRepo.addSessionToDay(
+      await this._workoutDayRepo.addSessionToDay(
         day._id.toString(),
         session._id.toString()
       )
@@ -58,7 +57,7 @@ export class WorkoutService implements IWorkoutService {
   }
 
   getSession (id: string) {
-    return this.sessionRepo.findById(id)
+    return this._sessionRepo.findById(id)
   }
     async trainerCreateSession(
     trainerId: string,
@@ -72,17 +71,17 @@ export class WorkoutService implements IWorkoutService {
       userId: clientId,
     };
 
-    const session = await this.sessionRepo.create(sessionPayload);
+    const session = await this._sessionRepo.create(sessionPayload);
 
-    let day = await this.workoutDayRepo.findByUserAndDate(clientId, payload.date!);
+    let day = await this._workoutDayRepo.findByUserAndDate(clientId, payload.date!);
     if (!day) {
-      day = await this.workoutDayRepo.create({
+      day = await this._workoutDayRepo.create({
         userId: clientId,
         date: payload.date!,
         sessions: [],
       });
     }
-    await this.workoutDayRepo.addSessionToDay(day._id.toString(), session._id.toString());
+    await this._workoutDayRepo.addSessionToDay(day._id.toString(), session._id.toString());
 
     return session;
   }
@@ -93,7 +92,7 @@ export class WorkoutService implements IWorkoutService {
     }
 
     if (payload.exerciseUpdates) {
-      const session = await this.sessionRepo.findById(id)
+      const session = await this._sessionRepo.findById(id)
       if (!session) throw new Error('Session not found')
 
 
@@ -107,28 +106,28 @@ export class WorkoutService implements IWorkoutService {
       delete payload.exerciseUpdates
     }
 
-    return this.sessionRepo.update(id, payload)
+    return this._sessionRepo.update(id, payload)
   }
   async deleteSession (id: string) {
-    return this.sessionRepo.delete(id)
+    return this._sessionRepo.delete(id)
   }
 
   async createDay (userId: string, date: string) {
-    const existing = await this.workoutDayRepo.findByUserAndDate(userId, date)
+    const existing = await this._workoutDayRepo.findByUserAndDate(userId, date)
     if (existing) return existing
-    return this.workoutDayRepo.create({ userId, date, sessions: [] })
+    return this._workoutDayRepo.create({ userId, date, sessions: [] })
   }
 
   async addSessionToDay (userId: string, date: string, sessionId: string) {
-    let day = await this.workoutDayRepo.findByUserAndDate(userId, date)
+    let day = await this._workoutDayRepo.findByUserAndDate(userId, date)
     if (!day)
-      day = await this.workoutDayRepo.create({
+      day = await this._workoutDayRepo.create({
         userId,
         date,
         sessions: [sessionId]
       })
     else
-      day = await this.workoutDayRepo.addSessionToDay(
+      day = await this._workoutDayRepo.addSessionToDay(
         day._id.toString(),
         sessionId
       )
@@ -136,6 +135,6 @@ export class WorkoutService implements IWorkoutService {
   }
 
   async getDay (userId: string, date: string) {
-    return this.workoutDayRepo.findByUserAndDate(userId, date)
+    return this._workoutDayRepo.findByUserAndDate(userId, date)
   }
 }

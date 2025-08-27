@@ -6,22 +6,22 @@ import { IDietTemplateService } from "../core/interfaces/services/IDietTemplateS
 
 @injectable()
 export class DietTemplateService implements IDietTemplateService{
-  constructor(@inject(TYPES.ITemplateRepository) private repo: TemplateRepository) {}
+  constructor(@inject(TYPES.ITemplateRepository) private _repo: TemplateRepository) {}
 
   createTemplate(adminId: string, payload: Partial<ITemplate>) {
     payload.createdBy = adminId as any;
-    return this.repo.create(payload);
+    return this._repo.create(payload);
   }
 
   listTemplates(filter: any = {}) {
-    return this.repo.list(filter);
+    return this._repo.list(filter);
   }
 
   getTemplate(id: string) {
-    return this.repo.getById(id);
+    return this._repo.getById(id);
   }
 
   deleteTemplate(id: string) {
-    return this.repo.delete(id);
+    return this._repo.delete(id);
   }
 }

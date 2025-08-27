@@ -30,13 +30,13 @@ interface TrainerApplyData {
 @injectable()
 export class TrainerService implements ITrainerService {
   constructor(
-    @inject(TYPES.ITrainerRepository) private trainerRepo: ITrainerRepository,
-    @inject(TYPES.IOtpService) private otpService: IOTPService,
-    @inject(TYPES.IJwtService) private jwtService: IJwtService,
+    @inject(TYPES.ITrainerRepository) private _trainerRepo: ITrainerRepository,
+    @inject(TYPES.IOtpService) private _otpService: IOTPService,
+    @inject(TYPES.IJwtService) private _jwtService: IJwtService,
   ) { }
 
   async loginTrainer(email: string, password: string) {
-    const trainer = await this.trainerRepo.findByEmail(email);
+    const trainer = await this._trainerRepo.findByEmail(email);
     if (!trainer) {
       throw new Error("Trainer doesn't exist");
     }
@@ -50,27 +50,27 @@ export class TrainerService implements ITrainerService {
       throw new Error("Invalid password");
     }
 
-    const accessToken = this.jwtService.generateAccessToken(trainer._id.toString(), trainer.role, trainer.tokenVersion ?? 0);
-    const refreshToken = this.jwtService.generateRefreshToken(trainer._id.toString(), trainer.role, trainer.tokenVersion ?? 0);
+    const accessToken = this._jwtService.generateAccessToken(trainer._id.toString(), trainer.role, trainer.tokenVersion ?? 0);
+    const refreshToken = this._jwtService.generateRefreshToken(trainer._id.toString(), trainer.role, trainer.tokenVersion ?? 0);
 
     return { trainer, accessToken, refreshToken };
   }
 
   async forgotPassword(email: string) {
-    const trainer = await this.trainerRepo.findByEmail(email);
+    const trainer = await this._trainerRepo.findByEmail(email);
     if (!trainer) throw new Error("Trainer not found");
-    await this.otpService.requestForgotPasswordOtp(email, 'trainer');
+    await this._otpService.requestForgotPasswordOtp(email, 'trainer');
   }
 
   async verifyOtp(email: string, otp: string) {
-    const isValid = await this.otpService.verifyOtp(email, otp);
+    const isValid = await this._otpService.verifyOtp(email, otp);
     if (!isValid) throw new Error("Invalid or expired OTP");
   }
 
   async resetPassword(email: string, password: string) {
     const hashed = await bcrypt.hash(password, 10);
-    await this.trainerRepo.updateStatus(email, { password: hashed });
-    await this.otpService.clearOtp(email);
+    await this._trainerRepo.updateStatus(email, { password: hashed });
+    await this._otpService.clearOtp(email);
   }
 
   async applyAsTrainer(trainerData: TrainerApplyData) {
@@ -78,7 +78,7 @@ export class TrainerService implements ITrainerService {
       throw new Error('Missing required fields: name, email, phone, password, certificate, profileImage');
     }
 
-    const existingTrainer = await this.trainerRepo.findByEmail(trainerData.email);
+    const existingTrainer = await this._trainerRepo.findByEmail(trainerData.email);
     if (existingTrainer) {
       throw new Error('Email already registered');
     }
@@ -144,15 +144,15 @@ export class TrainerService implements ITrainerService {
       profileStatus: 'pending',
     };
 
-    const trainer = await this.trainerRepo.create(trainerToSave);
-    const accessToken = this.jwtService.generateAccessToken(trainer._id.toString(), trainer.role, trainer.tokenVersion ?? 0);
-    const refreshToken = this.jwtService.generateRefreshToken(trainer._id.toString(), trainer.role, trainer.tokenVersion ?? 0);
+    const trainer = await this._trainerRepo.create(trainerToSave);
+    const accessToken = this._jwtService.generateAccessToken(trainer._id.toString(), trainer.role, trainer.tokenVersion ?? 0);
+    const refreshToken = this._jwtService.generateRefreshToken(trainer._id.toString(), trainer.role, trainer.tokenVersion ?? 0);
 
     return { trainer, accessToken, refreshToken };
   }
 
   async getTrainerById(id: string) {
-      const trainer=await this.trainerRepo.findById(id);
+      const trainer=await this._trainerRepo.findById(id);
       if (!trainer) throw new Error('Trainer not found');
       return trainer; 
   }
@@ -168,8 +168,8 @@ export class TrainerService implements ITrainerService {
     endDate?: string
   ) {
     const skip = (page - 1) * limit;
-    const trainers = await this.trainerRepo.findAll(skip, limit, search, isBanned, isVerified, startDate, endDate);
-    const total = await this.trainerRepo.count(search, isBanned, isVerified, startDate, endDate);
+    const trainers = await this._trainerRepo.findAll(skip, limit, search, isBanned, isVerified, startDate, endDate);
+    const total = await this._trainerRepo.count(search, isBanned, isVerified, startDate, endDate);
 
     return {
       trainers,
@@ -179,18 +179,18 @@ export class TrainerService implements ITrainerService {
     };
   }
    async getTrainerApplication(id: string) {
-    return await this.trainerRepo.findApplicationByTrainerId(id);
+    return await this._trainerRepo.findApplicationByTrainerId(id);
   }
 
   async updateTrainerStatus(id: string, updateData: Partial<ITrainer>) {
-    return await this.trainerRepo.updateStatus(id, updateData);
+    return await this._trainerRepo.updateStatus(id, updateData);
   }
 
    async addClientToTrainer(trainerId: string, userId: string): Promise<void> {
-    await this.trainerRepo.addClient(trainerId, userId);
+    await this._trainerRepo.addClient(trainerId, userId);
   }
       async removeClientFromTrainer(trainerId: string, userId: string): Promise<void> {
-        await this.trainerRepo.removeClient(trainerId, userId);
+        await this._trainerRepo.removeClient(trainerId, userId);
     }
 
         async getTrainerClients(
@@ -200,7 +200,7 @@ export class TrainerService implements ITrainerService {
         search: string
     ): Promise<PaginatedClients> {
         const skip = (page - 1) * limit;
-        const { clients, total } = await this.trainerRepo.findClients(trainerId, skip, limit, search);
+        const { clients, total } = await this._trainerRepo.findClients(trainerId, skip, limit, search);
         return {
             clients,
             total,

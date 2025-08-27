@@ -6,10 +6,10 @@ dotenv.config()
 
 @injectable()
 export class MailService implements IMailService {
-  private mailUtil: MailUtil;
+  private _mailUtil: MailUtil;
 
   constructor() {
-    this.mailUtil = new MailUtil();
+    this._mailUtil = new MailUtil();
     this.validateEnv();
   }
 
@@ -21,7 +21,7 @@ export class MailService implements IMailService {
 
   async sendMail(to: string, subject: string, html: string) {
     try {
-      const result = await this.mailUtil.send(to, subject, html);
+      const result = await this._mailUtil.send(to, subject, html);
       return result;
     } catch (error) {
       throw new Error('Mail delivery failed');

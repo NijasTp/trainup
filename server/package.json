@@ -19,7 +19,6 @@
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
     "dotenv": "^17.1.0",
-    "eslint": "^9.31.0",
     "express": "^5.1.0",
     "express-fileupload": "^1.5.2",
     "google-auth-library": "^10.1.0",
@@ -32,6 +31,7 @@
     "razorpay": "^2.9.6"
   },
   "devDependencies": {
+    "@eslint/js": "^9.34.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
@@ -42,7 +42,11 @@
     "@types/node": "^24.0.10",
     "@types/nodemailer": "^6.4.17",
     "@types/passport-google-oauth20": "^2.0.16",
+    "eslint": "^9.34.0",
+    "globals": "^16.3.0",
+    "jiti": "^2.5.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.41.0"
   }
 }

@@ -17,9 +17,9 @@ export interface IMeal {
   fats?: number;
   time: string; // "HH:mm"
   isEaten: boolean;
-  usedBy: Types.ObjectId | string;   // the owner user (same as DietDay.user)
-  source: MealSource;                // who assigned/created it
-  sourceId: Types.ObjectId | string; // id of creator
+  usedBy: Types.ObjectId | string;  
+  source: MealSource;               
+  sourceId: Types.ObjectId | string; 
   nutritions?: NutritionItem[];
   notes?: string;
   createdAt?: Date;

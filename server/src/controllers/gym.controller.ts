@@ -7,6 +7,8 @@ import { JwtService } from "../utils/jwt";
 import { UploadedFile } from "express-fileupload";
 import { IJwtService, JwtPayload } from "../core/interfaces/services/IJwtService";
 import { STATUS_CODE } from "../constants/status";
+import { MESSAGES } from "../constants/messages";
+import { ROLE } from "../constants/role";
 
 @injectable()
 export class GymController {
@@ -19,8 +21,8 @@ export class GymController {
   requestOtp = async (req: Request, res: Response) => {
     const { email } = req.body;
     try {
-      await this._otpService.requestOtp(email, 'gym');
-      res.status(STATUS_CODE.OK).json({ message: "OTP sent to email" });
+      await this._otpService.requestOtp(email, ROLE.GYM);
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_SENT });
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message });
     }
