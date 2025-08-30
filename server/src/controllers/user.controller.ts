@@ -208,7 +208,6 @@ export class UserController implements IUserController {
             const trainer = await this._trainerService.getTrainerById(user!.assignedTrainer!.toString());
             res.status(STATUS_CODE.OK).json({ trainer });
         } catch (error: any) {
-            console.error("Error fetching my trainer:", error);
             res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
         }
     }

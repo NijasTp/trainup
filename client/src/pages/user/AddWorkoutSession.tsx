@@ -9,11 +9,11 @@ import { Dumbbell, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "use-debounce";
 import { createWorkoutSession } from "@/services/workoutService";
-import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { InfoModal } from "@/components/user/general/InfoModal";
+import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 
 interface WgerExerciseSuggestion {
     value: string;

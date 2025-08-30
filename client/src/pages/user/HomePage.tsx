@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner";
 import { getTrainers } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";
 
@@ -145,7 +145,8 @@ export default function HomePage() {
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [streak, setStreak] = useState(7);
+  const [streak, _ ] = useState(7);
+  const navigate=useNavigate();
 
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -218,7 +219,9 @@ export default function HomePage() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
       <SiteHeader />
-
+      <Button className="fixed bottom-8 right-8 z-50" onClick={() => navigate("/dashboard")}>
+        Go to Dashboard
+      </Button>
       <main className="relative container mx-auto px-4 py-8 space-y-8">
         {/* Welcome Section */}
         <div className="text-center space-y-4 mb-8">

@@ -7,4 +7,8 @@ export const MESSAGES = {
   DELETED: "Deleted",
   BANNED: "Banned",
   OTP_SENT: "OTP sent successfully",
-} as const;
+  USER_EXISTS:'User already exists',
+  USER_NOT_FOUND: 'User not found',
+
+
+} 

@@ -6,15 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { Dumbbell, Plus, Target, Search, ArrowLeft, Trash2 } from "lucide-react";
+import { Dumbbell, Plus, Target, ArrowLeft, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 import API from "@/lib/axios";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import { DialogTrigger } from "@radix-ui/react-dialog";
 
 interface WgerExerciseSuggestion {
   value: string;
@@ -151,9 +150,7 @@ function ExerciseSuggestionCard({
 
 function AddedExerciseCard({
   exercise,
-  index,
-  sessionId,
-  onExerciseRemoved,
+  index
 }: {
   exercise: Exercise;
   index: number;
@@ -162,15 +159,7 @@ function AddedExerciseCard({
 }) {
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  async function handleRemoveExercise() {
-    try {
-      await API.patch(`/workout/sessions/${sessionId}/remove-exercise`, { exerciseId: exercise.id });
-      onExerciseRemoved();
-      toast.success(`Removed ${exercise.name} from session`);
-    } catch (err: any) {
-      toast.error("Failed to remove exercise");
-    }
-  }
+
 
   return (
     <Card
@@ -187,14 +176,7 @@ function AddedExerciseCard({
             <Dumbbell className="h-5 w-5 text-primary" />
             {exercise.name}
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-destructive hover:bg-destructive/10"
-            onClick={handleRemoveExercise}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+         
         </div>
       </CardHeader>
       <CardContent>
@@ -220,102 +202,6 @@ function AddedExerciseCard({
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function NewSessionDialog({
-  clientId,
-  date,
-  onSessionAdded,
-}: {
-  clientId: string;
-  date: string;
-  onSessionAdded: () => void;
-}) {
-  const [name, setName] = useState("");
-  const [time, setTime] = useState("");
-  const [goal, setGoal] = useState("");
-  const [notes, setNotes] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await API.post("/workout/trainer-create-workout-session", {
-        clientId,
-        date,
-        name,
-        time,
-        goal,
-        notes,
-      });
-      onSessionAdded();
-      toast.success("Workout session created");
-      setName("");
-      setTime("");
-      setGoal("");
-      setNotes("");
-    } catch (err: any) {
-      toast.error("Failed to create session");
-    }
-  };
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
-          disabled={!date}
-        >
-          <Plus className="h-4 w-4 mr-2" /> Add New Session
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="bg-card/80 backdrop-blur-sm border-border/50">
-        <DialogHeader>
-          <DialogTitle>Create New Workout Session</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label className="text-sm font-medium text-foreground">Session Name</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Morning Strength"
-              className="bg-background/50 border-border/50"
-            />
-          </div>
-          <div>
-            <Label className="text-sm font-medium text-foreground">Time</Label>
-            <Input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="bg-background/50 border-border/50"
-            />
-          </div>
-          <div>
-            <Label className="text-sm font-medium text-foreground">Goal</Label>
-            <Input
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-              placeholder="e.g., Build muscle"
-              className="bg-background/50 border-border/50"
-            />
-          </div>
-          <div>
-            <Label className="text-sm font-medium text-foreground">Notes</Label>
-            <Input
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g., Focus on form"
-              className="bg-background/50 border-border/50"
-            />
-          </div>
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-            Create Session
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -351,9 +237,7 @@ function ExerciseSearchModal({
     setIsSuggestionsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`https://wger.de/api/v2/exercise/search/?term=${term}&language=2`, {
-        headers: { Authorization: "Token your-wger-api-key" }, 
-      });
+      const response = await fetch(`/api/wger/exercise/search/?term=${term}&language=2`);
       if (!response.ok) throw new Error("Failed to fetch exercise suggestions");
       const data = await response.json();
       setSuggestions(data.suggestions || []);
@@ -369,9 +253,7 @@ function ExerciseSearchModal({
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`https://wger.de/api/v2/exerciseinfo/${exerciseId}/?language=2`, {
-        headers: { Authorization: "Token your-wger-api-key" }, // Replace with actual API key
-      });
+      const response = await fetch(`/api/wger/exerciseinfo/${exerciseId}/?language=2`);
       if (!response.ok) throw new Error("Failed to fetch exercise details");
       const data = await response.json();
       setSelectedExercise({ ...data, name: exerciseName });
@@ -426,11 +308,6 @@ function ExerciseSearchModal({
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5">
-          <Plus className="h-4 w-4 mr-2" /> Add Exercise
-        </Button>
-      </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-card/80 backdrop-blur-sm border-border/50">
         <DialogHeader>
           <DialogTitle>{showConfig ? `Configure ${selectedExercise?.name}` : "Search Exercises"}</DialogTitle>
@@ -592,12 +469,14 @@ function WorkoutSessionCard({
   session,
   index,
   onExerciseAdded,
+  clientId,
 }: {
   session: WorkoutSession;
   index: number;
   onExerciseAdded: () => void;
+  clientId: string;
 }) {
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <Card
@@ -615,7 +494,16 @@ function WorkoutSessionCard({
             {session.name} ({session.time})
             <Badge className="bg-primary/90 text-primary-foreground shadow-lg">Trainer</Badge>
           </CardTitle>
-          <ExerciseSearchModal sessionId={session._id} onExerciseAdded={onExerciseAdded} />
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"
+              onClick={() => navigate(`/trainer/workout/add-session/${clientId}?sessionId=${session._id}`)}
+            >
+              <Edit className="h-4 w-4 mr-2" /> Edit
+            </Button>
+            <ExerciseSearchModal sessionId={session._id} onExerciseAdded={onExerciseAdded} />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -665,7 +553,7 @@ export default function TrainerAddWorkoutPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await API.get(`/workout/days/${selectedDate}`, {
+      const response = await API.get(`/workout/trainer-get-days/${selectedDate}`, {
         params: { clientId },
       });
       const workoutDay = response.data
@@ -730,7 +618,13 @@ export default function TrainerAddWorkoutPage() {
               <h2 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
                 Sessions for {format(new Date(selectedDate), "MMMM d, yyyy")}
               </h2>
-              <NewSessionDialog clientId={clientId!} date={selectedDate} onSessionAdded={fetchWorkouts} />
+              <Button
+                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
+                onClick={() => navigate(`/trainer/workout/add-session/${clientId}`)}
+                disabled={!selectedDate}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add New Session
+              </Button>
             </div>
             {sessionsForDate.length > 0 ? (
               sessionsForDate.map((session, index) => (
@@ -739,6 +633,7 @@ export default function TrainerAddWorkoutPage() {
                   session={session}
                   index={index}
                   onExerciseAdded={fetchWorkouts}
+                  clientId={clientId!}
                 />
               ))
             ) : (
@@ -749,7 +644,12 @@ export default function TrainerAddWorkoutPage() {
                   </div>
                   <h3 className="text-xl font-semibold text-foreground">No sessions found</h3>
                   <p className="mb-4">No trainer-assigned workout sessions for this day.</p>
-                  <NewSessionDialog clientId={clientId!} date={selectedDate} onSessionAdded={fetchWorkouts} />
+                  <Button
+                    className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
+                    onClick={() => navigate(`/trainer/workout/add-session/${clientId}`)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Add New Session
+                  </Button>
                 </CardContent>
               </Card>
             )}

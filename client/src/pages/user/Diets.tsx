@@ -71,6 +71,7 @@ export default function Diets() {
         });
 
         const data = response.data;
+        console.log('data', response.data);
         const meals = data.meals || [];
 
         const trainerMeals = meals

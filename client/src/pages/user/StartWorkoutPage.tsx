@@ -20,7 +20,7 @@ interface IExercise {
   rest?: string;
   notes?: string;
   isDone?: boolean;
-  timeTaken?: number; // Not used in state, but for interface completeness
+  timeTaken?: number; 
 }
 
 interface IWorkoutSession {

@@ -47,11 +47,6 @@ export default function TrainerUserDetails() {
         }
     };
 
-   
-
-    const handleSetDiet = () => {
-        toast.info("Diet plan setup coming soon!");
-    };
 
     const handleStartChat = () => {
         navigate(`/trainer/chat/${id}`);
@@ -174,13 +169,15 @@ export default function TrainerUserDetails() {
                                 Set Workout Session
                             </Button>
                             </Link>
+                            <Link  to={`/trainer/diet/${id}`}>
                             <Button
                                 className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all duration-300"
-                                onClick={handleSetDiet}
+                                
                             >
                                 <Apple className="h-4 w-4 mr-2" />
                                 Set Diet Plan
                             </Button>
+                            </Link>
                             <Button
                                 className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300"
                                 onClick={handleStartChat}

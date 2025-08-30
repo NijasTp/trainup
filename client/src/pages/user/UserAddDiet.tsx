@@ -198,7 +198,7 @@ export default function UserAddDiet() {
     setMeals((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Submit diet day with new meals only
+
   const handleSubmit = async () => {
     const newMeals = meals.filter((meal) => !meal._id);
     if (newMeals.length === 0 && meals.length > 0) {
@@ -226,6 +226,7 @@ export default function UserAddDiet() {
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to update diet day");
       toast.error(err.response?.data?.error || "Failed to update diet day");
+
     } finally {
       setLoading(false);
     }

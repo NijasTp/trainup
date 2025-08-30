@@ -2,33 +2,14 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Award, Calendar, Flame, Lock, Mail, Phone, Ruler, Scale, Trophy, User, MapPin, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { getProfile } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import type { UserProfile } from "@/interfaces/user/profile/profileInterface";
 
-interface UserProfile {
-  _id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  role: "user";
-  goals?: string[];
-  activityLevel?: string;
-  equipment?: boolean;
-  height?: number;
-  weight?: number;
-  assignedTrainer?: string;
-  gymId?: string;
-  isPrivate?: boolean;
-  isBanned: boolean;
-  streak?: number;
-  xp?: number;
-  achievements?: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -114,13 +95,13 @@ export default function Profile() {
                 )}
               </div>
               <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-                <DialogTrigger asChild>
+                {/* <DialogTrigger asChild>
                   <Button
                     className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
                   >
                     Edit Profile
                   </Button>
-                </DialogTrigger>
+                </DialogTrigger> */}
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle className="text-2xl font-bold">Edit Profile</DialogTitle>

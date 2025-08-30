@@ -55,6 +55,8 @@ import MyTrainerProfile from './pages/user/MyTrainer';
 import TrainerClients from './pages/trainer/TrainerDashboard';
 import TrainerUserDetails from './pages/trainer/TrainerUserDetails';
 import TrainerAddWorkoutPage from './pages/trainer/TrainerAddWorkoutPage';
+import TrainerAddSessionPage from './pages/trainer/TrainerAddSessionPage';
+import TrainerUserDietPage from './pages/trainer/TrainerUserDiet';
 
 function App() {
   return (
@@ -96,6 +98,8 @@ function App() {
         <Route path={ROUTES.TRAINER_DASHBOARD} element={<TrainerProtectedRoute><TrainerClients /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_INDIVIDUAL_CLIENT} element={<TrainerProtectedRoute><TrainerUserDetails /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_WORKOUT} element={<TrainerProtectedRoute><TrainerAddWorkoutPage /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_CLIENT_SESSION} element={<TrainerProtectedRoute><TrainerAddSessionPage /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_CLIENT_DIET} element={<TrainerProtectedRoute><TrainerUserDietPage /></TrainerProtectedRoute>} />
 
         {/* Gym Routes */}
         <Route path={ROUTES.GYM_LOGIN} element={<GymAuthRedirect><GymLogin /></GymAuthRedirect>} />

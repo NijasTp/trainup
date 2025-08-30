@@ -6,6 +6,7 @@ import TYPES from '../core/types/types'
 import { IJwtService } from '../core/interfaces/services/IJwtService'
 import { IUser } from '../models/user.model'
 import { OAuth2Client } from 'google-auth-library'
+import { MESSAGES } from '../constants/messages'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ''
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret'
@@ -23,7 +24,7 @@ export class UserService implements IUserService {
 
   public async registerUser (name: string, email: string, password: string) {
     const existingUser = await this._userRepo.findByEmail(email)
-    if (existingUser) throw new Error('User already exists')
+    if (existingUser) throw new Error(MESSAGES.USER_EXISTS)
 
     const hashed = await bcrypt.hash(password, 10)
     const user = await this._userRepo.createUser({
@@ -53,7 +54,7 @@ export class UserService implements IUserService {
   public async resetPassword (email: string, newPassword: string) {
     const user = await this._userRepo.findByEmail(email)
     if (!user) {
-      throw new Error('User not found')
+      throw new Error(MESSAGES.USER_NOT_FOUND)
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10)

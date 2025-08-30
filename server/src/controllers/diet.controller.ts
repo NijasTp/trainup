@@ -17,7 +17,7 @@ export class DietController {
 
   createOrGetDay = async (req: Request, res: Response) => {
     try {
-      const userId = req.params.userId || (req.user as any).id
+      const userId = (req.user as JwtPayload).id
       const { date } = req.body
       const day = await this._dietService.createOrGetDay(userId, date)
       res.status(STATUS.OK).json(day)
@@ -25,6 +25,8 @@ export class DietController {
       res.status(STATUS.BAD_REQUEST).json({ error: err.message })
     }
   }
+
+
   trainerCreateOrGetDay = async (req: Request, res: Response) => {
     try {
       const userId = req.query.userId as string
@@ -40,6 +42,21 @@ export class DietController {
     try {
       const userId =(req.user as JwtPayload).id
       const { date } = req.params as any
+      const day = await this._dietService.getDay(userId, date)
+      if (!day) {
+        res.status(STATUS.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND })
+        return
+      }
+      res.json(day)
+    } catch (err: any) {
+      res.status(STATUS.BAD_REQUEST).json({ error: err.message })
+    }
+  }
+
+  trainerGetDay = async (req: Request, res: Response) => {
+    try {
+      const userId =req.query.userId as string
+      const { date } = req.params
       const day = await this._dietService.getDay(userId, date)
       if (!day) {
         res.status(STATUS.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND })
@@ -73,7 +90,7 @@ export class DietController {
   addMeal = async (req: Request, res: Response) => {
     try {
       const actor = req.user as any
-      const userId = req.params.userId 
+      const userId = req.query.userId || actor.id
       const { date } = req.params
       const payload = req.body
       const day = await this._dietService.addMeal(actor, userId, date, payload)

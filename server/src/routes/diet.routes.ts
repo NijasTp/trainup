@@ -8,6 +8,7 @@ const router = Router();
 const dietController = container.get<DietController>(TYPES.DietController);
 
 router.get("/:date", authMiddleware, dietController.getDay.bind(dietController));
+router.get("/trainer-get-day/:date", authMiddleware, dietController.trainerGetDay.bind(dietController));
 router.post("/", authMiddleware, dietController.createOrGetDay.bind(dietController));
 router.post("/trainer-create-diet", authMiddleware, dietController.trainerCreateOrGetDay.bind(dietController));
 router.post("/trainer-create-diet-session", authMiddleware, dietController.createDietSession.bind(dietController))

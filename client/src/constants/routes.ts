@@ -39,6 +39,9 @@ export const ROUTES = {
   TRAINER_DASHBOARD: "/trainer/dashboard",
   TRAINER_INDIVIDUAL_CLIENT: "/trainer/user/:id",
   TRAINER_CLIENT_WORKOUT: "/trainer/workout/:clientId",
+  TRAINER_CLIENT_SESSION: "/trainer/workout/add-session/:clientId",
+
+  TRAINER_CLIENT_DIET: "/trainer/diet/:clientId",
 
   // Gym Routes
   GYM_LOGIN: "/gym/login",

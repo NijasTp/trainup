@@ -90,7 +90,7 @@ export default function TrainerSiteHeader() {
           <Button
             variant="ghost"
             className="text-foreground hover:bg-primary/5 hover:text-primary transition-all"
-            onClick={() => navigate("/trainer/clients")}
+            onClick={() => navigate("/trainer/dashboard")}
           >
             <Users className="h-4 w-4 mr-2" />
             Clients
@@ -191,7 +191,7 @@ export default function TrainerSiteHeader() {
           >
             <DropdownMenuItem
               className="text-foreground hover:bg-primary/5 cursor-pointer"
-              onSelect={() => navigate("/trainer/clients")}
+              onSelect={() => navigate("/trainer/dashboard")}
             >
               <Users className="h-4 w-4 mr-2" />
               Clients
