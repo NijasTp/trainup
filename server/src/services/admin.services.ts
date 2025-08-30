@@ -1,4 +1,3 @@
-// src/services/admin.services.ts
 import { injectable, inject } from 'inversify'
 import bcrypt from 'bcryptjs'
 import { IAdminService } from '../core/interfaces/services/IAdminService'

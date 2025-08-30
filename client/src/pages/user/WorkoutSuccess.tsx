@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams, useNavigate, Link } from "react-router-dom";
+import { useLocation, useParams, useNavigate, } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Clock } from "lucide-react";
@@ -63,6 +63,8 @@ export default function SuccessPage() {
       });
     }, 250);
 
+
+
     async function markSessionAsDone() {
       try {
         if (id && state?.exerciseTimes && state.isDone) {
@@ -91,6 +93,7 @@ export default function SuccessPage() {
 
     return () => clearInterval(interval);
   }, [id, state, navigate]);
+
 
   const exerciseTimes = state?.exerciseTimes || [];
   const totalWorkoutTime = state?.totalWorkoutTime || 0;
@@ -159,13 +162,12 @@ export default function SuccessPage() {
                   <p className="text-muted-foreground text-center">No exercise times recorded.</p>
                 )}
               </div>
-              <Link to="/workouts">
-                <Button
-                  className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
+         
+                <Button 
+                  className="w-full text-black bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   Back to Workouts
                 </Button>
-              </Link>
             </CardContent>
           </Card>
         )}

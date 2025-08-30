@@ -7,7 +7,7 @@ import { Award, Calendar, Flame, Lock, Mail, Phone, Ruler, Scale, Trophy, User, 
 import { toast } from "sonner";
 import { getProfile } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import type { UserProfile } from "@/interfaces/user/profile/profileInterface";
+import type { UserProfile } from "@/interfaces/user/profileInterface";
 
 
 

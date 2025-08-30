@@ -3,19 +3,21 @@ import { IDietDayRepository } from '../core/interfaces/repositories/IDietReposit
 import TYPES from '../core/types/types'
 import { IDietDay, IMeal } from '../models/diet.model'
 import { MESSAGES } from '../constants/messages'
+import { IStreakService } from '../core/interfaces/services/IStreakService'
 
 @injectable()
 export class DietService {
   constructor (
-    @inject(TYPES.IDietDayRepository) private _repo: IDietDayRepository
+    @inject(TYPES.IDietDayRepository) private _dietRepo: IDietDayRepository,
+    @inject(TYPES.IStreakService) private _streakService: IStreakService
   ) {}
 
   async createOrGetDay (userId: string, date: string): Promise<IDietDay> {
-    return this._repo.createOrGet(userId, date)
+    return this._dietRepo.createOrGet(userId, date)
   }
 
   async getDay (userId: string, date: string): Promise<IDietDay | null> {
-    return this._repo.getByUserAndDate(userId, date)
+    return this._dietRepo.getByUserAndDate(userId, date)
   }
 
   async addMeal (
@@ -31,7 +33,6 @@ export class DietService {
     }
 
     if (actor.role === 'user') {
-      // if (actor.id !== userId) throw new Error(MESSAGES.FORBIDDEN)
       mealPayload.source = 'user'
       mealPayload.sourceId = actor.id
     }
@@ -47,8 +48,8 @@ export class DietService {
 
     mealPayload.usedBy = userId
 
-    await this._repo.createOrGet(userId, date)
-    return this._repo.addMeal(userId, date, mealPayload as IMeal)
+    await this._dietRepo.createOrGet(userId, date)
+    return this._dietRepo.addMeal(userId, date, mealPayload as IMeal)
   }
 
   async updateMeal (
@@ -58,7 +59,7 @@ export class DietService {
     mealId: string,
     update: Partial<IMeal>
   ): Promise<IDietDay | null> {
-    const day = await this._repo.getByUserAndDate(userId, date)
+    const day = await this._dietRepo.getByUserAndDate(userId, date)
     if (!day) throw new Error(MESSAGES.NOT_FOUND)
 
     const meal = day.meals.find(m => m._id?.toString() === mealId)
@@ -75,8 +76,8 @@ export class DietService {
       if (meal.source !== 'user' || actor.id !== creatorId)
         throw new Error(MESSAGES.FORBIDDEN)
     }
-
-    return this._repo.updateMeal(userId, date, mealId, update)
+      
+    return this._dietRepo.updateMeal(userId, date, mealId, update)
   }
 
   async markMealEaten (
@@ -91,7 +92,9 @@ export class DietService {
     if (actor.role !== 'user' && actor.role !== 'trainer')
       throw new Error(MESSAGES.FORBIDDEN)
 
-    return this._repo.markMeal(userId, date, mealId, isEaten)
+    await this._streakService.updateUserStreak(userId)
+
+    return this._dietRepo.markMeal(userId, date, mealId, isEaten)
   }
 
   async removeMeal (
@@ -100,7 +103,7 @@ export class DietService {
     date: string,
     mealId: string
   ): Promise<IDietDay | null> {
-    const day = await this._repo.getByUserAndDate(userId, date)
+    const day = await this._dietRepo.getByUserAndDate(userId, date)
     if (!day) throw new Error(MESSAGES.NOT_FOUND)
     const meal = day.meals.find(m => m._id?.toString() === mealId)
     if (!meal) throw new Error(MESSAGES.NOT_FOUND)
@@ -118,6 +121,6 @@ export class DietService {
         throw new Error(MESSAGES.FORBIDDEN)
     }
 
-    return this._repo.removeMeal(userId, date, mealId)
+    return this._dietRepo.removeMeal(userId, date, mealId)
   }
 }

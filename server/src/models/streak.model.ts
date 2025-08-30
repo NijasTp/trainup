@@ -1,6 +1,7 @@
 import { Schema, Types, model } from "mongoose";
 
 export interface IStreak {
+    _id: Types.ObjectId|string;
     userId: Types.ObjectId | string;
     currentStreak: number;
     longestStreak: number;

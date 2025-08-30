@@ -1,10 +1,11 @@
-// src/services/WorkoutService.ts
 import { injectable, inject } from 'inversify'
 import TYPES from '../core/types/types'
 import { IWorkoutService } from '../core/interfaces/services/IWorkoutService'
 import { IWorkoutSessionRepository } from '../core/interfaces/repositories/IWorkoutSessionRepository'
 import { IWorkoutDayRepository } from '../core/interfaces/repositories/IWorkoutDayRepository'
 import { IWorkoutSession } from '../models/workout.model'
+import { IStreak } from '../models/streak.model'
+import { IStreakService } from '../core/interfaces/services/IStreakService'
 
 interface IExerciseUpdate {
   exerciseId: string
@@ -21,7 +22,8 @@ export class WorkoutService implements IWorkoutService {
     @inject(TYPES.WorkoutSessionRepository)
     private _sessionRepo: IWorkoutSessionRepository,
     @inject(TYPES.WorkoutDayRepository)
-    private _workoutDayRepo: IWorkoutDayRepository
+    private _workoutDayRepo: IWorkoutDayRepository,
+    @inject(TYPES.IStreakService) private _streakService : IStreakService
   ) {}
 
   async createSession (
@@ -59,31 +61,37 @@ export class WorkoutService implements IWorkoutService {
   getSession (id: string) {
     return this._sessionRepo.findById(id)
   }
-    async trainerCreateSession(
+  async trainerCreateSession (
     trainerId: string,
     clientId: string,
     payload: Partial<IWorkoutSession>
   ): Promise<IWorkoutSession> {
     const sessionPayload = {
       ...payload,
-      givenBy: "trainer" as const,
+      givenBy: 'trainer' as const,
       trainerId,
-      userId: clientId,
-    };
+      userId: clientId
+    }
 
-    const session = await this._sessionRepo.create(sessionPayload);
+    const session = await this._sessionRepo.create(sessionPayload)
 
-    let day = await this._workoutDayRepo.findByUserAndDate(clientId, payload.date!);
+    let day = await this._workoutDayRepo.findByUserAndDate(
+      clientId,
+      payload.date!
+    )
     if (!day) {
       day = await this._workoutDayRepo.create({
         userId: clientId,
         date: payload.date!,
-        sessions: [],
-      });
+        sessions: []
+      })
     }
-    await this._workoutDayRepo.addSessionToDay(day._id.toString(), session._id.toString());
+    await this._workoutDayRepo.addSessionToDay(
+      day._id.toString(),
+      session._id.toString()
+    )
 
-    return session;
+    return session
   }
 
   async updateSession (id: string, payload: IWorkoutSessionPayload) {
@@ -95,6 +103,9 @@ export class WorkoutService implements IWorkoutService {
       const session = await this._sessionRepo.findById(id)
       if (!session) throw new Error('Session not found')
 
+      if (payload.isDone) {
+        await this._streakService.updateUserStreak(session.userId)
+      }
 
       const updatedExercises = session.exercises.map(exercise => {
         const update = payload.exerciseUpdates?.find(

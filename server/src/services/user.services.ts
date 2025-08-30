@@ -9,7 +9,7 @@ import { OAuth2Client } from 'google-auth-library'
 import { MESSAGES } from '../constants/messages'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ''
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret'
+const JWT_SECRET = process.env.JWT_SECRET 
 
 @injectable()
 export class UserService implements IUserService {

@@ -2,7 +2,6 @@ import { inject, injectable } from "inversify";
 import TYPES from "../core/types/types";
 import { ITrainerService, PaginatedClients } from "../core/interfaces/services/ITrainerService";
 import { ITrainerRepository } from "../core/interfaces/repositories/ITrainerRepository";
-import { PaginatedTrainers } from "../core/interfaces/services/ITrainerService";
 import { v2 as cloudinary } from "cloudinary";
 import { ITrainer } from "../models/trainer.model";
 import { UploadedFile } from 'express-fileupload';

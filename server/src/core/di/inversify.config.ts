@@ -58,6 +58,10 @@ import { PaymentService } from "../../services/payment.services";
 import { PaymentController } from "../../controllers/payment.controller";
 import { IPaymentRepository } from "../interfaces/repositories/IPaymentRepository";
 import { IPaymentService } from "../interfaces/services/IPaymentService";
+import { IStreakService } from "../interfaces/services/IStreakService";
+import { StreakService } from "../../services/streak.services";
+import { StreakRepository } from "../../repositories/streak.repository";
+import { IStreakRepository } from "../interfaces/repositories/IStreakRepository";
 
 
 // Create container 
@@ -69,6 +73,9 @@ container.bind<IUserService>(TYPES.IUserService).to(UserService);
 container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepository);
 container.bind<OAuthClient>(TYPES.OAuthClient).to(OAuthClient);
 container.bind<PassportConfig>(TYPES.PassportConfig).to(PassportConfig).inSingletonScope();
+
+container.bind<IStreakService>(TYPES.IStreakService).to(StreakService);
+container.bind<IStreakRepository>(TYPES.IStreakRepository).to(StreakRepository);
 
 container.bind<IPaymentRepository>(TYPES.IPaymentRepository).to(PaymentRepository);
 container.bind<IPaymentService>(TYPES.IPaymentService).to(PaymentService);

@@ -1,5 +1,4 @@
 import { IUser } from '../../../models/user.model'
-import { PaginatedUsers } from '../repositories/IUserRepository'
 export interface IUserService {
   registerUser(
     name: string,

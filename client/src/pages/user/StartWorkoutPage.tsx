@@ -110,6 +110,7 @@ export default function StartSessionPage() {
       setIsLoading(true);
       try {
         const response = await getWorkoutSession(id!);
+        if (response.isDone) return navigate("/workouts");
         setSession({
           ...response,
           exercises: response.exercises.map((ex: IExercise) => ({ ...ex, isDone: false })),

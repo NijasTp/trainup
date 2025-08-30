@@ -7,6 +7,10 @@ const TYPES = {
   IUserRepository: Symbol.for("IUserRepository"),
   UserController:Symbol.for("UserController"),
 
+  IStreakRepository: Symbol.for("IStreakRepository"),
+  IStreakService: Symbol.for("IStreakService"),
+  StreakController: Symbol.for("StreakController"),
+
   PaymentController:Symbol.for("PaymentController"),
   IPaymentRepository:Symbol.for("IPaymentRepository"),
   IPaymentService:Symbol.for("IPaymentService"),

@@ -338,16 +338,13 @@ function WorkoutSessionCard({
         </div>
         {canStartSession && !session.isDone && (
           <div className="sticky bottom-0 bg-background py-4">
+          <Link to={`/workouts/${session._id}/start`}>
             <Button
               className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
-              onClick={() => {
-                toast.success(`Started session: ${session.name}`, {
-                  description: "Track your progress in the app!",
-                });
-              }}
             >
               Start Session
             </Button>
+            </Link>
           </div>
         )}
       </DialogContent>

@@ -24,70 +24,8 @@ import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { Link, useNavigate } from "react-router-dom";
 import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";
+import type { DietResponse, Meal, Trainer, WorkoutSession } from "@/interfaces/user/homeInterface";
 
-interface Exercise {
-  id: string;
-  name: string;
-  sets: number;
-  reps: string;
-  weight?: number;
-  image?: string;
-  timeTaken?: number;
-}
-
-interface WorkoutSession {
-  _id: string;
-  name: string;
-  givenBy: "trainer" | "user";
-  trainerId?: string;
-  date: string;
-  time: string;
-  exercises: Exercise[] | [];
-  goal?: string;
-  notes?: string;
-  isDone?: boolean;
-}
-
-interface Meal {
-  _id: string;
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-  time: string;
-  isEaten: boolean;
-  source: "trainer" | "user";
-  usedBy: string;
-  sourceId: string;
-  createdAt: string;
-  updatedAt: string;
-  nutritions: any[] | [];
-  eatenTime?: string;
-  image?: string;
-  description?: string;
-}
-
-interface DietResponse {
-  _id: string;
-  user: string;
-  date: string;
-  meals: Meal[] | [];
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
-
-interface Trainer {
-  id: string;
-  name: string;
-  specialty: string;
-  location: string;
-  price: string;
-  rating: number;
-  bio: string;
-  profileImage: string;
-}
 
 const staticWorkouts: WorkoutSession[] = [
   {

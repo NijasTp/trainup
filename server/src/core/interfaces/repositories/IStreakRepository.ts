@@ -1,8 +1,8 @@
-import { Types } from "mongoose";
-import { IStreak } from "../../../models/streak.model";
+import { Types } from 'mongoose';
+import { IStreak } from '../../../models/streak.model';
 
 export interface IStreakRepository {
+  create(userId: Types.ObjectId): Promise<IStreak>;
   findByUserId(userId: Types.ObjectId): Promise<IStreak | null>;
-  create(userId: Types.ObjectId): Promise<IStreak | null>;
-  updateStreak(userId: Types.ObjectId, increment: boolean): Promise<IStreak | null>;
+  update(streak: IStreak): Promise<IStreak>;
 }
