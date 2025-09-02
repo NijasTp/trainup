@@ -20,7 +20,7 @@ export default defineConfig([
     extends: ["js/recommended", ...tseslint.configs.recommended],
     rules: {
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
-      "no-console": "warn",
+      "no-console": ["error", { allow: ["warn", "error"] }],
     },
   },
 ]);

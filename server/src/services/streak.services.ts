@@ -4,6 +4,7 @@ import { IStreak } from '../models/streak.model';
 import { IStreakService } from '../core/interfaces/services/IStreakService';
 import { IStreakRepository } from '../core/interfaces/repositories/IStreakRepository';
 import TYPES from '../core/types/types';
+import { logger } from '../utils/logger.util';
 
 @injectable()
 export class StreakService implements IStreakService {
@@ -22,7 +23,7 @@ export class StreakService implements IStreakService {
 
   async updateUserStreak(userId: Types.ObjectId): Promise<IStreak> {
     const streak = await this.getOrCreateUserStreak(userId);
-
+    
     const today = new Date();
     const lastAction = new Date(streak.lastActionDate);
     

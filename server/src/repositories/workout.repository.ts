@@ -25,4 +25,10 @@ export class WorkoutSessionRepository implements IWorkoutSessionRepository {
   async findTemplates(filter: any = {}) {
     return WorkoutSessionModel.find({ date: { $exists: false }, ...filter }).lean().exec();
   }
+  async findAdminTemplates() {
+    return WorkoutSessionModel.find({
+      date: { $exists: false },
+      givenBy: "admin",
+    }).lean().exec();
+  }
 }

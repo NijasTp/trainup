@@ -1,104 +1,168 @@
 import type React from "react";
-import { useState, useEffect, type ChangeEvent } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, CheckCircle, FileText } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { getTrainerApplication, getTrainerById, getTrainers, toggleTrainerBan, verifyTrainer } from "@/services/adminService";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Search, ChevronLeft, ChevronRight, Loader2, FileText, Plus, Eye, Edit, Trash } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 
-interface ITrainer {
-  _id: string;
+// Mock data interfaces based on provided schemas
+interface IExercise {
+  id: string;
   name: string;
-  email: string;
-  phone: string;
-  isVerified: boolean;
-  isBanned: boolean;
-  role: "trainer";
-  gymId?: string;
-  clients: string[];
-  bio: string;
-  location: string;
-  specialization: string;
-  experience: string;
-  badges: string[];
-  rating: number;
-  certificate: string;
-  profileImage: string;
-  profileStatus: "pending" | "approved" | "rejected" | "active" | "suspended";
-  createdAt: Date;
-  updatedAt: Date;
+  image?: string;
+  sets: number;
+  reps?: string;
+  time?: string;
+  rest?: string;
+  notes?: string;
 }
 
-interface TrainerResponse {
-  trainers: ITrainer[];
+interface IWorkoutTemplate {
+  _id: string;
+  name: string;
+  givenBy: "admin";
+  exercises: IExercise[];
+  goal?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface TemplateMeal {
+  name: string;
+  calories: number;
+  protein?: number;
+  carbs?: number;
+  fats?: number;
+  time: string;
+  nutritions?: { label: string; value: number; unit?: string }[];
+  notes?: string;
+}
+
+interface IDietTemplate {
+  _id: string;
+  title: string;
+  description?: string;
+  createdBy: string;
+  meals: TemplateMeal[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface TemplateResponse {
+  templates: (IWorkoutTemplate | IDietTemplate)[];
   total: number;
   page: number;
   totalPages: number;
 }
 
-const TrainerManagement = () => {
-  const [response, setResponse] = useState<TrainerResponse>({ trainers: [], total: 0, page: 1, totalPages: 1 });
+// Mock data for diet templates (static)
+const mockDietTemplates: IDietTemplate[] = [
+  {
+    _id: "dt1",
+    title: "Balanced Diet Plan",
+    description: "General balanced diet for daily nutrition",
+    createdBy: "admin1",
+    meals: [
+      {
+        name: "Breakfast Oatmeal",
+        calories: 300,
+        protein: 10,
+        carbs: 45,
+        fats: 8,
+        time: "08:00",
+        notes: "Use skim milk",
+      },
+      {
+        name: "Grilled Chicken Lunch",
+        calories: 450,
+        protein: 35,
+        carbs: 30,
+        fats: 15,
+        time: "12:30",
+      },
+    ],
+    createdAt: "2025-08-01T09:00:00Z",
+    updatedAt: "2025-08-01T09:00:00Z",
+  },
+  {
+    _id: "dt2",
+    title: "Keto Diet Plan",
+    description: "Low-carb, high-fat diet plan",
+    createdBy: "admin1",
+    meals: [
+      {
+        name: "Avocado Egg Breakfast",
+        calories: 400,
+        protein: 15,
+        carbs: 5,
+        fats: 35,
+        time: "07:30",
+      },
+    ],
+    createdAt: "2025-08-02T11:00:00Z",
+    updatedAt: "2025-08-02T11:00:00Z",
+  },
+];
+
+const TemplateManagement = () => {
+  const [templateType, setTemplateType] = useState<"workout" | "diet">("workout");
+  const [response, setResponse] = useState<TemplateResponse>({ templates: [], total: 0, page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState("");
-  const [isBannedFilter, setIsBannedFilter] = useState<string>("all");
-  const [isVerifiedFilter, setIsVerifiedFilter] = useState<string>("all");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const trainersPerPage = 5;
+  const [selectedTemplate, setSelectedTemplate] = useState<IWorkoutTemplate | IDietTemplate | null>(null);
+  const templatesPerPage = 5;
   const navigate = useNavigate();
 
-  // Log filter changes
   useEffect(() => {
-    console.log("Filter values changed:", { isBannedFilter, isVerifiedFilter, startDate, endDate, searchQuery });
-  }, [isBannedFilter, isVerifiedFilter, startDate, endDate, searchQuery]);
-
-  useEffect(() => {
-    const fetchTrainers = async () => {
+    const fetchTemplates = async () => {
       setLoading(true);
       try {
-        console.log("Calling getTrainers with params:", {
-          currentPage,
-          trainersPerPage,
-          searchQuery,
-          isBannedFilter,
-          isVerifiedFilter,
-          startDate,
-          endDate,
-        });
-        const res = await getTrainers(
-          currentPage,
-          trainersPerPage,
-          searchQuery,
-          isBannedFilter,
-          isVerifiedFilter,
-          startDate,
-          endDate
-        );
-        console.log("getTrainers response:", res);
-        setResponse(res as TrainerResponse);
-        setError(null);
+        if (templateType === "workout") {
+          // Dynamic fetch for workout templates
+          const apiResponse = await axios.get('/admin/workout-templates', {
+            params: {
+              page: currentPage,
+              limit: templatesPerPage,
+              search: searchQuery,
+            },
+          });
+          setResponse({
+            templates: apiResponse.data.templates,
+            total: apiResponse.data.total,
+            page: apiResponse.data.page,
+            totalPages: apiResponse.data.totalPages,
+          });
+        } else {
+          // Static for diet templates
+          const filteredTemplates = mockDietTemplates.filter(template =>
+            template.title.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          const startIndex = (currentPage - 1) * templatesPerPage;
+          const paginatedTemplates = filteredTemplates.slice(startIndex, startIndex + templatesPerPage);
+          setResponse({
+            templates: paginatedTemplates,
+            total: filteredTemplates.length,
+            page: currentPage,
+            totalPages: Math.ceil(filteredTemplates.length / templatesPerPage),
+          });
+        }
       } catch (error: any) {
-        console.error("Error fetching trainers:", {
-          error: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        });
-        setError(error.response?.data?.message || "Failed to fetch trainers. Please try again.");
-        setResponse({ trainers: [], total: 0, page: 1, totalPages: 1 });
+        console.error("Error fetching templates:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTrainers();
-  }, [currentPage, searchQuery, isBannedFilter, isVerifiedFilter, startDate, endDate]);
+    fetchTemplates();
+  }, [currentPage, searchQuery, templateType]);
 
   const handleSearch = () => {
     setSearchQuery(searchInput);
@@ -111,84 +175,70 @@ const TrainerManagement = () => {
     }
   };
 
-  const handleBanToggle = async (trainerId: string, currentBanStatus: boolean) => {
-    setActionLoading(trainerId);
-    try {
-      await toggleTrainerBan(trainerId, !currentBanStatus);
-      const res = await getTrainers(currentPage, trainersPerPage, searchQuery, isBannedFilter, isVerifiedFilter, startDate, endDate);
-      setResponse(res as TrainerResponse);
-      setError(null);
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      console.error("Error updating trainer ban status:", error);
-      setError(error.response?.data?.message || "Failed to update ban status.");
-    } finally {
-      setActionLoading(null);
-    }
+  const handleAddTemplate = () => {
+    navigate(`/admin/templates/new/${templateType}`);
   };
 
-  const handleVerify = async (trainerId: string) => {
-    setActionLoading(trainerId);
-    try {
-      await verifyTrainer(trainerId);
-      const res = await getTrainers(currentPage, trainersPerPage, searchQuery, isBannedFilter, isVerifiedFilter, startDate, endDate);
-      setResponse(res as TrainerResponse);
-      setError(null);
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      console.error("Error verifying trainer:", error);
-      setError(error.response?.data?.message || "Failed to verify trainer.");
-    } finally {
-      setActionLoading(null);
-    }
+  const handleViewTemplate = (template: IWorkoutTemplate | IDietTemplate) => {
+    setSelectedTemplate(template);
   };
 
-  const handleViewTrainer = async (trainerId: string) => {
-    try {
-      const res = await getTrainerById(trainerId);
-      const trainer = res as ITrainer;
-      navigate(`/admin/trainers/${trainerId}`, { state: { trainer } });
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      console.error("Error fetching trainer details:", error);
-      setError(error.response?.data?.message || "Failed to fetch trainer details.");
-    }
+  const handleEditTemplate = (template: IWorkoutTemplate | IDietTemplate) => {
+    navigate(`/admin/templates/edit/${template._id}/${templateType}`);
   };
 
-  const handleViewApplication = async (trainerId: string) => {
-    try {
-      const res = await getTrainerApplication(trainerId);
-      const application = res;
-      navigate(`/admin/trainers/${trainerId}/application`, { state: { application } });
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      console.error("Error fetching trainer application:", error);
-      setError(error.response?.data?.message || "Failed to fetch application.");
+  const handleDeleteTemplate = async (id: string) => {
+    if (templateType === "workout") {
+      try {
+        await axios.delete(`/admin/workout-templates/${id}`);
+        // Refetch after delete
+        setCurrentPage(1);
+      } catch (error) {
+        console.error("Error deleting template:", error);
+      }
+    } else {
+      // Static delete for diet (if needed, but since static, perhaps not implemented)
+      console.log("Delete diet template not supported as it's static.");
     }
   };
 
   return (
     <AdminLayout>
       <div className="p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center">
-            <UserCheck className="mr-3 h-8 w-8 text-[#4B8B9B]" />
-            Trainer Management
-          </h1>
-          <p className="text-gray-400">Manage and monitor all registered trainers</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2 flex items-center">
+              <FileText className="mr-3 h-8 w-8 text-[#4B8B9B]" />
+              Template Management
+            </h1>
+            <p className="text-gray-400">Manage workout and diet templates</p>
+          </div>
+          <Button onClick={handleAddTemplate} className="bg-[#4B8B9B] hover:bg-[#4B8B9B]/80">
+            <Plus className="mr-2 h-4 w-4" />
+            Add {templateType === "workout" ? "Workout" : "Diet"} Template
+          </Button>
         </div>
 
-        {/* Search and Filters */}
+        {/* Template Type Selector and Search */}
         <Card className="bg-[#111827] border border-[#4B8B9B]/30 mb-6">
           <CardContent className="p-6">
             <div className="flex flex-col gap-4">
               <div className="flex gap-4 items-center">
+                <Select onValueChange={(value: "workout" | "diet") => setTemplateType(value)} defaultValue="workout">
+                  <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white w-40">
+                    <SelectValue placeholder="Select Template Type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
+                    <SelectItem value="workout">Workout Templates</SelectItem>
+                    <SelectItem value="diet">Diet Templates</SelectItem>
+                  </SelectContent>
+                </Select>
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#4B8B9B]" />
                   <Input
-                    placeholder="Search trainers by name, email, or specialization..."
+                    placeholder={`Search ${templateType} templates...`}
                     value={searchInput}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value)}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     onKeyPress={handleKeyPress}
                     className="pl-10 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
                   />
@@ -197,68 +247,27 @@ const TrainerManagement = () => {
                   Search
                 </Button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Select onValueChange={setIsBannedFilter} defaultValue="all">
-                  <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
-                    <SelectValue placeholder="Filter by Status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="banned">Banned</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select onValueChange={setIsVerifiedFilter} defaultValue="all">
-                  <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
-                    <SelectValue placeholder="Filter by Verification" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-                    <SelectItem value="all">All Verification</SelectItem>
-                    <SelectItem value="verified">Verified</SelectItem>
-                    <SelectItem value="unverified">Unverified</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="date"
-                  placeholder="Start Date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
-                />
-                <Input
-                  type="date"
-                  placeholder="End Date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
-                />
-              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Trainers Table */}
+        {/* Templates Table */}
         <Card className="bg-[#111827] border border-[#4B8B9B]/30">
           <CardHeader>
             <CardTitle className="text-white">
-              Trainers ({response.trainers.length} of {response.total})
+              {templateType === "workout" ? "Workout" : "Diet"} Templates ({response.templates.length} of {response.total})
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-[#4B8B9B]" />
-                <span className="ml-2 text-gray-400">Loading trainers...</span>
+                <span className="ml-2 text-gray-400">Loading templates...</span>
               </div>
-            ) : error ? (
+            ) : response.templates.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-red-400 mb-4">{error}</p>
-                <Button onClick={() => window.location.reload()}>Try Again</Button>
-              </div>
-            ) : response.trainers.length === 0 ? (
-              <div className="text-center py-12">
-                <UserCheck className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No trainers found</p>
+                <FileText className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400">No templates found</p>
               </div>
             ) : (
               <>
@@ -266,130 +275,75 @@ const TrainerManagement = () => {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-700">
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Name</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Email</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Phone</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Specialization</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Experience</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Clients</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Rating</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Status</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Name/Title</th>
+                        {templateType === "workout" ? (
+                          <>
+                            <th className="text-left py-3 px-4 text-gray-400 font-medium">Exercises</th>
+                            <th className="text-left py-3 px-4 text-gray-400 font-medium">Goal</th>
+                          </>
+                        ) : (
+                          <>
+                            <th className="text-left py-3 px-4 text-gray-400 font-medium">Meals</th>
+                            <th className="text-left py-3 px-4 text-gray-400 font-medium">Total Calories</th>
+                          </>
+                        )}
+                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Created At</th>
                         <th className="text-left py-3 px-4 text-gray-400 font-medium">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {response.trainers.map((trainer) => (
-                        <tr key={trainer._id} className="border-b border-gray-800 hover:bg-[#1F2A44]/30">
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={trainer.profileImage || "/placeholder.svg"}
-                                alt={trainer.name}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                              <div>
-                                <p className="text-white font-medium">{trainer.name}</p>
-                                <p className="text-sm text-gray-400">{trainer.location}</p>
-                              </div>
-                              </div>
-                            </td>
-                          <td className="py-4 px-4 text-gray-300">{trainer.email}</td>
-                          <td className="py-4 px-4 text-gray-300">{trainer.phone}</td>
-                          <td className="py-4 px-4">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#4B8B9B]/20 text-[#4B8B9B]">
-                              {trainer.specialization}
-                            </span>
+                      {response.templates.map((template) => (
+                        <tr key={template._id} className="border-b border-gray-800 hover:bg-[#1F2A44]/30">
+                          <td className="py-4 px-4 text-white font-medium">
+                            {templateType === "workout" ? (template as IWorkoutTemplate).name : (template as IDietTemplate).title}
                           </td>
-                          <td className="py-4 px-4 text-gray-300">{trainer.experience}</td>
-                          <td className="py-4 px-4 text-gray-300">{trainer.clients.length}</td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-1">
-                              <span className="text-yellow-400">★</span>
-                              <span className="text-white">{trainer.rating.toFixed(1)}</span>
-                            </div>
+                          {templateType === "workout" ? (
+                            <>
+                              <td className="py-4 px-4 text-gray-300">
+                                {(template as IWorkoutTemplate).exercises?.length}
+                              </td>
+                              <td className="py-4 px-4 text-gray-300">
+                                {(template as IWorkoutTemplate).goal || "N/A"}
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="py-4 px-4 text-gray-300">
+                                {(template as IDietTemplate).meals?.length ?? 0}
+                              </td>
+                              <td className="py-4 px-4 text-gray-300">
+                                {(template as IDietTemplate).meals?.reduce((sum, meal) => sum + meal.calories, 0) ?? 0}
+                              </td>
+                            </>
+                          )}
+                          <td className="py-4 px-4 text-gray-300">
+                            {new Date(template.createdAt).toLocaleDateString()}
                           </td>
-                          <td className="py-4 px-4">
-                            <div className="flex flex-col gap-1">
-                              <span
-                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                  trainer.isVerified
-                                    ? "bg-green-900/30 text-green-400"
-                                    : "bg-yellow-900/30 text-yellow-400"
-                                }`}
-                              >
-                                {trainer.isVerified ? "Verified" : "Unverified"}
-                              </span>
-                              {trainer.isBanned && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-400">
-                                  Banned
-                                </span>
-                              )}
-                              <span
-                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                  trainer.profileStatus === "active"
-                                    ? "bg-green-900/30 text-green-400"
-                                    : trainer.profileStatus === "pending"
-                                      ? "bg-yellow-900/30 text-yellow-400"
-                                      : trainer.profileStatus === "approved"
-                                        ? "bg-blue-900/30 text-blue-400"
-                                        : trainer.profileStatus === "rejected"
-                                          ? "bg-red-900/30 text-red-400"
-                                          : "bg-gray-900/30 text-gray-400"
-                                }`}
-                              >
-                                {trainer.profileStatus}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-2">
-                              {!trainer.isVerified && (
-                                <Button
-                                  variant="default"
-                                  onClick={() => handleVerify(trainer._id)}
-                                  disabled={actionLoading === trainer._id}
-                                  className="flex items-center gap-1 text-xs px-2 py-1"
-                                >
-                                  {actionLoading === trainer._id ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <CheckCircle className="h-3 w-3" />
-                                  )}
-                                  Verify
-                                </Button>
-                              )}
-                              <Button
-                                variant="default"
-                                onClick={() => handleBanToggle(trainer._id, trainer.isBanned)}
-                                disabled={actionLoading === trainer._id}
-                                className="flex items-center gap-1 text-xs px-2 py-1"
-                              >
-                                {actionLoading === trainer._id ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                  <Ban className="h-3 w-3" />
-                                )}
-                                {trainer.isBanned ? "Unban" : "Ban"}
-                              </Button>
-                              {!trainer.isVerified && (
-                                <Button
-                                  variant="outline"
-                                  onClick={() => handleViewApplication(trainer._id)}
-                                  className="flex items-center gap-1 text-xs px-2 py-1"
-                                >
-                                  <FileText className="h-3 w-3" />
-                                  App
-                                </Button>
-                              )}
-                              <Button
-                                variant="outline"
-                                onClick={() => handleViewTrainer(trainer._id)}
-                                className="flex items-center gap-1 text-xs px-2 py-1"
-                              >
-                                <Eye className="h-3 w-3" />
-                                View
-                              </Button>
-                            </div>
+                          <td className="py-4 px-4 flex gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => handleViewTemplate(template)}
+                              className="flex items-center gap-1 text-xs px-2 py-1"
+                            >
+                              <Eye className="h-3 w-3" />
+                              View
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleEditTemplate(template)}
+                              className="flex items-center gap-1 text-xs px-2 py-1"
+                            >
+                              <Edit className="h-3 w-3" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleDeleteTemplate(template._id)}
+                              className="flex items-center gap-1 text-xs px-2 py-1"
+                            >
+                              <Trash className="h-3 w-3" />
+                              Delete
+                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -429,9 +383,141 @@ const TrainerManagement = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Template Details Modal */}
+        {selectedTemplate && (
+          <Dialog open={!!selectedTemplate} onOpenChange={() => setSelectedTemplate(null)}>
+            <DialogContent className="bg-[#111827] border-[#4B8B9B]/30 text-white max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>
+                  {templateType === "workout"
+                    ? (selectedTemplate as IWorkoutTemplate).name
+                    : (selectedTemplate as IDietTemplate).title}
+                </DialogTitle>
+                <DialogClose className="text-gray-400 hover:text-white" />
+              </DialogHeader>
+              <div className="mt-4">
+                {templateType === "workout" ? (
+                  <div>
+                    <p className="text-gray-300 mb-2">
+                      <span className="font-medium">Goal:</span>{" "}
+                      {(selectedTemplate as IWorkoutTemplate).goal || "N/A"}
+                    </p>
+                    <p className="text-gray-300 mb-4">
+                      <span className="font-medium">Notes:</span>{" "}
+                      {(selectedTemplate as IWorkoutTemplate).notes || "N/A"}
+                    </p>
+                    <h3 className="text-lg font-semibold text-white mb-2">Exercises</h3>
+                    {(selectedTemplate as IWorkoutTemplate).exercises.length === 0 ? (
+                      <p className="text-gray-400">No exercises added</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {(selectedTemplate as IWorkoutTemplate).exercises.map((exercise) => (
+                          <Card key={exercise.id} className="bg-[#1F2A44]/50 border-[#4B8B9B]/30">
+                            <CardContent className="p-4">
+                              <h4 className="text-white font-medium">{exercise.name}</h4>
+                              <p className="text-gray-300 text-sm">
+                                <span className="font-medium">Sets:</span> {exercise.sets}
+                              </p>
+                              {exercise.reps && (
+                                <p className="text-gray-300 text-sm">
+                                  <span className="font-medium">Reps:</span> {exercise.reps}
+                                </p>
+                              )}
+                              {exercise.time && (
+                                <p className="text-gray-300 text-sm">
+                                  <span className="font-medium">Time:</span> {exercise.time}
+                                </p>
+                              )}
+                              {exercise.rest && (
+                                <p className="text-gray-300 text-sm">
+                                  <span className="font-medium">Rest:</span> {exercise.rest}
+                                </p>
+                              )}
+                              {exercise.notes && (
+                                <p className="text-gray-300 text-sm">
+                                  <span className="font-medium">Notes:</span> {exercise.notes}
+                                </p>
+                              )}
+                              {exercise.image && (
+                                <img
+                                  src={exercise.image}
+                                  alt={exercise.name}
+                                  className="mt-2 w-24 h-24 object-cover rounded"
+                                />
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-gray-300 mb-2">
+                      <span className="font-medium">Description:</span>{" "}
+                      {(selectedTemplate as IDietTemplate).description || "N/A"}
+                    </p>
+                    <h3 className="text-lg font-semibold text-white mb-2">Meals</h3>
+                    {(selectedTemplate as IDietTemplate).meals.length === 0 ? (
+                      <p className="text-gray-400">No meals added</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {(selectedTemplate as IDietTemplate).meals.map((meal, index) => (
+                          <Card key={index} className="bg-[#1F2A44]/50 border-[#4B8B9B]/30">
+                            <CardContent className="p-4">
+                              <h4 className="text-white font-medium">{meal.name}</h4>
+                              <p className="text-gray-300 text-sm">
+                                <span className="font-medium">Time:</span> {meal.time}
+                              </p>
+                              <p className="text-gray-300 text-sm">
+                                <span className="font-medium">Calories:</span> {meal.calories} kcal
+                              </p>
+                              {meal.protein && (
+                                <p className="text-gray-300 text-sm">
+                                  <span className="font-medium">Protein:</span> {meal.protein}g
+                                </p>
+                              )}
+                              {meal.carbs && (
+                                <p className="text-gray-300 text-sm">
+                                  <span className="font-medium">Carbs:</span> {meal.carbs}g
+                                </p>
+                              )}
+                              {meal.fats && (
+                                <p className="text-gray-300 text-sm">
+                                  <span className="font-medium">Fats:</span> {meal.fats}g
+                                </p>
+                              )}
+                              {meal.nutritions && meal.nutritions.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-gray-300 text-sm font-medium">Additional Nutrition:</p>
+                                  {meal.nutritions.map((nutrition, idx) => (
+                                    <p key={idx} className="text-gray-300 text-sm">
+                                      {nutrition.label}: {nutrition.value}
+                                      {nutrition.unit && ` ${nutrition.unit}`}
+                                    </p>
+                                  ))}
+                                </div>
+                              )}
+                              {meal.notes && (
+                                <p className="text-gray-300 text-sm">
+                                  <span className="font-medium">Notes:</span> {meal.notes}
+                                </p>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </AdminLayout>
   );
 };
 
-export default TrainerManagement;
+export default TemplateManagement;

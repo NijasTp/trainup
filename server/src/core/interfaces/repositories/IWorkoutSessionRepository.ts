@@ -7,4 +7,5 @@ export interface IWorkoutSessionRepository {
   update(id: string, update: Partial<IWorkoutSession>): Promise<IWorkoutSession | null>;
   delete(id: string): Promise<void>;
   findTemplates(filter?: any): Promise<IWorkoutSession[]>;
+  findAdminTemplates(adminId: string): Promise<IWorkoutSession[]>
 }

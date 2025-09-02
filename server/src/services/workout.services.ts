@@ -1,20 +1,10 @@
 import { injectable, inject } from 'inversify'
 import TYPES from '../core/types/types'
-import { IWorkoutService } from '../core/interfaces/services/IWorkoutService'
+import { IExerciseUpdate, IWorkoutService, IWorkoutSessionPayload } from '../core/interfaces/services/IWorkoutService'
 import { IWorkoutSessionRepository } from '../core/interfaces/repositories/IWorkoutSessionRepository'
-import { IWorkoutDayRepository } from '../core/interfaces/repositories/IWorkoutDayRepository'
-import { IWorkoutSession } from '../models/workout.model'
-import { IStreak } from '../models/streak.model'
-import { IStreakService } from '../core/interfaces/services/IStreakService'
-
-interface IExerciseUpdate {
-  exerciseId: string
-  timeTaken: number
-}
-
-interface IWorkoutSessionPayload extends Partial<IWorkoutSession> {
-  exerciseUpdates?: IExerciseUpdate[]
-}
+import { IWorkoutDayRepository } from '../core/interfaces/repositories/IWorkoutDayRepository';
+import { IWorkoutSession } from '../models/workout.model';
+import { IStreakService } from '../core/interfaces/services/IStreakService';
 
 @injectable()
 export class WorkoutService implements IWorkoutService {
@@ -103,9 +93,6 @@ export class WorkoutService implements IWorkoutService {
       const session = await this._sessionRepo.findById(id)
       if (!session) throw new Error('Session not found')
 
-      if (payload.isDone) {
-        await this._streakService.updateUserStreak(session.userId)
-      }
 
       const updatedExercises = session.exercises.map(exercise => {
         const update = payload.exerciseUpdates?.find(

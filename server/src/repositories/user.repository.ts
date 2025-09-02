@@ -102,7 +102,7 @@ export class UserRepository implements IUserRepository {
   ): Promise<IUser | null> {
     return await UserModel.findByIdAndUpdate(id, updateData, { new: true })
   }
-  async findById (id: string) {
+    async findById (id: string) {
     return UserModel.findById(id).select('-password')
   }
 }

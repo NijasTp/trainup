@@ -15,9 +15,9 @@ export interface IExercise {
 export interface IWorkoutSession extends Document {
   _id: Types.ObjectId;
   name: string;
-  givenBy: "trainer" | "user";
+  givenBy: "trainer" | "user" | "admin";
   trainerId?: Types.ObjectId | string;
-  userId: Types.ObjectId | string;
+  userId?: Types.ObjectId | string;
   date?: string;
   time?: string;
   exercises: IExercise[];
@@ -46,7 +46,7 @@ const WorkoutSessionSchema = new Schema<IWorkoutSession>(
     name: { type: String, required: true },
     givenBy: { type: String, enum: ["trainer", "user"], required: true },
     trainerId: { type: Schema.Types.ObjectId, ref: "Trainer" },
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User" },
     date: { type: String },
     time: { type: String },
     exercises: { type: [ExerciseSchema], default: [] },

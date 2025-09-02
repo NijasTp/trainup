@@ -2,6 +2,15 @@
 import { IWorkoutSession } from "../../../models/workout.model";
 import { IWorkoutDay } from "../../../models/workoutDay.model";
 
+export interface IExerciseUpdate {
+  exerciseId: string
+  timeTaken: number
+}
+
+export interface IWorkoutSessionPayload extends Partial<IWorkoutSession> {
+  exerciseUpdates?: IExerciseUpdate[]
+}
+
 export interface IWorkoutService {
   createSession(payload: Partial<IWorkoutSession>): Promise<IWorkoutSession>;
   getSession(id: string): Promise<IWorkoutSession | null>;

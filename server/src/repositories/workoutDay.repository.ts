@@ -1,4 +1,3 @@
-// src/repositories/WorkoutDayRepository.ts
 import { injectable } from "inversify";
 import WorkoutDayModel,{ IWorkoutDay } from "../models/workoutDay.model";
 import { IWorkoutDayRepository } from "../core/interfaces/repositories/IWorkoutDayRepository";

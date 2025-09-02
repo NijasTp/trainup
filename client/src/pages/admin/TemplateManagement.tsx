@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
-import { Search, ChevronLeft, ChevronRight, Loader2, FileText, Plus, Eye } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Loader2, FileText, Plus, Eye, Edit, Trash } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 // Mock data interfaces based on provided schemas
 interface IExercise {
@@ -60,59 +61,7 @@ interface TemplateResponse {
   totalPages: number;
 }
 
-// Mock data
-const mockWorkoutTemplates: IWorkoutTemplate[] = [
-  {
-    _id: "wt1",
-    name: "Beginner Full Body",
-    givenBy: "admin",
-    exercises: [
-      {
-        id: "e1",
-        name: "Push-ups",
-        sets: 3,
-        reps: "10-12",
-        rest: "30s",
-        notes: "Keep core engaged",
-      },
-      {
-        id: "e2",
-        name: "Squats",
-        sets: 3,
-        reps: "12-15",
-        rest: "30s",
-      },
-    ],
-    goal: "Build strength",
-    createdAt: "2025-08-01T10:00:00Z",
-    updatedAt: "2025-08-01T10:00:00Z",
-  },
-  {
-    _id: "wt2",
-    name: "Cardio Blast",
-    givenBy: "admin",
-    exercises: [
-      {
-        id: "e3",
-        name: "Jump Rope",
-        sets: 4,
-        time: "1min",
-        rest: "15s",
-      },
-      {
-        id: "e4",
-        name: "Burpees",
-        sets: 3,
-        time: "30s",
-        rest: "20s",
-      },
-    ],
-    goal: "Improve endurance",
-    createdAt: "2025-08-02T12:00:00Z",
-    updatedAt: "2025-08-02T12:00:00Z",
-  },
-];
-
+// Mock data for diet templates (static)
 const mockDietTemplates: IDietTemplate[] = [
   {
     _id: "dt1",
@@ -176,22 +125,35 @@ const TemplateManagement = () => {
     const fetchTemplates = async () => {
       setLoading(true);
       try {
-        const mockData = templateType === "workout" ? mockWorkoutTemplates : mockDietTemplates;
-        const filteredTemplates = mockData.filter(template =>
-          templateType === "workout"
-            ? (template as IWorkoutTemplate).name.toLowerCase().includes(searchQuery.toLowerCase())
-            : (template as IDietTemplate).title.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        
-        const startIndex = (currentPage - 1) * templatesPerPage;
-        const paginatedTemplates = filteredTemplates.slice(startIndex, startIndex + templatesPerPage);
-        
-        setResponse({
-          templates: paginatedTemplates,
-          total: filteredTemplates.length,
-          page: currentPage,
-          totalPages: Math.ceil(filteredTemplates.length / templatesPerPage),
-        });
+        if (templateType === "workout") {
+          // Dynamic fetch for workout templates
+          const apiResponse = await axios.get('/admin/workout-templates', {
+            params: {
+              page: currentPage,
+              limit: templatesPerPage,
+              search: searchQuery,
+            },
+          });
+          setResponse({
+            templates: apiResponse.data.templates,
+            total: apiResponse.data.total,
+            page: apiResponse.data.page,
+            totalPages: apiResponse.data.totalPages,
+          });
+        } else {
+          // Static for diet templates
+          const filteredTemplates = mockDietTemplates.filter(template =>
+            template.title.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          const startIndex = (currentPage - 1) * templatesPerPage;
+          const paginatedTemplates = filteredTemplates.slice(startIndex, startIndex + templatesPerPage);
+          setResponse({
+            templates: paginatedTemplates,
+            total: filteredTemplates.length,
+            page: currentPage,
+            totalPages: Math.ceil(filteredTemplates.length / templatesPerPage),
+          });
+        }
       } catch (error: any) {
         console.error("Error fetching templates:", error);
       } finally {
@@ -219,6 +181,25 @@ const TemplateManagement = () => {
 
   const handleViewTemplate = (template: IWorkoutTemplate | IDietTemplate) => {
     setSelectedTemplate(template);
+  };
+
+  const handleEditTemplate = (template: IWorkoutTemplate | IDietTemplate) => {
+    navigate(`/admin/templates/edit/${template._id}/${templateType}`);
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    if (templateType === "workout") {
+      try {
+        await axios.delete(`/admin/workout-templates/${id}`);
+        // Refetch after delete
+        setCurrentPage(1);
+      } catch (error) {
+        console.error("Error deleting template:", error);
+      }
+    } else {
+      // Static delete for diet (if needed, but since static, perhaps not implemented)
+      console.log("Delete diet template not supported as it's static.");
+    }
   };
 
   return (
@@ -338,7 +319,7 @@ const TemplateManagement = () => {
                           <td className="py-4 px-4 text-gray-300">
                             {new Date(template.createdAt).toLocaleDateString()}
                           </td>
-                          <td className="py-4 px-4">
+                          <td className="py-4 px-4 flex gap-2">
                             <Button
                               variant="outline"
                               onClick={() => handleViewTemplate(template)}
@@ -346,6 +327,22 @@ const TemplateManagement = () => {
                             >
                               <Eye className="h-3 w-3" />
                               View
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleEditTemplate(template)}
+                              className="flex items-center gap-1 text-xs px-2 py-1"
+                            >
+                              <Edit className="h-3 w-3" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleDeleteTemplate(template._id)}
+                              className="flex items-center gap-1 text-xs px-2 py-1"
+                            >
+                              <Trash className="h-3 w-3" />
+                              Delete
                             </Button>
                           </td>
                         </tr>

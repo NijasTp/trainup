@@ -7,6 +7,7 @@ import { IMailService } from "../core/interfaces/services/IMailService";
 import { sendOtpHtml } from "../utils/sendEmail";
 import { IGymRepository } from "../core/interfaces/repositories/IGymRepository";
 import { ITrainerRepository } from "../core/interfaces/repositories/ITrainerRepository";
+import { logger } from "../utils/logger.util";
 
 @injectable()
 export class OtpService implements IOTPService {
@@ -48,7 +49,7 @@ async requestOtp(email: string, role: 'user' | 'trainer' | 'gym' | 'admin') {
   const otp = this.generateOtp();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-  console.log(`OTP sent to ${email}: ${otp}`);
+  logger.info(`OTP sent to ${email}: ${otp}`);
   await this._otpRepo.saveOtp(email, otp, expiresAt);
   await this._mailService.sendMail(
     email,
@@ -69,7 +70,7 @@ async requestForgotPasswordOtp(email: string, role: 'user' | 'trainer' | 'gym' |
   const otp = this.generateOtp();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-  console.log(`OTP sent to ${email}: ${otp}`);
+  logger.info(`OTP sent to ${email}: ${otp}`);
   await this._otpRepo.saveOtp(email, otp, expiresAt);
   await this._mailService.sendMail(
     email,

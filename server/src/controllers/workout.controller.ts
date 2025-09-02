@@ -1,121 +1,120 @@
-// src/controllers/WorkoutController.ts
-import { Request, Response } from 'express'
-import { injectable, inject } from 'inversify'
-import { STATUS_CODE } from '../constants/status'
-import TYPES from '../core/types/types'
-import { IWorkoutService } from '../core/interfaces/services/IWorkoutService'
-import { JwtPayload } from '../core/interfaces/services/IJwtService'
+  import { Request, Response } from 'express'
+  import { injectable, inject } from 'inversify'
+  import { STATUS_CODE } from '../constants/status'
+  import TYPES from '../core/types/types'
+  import { IWorkoutService } from '../core/interfaces/services/IWorkoutService'
+  import { JwtPayload } from '../core/interfaces/services/IJwtService'
 
-@injectable()
-export class WorkoutController {
-  constructor (
-    @inject(TYPES.WorkoutService) private _workoutService: IWorkoutService
-  ) {}
+  @injectable()
+  export class WorkoutController {
+    constructor (
+      @inject(TYPES.WorkoutService) private _workoutService: IWorkoutService
+    ) {}
 
-  createSession = async (req: Request, res: Response) => {
-    try {
-      const jwtUser = req.user as JwtPayload | undefined
-      const payload = req.body
+    createSession = async (req: Request, res: Response) => {
+      try {
+        const jwtUser = req.user as JwtPayload | undefined
+        const payload = req.body
 
-      const created = await this._workoutService.createSession({
-        ...payload,
-        userId: jwtUser?.role === 'user' ? jwtUser.id : undefined,
-        trainerId: jwtUser?.role === 'trainer' ? jwtUser.id : undefined,
-        givenBy: jwtUser?.role
-      })
+        const created = await this._workoutService.createSession({
+          ...payload,
+          userId: jwtUser?.role === 'user' ? jwtUser.id : undefined,
+          trainerId: jwtUser?.role === 'trainer' ? jwtUser.id : undefined,
+          givenBy: jwtUser?.role
+        })
 
-      res.status(STATUS_CODE.CREATED).json(created)
-    } catch (err: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
-    }
-  }
-
-  getSession = async (req: Request, res: Response) => {
-    try {
-      const id = req.params.id
-      const session = await this._workoutService.getSession(id)
-      res.status(STATUS_CODE.OK).json(session)
-    } catch (error: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
-    }
-  }
-
-  updateSession = async (req: Request, res: Response) => {
-    try {
-      const id = req.params.id
-      const updated = await this._workoutService.updateSession(id, req.body)
-      res.status(STATUS_CODE.CREATED).json(updated)
-    } catch (err: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
-    }
-  }
-
-  deleteSession = async (req: Request, res: Response) => {
-    try {
-      await this._workoutService.deleteSession(req.params.id)
-      res.status(STATUS_CODE.NO_CONTENT).end()
-    } catch (err: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
-    }
-  }
-
-  createOrGetDay = async (req: Request, res: Response) => {
-    try {
-      const jwtUser = req.user as JwtPayload | undefined
-      const userId = jwtUser!.id
-
-      const { date } = req.body
-      const day = await this._workoutService.createDay(userId, date)
-
-      res.status(STATUS_CODE.OK).json(day)
-    } catch (err: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
-    }
-  }
-
-  addSessionToDay = async (req: Request, res: Response) => {
-    try {
-      const jwtUser = req.user as JwtPayload | undefined
-      const userId = jwtUser!.id
-
-      const { date } = req.params
-      const { sessionId } = req.body
-      const day = await this._workoutService.addSessionToDay(
-        userId,
-        date,
-        sessionId
-      )
-
-      res.status(STATUS_CODE.CREATED).json(day)
-    } catch (err: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
-    }
-  }
-
-    async trainerCreateSession(req: Request, res: Response) {
-    try {
-      const jwtUser = req.user as JwtPayload | undefined;
-      if (!jwtUser || jwtUser.role !== 'trainer') {
-         res.status(STATUS_CODE.UNAUTHORIZED).json({ error: 'Unauthorized: Trainer role required' });
-         return
+        res.status(STATUS_CODE.CREATED).json(created)
+      } catch (err: any) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
       }
-      const { clientId, name, date, time, goal, notes } = req.body;
-      if (!clientId || !name || !date || !time) {
-         res.status(STATUS_CODE.BAD_REQUEST).json({ error: 'Missing required fields' });
-         return
-      }
-      const session = await this._workoutService.trainerCreateSession(jwtUser.id, clientId, {
-        name,
-        date,
-        time,
-        goal,
-        notes,
-      });
-       res.status(STATUS_CODE.CREATED).json(session);
-    } catch (err: any) {
-       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message });
     }
-  }
+
+    getSession = async (req: Request, res: Response) => {
+      try {
+        const id = req.params.id
+        const session = await this._workoutService.getSession(id)
+        res.status(STATUS_CODE.OK).json(session)
+      } catch (error: any) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
+      }
+    }
+
+    updateSession = async (req: Request, res: Response) => {
+      try {
+        const id = req.params.id
+        const updated = await this._workoutService.updateSession(id, req.body)
+        res.status(STATUS_CODE.CREATED).json(updated)
+      } catch (err: any) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
+      }
+    }
+
+    deleteSession = async (req: Request, res: Response) => {
+      try {
+        await this._workoutService.deleteSession(req.params.id)
+        res.status(STATUS_CODE.NO_CONTENT).end()
+      } catch (err: any) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
+      }
+    }
+
+    createOrGetDay = async (req: Request, res: Response) => {
+      try {
+        const jwtUser = req.user as JwtPayload | undefined
+        const userId = jwtUser!.id
+
+        const { date } = req.body
+        const day = await this._workoutService.createDay(userId, date)
+
+        res.status(STATUS_CODE.OK).json(day)
+      } catch (err: any) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
+      }
+    }
+
+    addSessionToDay = async (req: Request, res: Response) => {
+      try {
+        const jwtUser = req.user as JwtPayload | undefined
+        const userId = jwtUser!.id
+
+        const { date } = req.params
+        const { sessionId } = req.body
+        const day = await this._workoutService.addSessionToDay(
+          userId,
+          date,
+          sessionId
+        )
+
+        res.status(STATUS_CODE.CREATED).json(day)
+      } catch (err: any) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
+      }
+    }
+
+      async trainerCreateSession(req: Request, res: Response) {
+      try {
+        const jwtUser = req.user as JwtPayload | undefined;
+        if (!jwtUser || jwtUser.role !== 'trainer') {
+          res.status(STATUS_CODE.UNAUTHORIZED).json({ error: 'Unauthorized: Trainer role required' });
+          return
+        }
+        const { clientId, name, date, time, goal, notes } = req.body;
+        if (!clientId || !name || !date || !time) {
+          res.status(STATUS_CODE.BAD_REQUEST).json({ error: 'Missing required fields' });
+          return
+        }
+        const session = await this._workoutService.trainerCreateSession(jwtUser.id, clientId, {
+          name,
+          date,
+          time,
+          goal,
+          notes,
+        });
+        res.status(STATUS_CODE.CREATED).json(session);
+      } catch (err: any) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message });
+      }
+    }
 
   getDay = async (req: Request, res: Response) => {
     try {
