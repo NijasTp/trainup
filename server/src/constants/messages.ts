@@ -9,6 +9,12 @@ export const MESSAGES = {
   OTP_SENT: "OTP sent successfully",
   USER_EXISTS:'User already exists',
   USER_NOT_FOUND: 'User not found',
+  MISSING_REQUIRED_FIELDS: 'Missing required fields',
 
+
+  TRAINER_REQUIRED:'Trainer role required',
+
+
+  ADMIN_REQUIRED:'Admin role required'
 
 } 

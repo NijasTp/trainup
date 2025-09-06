@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -24,67 +25,16 @@ import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { Link, useNavigate } from "react-router-dom";
 import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";
-import type { DietResponse, Meal, Trainer, WorkoutSession } from "@/interfaces/user/homeInterface";
+import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/homeInterface";
 
-
-const staticWorkouts: WorkoutSession[] = [
-  {
-    _id: "1",
-    name: "Morning Strength",
-    givenBy: "trainer",
-    date: format(new Date(), "yyyy-MM-dd"),
-    time: "08:00",
-    exercises: [
-      { id: "1", name: "Bench Press", sets: 3, reps: "10", weight: 60 },
-      { id: "2", name: "Squats", sets: 4, reps: "12", weight: 80 },
-    ],
-    goal: "Build Muscle",
-    isDone: false,
-  },
-];
-
-const staticMeals: Meal[] = [
-  {
-    _id: "1",
-    name: "Grilled Chicken Salad",
-    calories: 350,
-    protein: 30,
-    carbs: 15,
-    fats: 10,
-    time: "12:00",
-    isEaten: false,
-    source: "trainer",
-    usedBy: "user123",
-    sourceId: "trainer123",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    nutritions: [],
-  },
-  {
-    _id: "2",
-    name: "Protein Shake",
-    calories: 200,
-    protein: 25,
-    carbs: 10,
-    fats: 5,
-    time: "15:00",
-    isEaten: false,
-    source: "user",
-    usedBy: "user123",
-    sourceId: "user123",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    nutritions: [],
-  },
-];
 
 export default function HomePage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [streak, _ ] = useState(7);
-  const navigate=useNavigate();
+  const [streak, _] = useState(7);
+  const navigate = useNavigate();
 
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -107,11 +57,10 @@ export default function HomePage() {
 
       try {
         const workoutResponse = await getWorkoutDays(today);
-        setWorkouts(Array.isArray(workoutResponse.workouts) ? workoutResponse.workouts : staticWorkouts);
+        setWorkouts(workoutResponse.sessions);
       } catch (err: any) {
         console.error("Failed to fetch workouts:", err);
         toast.error("Failed to fetch workouts");
-        setWorkouts(staticWorkouts);
       }
 
       try {
@@ -120,7 +69,7 @@ export default function HomePage() {
       } catch (err: any) {
         console.error("Failed to fetch diet:", err);
         toast.error("Failed to fetch diet");
-        setDiet({ meals: staticMeals, _id: "", user: "", date: today, createdAt: "", updatedAt: "", __v: 0 });
+
       }
     } catch (error) {
       console.error("Error fetching home data:", error);
@@ -151,9 +100,11 @@ export default function HomePage() {
 
   const dietProgress = calculateDietProgress();
   const workoutProgress = calculateWorkoutProgress();
+      
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+    <div className="container min-h-screen bg-gradient-to-br from-background absolute inset-0 via-background/95 to-secondary/20">
+
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
       <SiteHeader />
@@ -170,7 +121,7 @@ export default function HomePage() {
           <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
             Welcome Back, Champion!
           </h1>
-      
+
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Ready to crush today's goals? Let's see what's on your fitness agenda.
           </p>
@@ -243,7 +194,7 @@ export default function HomePage() {
               <div className="text-center py-8 space-y-2">
                 <Activity className="h-12 w-12 mx-auto text-muted-foreground/50" />
                 <p className="text-muted-foreground">No workouts scheduled for today</p>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => navigate("/workouts/add")}>
                   <Dumbbell className="h-4 w-4 mr-2" />
                   Add Workout
                 </Button>
@@ -309,7 +260,7 @@ export default function HomePage() {
               <div className="text-center py-8 space-y-2">
                 <Apple className="h-12 w-12 mx-auto text-muted-foreground/50" />
                 <p className="text-muted-foreground">No meals planned for today</p>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => navigate("/diets/add")}>
                   <Apple className="h-4 w-4 mr-2" />
                   Add Meal
                 </Button>

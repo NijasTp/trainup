@@ -23,7 +23,6 @@ export class StreakService implements IStreakService {
 
   async updateUserStreak(userId: Types.ObjectId): Promise<IStreak> {
     const streak = await this.getOrCreateUserStreak(userId);
-    
     const today = new Date();
     const lastAction = new Date(streak.lastActionDate);
     

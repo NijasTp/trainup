@@ -7,8 +7,6 @@ export interface IExercise {
   sets: number;
   reps?: string;
   time?: string;
-  rest?: string;
-  notes?: string;
   timeTaken?: number; 
 }
 
@@ -34,8 +32,6 @@ const ExerciseSchema = new Schema<IExercise>(
     sets: { type: Number, required: true },
     reps: { type: String },
     time: { type: String },
-    rest: { type: String },
-    notes: { type: String },
     timeTaken: { type: Number },
   },
   { _id: false }
@@ -43,8 +39,9 @@ const ExerciseSchema = new Schema<IExercise>(
 
 const WorkoutSessionSchema = new Schema<IWorkoutSession>(
   {
+    
     name: { type: String, required: true },
-    givenBy: { type: String, enum: ["trainer", "user"], required: true },
+    givenBy: { type: String, enum: ["trainer", "user","admin"], required: true },
     trainerId: { type: Schema.Types.ObjectId, ref: "Trainer" },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     date: { type: String },

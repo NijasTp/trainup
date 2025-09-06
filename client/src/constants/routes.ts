@@ -15,6 +15,7 @@ export const ROUTES = {
   USER_INDIVIDUAL_TRAINER:'/trainers/:id',
   MY_TRAINER_PROFILE:'/my-trainer/profile',
   USER_WORKOUTS_PAGE:'/workouts',
+  USER_ADMIN_WORKOUT_TEMPLATES:'/workouts/browse',
   USER_ADD_WORKOUT:'/workouts/add',
   USER_ADD_WORKOUT_SESSION:'/workouts/add-session',
   USER_EDIT_WORKOUT_SESSION:'/workouts/:id',
@@ -61,4 +62,5 @@ export const ROUTES = {
   ADMIN_GYMS: "/admin/gyms",
   ADMIN_GYM_APPLICATION: "/admin/gyms/:id/application",
   ADMIN_TEMPLATE_MANAGEMENT: "/admin/templates",
+  ADMIN_ADD_WORKOUT_TEMPLATE: "/admin/templates/new/:type",
 };

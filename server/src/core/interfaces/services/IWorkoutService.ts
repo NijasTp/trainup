@@ -20,4 +20,7 @@ export interface IWorkoutService {
   createDay(userId: string, date: string): Promise<IWorkoutDay>;
   addSessionToDay(userId: string, date: string, sessionId: string): Promise<IWorkoutDay | null>;
   getDay(userId: string, date: string): Promise<IWorkoutDay | null>;
+  createAdminTemplate(payload: Partial<IWorkoutSession>): Promise<IWorkoutSession>;
+  getAdminTemplates(page: number, limit: number, search: string): Promise<{ templates: IWorkoutSession[], total: number, page: number, totalPages: number }>;
+  updateAdminTemplate(id: string, payload: Partial<IWorkoutSession>): Promise<IWorkoutSession | null>;
 }

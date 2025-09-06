@@ -19,13 +19,9 @@ export class WorkoutService implements IWorkoutService {
   async createSession (
     payload: Partial<IWorkoutSession>
   ): Promise<IWorkoutSession> {
-    if (payload.notes && payload.givenBy !== 'trainer') {
-      throw new Error('Only trainers can provide notes')
-    }
-
     const session = await this._sessionRepo.create(payload)
 
-    if (payload.givenBy === 'user') {
+    if (payload.givenBy === 'user' || payload.givenBy === 'admin') {
       let day = await this._workoutDayRepo.findByUserAndDate(
         payload.userId?.toString()!,
         payload.date!
@@ -39,12 +35,11 @@ export class WorkoutService implements IWorkoutService {
         })
       }
 
-      await this._workoutDayRepo.addSessionToDay(
+      const res = await this._workoutDayRepo.addSessionToDay(
         day._id.toString(),
         session._id.toString()
       )
     }
-
     return session
   }
 
@@ -135,4 +130,37 @@ export class WorkoutService implements IWorkoutService {
   async getDay (userId: string, date: string) {
     return this._workoutDayRepo.findByUserAndDate(userId, date)
   }
+
+  async createAdminTemplate(payload: Partial<IWorkoutSession>): Promise<IWorkoutSession> {
+    const template = await this._sessionRepo.create({
+      ...payload,
+      givenBy: 'admin',
+      date: undefined,
+      userId: undefined,
+      trainerId: undefined,
+      time: undefined,
+      isDone: false,
+    });
+    return template;
+  }
+
+  async getAdminTemplates(page: number, limit: number, search: string): Promise<{ templates: IWorkoutSession[], total: number, page: number, totalPages: number }> {
+    return this._sessionRepo.findAdminTemplates(page, limit, search);
+  }
+
+  async updateAdminTemplate(id: string, payload: Partial<IWorkoutSession>): Promise<IWorkoutSession | null> {
+    const session = await this._sessionRepo.findById(id);
+    if (!session || session.givenBy !== 'admin') {
+      throw new Error('Template not found or not an admin template');
+    }
+    return this._sessionRepo.update(id, {
+      ...payload,
+      date: undefined,
+      userId: undefined,
+      trainerId: undefined,
+      time: undefined,
+    });
+  }
+
+
 }

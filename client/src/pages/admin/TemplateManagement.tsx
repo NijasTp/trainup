@@ -8,60 +8,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@
 import { Search, ChevronLeft, ChevronRight, Loader2, FileText, Plus, Eye, Edit, Trash } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
+import API from "@/lib/axios";
+import type { IDietTemplate, IWorkoutTemplate, TemplateResponse } from "@/interfaces/admin/templateManagement";
+import { KEY } from "@/constants/keyConstants";
 
-// Mock data interfaces based on provided schemas
-interface IExercise {
-  id: string;
-  name: string;
-  image?: string;
-  sets: number;
-  reps?: string;
-  time?: string;
-  rest?: string;
-  notes?: string;
-}
 
-interface IWorkoutTemplate {
-  _id: string;
-  name: string;
-  givenBy: "admin";
-  exercises: IExercise[];
-  goal?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface TemplateMeal {
-  name: string;
-  calories: number;
-  protein?: number;
-  carbs?: number;
-  fats?: number;
-  time: string;
-  nutritions?: { label: string; value: number; unit?: string }[];
-  notes?: string;
-}
-
-interface IDietTemplate {
-  _id: string;
-  title: string;
-  description?: string;
-  createdBy: string;
-  meals: TemplateMeal[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface TemplateResponse {
-  templates: (IWorkoutTemplate | IDietTemplate)[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-// Mock data for diet templates (static)
 const mockDietTemplates: IDietTemplate[] = [
   {
     _id: "dt1",
@@ -126,8 +77,7 @@ const TemplateManagement = () => {
       setLoading(true);
       try {
         if (templateType === "workout") {
-          // Dynamic fetch for workout templates
-          const apiResponse = await axios.get('/admin/workout-templates', {
+          const apiResponse = await API.get('/workout/admin/workout-templates', {
             params: {
               page: currentPage,
               limit: templatesPerPage,
@@ -141,7 +91,6 @@ const TemplateManagement = () => {
             totalPages: apiResponse.data.totalPages,
           });
         } else {
-          // Static for diet templates
           const filteredTemplates = mockDietTemplates.filter(template =>
             template.title.toLowerCase().includes(searchQuery.toLowerCase())
           );
@@ -170,10 +119,11 @@ const TemplateManagement = () => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === KEY.ENTER) {
       handleSearch();
     }
   };
+
 
   const handleAddTemplate = () => {
     navigate(`/admin/templates/new/${templateType}`);
@@ -190,14 +140,12 @@ const TemplateManagement = () => {
   const handleDeleteTemplate = async (id: string) => {
     if (templateType === "workout") {
       try {
-        await axios.delete(`/admin/workout-templates/${id}`);
-        // Refetch after delete
+        await API.delete(`/workout/admin/workout-templates/${id}`);
         setCurrentPage(1);
       } catch (error) {
         console.error("Error deleting template:", error);
       }
     } else {
-      // Static delete for diet (if needed, but since static, perhaps not implemented)
       console.log("Delete diet template not supported as it's static.");
     }
   };
@@ -219,7 +167,6 @@ const TemplateManagement = () => {
           </Button>
         </div>
 
-        {/* Template Type Selector and Search */}
         <Card className="bg-[#111827] border border-[#4B8B9B]/30 mb-6">
           <CardContent className="p-6">
             <div className="flex flex-col gap-4">
@@ -229,8 +176,8 @@ const TemplateManagement = () => {
                     <SelectValue placeholder="Select Template Type" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-                    <SelectItem value="workout">Workout Templates</SelectItem>
-                    <SelectItem value="diet">Diet Templates</SelectItem>
+                    <SelectItem value="workout">Workout</SelectItem>
+                    <SelectItem value="diet">Diet</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="flex-1 relative">

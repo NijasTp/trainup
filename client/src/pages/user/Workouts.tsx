@@ -25,7 +25,7 @@ interface Exercise {
 interface WorkoutSession {
   _id: string;
   name: string;
-  givenBy: "trainer" | "user";
+  givenBy: "trainer" | "user" | "admin";
   trainerId?: string;
   date: string;
   time: string;
@@ -107,7 +107,7 @@ function DateSelector({
   );
 }
 
-function FilterButtons({ filter, setFilter }: { filter: "trainer" | "user"; setFilter: (value: "trainer" | "user") => void }) {
+function FilterButtons({ filter, setFilter }: { filter: "trainer" | "user" | "admin"; setFilter: (value: "trainer" | "user" | "admin") => void }) {
   return (
     <div className="flex items-center gap-2">
       <Button
@@ -143,7 +143,7 @@ function WorkoutSessionCard({
   focusedSessionId: string | null;
 }) {
   const [imageLoaded, setImageLoaded] = useState(false);
-  
+
   // Calculate if Start button should be shown (within 20 minutes of session time)
   const now = new Date();
   const sessionDateTime = parse(`${session.date} ${session.time}`, "yyyy-MM-dd HH:mm", new Date());
@@ -155,9 +155,8 @@ function WorkoutSessionCard({
     <Dialog>
       <DialogTrigger asChild>
         <Card
-          className={`group relative overflow-hidden bg-card/40 backdrop-blur-sm border-border/50 hover:border-border transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 ${
-            focusedSessionId === session._id ? "border-primary/50 shadow-primary/25" : ""
-          }`}
+          className={`group relative overflow-hidden bg-card/40 backdrop-blur-sm border-border/50 hover:border-border transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 ${focusedSessionId === session._id ? "border-primary/50 shadow-primary/25" : ""
+            }`}
           style={{
             animationDelay: `${index * 100}ms`,
             animation: "slideUp 0.6s ease-out forwards",
@@ -175,10 +174,12 @@ function WorkoutSessionCard({
                     className={
                       session.givenBy === "trainer"
                         ? "bg-primary/90 text-primary-foreground shadow-lg"
-                        : "bg-secondary/90 text-foreground shadow-lg"
+                        : session.givenBy === "admin"
+                          ? "bg-purple-500/90 text-white shadow-lg"
+                          : "bg-secondary/90 text-foreground shadow-lg"
                     }
                   >
-                    {session.givenBy === "trainer" ? "Trainer" : "You"}
+                    {session.givenBy === "trainer" ? "Trainer" : session.givenBy === "admin" ? "Admin" : "You"}
                   </Badge>
                   {session.isDone ? (
                     <Badge className="bg-green-500/90 text-white shadow-lg flex items-center gap-1">
@@ -233,12 +234,12 @@ function WorkoutSessionCard({
                       <img
                         src={exercise.image || 'https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp'}
                         alt={exercise.name}
-                        className={`h-16 w-16 object-cover rounded-md transition-opacity duration-500 ${
-                          imageLoaded ? "opacity-100" : "opacity-0"
-                        }`}
+                        className={`h-16 w-16 object-cover rounded-md transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"
+                          }`}
                         loading="lazy"
                         onLoad={() => setImageLoaded(true)}
                       />
+
                     </div>
                     <div>
                       <p className="font-medium text-foreground">{exercise.name}</p>
@@ -281,10 +282,12 @@ function WorkoutSessionCard({
                   className={
                     session.givenBy === "trainer"
                       ? "bg-primary/90 text-primary-foreground"
-                      : "bg-secondary/90 text-foreground"
+                      : session.givenBy === "admin"
+                        ? "bg-purple-500/90 text-white"
+                        : "bg-secondary/90 text-foreground"
                   }
                 >
-                  {session.givenBy === "trainer" ? "Trainer" : "You"}
+                  {session.givenBy === "trainer" ? "Trainer" : session.givenBy === "admin" ? "Admin" : "You"}
                 </Badge>
                 {session.isDone ? (
                   <Badge className="bg-green-500/90 text-white flex items-center gap-1">
@@ -338,12 +341,12 @@ function WorkoutSessionCard({
         </div>
         {canStartSession && !session.isDone && (
           <div className="sticky bottom-0 bg-background py-4">
-          <Link to={`/workouts/${session._id}/start`}>
-            <Button
-              className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              Start Session
-            </Button>
+            <Link to={`/workouts/${session._id}/start`}>
+              <Button
+                className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Start Session
+              </Button>
             </Link>
           </div>
         )}
@@ -354,7 +357,7 @@ function WorkoutSessionCard({
 
 export default function WorkoutPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [filter, setFilter] = useState<"trainer" | "user">("trainer");
+  const [filter, setFilter] = useState<"trainer" | "user" | "admin">("trainer");
   const [dailyWorkouts, setDailyWorkouts] = useState<WorkoutDay[]>([]);
   const [focusedSessionId, setFocusedSessionId] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<string>(format(new Date(), "yyyy-MM-dd"));
@@ -371,7 +374,6 @@ export default function WorkoutPage() {
     setError(null);
     try {
       const response = await getWorkoutDays(format(selectedDate, "yyyy-MM-dd"));
-      // If response is null (no WorkoutDay found), use an empty array with a default WorkoutDay
       const workoutDay = response ? [response] : [{ _id: "", userId: "", date: format(selectedDate, "yyyy-MM-dd"), sessions: [] }];
       setDailyWorkouts(workoutDay);
       console.log("Fetched workouts:", workoutDay);
@@ -393,7 +395,7 @@ export default function WorkoutPage() {
       if (todayWorkouts?.sessions.length) {
         const now = new Date().toTimeString().slice(0, 5);
         const closestSession = todayWorkouts.sessions
-          .filter((session) => session.givenBy === filter)
+          .filter((session) => filter === "user" ? ["user", "admin"].includes(session.givenBy) : session.givenBy === filter)
           .reduce((prev, curr) => {
             const prevDiff = Math.abs(
               parseInt(prev.time.replace(":", "")) - parseInt(now.replace(":", ""))
@@ -414,7 +416,9 @@ export default function WorkoutPage() {
 
   const filteredSessions = dailyWorkouts.find(
     (dw) => dw.date === format(selectedDate, "yyyy-MM-dd")
-  )?.sessions.filter((session) => session.givenBy === filter) || [];
+  )?.sessions.filter((session) =>
+    filter === "user" ? ["user", "admin"].includes(session.givenBy) : session.givenBy === filter
+  ) || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
@@ -469,7 +473,7 @@ export default function WorkoutPage() {
                 </div>
                 <h3 className="text-xl font-semibold text-foreground">No workouts found</h3>
                 <p>
-                  No {filter === "trainer" ? "trainer-assigned" : "user-created"} workouts scheduled for this day.
+                  No {filter === "trainer" ? "trainer-assigned" : "user-created or admin-assigned"} workouts scheduled for this day.
                 </p>
               </CardContent>
             </Card>

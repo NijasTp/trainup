@@ -4,6 +4,8 @@
   import TYPES from '../core/types/types'
   import { IWorkoutService } from '../core/interfaces/services/IWorkoutService'
   import { JwtPayload } from '../core/interfaces/services/IJwtService'
+import { MESSAGES } from '../constants/messages'
+import { ROLE } from '../constants/role'
 
   @injectable()
   export class WorkoutController {
@@ -13,14 +15,13 @@
 
     createSession = async (req: Request, res: Response) => {
       try {
-        const jwtUser = req.user as JwtPayload | undefined
+        const jwtUser = req.user as JwtPayload
         const payload = req.body
-
         const created = await this._workoutService.createSession({
           ...payload,
-          userId: jwtUser?.role === 'user' ? jwtUser.id : undefined,
-          trainerId: jwtUser?.role === 'trainer' ? jwtUser.id : undefined,
-          givenBy: jwtUser?.role
+          userId: jwtUser?.role === ROLE.USER ? jwtUser.id : undefined,
+          trainerId: jwtUser?.role === ROLE.TRAINER ? jwtUser.id : undefined,
+          givenBy: payload.givenBy || jwtUser?.role
         })
 
         res.status(STATUS_CODE.CREATED).json(created)
@@ -62,10 +63,8 @@
       try {
         const jwtUser = req.user as JwtPayload | undefined
         const userId = jwtUser!.id
-
         const { date } = req.body
         const day = await this._workoutService.createDay(userId, date)
-
         res.status(STATUS_CODE.OK).json(day)
       } catch (err: any) {
         res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
@@ -74,9 +73,8 @@
 
     addSessionToDay = async (req: Request, res: Response) => {
       try {
-        const jwtUser = req.user as JwtPayload | undefined
+        const jwtUser = req.user as JwtPayload
         const userId = jwtUser!.id
-
         const { date } = req.params
         const { sessionId } = req.body
         const day = await this._workoutService.addSessionToDay(
@@ -84,7 +82,6 @@
           date,
           sessionId
         )
-
         res.status(STATUS_CODE.CREATED).json(day)
       } catch (err: any) {
         res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
@@ -95,12 +92,12 @@
       try {
         const jwtUser = req.user as JwtPayload | undefined;
         if (!jwtUser || jwtUser.role !== 'trainer') {
-          res.status(STATUS_CODE.UNAUTHORIZED).json({ error: 'Unauthorized: Trainer role required' });
+          res.status(STATUS_CODE.UNAUTHORIZED).json({ error: MESSAGES.TRAINER_REQUIRED });
           return
         }
         const { clientId, name, date, time, goal, notes } = req.body;
         if (!clientId || !name || !date || !time) {
-          res.status(STATUS_CODE.BAD_REQUEST).json({ error: 'Missing required fields' });
+          res.status(STATUS_CODE.BAD_REQUEST).json({ error: MESSAGES.MISSING_REQUIRED_FIELDS });
           return
         }
         const session = await this._workoutService.trainerCreateSession(jwtUser.id, clientId, {
@@ -125,7 +122,7 @@
       const day = await this._workoutService.getDay(userId, date)
 
       if (!day) {
-        res.status(STATUS_CODE.NOT_FOUND).json({ error: 'Not found' })
+        res.status(STATUS_CODE.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND })
       }
       res.status(STATUS_CODE.OK).json(day)
     } catch (err: any) {
@@ -139,11 +136,66 @@
       const day = await this._workoutService.getDay(userId, date)
 
       if (!day) {
-        res.status(STATUS_CODE.NOT_FOUND).json({ error: 'Not found' })
+        res.status(STATUS_CODE.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND })
       }
       res.status(STATUS_CODE.OK).json(day)
     } catch (err: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
+    }
+  }
+  async createAdminTemplate(req: Request, res: Response) {
+    try {
+      const jwtUser = req.user as JwtPayload;
+      if (jwtUser?.role !== 'admin') {
+         res.status(STATUS_CODE.UNAUTHORIZED).json({ error: MESSAGES.ADMIN_REQUIRED });
+         return
+      }
+      const payload = req.body;
+      const template = await this._workoutService.createAdminTemplate(payload);
+      res.status(STATUS_CODE.CREATED).json(template);
+    } catch (err: any) {
+      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message });
+    }
+  }
+
+  async getAdminTemplates(req: Request, res: Response) {
+    try {
+      const { page = 1, limit = 5, search = '' } = req.query;
+      const result = await this._workoutService.getAdminTemplates(Number(page), Number(limit), search as string);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err: any) {
+      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message });
+    }
+  }
+
+  async updateAdminTemplate(req: Request, res: Response) {
+    try {
+      const jwtUser = req.user as JwtPayload | undefined;
+      if (jwtUser?.role !== 'admin') {
+         res.status(STATUS_CODE.UNAUTHORIZED).json({ error: MESSAGES.ADMIN_REQUIRED });
+         return 
+      }
+      const id = req.params.id;
+      const payload = req.body;
+      const updated = await this._workoutService.updateAdminTemplate(id, payload);
+      res.status(STATUS_CODE.OK).json(updated);
+    } catch (err: any) {
+      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message });
+    }
+  }
+
+  async deleteAdminTemplate(req: Request, res: Response) {
+    try {
+      const jwtUser = req.user as JwtPayload | undefined;
+      if (jwtUser?.role !== 'admin') {
+         res.status(STATUS_CODE.UNAUTHORIZED).json({ error: MESSAGES.ADMIN_REQUIRED });
+         return
+      }
+      const id = req.params.id;
+      await this._workoutService.deleteSession(id);
+      res.status(STATUS_CODE.NO_CONTENT)
+    } catch (err: any) {
+      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message });
     }
   }
 }

@@ -7,17 +7,9 @@ import { MapPin, Star, Search, Clock, Users, Award } from "lucide-react";
 import { getTrainers } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { Link } from "react-router-dom";
+import type { Trainer } from "@/interfaces/trainer/trainers";
 
-type Trainer = {
-    id: string;
-    name: string;
-    specialty: string;
-    location: string;
-    price: string;
-    rating: number;
-    bio: string;
-    profileImage: string;
-};
+
 
 
 export default function Trainers() {

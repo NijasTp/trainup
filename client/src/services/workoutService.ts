@@ -29,3 +29,8 @@ export const updateWorkoutSession = async (
   const res = await API.patch(`/workout/sessions/${sessionId}`, payload)
   return res.data
 }
+
+export const fetchAdminWorkoutSessions = async () => {
+  const res = await API.get('/workout/admin/workout-templates')
+  return res.data
+}
