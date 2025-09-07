@@ -8,7 +8,6 @@ import { trainerVerifyOtp as trainerVerifyOtpApi, trainerResendOtp as trainerRes
 import { useDispatch } from 'react-redux';
 import { loginTrainer } from '@/redux/slices/trainerAuthSlice';
 
-// Main Component
 const TrainerVerifyOtp: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch()
@@ -29,7 +28,6 @@ const TrainerVerifyOtp: React.FC = () => {
     }
   };
 
-  // Handle backspace
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
       document.getElementById(`otp-${index - 1}`)?.focus();
@@ -52,6 +50,7 @@ const TrainerVerifyOtp: React.FC = () => {
       form.append("email", formData.email);
       form.append("password", formData.password);
       form.append("phone", formData.phone);
+      form.append("price", formData.price);
       form.append("location", formData.location);
       form.append("experience", formData.experience);
       form.append("specialization", formData.specialization);
@@ -84,7 +83,6 @@ const TrainerVerifyOtp: React.FC = () => {
     }
   };
 
-  // Resend timer
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);

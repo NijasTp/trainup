@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { verifyTrainer } from '@/services/adminService';
+import { verifyTrainer, rejectTrainer } from '@/services/adminService';
 import { 
   ArrowLeft, 
   CheckCircle, 
@@ -16,14 +16,21 @@ import {
   Loader2,
   Shield,
   Clock,
-  Badge
+  Badge,
+  XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Logo } from '@/components/ui/logo';
-
-
-
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 const TrainerApplication = () => {
   const { trainerId } = useParams();
@@ -44,8 +51,9 @@ const TrainerApplication = () => {
     createdAt: new Date("2024-01-15T10:30:00")
   };
 
-
   const [loading, setLoading] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
 
   const handleVerify = async () => {
     setLoading(true);
@@ -56,6 +64,24 @@ const TrainerApplication = () => {
       console.error("Error verifying trainer:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectReason.trim()) {
+      alert('Please provide a reason for rejection');
+      return;
+    }
+    setLoading(true);
+    try {
+      await rejectTrainer(trainerId!, rejectReason);
+      navigate('/admin/trainers');
+    } catch (err) {
+      console.error("Error rejecting trainer:", err);
+    } finally {
+      setLoading(false);
+      setIsRejectModalOpen(false);
+      setRejectReason('');
     }
   };
 
@@ -202,7 +228,7 @@ const TrainerApplication = () => {
                         <FileCheck className="h-4 w-4" />
                         <span className="text-sm font-medium">Certificate</span>
                       </div>
-                      <Badge  className="bg-green-500/10 text-green-500 border-green-500/30">
+                      <Badge className="bg-green-500/10 text-green-500 border-green-500/30">
                         Uploaded
                       </Badge>
                     </div>
@@ -228,6 +254,15 @@ const TrainerApplication = () => {
                 Cancel
               </Button>
               <Button
+                variant="destructive"
+                onClick={() => setIsRejectModalOpen(true)}
+                disabled={loading}
+                className="bg-red-600 text-white px-8 py-2 rounded-lg hover:bg-red-700 transition duration-300 shadow-lg"
+              >
+                <XCircle className="h-5 w-5 mr-2" />
+                Reject Trainer
+              </Button>
+              <Button
                 onClick={handleVerify}
                 disabled={loading}
                 className="bg-[#001C30] text-white px-8 py-2 rounded-lg hover:bg-gradient-to-r hover:from-[#001C30] hover:to-[#1F2A44] transition duration-300 shadow-lg"
@@ -247,6 +282,56 @@ const TrainerApplication = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Reject Modal */}
+        <Dialog open={isRejectModalOpen} onOpenChange={setIsRejectModalOpen}>
+          <DialogContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold flex items-center">
+                <XCircle className="h-5 w-5 mr-2 text-red-500" />
+                Reject Trainer Application
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <Label htmlFor="rejectReason" className="text-white mb-2 block">
+                Reason for Rejection
+              </Label>
+              <Textarea
+                id="rejectReason"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Please provide a reason for rejecting this application"
+                className="bg-gray-700 border-gray-600 text-white"
+                rows={4}
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsRejectModalOpen(false)}
+                className="text-gray-400 border-gray-600 hover:bg-gray-700/50"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleReject}
+                disabled={loading}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : (
+                  'Confirm Rejection'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

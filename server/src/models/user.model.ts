@@ -97,3 +97,4 @@ const userSchema: Schema<IUser> = new Schema(
 
 
 export const UserModel: Model<IUser> = mongoose.model<IUser>("User", userSchema);
+

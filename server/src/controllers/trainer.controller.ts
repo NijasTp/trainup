@@ -5,9 +5,13 @@ import { ITrainerService } from '../core/interfaces/services/ITrainerService'
 import { JwtService } from '../utils/jwt'
 import { UploadedFile } from 'express-fileupload'
 import { IOTPService } from '../core/interfaces/services/IOtpService'
-import { IJwtService } from '../core/interfaces/services/IJwtService'
+import {
+  IJwtService,
+  JwtPayload
+} from '../core/interfaces/services/IJwtService'
 import { STATUS_CODE } from '../constants/status'
 import { IUserService } from '../core/interfaces/services/IUserService'
+import { logger } from '../utils/logger.util'
 
 @injectable()
 export class TrainerController {
@@ -100,6 +104,7 @@ export class TrainerController {
         email,
         password,
         phone,
+        price,
         location,
         experience,
         specialization,
@@ -122,6 +127,7 @@ export class TrainerController {
         email,
         password,
         phone,
+        price,
         location,
         experience,
         specialization,
@@ -141,6 +147,51 @@ export class TrainerController {
       res.status(STATUS_CODE.BAD_REQUEST).json({
         error: error.message || 'Failed to submit application'
       })
+    }
+  }
+
+  async reapply (req: Request, res: Response) {
+    try {
+      const {
+        fullName,
+        email,
+        password,
+        phone,
+        price,
+        location,
+        experience,
+        specialization,
+        bio
+      } = req.body
+      const trainerId = (req.user as JwtPayload).id
+      const { certificate, profileImage } = req.files as {
+        certificate: UploadedFile
+        profileImage: UploadedFile
+      }
+      if (!certificate) {
+        res
+          .status(STATUS_CODE.BAD_REQUEST)
+          .json({ error: 'Certificate file is required' })
+        return
+      }
+
+      const data = {
+        name: fullName,
+        email,
+        password,
+        phone,
+        price,
+        location,
+        experience,
+        specialization,
+        bio,
+        certificate,
+        profileImage
+      }
+      this._trainerService.reapplyAsTrainer(trainerId, data)
+    } catch (error: any) {
+      logger.error('trainer reapply error:', error)
+      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
 

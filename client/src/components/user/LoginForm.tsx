@@ -14,21 +14,22 @@ const LoginForm = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-async function handleLogin(e: React.FormEvent) {
-  e.preventDefault();
-  setError("");
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
 
-  try {
-    const userData = await loginApi(email, password);
-    dispatch(login(userData.user)); 
-    toast.success("Login successful");
-    navigate("/home");
-  } catch (err: any) {
-    const errorMessage = err.message || "Login failed";
-    setError(errorMessage);
-    console.error("Login error:", errorMessage);
+    try {
+      const { user, streak } = await loginApi(email, password);
+      console.log(streak)
+      dispatch(login({ ...user, streak: streak.currentStreak }));
+      toast.success("Login successful");
+      navigate("/home");
+    } catch (err: any) {
+      const errorMessage = err.message || "Login failed";
+      setError(errorMessage);
+      console.error("Login error:", err);
+    }
   }
-}
 
   return (
     <form onSubmit={handleLogin} className="space-y-6">

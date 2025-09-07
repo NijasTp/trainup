@@ -35,9 +35,12 @@ export const toggleTrainerBan = async (trainerId: string, isBanned: boolean) => 
 
 
 export const verifyTrainer = async (trainerId: string) => {
-    await API.patch(`/admin/trainers/${trainerId}/status`, { isVerified: true });
+    await API.patch(`/admin/trainers/${trainerId}/status`, { profileStatus: 'approved' });
 };
-
+ 
+export const rejectTrainer = async (trainerId:string,rejectReason:string) => {
+  await API.patch(`/admin/trainers/${trainerId}/status`, {profileStatus:'rejected', rejectReason})
+}
 
 export const getTrainerById = async (trainerId: string) => {
     const res = await API.get(`/admin/trainers/${trainerId}`);

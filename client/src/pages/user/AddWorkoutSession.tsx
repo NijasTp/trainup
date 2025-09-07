@@ -14,60 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { InfoModal } from "@/components/user/general/InfoModal";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-
-interface WgerExerciseSuggestion {
-    value: string;
-    data: {
-        id: string;
-        base_id: string;
-        name: string;
-        category: string;
-        image: string;
-        image_thumbnail: string;
-    };
-}
-
-interface WgerExerciseInfo {
-    id: number;
-    name: string;
-    description: string;
-    category: number;
-    equipment?: number[];
-    images?: { image: string; is_main: boolean }[];
-    muscles?: number[];
-}
-
-interface AddedExercise {
-    id: string;
-    name: string;
-    sets: number;
-    reps?: string;
-    time?: string;
-    weight?: number;
-    image?: string;
-}
-
-export interface Exercise {
-    id?: string;
-    name: string;
-    sets?: number;
-    reps?: string;
-    time?: string;
-    weight?: number;
-    image?: string;
-}
-
-export interface WorkoutSessionPayload {
-    name: string;
-    givenBy?: "trainer" | "user";
-    date?: string;
-    time?: string;
-    goal?: string;
-    notes?: string;
-    exercises?: Exercise[];
-}
-
-
+import type { AddedExercise, WgerExerciseInfo, WgerExerciseSuggestion, WorkoutSessionPayload } from "@/interfaces/user/addWorkoutSession";
 
 function ExerciseSuggestionCard({
     suggestion,

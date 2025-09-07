@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import {
     MapPin,
     Star,
-    FileText,
     MessageSquare,
     Clock,
     Users,
@@ -414,27 +413,6 @@ export default function TrainerPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                            <CardHeader>
-                                <h2 className="text-2xl font-bold text-foreground">Certifications</h2>
-                            </CardHeader>
-                            <CardContent>
-                                <a
-                                    href={trainer.certificate}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="group inline-flex items-center gap-3 p-4 bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/20 hover:border-primary/30 transition-all duration-300"
-                                >
-                                    <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                        <FileText className="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-foreground">Professional Certificate</p>
-                                        <p className="text-sm text-muted-foreground">Click to view credentials</p>
-                                    </div>
-                                </a>
-                            </CardContent>
-                        </Card>
                     </div>
 
                     <div className="space-y-6">

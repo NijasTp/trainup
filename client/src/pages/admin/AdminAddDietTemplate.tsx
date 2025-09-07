@@ -1,29 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import { SiteFooter } from "@/components/user/home/UserSiteFooter";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-toastify";
-import { InfoModal } from "@/components/user/general/InfoModal";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import api from "@/lib/axios";
-import { deleteMeal, getMealsByDate } from "@/services/dietServices";
-
-export interface Meal {
-  _id?: string;
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-  time: string;
-  source: "user" | "trainer";
-  description?: string;
-}
+import API from "@/lib/axios";
+import { type TemplateMeal } from "@/interfaces/admin/templateManagement";
 
 interface USDAFood {
   fdcId: number;
@@ -49,28 +35,20 @@ interface USDAResponse {
   foods: USDAFood[];
 }
 
-export interface AddMealResponse {
-  _id: string;
-  user: string;
-  date: string;
-  meals: Meal[] | null;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
-
-export default function UserAddDiet() {
-  const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [meals, setMeals] = useState<Meal[]>([]);
-  const [newMeal, setNewMeal] = useState<Partial<Meal>>({
+export default function NewDietTemplate() {
+  const [template, setTemplate] = useState({
+    title: "",
+    description: "",
+    meals: [] as TemplateMeal[],
+  });
+  const [newMeal, setNewMeal] = useState<Partial<TemplateMeal>>({
     name: "",
     calories: 0,
     protein: 0,
     carbs: 0,
     fats: 0,
     time: "12:00",
-    source: "user",
-    description: "",
+    notes: "",
   });
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [usdaFoods, setUsdaFoods] = useState<USDAFood[]>([]);
@@ -81,23 +59,6 @@ export default function UserAddDiet() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const itemsPerPage = 5;
-
-  useEffect(() => {
-    const fetchExistingMeals = async () => {
-      setLoading(true);
-      try {
-        const response = await getMealsByDate(date);
-        setMeals(response.meals || []);
-        setLoading(false);
-      } catch (err) {
-        setError("Failed to fetch existing diet data");
-        setLoading(false);
-        toast.error("Failed to fetch existing diet data");
-        console.log('error', err);
-      }
-    };
-    fetchExistingMeals();
-  }, [date]);
 
   const fetchUsdaFoods = async (query: string, page: number = 1) => {
     if (!query) return;
@@ -121,28 +82,33 @@ export default function UserAddDiet() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setNewMeal((prev) => ({
-      ...prev,
-      [name]: name === "name" || name === "time" || name === "description" ? value : parseFloat(value) || 0,
-    }));
+    if (name === "title" || name === "description") {
+      setTemplate((prev) => ({ ...prev, [name]: value }));
+    } else {
+      setNewMeal((prev: any) => ({
+        ...prev,
+        [name]: name === "name" || name === "time" || name === "notes" ? value : parseFloat(value) || 0,
+      }));
+    }
   };
 
-  // Add manual meal to list
   const addManualMeal = () => {
     if (!newMeal.name || !newMeal.time) {
       toast.error("Meal name and time are required");
       return;
     }
-    setMeals((prev) => [
+    setTemplate((prev) => ({
       ...prev,
-      {
-        ...newMeal,
-        source: "user",
-        description: newMeal.description || "No description provided.",
-      } as Meal,
-    ]);
+      meals: [
+        ...prev.meals,
+        {
+          ...newMeal,
+          notes: newMeal.notes || "No notes provided.",
+        } as TemplateMeal,
+      ],
+    }));
     setNewMeal({
       name: "",
       calories: 0,
@@ -150,12 +116,10 @@ export default function UserAddDiet() {
       carbs: 0,
       fats: 0,
       time: "12:00",
-      source: "user",
-      description: "",
+      notes: "",
     });
   };
 
-  // Add USDA meal to list
   const addUsdaMeal = (food: USDAFood) => {
     if (!usdaMealTime) {
       toast.error("Please select a time for the meal");
@@ -167,132 +131,120 @@ export default function UserAddDiet() {
     const carbs = nutrients.find((n) => n.nutrientName === "Carbohydrate, by difference")?.value || 0;
     const fats = nutrients.find((n) => n.nutrientName === "Total lipid (fat)")?.value || 0;
 
-    const meal: Meal = {
+    const meal: TemplateMeal = {
       name: food.description,
       calories,
       protein,
       carbs,
       fats,
       time: usdaMealTime,
-      source: "user",
-      description: food.ingredients || "No ingredients provided.",
+      notes: food.ingredients || "No ingredients provided.",
+      nutritions: nutrients
+        .filter((n) => !["Energy", "Protein", "Carbohydrate, by difference", "Total lipid (fat)"].includes(n.nutrientName))
+        .map((n) => ({ label: n.nutrientName, value: n.value, unit: n.unitName })),
     };
-    setMeals((prev) => [...prev, meal]);
+    setTemplate((prev) => ({
+      ...prev,
+      meals: [...prev.meals, meal],
+    }));
     setSelectedFood(null);
-    setUsdaMealTime("12:00"); // Reset time after adding
+    setUsdaMealTime("12:00");
   };
 
-  // Remove meal (local or server)
-  const removeMeal = async (index: number, meal: Meal) => {
-    if (meal._id) {
-      try {
-        await deleteMeal(date, meal._id);
-        toast.success("Meal removed successfully");
-      } catch (err: any) {
-        toast.error(err.response?.data?.error || "Failed to remove meal");
-        console.log('error while removing meal', err);
-        return;
-      }
-    }
-    setMeals((prev) => prev.filter((_, i) => i !== index));
+  const removeMeal = (index: number) => {
+    setTemplate((prev) => ({
+      ...prev,
+      meals: prev.meals.filter((_, i) => i !== index),
+    }));
   };
-
 
   const handleSubmit = async () => {
-    const newMeals = meals.filter((meal) => !meal._id);
-    if (newMeals.length === 0 && meals.length > 0) {
-      toast.info("No new meals to save");
+    if (!template.title) {
+      toast.error("Template title is required");
       return;
     }
-    if (newMeals.length === 0) {
-      toast.error("Please add at least one meal");
+    if (template.meals.length === 0) {
+      toast.error("Please add at least one meal to the template");
       return;
     }
-
     setLoading(true);
     try {
-      for (const meal of newMeals) {
-        const response = await api.post(`/diet/${date}/meals`, meal);
-        setMeals((prev) =>
-          prev.map((m) =>
-            m === meal ? { ...m, _id: response.data.meals?.find((rm: Meal) => rm.name === m.name)?._id } : m
-          )
-        );
-      }
-      toast.success("Diet day updated successfully");
-      const updatedResponse = await getMealsByDate(date);
-      setMeals(updatedResponse.meals || []);
+      console.log('the template that is about to be sent', template);
+      const res = await API.post("/diet/admin/templates", template);
+      console.log('response from backend', res);
+      toast.success("Diet template created successfully");
+      setTemplate({ title: "", description: "", meals: [] });
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to update diet day");
-      toast.error(err.response?.data?.error || "Failed to update diet day");
-
+      setError(err.response?.data?.error || "Failed to create diet template");
+      toast.error(err.response?.data?.error || "Failed to create diet template");
     } finally {
       setLoading(false);
     }
   };
 
-  // Pagination logic
-  const paginatedFoods = usdaFoods;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-      <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 space-y-12">
+    <AdminLayout>
+      <main className="container mx-auto px-4 py-12 space-y-12">
         <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-2">
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-              Create Your Diet Plan
-            </h1>
-            <InfoModal modalMessage="Search for meals using the USDA database or add them manually. If no search results appear, try adding a meal manually below." />
-          </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Build your diet plan by selecting meals from the USDA database or adding custom meals with your own nutrition values.
-          </p>
+          <h1 className="text-4xl font-bold text-white">Create New Diet Template</h1>
+          <p className="text-gray-400">Build a diet template by searching USDA foods or adding meals manually.</p>
         </div>
 
-      {/* Date Selection */}
-        <Card className="bg-card/40 backdrop-blur-sm border-border/50">
+        <Card className="bg-[#111827] border-[#4B8B9B]/30">
           <CardHeader>
-            <CardTitle>Select Date</CardTitle>
+            <CardTitle className="text-white">Template Details</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="max-w-xs rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
-            />
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="title">Template Title</Label>
+              <Input
+                id="title"
+                name="title"
+                value={template.title}
+                onChange={handleInputChange}
+                placeholder="e.g., Balanced Diet Plan"
+                className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Input
+                id="description"
+                name="description"
+                value={template.description}
+                onChange={handleInputChange}
+                placeholder="e.g., General balanced diet for daily nutrition"
+                className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
+              />
+            </div>
           </CardContent>
         </Card>
 
-        {/* Added Meals List */}
-        <Card className="bg-card/40 backdrop-blur-sm border-border/50">
+        <Card className="bg-[#111827] border-[#4B8B9B]/30">
           <CardHeader>
-            <CardTitle>Meals for {date}</CardTitle>
+            <CardTitle className="text-white">Meals in Template</CardTitle>
           </CardHeader>
           <CardContent>
-            {meals.length === 0 ? (
-              <p className="text-muted-foreground">No meals added yet.</p>
+            {template.meals.length === 0 ? (
+              <p className="text-gray-400">No meals added yet.</p>
             ) : (
               <div className="space-y-4">
-                {meals.map((meal, index) => (
-                  <Card
-                    key={meal._id || index}
-                    className="group relative bg-card/50 hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                {template.meals.map((meal, index) => (
+                  <Card key={index} className="bg-[#1F2A44]/50 border-[#4B8B9B]/30">
                     <CardContent className="flex items-center gap-4 p-4">
                       <div className="flex-1 space-y-1">
-                        <h3 className="text-lg font-semibold text-foreground">{meal.name}</h3>
-                        <p className="text-sm text-muted-foreground">
+                        <h3 className="text-white font-semibold">{meal.name}</h3>
+                        <p className="text-gray-300 text-sm">
                           {meal.calories} kcal • Protein: {meal.protein}g • Carbs: {meal.carbs}g • Fats: {meal.fats}g • Time: {meal.time}
                         </p>
+                        {meal.notes && (
+                          <p className="text-gray-300 text-sm">Notes: {meal.notes}</p>
+                        )}
                       </div>
                       <Button
                         variant="destructive"
-                        onClick={() => removeMeal(index, meal)}
-                        className="bg-red-500 hover:bg-red-600 text-black font-semibold"
+                        onClick={() => removeMeal(index)}
+                        className="bg-red-500 hover:bg-red-600"
                       >
                         Remove
                       </Button>
@@ -303,23 +255,17 @@ export default function UserAddDiet() {
             )}
             <Button
               onClick={handleSubmit}
-              disabled={loading || meals.every((m) => m._id)}
-              className="mt-4 w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-black font-semibold py-4 shadow-lg hover:shadow-xl transition-all duration-300"
+              disabled={loading}
+              className="mt-4 w-full bg-[#4B8B9B] hover:bg-[#4B8B9B]/80"
             >
-              Save Diet Plan
+              Save Template
             </Button>
           </CardContent>
         </Card>
 
-
-
-        {/* USDA Search */}
-        <Card className="bg-card/40 backdrop-blur-sm border-border/50">
+        <Card className="bg-[#111827] border-[#4B8B9B]/30">
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <CardTitle>Search USDA Foods</CardTitle>
-              <InfoModal modalMessage="Search for foods in the USDA database. Click a food to view details and add it to your diet plan." />
-            </div>
+            <CardTitle className="text-white">Search USDA Foods</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-4">
@@ -327,27 +273,26 @@ export default function UserAddDiet() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for foods (e.g., chicken)"
-                className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
               />
               <Button
                 onClick={() => fetchUsdaFoods(searchQuery, 1)}
                 disabled={loading}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-black font-semibold py-2"
+                className="bg-[#4B8B9B] hover:bg-[#4B8B9B]/80"
               >
                 Search
               </Button>
             </div>
-            {loading && <p className="text-muted-foreground">Loading...</p>}
+            {loading && <p className="text-gray-400">Loading...</p>}
             {error && <p className="text-red-500">{error}</p>}
-            {paginatedFoods.length > 0 && (
+            {usdaFoods.length > 0 && (
               <div className="space-y-4">
-                {paginatedFoods.map((food) => (
+                {usdaFoods.map((food) => (
                   <Card
                     key={food.fdcId}
-                    className="group relative bg-card/50 hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer"
+                    className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 cursor-pointer"
                     onClick={() => setSelectedFood(food)}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                     <CardContent className="flex items-center gap-4 p-4">
                       {food.foodAttributes?.find((attr) => attr.name === "Package Image")?.value && (
                         <img
@@ -357,8 +302,8 @@ export default function UserAddDiet() {
                         />
                       )}
                       <div className="flex-1 space-y-1">
-                        <h3 className="text-lg font-semibold text-foreground">{food.description}</h3>
-                        <p className="text-sm text-muted-foreground">
+                        <h3 className="text-white font-semibold">{food.description}</h3>
+                        <p className="text-gray-300 text-sm">
                           {food.foodNutrients.find((n) => n.nutrientName === "Energy")?.value || 0} kcal • Protein: {food.foodNutrients.find((n) => n.nutrientName === "Protein")?.value || 0}g
                         </p>
                       </div>
@@ -367,7 +312,7 @@ export default function UserAddDiet() {
                           e.stopPropagation();
                           setSelectedFood(food);
                         }}
-                        className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-black font-semibold py-2"
+                        className="bg-[#4B8B9B] hover:bg-[#4B8B9B]/80"
                       >
                         Add
                       </Button>
@@ -383,12 +328,12 @@ export default function UserAddDiet() {
                     }}
                     disabled={currentPage === 1}
                     variant="outline"
-                    className="hover:bg-primary/10 border-primary/30 text-black"
+                    className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                   >
                     <ChevronLeft className="h-4 w-4 mr-2" />
                     Previous
                   </Button>
-                  <span className="text-muted-foreground">
+                  <span className="text-gray-400">
                     Page {currentPage} of {totalPages}
                   </span>
                   <Button
@@ -399,7 +344,7 @@ export default function UserAddDiet() {
                     }}
                     disabled={currentPage === totalPages}
                     variant="outline"
-                    className="hover:bg-primary/10 border-primary/30 text-black"
+                    className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                   >
                     Next
                     <ChevronRight className="h-4 w-4 ml-2" />
@@ -410,13 +355,9 @@ export default function UserAddDiet() {
           </CardContent>
         </Card>
 
-        {/* Manual Meal Input */}
-        <Card className="bg-card/40 backdrop-blur-sm border-border/50">
+        <Card className="bg-[#111827] border-[#4B8B9B]/30">
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <CardTitle>Add Custom Meal</CardTitle>
-              <InfoModal modalMessage="Enter the nutritional details manually if you can't find your meal in the search results." />
-            </div>
+            <CardTitle className="text-white">Add Custom Meal</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -428,7 +369,7 @@ export default function UserAddDiet() {
                   value={newMeal.name}
                   onChange={handleInputChange}
                   placeholder="e.g., Chicken Salad"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                 />
               </div>
               <div>
@@ -439,7 +380,7 @@ export default function UserAddDiet() {
                   type="time"
                   value={newMeal.time}
                   onChange={handleInputChange}
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                 />
               </div>
               <div>
@@ -451,7 +392,7 @@ export default function UserAddDiet() {
                   value={newMeal.calories || ""}
                   onChange={handleInputChange}
                   placeholder="e.g., 400"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                 />
               </div>
               <div>
@@ -463,7 +404,7 @@ export default function UserAddDiet() {
                   value={newMeal.protein || ""}
                   onChange={handleInputChange}
                   placeholder="e.g., 25"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                 />
               </div>
               <div>
@@ -475,7 +416,7 @@ export default function UserAddDiet() {
                   value={newMeal.carbs || ""}
                   onChange={handleInputChange}
                   placeholder="e.g., 50"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                 />
               </div>
               <div>
@@ -487,41 +428,37 @@ export default function UserAddDiet() {
                   value={newMeal.fats || ""}
                   onChange={handleInputChange}
                   placeholder="e.g., 10"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                 />
               </div>
               <div className="md:col-span-2">
-                <Label htmlFor="description">Description (Optional)</Label>
+                <Label htmlFor="notes">Notes (Optional)</Label>
                 <Input
-                  id="description"
-                  name="description"
-                  value={newMeal.description || ""}
+                  id="notes"
+                  name="notes"
+                  value={newMeal.notes || ""}
                   onChange={handleInputChange}
-                  placeholder="e.g., A delicious homemade meal"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  placeholder="e.g., Use skim milk"
+                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                 />
               </div>
             </div>
             <Button
               onClick={addManualMeal}
               disabled={loading}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-black font-semibold py-4 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-[#4B8B9B] hover:bg-[#4B8B9B]/80"
             >
               Add Meal
             </Button>
           </CardContent>
         </Card>
       </main>
-      <SiteFooter />
 
-      {/* Meal Details Modal */}
       {selectedFood && (
         <Dialog open={!!selectedFood} onOpenChange={() => setSelectedFood(null)}>
-          <DialogContent className="max-w-sm bg-card/95 backdrop-blur-md border-primary/30 shadow-2xl p-4">
+          <DialogContent className="bg-[#111827] border-[#4B8B9B]/30 text-white max-w-sm">
             <DialogHeader>
-              <DialogTitle className="text-lg font-bold bg-gradient-to-r from-primary to-primary/90 bg-clip-text text-transparent">
-                {selectedFood.description}
-              </DialogTitle>
+              <DialogTitle>{selectedFood.description}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {selectedFood.foodAttributes?.find((attr) => attr.name === "Package Image")?.value && (
@@ -532,35 +469,35 @@ export default function UserAddDiet() {
                 />
               )}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1 p-2 bg-primary/10 rounded-lg">
-                  <p className="text-xs font-medium text-muted-foreground">Calories</p>
-                  <p className="text-sm font-bold text-primary">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-400">Calories</p>
+                  <p className="text-sm font-bold">
                     {selectedFood.foodNutrients.find((n) => n.nutrientName === "Energy")?.value || 0} kcal
                   </p>
                 </div>
-                <div className="space-y-1 p-2 bg-primary/10 rounded-lg">
-                  <p className="text-xs font-medium text-muted-foreground">Protein</p>
-                  <p className="text-sm font-bold text-primary">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-400">Protein</p>
+                  <p className="text-sm font-bold">
                     {selectedFood.foodNutrients.find((n) => n.nutrientName === "Protein")?.value || 0}g
                   </p>
                 </div>
-                <div className="space-y-1 p-2 bg-primary/10 rounded-lg">
-                  <p className="text-xs font-medium text-muted-foreground">Carbs</p>
-                  <p className="text-sm font-bold text-primary">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-400">Carbs</p>
+                  <p className="text-sm font-bold">
                     {selectedFood.foodNutrients.find((n) => n.nutrientName === "Carbohydrate, by difference")?.value || 0}g
                   </p>
                 </div>
-                <div className="space-y-1 p-2 bg-primary/10 rounded-lg">
-                  <p className="text-xs font-medium text-muted-foreground">Fat</p>
-                  <p className="text-sm font-bold text-primary">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-400">Fat</p>
+                  <p className="text-sm font-bold">
                     {selectedFood.foodNutrients.find((n) => n.nutrientName === "Total lipid (fat)")?.value || 0}g
                   </p>
                 </div>
               </div>
               {selectedFood.ingredients && (
-                <div className="space-y-1 p-2 bg-primary/10 rounded-lg">
-                  <p className="text-xs font-medium text-muted-foreground">Ingredients</p>
-                  <p className="text-xs text-foreground">{selectedFood.ingredients}</p>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-400">Ingredients</p>
+                  <p className="text-xs">{selectedFood.ingredients}</p>
                 </div>
               )}
               <div className="space-y-1">
@@ -570,19 +507,19 @@ export default function UserAddDiet() {
                   type="time"
                   value={usdaMealTime}
                   onChange={(e) => setUsdaMealTime(e.target.value)}
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                 />
               </div>
               <Button
                 onClick={() => addUsdaMeal(selectedFood)}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-black font-semibold py-4 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="w-full bg-[#4B8B9B] hover:bg-[#4B8B9B]/80"
               >
-                Add to Diet
+                Add to Template
               </Button>
               <Button
                 onClick={() => setSelectedFood(null)}
                 variant="outline"
-                className="w-full hover:bg-primary/10 border-primary/30 text-black"
+                className="w-full bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
               >
                 Close
               </Button>
@@ -590,6 +527,6 @@ export default function UserAddDiet() {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+    </AdminLayout>
   );
 }

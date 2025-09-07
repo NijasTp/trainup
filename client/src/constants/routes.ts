@@ -1,6 +1,5 @@
-// src/constants/routes.ts
 export const ROUTES = {
-  // User Routes
+  //User Routes
   CHOOSE_LOGIN: "/login",
   USER_LOGIN: "/user/login",
   USER_FORGOT_PASSWORD: "/forgot-password",
@@ -37,6 +36,7 @@ export const ROUTES = {
   TRAINER_APPLY: "/trainer/apply",
   TRAINER_VERIFY_OTP: "/trainer/verify-otp",
   TRAINER_WAITLIST: "/trainer/waitlist",
+  TRAINER_REJECTED: "/trainer/rejected",
   TRAINER_DASHBOARD: "/trainer/dashboard",
   TRAINER_INDIVIDUAL_CLIENT: "/trainer/user/:id",
   TRAINER_CLIENT_WORKOUT: "/trainer/workout/:clientId",
@@ -51,7 +51,7 @@ export const ROUTES = {
   GYM_WAITLIST: "/gym/waitlist",
   GYM_DASHBOARD: "/gym/dashboard",
 
-  /* Admin Routes */
+  // Admin Routes
   ADMIN_LOGIN: "/admin/login",
   ADMIN_DASHBOARD: "/admin/dashboard",
   ADMIN_TRAINERS: "/admin/trainers",
@@ -62,5 +62,6 @@ export const ROUTES = {
   ADMIN_GYMS: "/admin/gyms",
   ADMIN_GYM_APPLICATION: "/admin/gyms/:id/application",
   ADMIN_TEMPLATE_MANAGEMENT: "/admin/templates",
-  ADMIN_ADD_WORKOUT_TEMPLATE: "/admin/templates/new/:type",
+  ADMIN_ADD_WORKOUT_TEMPLATE: "/admin/templates/new/workout",
+  ADMIN_ADD_DIET_TEMPLATE: "/admin/templates/new/diet",
 };

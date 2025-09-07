@@ -19,38 +19,7 @@ import {
 } from "lucide-react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { getTrainerApplication, getTrainerById, toggleTrainerBan, verifyTrainer } from "@/services/adminService"
-
-interface ITrainer {
-  _id: string
-  name: string
-  email: string
-  phone: string
-  isVerified: boolean
-  isBanned: boolean
-  role: "trainer"
-  gymId?: {
-    _id: string
-    name: string
-    location: string
-  } | null
-  clients: Array<{
-    _id: string
-    name: string
-    joinDate: Date
-  }>
-  bio: string
-  location: string
-  specialization: string
-  experience: string
-  badges: string[]
-  rating: number
-  certificate: string
-  profileImage: string
-  profileStatus: "pending" | "approved" | "rejected" | "active" | "suspended"
-  createdAt: Date
-  updatedAt: Date
-}
-
+import type { ITrainer } from "@/interfaces/admin/individualTrainer"
 
 const IndividualTrainer = () => {
   const [trainer, setTrainer] = useState<ITrainer | null>(null);
@@ -111,7 +80,7 @@ const IndividualTrainer = () => {
     setActionLoading("verify");
     try {
       await verifyTrainer(trainer._id);
-      setTrainer({ ...trainer, isVerified: true });
+      setTrainer({ ...trainer, profileStatus: 'approved' });
     } catch (err) {
       console.error("Error verifying trainer:", err);
     } finally {
@@ -165,7 +134,7 @@ const IndividualTrainer = () => {
               <p className="text-gray-400">Trainer Details and Performance</p>
             </div>
             <div className="flex items-center gap-2">
-              {!trainer.isVerified && (
+              {trainer.profileStatus !== 'approved' && (
                 <Button
                   variant="default"
                   onClick={handleVerify}
@@ -308,10 +277,10 @@ const IndividualTrainer = () => {
                   <span className="text-gray-400">Verification</span>
                   <span
                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      trainer.isVerified ? "bg-green-900/30 text-green-400" : "bg-yellow-900/30 text-yellow-400"
+                      trainer.profileStatus == 'approved' ? "bg-green-900/30 text-green-400" : "bg-yellow-900/30 text-yellow-400"
                     }`}
                   >
-                    {trainer.isVerified ? "Verified" : "Unverified"}
+                    {trainer.profileStatus == 'approved' ? "Verified" : "Unverified"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

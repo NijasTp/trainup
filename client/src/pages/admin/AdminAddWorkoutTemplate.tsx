@@ -9,11 +9,12 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "@/lib/axios";
 import { toast } from "react-toastify";
-import type { IExercise, IWorkoutTemplate, WgerExercise } from "@/interfaces/admin/adminAddWorkoutTemplates";
+import type { IExercise, IWorkoutTemplate, WgerExercise } from "@/interfaces/admin/adminAddTemplates";
 
 
 const WorkoutTemplateForm = () => {
-    const { type, id } = useParams<{ type: "workout" | "diet"; id?: string }>();
+    const { id } = useParams<{ id?: string }>();
+    const type = 'workout'
     const navigate = useNavigate();
     const [formData, setFormData] = useState<IWorkoutTemplate>({
         name: "",

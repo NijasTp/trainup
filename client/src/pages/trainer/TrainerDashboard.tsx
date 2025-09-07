@@ -11,25 +11,10 @@ import { Badge } from "@/components/ui/badge"
 import { Eye, Mail, Phone, Calendar } from "lucide-react"
 import API from "@/lib/axios"
 import { toast } from "sonner"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader"
+import type { PaginatedClients } from "@/interfaces/trainer/iTrainerDashboard"
 
-
-interface Client {
-  _id: string
-  name: string
-  email: string
-  phone: string
-  subscriptionStartDate: string
-  profileImage?: string
-}
-
-interface PaginatedClients {
-  clients: Client[]
-  total: number
-  page: number
-  totalPages: number
-}
 
 export default function TrainerClients() {
   const navigate = useNavigate()
@@ -138,6 +123,7 @@ export default function TrainerClients() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {clients.clients.map((client) => (
+               <Link to={`/trainer/user/${client._id}`}>
                 <Card
                   key={client._id}
                   className="bg-background/50 border-border/50 hover:shadow-md transition-all duration-200"
@@ -189,6 +175,7 @@ export default function TrainerClients() {
                     </div>
                   </CardContent>
                 </Card>
+                </Link>
               ))}
             </div>
 

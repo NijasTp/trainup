@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import TYPES from "../core/types/types";
-import { ITrainerService, PaginatedClients } from "../core/interfaces/services/ITrainerService";
+import { ITrainerService, PaginatedClients, TrainerApplyData } from "../core/interfaces/services/ITrainerService";
 import { ITrainerRepository } from "../core/interfaces/repositories/ITrainerRepository";
 import { v2 as cloudinary } from "cloudinary";
 import { ITrainer } from "../models/trainer.model";
@@ -8,22 +8,7 @@ import { UploadedFile } from 'express-fileupload';
 import bcrypt from 'bcryptjs'
 import { IOTPService } from "../core/interfaces/services/IOtpService";
 import { IJwtService } from "../core/interfaces/services/IJwtService";
-
-
-interface TrainerApplyData {
-  name: string;
-  email: string;
-  password: string;
-  phone: string;
-  location: string;
-  experience: string;
-  specialization: string;
-  bio: string;
-  certificate: UploadedFile;
-  profileImage: UploadedFile,
-
-}
-
+import { logger } from "../utils/logger.util";
 
 
 @injectable()
@@ -116,16 +101,7 @@ export class TrainerService implements ITrainerService {
       );
       profileImageUrl = profileImageUploadResult.secure_url;
     } catch (error: any) {
-      console.error('Cloudinary profile image upload error:', {
-        message: error.message,
-        status: error.http_code,
-        details: error,
-        fileInfo: {
-          name: trainerData.profileImage.name,
-          size: trainerData.profileImage.size,
-          mimetype: trainerData.profileImage.mimetype,
-        },
-      });
+      console.error('Cloudinary profile image upload error:', error);
       throw new Error(`Failed to upload profile image: ${error.message || 'Unknown error'}`);
     }
 
@@ -134,6 +110,7 @@ export class TrainerService implements ITrainerService {
       email: trainerData.email,
       password: hashedPassword,
       phone: trainerData.phone,
+      price:trainerData.price,
       bio: trainerData.bio ,
       location: trainerData.location,
       experience: trainerData.experience,
@@ -148,6 +125,55 @@ export class TrainerService implements ITrainerService {
     const refreshToken = this._jwtService.generateRefreshToken(trainer._id.toString(), trainer.role, trainer.tokenVersion ?? 0);
 
     return { trainer, accessToken, refreshToken };
+  }
+
+  async reapplyAsTrainer(trainerId: string, trainerData: TrainerApplyData) {
+    const existingTrainer = await this._trainerRepo.findById(trainerId);
+    if (!existingTrainer) {
+      throw new Error('Trainer not found');
+    }
+    const trainerToUpdate: Partial<ITrainer> = {
+      name: trainerData.name || existingTrainer.name,
+      email: trainerData.email || existingTrainer.email,
+      phone: trainerData.phone || existingTrainer.phone,
+      price: trainerData.price || existingTrainer.price,
+      bio: trainerData.bio || existingTrainer.bio,
+      location: trainerData.location || existingTrainer.location,
+      experience: trainerData.experience || existingTrainer.experience,
+      specialization: trainerData.specialization || existingTrainer.specialization,
+      profileStatus: 'pending', 
+    };
+
+
+    if (trainerData.certificate) {
+      try {
+        const certificateUploadResult = await cloudinary.uploader.upload(
+          trainerData.certificate.tempFilePath,
+          { resource_type: 'auto', folder: 'trainer_certificates' }
+        );
+        trainerToUpdate.certificate = certificateUploadResult.secure_url;
+      } catch (error: any) {
+        logger.error('cloudinary error:',error)
+        throw new Error(`Failed to upload certificate: ${error.message || 'Unknown error'}`);
+      }
+    }
+
+    if (trainerData.profileImage) {
+      try {
+        const profileImageUploadResult = await cloudinary.uploader.upload(
+          trainerData.profileImage.tempFilePath,
+          { resource_type: 'image', folder: 'trainer_profile_images' }
+        );
+        trainerToUpdate.profileImage = profileImageUploadResult.secure_url;
+      } catch (error: any) {
+        console.error('Cloudinary profile image upload error:', error);
+        throw new Error(`Failed to upload profile image: ${error.message || 'Unknown error'}`);
+      }
+    }
+
+    const updatedTrainer = await this._trainerRepo.updateStatus(trainerId, trainerToUpdate);
+
+    return updatedTrainer
   }
 
   async getTrainerById(id: string) {

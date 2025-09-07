@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Award, Calendar, Flame, Lock, Mail, Phone, Ruler, Scale, Trophy, User, MapPin, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { getProfile } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import type { UserProfile } from "@/interfaces/user/profileInterface";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -15,7 +15,7 @@ export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const navigate = useNavigate()
 
   useEffect(() => {
     document.title = "TrainUp - Your Profile";
@@ -44,7 +44,7 @@ export default function Profile() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <SiteHeader />
       <main className="relative container mx-auto px-4 py-12 space-y-8">
-        {/* Header Section */}
+
         <div className="text-center space-y-6 mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
             <User className="h-4 w-4 text-primary" />
@@ -94,35 +94,13 @@ export default function Profile() {
                   </div>
                 )}
               </div>
-              <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-                {/* <DialogTrigger asChild>
-                  <Button
-                    className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+                
+                  <Button onClick={() => navigate("/edit-profile")}
+                    className="bg-gradient-to-r cursor-pointer from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
                   >
                     Edit Profile
                   </Button>
-                </DialogTrigger> */}
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold">Edit Profile</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <p className="text-muted-foreground">Edit profile feature coming soon!</p>
-                    <Button
-                      variant="outline"
-                      className="w-full hover:bg-secondary/80 border-border/50"
-                      onClick={() => {
-                        toast.info("Edit feature in development", {
-                          description: "We'll notify you when profile editing is available!",
-                        });
-                        setIsEditOpen(false);
-                      }}
-                    >
-                      Close
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+
             </CardHeader>
             <CardContent className="space-y-8">
               {/* Personal Information */}

@@ -23,7 +23,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = () => {
   const handleSignOut = async () => {
     dispatch(logout())
      logoutApi()
-    localStorage.removeItem("profilePrompted") // Clear profilePrompted on logout
     console.log("Successfully signed out")
     navigate("/login")
   }
@@ -31,7 +30,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = () => {
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="container h-16 flex items-center gap-4">
-        {/* Logo */}
+
         <Link to="/home" className="flex items-center gap-2 font-display text-xl tracking-wider">
           <div className="ms-3">
             <span className="font-extrabold">TRAIN</span>
@@ -39,7 +38,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = () => {
           </div>
         </Link>
 
-        {/* Search */}
+
         <div className="hidden md:flex items-center gap-2 flex-1 max-w-xl ml-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

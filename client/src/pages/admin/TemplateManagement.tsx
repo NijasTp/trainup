@@ -12,55 +12,6 @@ import API from "@/lib/axios";
 import type { IDietTemplate, IWorkoutTemplate, TemplateResponse } from "@/interfaces/admin/templateManagement";
 import { KEY } from "@/constants/keyConstants";
 
-
-const mockDietTemplates: IDietTemplate[] = [
-  {
-    _id: "dt1",
-    title: "Balanced Diet Plan",
-    description: "General balanced diet for daily nutrition",
-    createdBy: "admin1",
-    meals: [
-      {
-        name: "Breakfast Oatmeal",
-        calories: 300,
-        protein: 10,
-        carbs: 45,
-        fats: 8,
-        time: "08:00",
-        notes: "Use skim milk",
-      },
-      {
-        name: "Grilled Chicken Lunch",
-        calories: 450,
-        protein: 35,
-        carbs: 30,
-        fats: 15,
-        time: "12:30",
-      },
-    ],
-    createdAt: "2025-08-01T09:00:00Z",
-    updatedAt: "2025-08-01T09:00:00Z",
-  },
-  {
-    _id: "dt2",
-    title: "Keto Diet Plan",
-    description: "Low-carb, high-fat diet plan",
-    createdBy: "admin1",
-    meals: [
-      {
-        name: "Avocado Egg Breakfast",
-        calories: 400,
-        protein: 15,
-        carbs: 5,
-        fats: 35,
-        time: "07:30",
-      },
-    ],
-    createdAt: "2025-08-02T11:00:00Z",
-    updatedAt: "2025-08-02T11:00:00Z",
-  },
-];
-
 const TemplateManagement = () => {
   const [templateType, setTemplateType] = useState<"workout" | "diet">("workout");
   const [response, setResponse] = useState<TemplateResponse>({ templates: [], total: 0, page: 1, totalPages: 1 });
@@ -76,35 +27,26 @@ const TemplateManagement = () => {
     const fetchTemplates = async () => {
       setLoading(true);
       try {
-        if (templateType === "workout") {
-          const apiResponse = await API.get('/workout/admin/workout-templates', {
-            params: {
-              page: currentPage,
-              limit: templatesPerPage,
-              search: searchQuery,
-            },
-          });
-          setResponse({
-            templates: apiResponse.data.templates,
-            total: apiResponse.data.total,
-            page: apiResponse.data.page,
-            totalPages: apiResponse.data.totalPages,
-          });
-        } else {
-          const filteredTemplates = mockDietTemplates.filter(template =>
-            template.title.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-          const startIndex = (currentPage - 1) * templatesPerPage;
-          const paginatedTemplates = filteredTemplates.slice(startIndex, startIndex + templatesPerPage);
-          setResponse({
-            templates: paginatedTemplates,
-            total: filteredTemplates.length,
+        const endpoint = templateType === "workout" 
+          ? '/workout/admin/workout-templates' 
+          : '/diet/admin/templates';
+        const apiResponse = await API.get(endpoint, {
+          params: {
             page: currentPage,
-            totalPages: Math.ceil(filteredTemplates.length / templatesPerPage),
-          });
-        }
+            limit: templatesPerPage,
+            search: searchQuery,
+          },
+        });
+        console.log('response:',apiResponse)
+        setResponse({
+          templates: apiResponse.data.templates|| apiResponse.data.meals,
+          total: apiResponse.data.total,
+          page: apiResponse.data.page,
+          totalPages: apiResponse.data.totalPages,
+        });
       } catch (error: any) {
         console.error("Error fetching templates:", error);
+        setResponse({ templates: [], total: 0, page: 1, totalPages: 1 });
       } finally {
         setLoading(false);
       }
@@ -124,7 +66,6 @@ const TemplateManagement = () => {
     }
   };
 
-
   const handleAddTemplate = () => {
     navigate(`/admin/templates/new/${templateType}`);
   };
@@ -138,15 +79,30 @@ const TemplateManagement = () => {
   };
 
   const handleDeleteTemplate = async (id: string) => {
-    if (templateType === "workout") {
-      try {
-        await API.delete(`/workout/admin/workout-templates/${id}`);
-        setCurrentPage(1);
-      } catch (error) {
-        console.error("Error deleting template:", error);
-      }
-    } else {
-      console.log("Delete diet template not supported as it's static.");
+    try {
+      const endpoint = templateType === "workout" 
+        ? `/workout/admin/workout-templates/${id}` 
+        : `/diet/admin/templates/${id}`;
+      await API.delete(endpoint);
+      setCurrentPage(1);
+      // Refetch templates after deletion
+      const apiResponse = await API.get(templateType === "workout" 
+        ? '/workout/admin/workout-templates' 
+        : '/diet/admin/templates', {
+        params: {
+          page: 1,
+          limit: templatesPerPage,
+          search: searchQuery,
+        },
+      });
+      setResponse({
+        templates: apiResponse.data.templates,
+        total: apiResponse.data.total,
+        page: apiResponse.data.page,
+        totalPages: apiResponse.data.totalPages,
+      });
+    } catch (error) {
+      console.error("Error deleting template:", error);
     }
   };
 
@@ -198,7 +154,6 @@ const TemplateManagement = () => {
           </CardContent>
         </Card>
 
-        {/* Templates Table */}
         <Card className="bg-[#111827] border border-[#4B8B9B]/30">
           <CardHeader>
             <CardTitle className="text-white">

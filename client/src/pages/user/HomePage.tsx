@@ -18,6 +18,7 @@ import {
   Target,
   Award,
   Activity,
+  TrendingDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers } from "@/services/userService";
@@ -26,6 +27,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";
 import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/homeInterface";
+import { useSelector } from "react-redux";
 
 
 export default function HomePage() {
@@ -33,8 +35,9 @@ export default function HomePage() {
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [streak, _] = useState(7);
   const navigate = useNavigate();
+  const user = useSelector((state: any) => state.userAuth.user)
+  const streak = user ? user.streak : 0
 
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -100,7 +103,7 @@ export default function HomePage() {
 
   const dietProgress = calculateDietProgress();
   const workoutProgress = calculateWorkoutProgress();
-      
+
 
   return (
     <div className="container min-h-screen bg-gradient-to-br from-background absolute inset-0 via-background/95 to-secondary/20">
@@ -136,10 +139,13 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">{streak} days</div>
-              <p className="text-xs text-muted-foreground">
+              {streak > 0 ? (<p className="text-xs text-green-700">
                 <TrendingUp className="inline h-3 w-3 mr-1" />
                 Keep it going!
-              </p>
+              </p>) : (<p className="text-xs text-muted-foreground">
+                <TrendingDown className="inline h-3 w-3 mr-1" />
+                Keep practicing, you can do it!
+              </p>)}
             </CardContent>
           </Card>
 

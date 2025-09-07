@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
 import { trainerRequestOtp as trainerRequestOtp } from "@/services/authService";
+import { FaRupeeSign } from "react-icons/fa";
 
 export default function TrainerApplyPage() {
   const [formData, setFormData] = useState({
@@ -20,14 +21,15 @@ export default function TrainerApplyPage() {
     experience: "",
     specialization: "",
     bio: "",
+    price: '',
     certificate: null as File | null,
     profileImage: null as File | null,
   });
-  const [confirmPassword,setConfirmPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate()
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -47,7 +49,7 @@ export default function TrainerApplyPage() {
     setLoading(true);
 
     try {
-      if (formData.password!==confirmPassword){
+      if (formData.password !== confirmPassword) {
         setError('Passwords do not match')
       }
       await trainerRequestOtp(formData.email);
@@ -158,7 +160,7 @@ export default function TrainerApplyPage() {
                       type="password"
                       placeholder="Enter your password again"
                       value={confirmPassword}
-                      onChange={(e)=>setConfirmPassword(e.target.value)}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                       className="bg-gray-700 border-gray-600 text-white pl-10"
                       required
                     />
@@ -177,6 +179,24 @@ export default function TrainerApplyPage() {
                       type="tel"
                       placeholder="Enter your phone number"
                       value={formData.phone}
+                      onChange={handleInputChange}
+                      className="bg-gray-700 border-gray-600 text-white pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="phone" className="text-white">
+                    Monthly Fee (₹)
+                  </Label>
+                  <div className="relative mt-2">
+                    <FaRupeeSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="price"
+                      name="price"
+                      type="number"
+                      placeholder="Enter your monthly fee in ₹"
+                      value={formData.price}
                       onChange={handleInputChange}
                       className="bg-gray-700 border-gray-600 text-white pl-10"
                       required
@@ -226,18 +246,37 @@ export default function TrainerApplyPage() {
                 <Label htmlFor="specialization" className="text-white">
                   Specialization
                 </Label>
-                <Input
+                <select
                   id="specialization"
                   name="specialization"
-                  type="text"
-                  placeholder="e.g., Weight Training, Yoga"
                   value={formData.specialization}
                   onChange={handleInputChange}
-                  className="bg-gray-700 border-gray-600 text-white mt-2"
+                  className="bg-gray-700 border-gray-600 text-white mt-2 block w-full p-2 rounded-md"
                   required
-                />
+                >
+                  <option value="" disabled>Select a specialization</option>
+                  <option value="Weight Training">Weight Training</option>
+                  <option value="Yoga">Yoga</option>
+                  <option value="Pilates">Pilates</option>
+                  <option value="Cardio">Cardio</option>
+                  <option value="CrossFit">CrossFit</option>
+                  <option value="Martial Arts">Martial Arts</option>
+                  <option value="Zumba">Zumba</option>
+                  <option value="Other">Other</option>
+                </select>
+                {formData.specialization === "Other" && (
+                  <Input
+                    id="specialization"
+                    name="specialization"
+                    type="text"
+                    placeholder="Enter your specialization"
+                    value={formData.specialization === "Other" ? "" : formData.specialization}
+                    onChange={handleInputChange}
+                    className="bg-gray-700 border-gray-600 text-white mt-2"
+                    required
+                  />
+                )}
               </div>
-
               <div>
                 <Label htmlFor="profileImage" className="text-white">
                   Profile Picture <span className="trainup-accent">(Required)</span>
@@ -312,7 +351,7 @@ export default function TrainerApplyPage() {
 
               <Button
                 type="submit"
-                className="w-full trainup-primary text-white hover:bg-opacity-80"
+                className="w-full trainup-primary text-black hover:bg-opacity-80"
                 disabled={loading}
               >
                 {loading ? "Submitting..." : "Submit Application"}

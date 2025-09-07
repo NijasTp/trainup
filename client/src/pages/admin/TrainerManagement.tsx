@@ -4,40 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, CheckCircle, FileText } from "lucide-react";
+import { Search, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getTrainerApplication, getTrainerById, getTrainers, toggleTrainerBan, verifyTrainer } from "@/services/adminService";
+import { getTrainerApplication, getTrainerById, getTrainers, toggleTrainerBan } from "@/services/adminService";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import type { ITrainer, TrainerResponse } from "@/interfaces/admin/adminTrainerManagement";
 
-interface ITrainer {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  isVerified: boolean;
-  isBanned: boolean;
-  role: "trainer";
-  gymId?: string;
-  clients: string[];
-  bio: string;
-  location: string;
-  specialization: string;
-  experience: string;
-  badges: string[];
-  rating: number;
-  certificate: string;
-  profileImage: string;
-  profileStatus: "pending" | "approved" | "rejected" | "active" | "suspended";
-  createdAt: Date;
-  updatedAt: Date;
-}
 
-interface TrainerResponse {
-  trainers: ITrainer[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
 
 const TrainerManagement = () => {
   const [response, setResponse] = useState<TrainerResponse>({ trainers: [], total: 0, page: 1, totalPages: 1 });
@@ -54,10 +27,6 @@ const TrainerManagement = () => {
   const trainersPerPage = 5;
   const navigate = useNavigate();
 
-  // Log filter changes
-  useEffect(() => {
-    console.log("Filter values changed:", { isBannedFilter, isVerifiedFilter, startDate, endDate, searchQuery });
-  }, [isBannedFilter, isVerifiedFilter, startDate, endDate, searchQuery]);
 
   useEffect(() => {
     const fetchTrainers = async () => {
@@ -72,6 +41,7 @@ const TrainerManagement = () => {
           startDate,
           endDate
         );
+        console.log('trainers:',res)
         setResponse(res as TrainerResponse);
         setError(null);
       } catch (error: any) {
@@ -117,21 +87,6 @@ const TrainerManagement = () => {
     }
   };
 
-  const handleVerify = async (trainerId: string) => {
-    setActionLoading(trainerId);
-    try {
-      await verifyTrainer(trainerId);
-      const res = await getTrainers(currentPage, trainersPerPage, searchQuery, isBannedFilter, isVerifiedFilter, startDate, endDate);
-      setResponse(res as TrainerResponse);
-      setError(null);
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      console.error("Error verifying trainer:", error);
-      setError(error.response?.data?.message || "Failed to verify trainer.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
 
   const handleViewTrainer = async (trainerId: string) => {
     try {
@@ -193,7 +148,7 @@ const TrainerManagement = () => {
                     <SelectValue placeholder="Filter by Status" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="all">All </SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="banned">Banned</SelectItem>
                   </SelectContent>
@@ -203,7 +158,7 @@ const TrainerManagement = () => {
                     <SelectValue placeholder="Filter by Verification" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-                    <SelectItem value="all">All Verification</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     <SelectItem value="verified">Verified</SelectItem>
                     <SelectItem value="unverified">Unverified</SelectItem>
                   </SelectContent>
@@ -281,8 +236,8 @@ const TrainerManagement = () => {
                                 <p className="text-white font-medium">{trainer.name}</p>
                                 <p className="text-sm text-gray-400">{trainer.location}</p>
                               </div>
-                              </div>
-                            </td>
+                            </div>
+                          </td>
                           <td className="py-4 px-4 text-gray-300">{trainer.email}</td>
                           <td className="py-4 px-4 text-gray-300">{trainer.phone}</td>
                           <td className="py-4 px-4">
@@ -301,13 +256,12 @@ const TrainerManagement = () => {
                           <td className="py-4 px-4">
                             <div className="flex flex-col gap-1">
                               <span
-                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                  trainer.isVerified
+                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${trainer.profileStatus == 'approved'
                                     ? "bg-green-900/30 text-green-400"
                                     : "bg-yellow-900/30 text-yellow-400"
-                                }`}
+                                  }`}
                               >
-                                {trainer.isVerified ? "Verified" : "Unverified"}
+                                {trainer.profileStatus == 'approved' ? "Verified" : "Unverified"}
                               </span>
                               {trainer.isBanned && (
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-400">
@@ -315,8 +269,7 @@ const TrainerManagement = () => {
                                 </span>
                               )}
                               <span
-                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                  trainer.profileStatus === "active"
+                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${trainer.profileStatus === "active"
                                     ? "bg-green-900/30 text-green-400"
                                     : trainer.profileStatus === "pending"
                                       ? "bg-yellow-900/30 text-yellow-400"
@@ -325,7 +278,7 @@ const TrainerManagement = () => {
                                         : trainer.profileStatus === "rejected"
                                           ? "bg-red-900/30 text-red-400"
                                           : "bg-gray-900/30 text-gray-400"
-                                }`}
+                                  }`}
                               >
                                 {trainer.profileStatus}
                               </span>
@@ -333,21 +286,6 @@ const TrainerManagement = () => {
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2">
-                              {!trainer.isVerified && (
-                                <Button
-                                  variant="default"
-                                  onClick={() => handleVerify(trainer._id)}
-                                  disabled={actionLoading === trainer._id}
-                                  className="flex items-center gap-1 text-xs px-2 py-1"
-                                >
-                                  {actionLoading === trainer._id ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <CheckCircle className="h-3 w-3" />
-                                  )}
-                                  Verify
-                                </Button>
-                              )}
                               <Button
                                 variant="default"
                                 onClick={() => handleBanToggle(trainer._id, trainer.isBanned)}
@@ -361,7 +299,7 @@ const TrainerManagement = () => {
                                 )}
                                 {trainer.isBanned ? "Unban" : "Ban"}
                               </Button>
-                              {!trainer.isVerified && (
+                              {trainer.profileStatus !== 'approved' && (
                                 <Button
                                   variant="outline"
                                   onClick={() => handleViewApplication(trainer._id)}
@@ -371,6 +309,7 @@ const TrainerManagement = () => {
                                   App
                                 </Button>
                               )}
+
                               <Button
                                 variant="outline"
                                 onClick={() => handleViewTrainer(trainer._id)}

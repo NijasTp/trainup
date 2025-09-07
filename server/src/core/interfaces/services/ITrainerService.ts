@@ -23,6 +23,22 @@ export interface PaginatedClients {
     page: number;
     totalPages: number;
 }
+export interface TrainerApplyData {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  price: string;
+  location: string;
+  experience: string;
+  specialization: string;
+  bio: string;
+  certificate: UploadedFile;
+  profileImage: UploadedFile,
+
+}
+
+
 
 export interface ITrainerService {
   loginTrainer(email: string, password: string): Promise<{ trainer: ITrainer, accessToken: string, refreshToken: string }>
@@ -42,6 +58,7 @@ export interface ITrainerService {
   accessToken: string;
   refreshToken: string;
 }>;
+reapplyAsTrainer(trainerId: string, trainerData: TrainerApplyData): Promise<ITrainer | null>
 getTrainerById(id: string): Promise<ITrainer | null>;
   forgotPassword(email:string):Promise<void>
   verifyOtp(email: string, otp: string): Promise<void>

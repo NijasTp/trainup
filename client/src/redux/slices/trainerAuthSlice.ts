@@ -5,6 +5,7 @@ interface TrainerType {
   name: string;
   email: string;
   profileImage?: string;
+  profileStatus: 'approved' | 'rejected' | 'pending'
   specialization?: string;
   experience?: string;
   isVerified: boolean; 

@@ -1,79 +1,100 @@
-import { IsEmail, IsString, MinLength, IsNotEmpty, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEmail, IsString, IsNumber, MinLength, IsOptional, IsInt, Min, IsArray, IsBoolean, IsDate, MaxLength, ValidateNested } from 'class-validator';
 
-export class RegisterUserDto {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
-  @IsEmail()
-  email: string;
-
-  @IsString()
-  @MinLength(6)
-  password: string;
-
-  @IsString()
-  @IsNotEmpty()
-  otp: string;
-}
-
-export class LoginUserDto {
-  @IsEmail()
-  email: string;
-
-  @IsString()
-  @MinLength(6)
-  password: string;
-}
-
-export class GoogleLoginDto {
-  @IsString()
-  @IsNotEmpty()
-  idToken: string;
-}
 
 export class RequestOtpDto {
-  @IsEmail()
+  @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 }
 
 export class VerifyOtpDto {
-  @IsEmail()
+  @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'OTP must be a string' })
+  @MinLength(6, { message: 'OTP must be exactly 6 digits' })
+  @MaxLength(6, { message: 'OTP must be exactly 6 digits' })
   otp: string;
+
+  @IsString({ message: 'Name must be a string' })
+  name: string;
+
+  @IsString({ message: 'Password must be a string' })
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
+  password: string;
+}
+
+export class CheckUsernameDto {
+  @IsString({ message: 'Username must be a string' })
+  username: string;
 }
 
 export class ForgotPasswordDto {
-  @IsEmail()
+  @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 }
 
 export class VerifyForgotPasswordOtpDto {
-  @IsEmail()
+  @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'OTP must be a string' })
+  @MinLength(6, { message: 'OTP must be exactly 6 digits' })
+  @MaxLength(6, { message: 'OTP must be exactly 6 digits' })
   otp: string;
 }
 
 export class ResetPasswordDto {
-  @IsEmail()
+  @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 
-  @IsString()
-  @MinLength(6)
+  @IsString({ message: 'New password must be a string' })
+  @MinLength(6, { message: 'New password must be at least 6 characters' })
   newPassword: string;
 }
 
-export class CheckUsernameDto {
-  @IsString()
-  @IsNotEmpty()
-  username: string;
+export class GoogleLoginDto {
+  @IsString({ message: 'idToken must be a string' })
+  idToken: string;
 }
+
+export class LoginDto {
+  @IsEmail({}, { message: 'Invalid email format' })
+  email: string;
+
+  @IsString({ message: 'Password must be a string' })
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
+  password: string;
+}
+
+export class ResendOtpDto {
+  @IsEmail({}, { message: 'Invalid email format' })
+  email: string;
+}
+
+export class GetTrainersQueryDto {
+  @IsOptional()
+  @Type(() => Number) 
+  @IsInt({ message: 'Page must be an integer' })
+  @Min(1, { message: 'Page must be at least 1' })
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number) 
+  @IsInt({ message: 'Limit must be an integer' })
+  @Min(1, { message: 'Limit must be at least 1' })
+  limit?: number;
+
+  @IsOptional()
+  @IsString({ message: 'Search must be a string' })
+  search?: string;
+}
+
+export class GetIndividualTrainerParamsDto {
+  @IsString({ message: 'ID must be a string' })
+  id: string;
+}
+
 
 export class UserResponseDto {
   @IsString()
@@ -85,54 +106,123 @@ export class UserResponseDto {
   @IsEmail()
   email: string;
 
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isVerified?: boolean;
+
   @IsString()
   role: string;
 
   @IsOptional()
-  isVerified?: boolean;
-
-  @IsOptional()
-  isBanned?: boolean;
-
-  @IsOptional()
-  createdAt?: Date;
-
-  @IsOptional()
-  assignedTrainer?: string | null;
-
-  @IsOptional()
-  subscriptionStartDate?: Date | null;
-
-  @IsOptional()
-  phone?: string;
-
-  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   goals?: string[];
 
   @IsOptional()
-  motivationLevel?: string;
+  @IsString()
+  activityLevel?: string;
 
   @IsOptional()
-  equipment?: string[];
+  @IsBoolean()
+  equipment?: boolean;
 
   @IsOptional()
+  @IsString()
+  assignedTrainer?: string | null;
+
+  @IsOptional()
+  @IsDate()
+  subscriptionStartDate?: Date | null;
+
+  @IsOptional()
+  @IsString()
   gymId?: string;
 
   @IsOptional()
+  @IsBoolean()
   isPrivate?: boolean;
 
   @IsOptional()
-  streak?: number;
+  @IsBoolean()
+  isBanned?: boolean;
+
+  @IsNumber()
+  streak: number;
 
   @IsOptional()
-  xp?: number;
+  @IsDate()
+  lastActiveDate?: Date;
+
+  @IsNumber()
+  xp: number;
+
+  @IsArray()
+  @IsString({ each: true })
+  achievements: string[];
 
   @IsOptional()
-  achievements?: string[];
+  @IsNumber()
+  todaysWeight?: number;
+
+  @IsOptional()
+  @IsNumber()
+  goalWeight?: number;
+
+  @IsOptional()
+  @IsNumber()
+  height?: number;
+
+  @IsOptional()
+  @IsNumber()
+  age?: number;
+
+  @IsOptional()
+  @IsString()
+  gender?: 'male' | 'female' | 'other';
+
+  @IsDate()
+  createdAt: Date;
+
+  @IsDate()
+  updatedAt: Date;
 }
 
-export class SessionResponseDto {
-  @IsNotEmpty()
+export class TrainerResponseDto {
+
+  @IsString()
+  _id: string;
+
+  @IsString()
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+
+}
+
+export class GetTrainersResponseDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TrainerResponseDto)
+  trainers: TrainerResponseDto[];
+}
+
+export class LoginResponseDto {
+  @ValidateNested()
+  @Type(() => UserResponseDto)
+  user: UserResponseDto;
+
+  @IsNumber()
+  streak: number;
+}
+
+export class CheckSessionResponseDto {
+  @IsBoolean()
   valid: boolean;
 
   @IsString()
@@ -142,7 +232,7 @@ export class SessionResponseDto {
   role: string;
 }
 
-export class TokenResponseDto {
+export class RefreshAccessTokenResponseDto {
   @IsString()
   accessToken: string;
 
@@ -150,16 +240,12 @@ export class TokenResponseDto {
   refreshToken: string;
 }
 
-export class PaginatedUsersDto {
-  @IsNotEmpty()
-  users: UserResponseDto[];
+export class SimpleMessageResponseDto {
+  @IsString()
+  message: string;
+}
 
-  @IsNotEmpty()
-  total: number;
-
-  @IsNotEmpty()
-  page: number;
-
-  @IsNotEmpty()
-  totalPages: number;
+export class CheckUsernameResponseDto {
+  @IsBoolean()
+  isAvailable: boolean;
 }

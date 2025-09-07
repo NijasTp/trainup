@@ -1,140 +1,16 @@
 import React, { useState } from 'react';
-import { Loader2, Clock, FileText, User, Mail, Phone, MapPin, Award, Briefcase, FileCheck, X, Dumbbell } from 'lucide-react';
+import { Loader2, Clock, FileText, User, Mail, Phone, MapPin, Award, Briefcase, FileCheck } from 'lucide-react';
 import { getTrainerDetails } from '@/services/trainerService';
 import { logoutTrainer } from '@/redux/slices/trainerAuthSlice';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { trainerLogout } from '@/services/authService';
-// Card Components
-const Card = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <div className={`rounded-lg ${className}`}>{children}</div>
-);
-
-const CardHeader = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <div className={`p-6 ${className}`}>{children}</div>
-);
-
-const CardContent = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <div className={`p-6 pt-0 ${className}`}>{children}</div>
-);
-
-const CardTitle = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>
-);
-
-const CardDescription = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <p className={`text-sm text-muted-foreground ${className}`}>{children}</p>
-);
-
-// Button Component
-const Button = ({ 
-  className, 
-  children, 
-  onClick, 
-  disabled, 
-  variant = "default" 
-}: { 
-  className?: string; 
-  children: React.ReactNode; 
-  onClick?: () => void; 
-  disabled?: boolean;
-  variant?: "default" | "ghost";
-}) => {
-  const baseStyles = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
-  const variants = {
-    default: "bg-primary text-primary-foreground hover:bg-primary/90",
-    ghost: "hover:bg-accent hover:text-accent-foreground"
-  };
-  
-  return (
-    <button 
-      className={`${baseStyles} ${variants[variant]} ${className}`}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {children}
-    </button>
-  );
-};
-
-// Badge Component
-const Badge = ({ 
-  className, 
-  children, 
-  variant = "default" 
-}: { 
-  className?: string; 
-  children: React.ReactNode; 
-  variant?: "default" | "outline";
-}) => {
-  const baseStyles = "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2";
-  const variants = {
-    default: "bg-primary text-primary-foreground",
-    outline: "border"
-  };
-  
-  return (
-    <div className={`${baseStyles} ${variants[variant]} ${className}`}>
-      {children}
-    </div>
-  );
-};
-
-// Dialog Components
-const Dialog = ({ 
-  open, 
-  onOpenChange, 
-  children 
-}: { 
-  open: boolean; 
-  onOpenChange: (open: boolean) => void; 
-  children: React.ReactNode;
-}) => {
-  if (!open) return null;
-  
-  return (
-    <div className="fixed inset-0 z-50">
-      <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={() => onOpenChange(false)}
-      />
-      <div className="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%]">
-        {children}
-      </div>
-    </div>
-  );
-};
-
-const DialogContent = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <div className={`grid w-full gap-4 rounded-lg p-6 shadow-lg ${className}`}>
-    {children}
-  </div>
-);
-
-const DialogHeader = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex flex-col space-y-1.5 text-center sm:text-left">
-    {children}
-  </div>
-);
-
-const DialogTitle = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <h2 className={`text-lg font-semibold leading-none tracking-tight ${className}`}>
-    {children}
-  </h2>
-);
-
-// Logo Component
-const Logo = ({ className }: { className?: string }) => (
-  <div className={`flex items-center ${className}`}>
-    <div className="text-3xl font-bold text-white">
-      <span className="text-[#4B8B9B]"><Dumbbell/>Train</span>up
-    </div>
-  </div>
-);
-
-
-
+import { Logo } from '@/components/ui/logo';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface TrainerDetails {
   _id: string;
@@ -255,7 +131,7 @@ const TrainerWaitlist: React.FC = () => {
             <Button
               onClick={handleViewApplication}
               disabled={loading}
-              className="w-full bg-[#001C30] text-white text-lg font-semibold py-3 rounded-lg hover:bg-gradient-to-r hover:from-[#001C30] hover:to-[#1F2A44] transition duration-300 shadow-lg"
+              className="w-full bg-[#001C30] text-white text-sm font-semibold py-3 rounded-lg hover:bg-gradient-to-r hover:from-[#001C30] hover:to-[#1F2A44] transition duration-300 shadow-lg"
             >
               {loading ? (
                 <>
@@ -264,7 +140,7 @@ const TrainerWaitlist: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <FileText className="h-5 w-5 mr-2" />
+                  <FileText className="h-5 text-white w-5 mr-2" />
                   View Submitted Application
                 </>
               )}
@@ -273,19 +149,12 @@ const TrainerWaitlist: React.FC = () => {
         </Card>
       </div>
 
-      {/* Application Details Modal */}
       <Dialog open={showApplication} onOpenChange={setShowApplication}>
         <DialogContent className="bg-[#111827] border border-[#4B8B9B]/30 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center justify-between">
               Your Application Details
-              <Button
-                variant="ghost"
-                onClick={() => setShowApplication(false)}
-                className="text-gray-400 hover:text-white p-2"
-              >
-                <X className="h-5 w-5" />
-              </Button>
+            
             </DialogTitle>
           </DialogHeader>
           

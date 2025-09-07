@@ -11,10 +11,11 @@ interface WeightLog {
   date: string;
 }
 
-interface UserType {
+export interface UserType {
   _id: string;
   name: string;
   email: string;
+  phone?: string;
   profileImage?: string;
   role: 'user' | null;
   streak: number;
@@ -58,6 +59,7 @@ export const userAuthSlice = createSlice({
         _id: payload._id,
         name: payload.name,
         email: payload.email,
+        phone: payload.phone,
         profileImage: payload.profileImage,
         role: payload.role || 'user',
         streak: payload.streak || 0,

@@ -38,6 +38,8 @@ export class DietController {
     }
   }
 
+
+
   getDay = async (req: Request, res: Response) => {
     try {
       const userId =(req.user as JwtPayload).id
@@ -181,7 +183,7 @@ export class DietController {
     }
   }
 
-  // Templates (admin)
+  // Templates
   createTemplate = async (req: Request, res: Response) => {
     try {
       const actor = req.user as any

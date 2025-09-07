@@ -13,7 +13,7 @@ export class StreakService implements IStreakService {
     private _streakRepo: IStreakRepository
   ) {}
 
-  async getOrCreateUserStreak(userId: Types.ObjectId): Promise<IStreak> {
+  async getOrCreateUserStreak(userId: Types.ObjectId) {
     let streak = await this._streakRepo.findByUserId(userId);
     if (!streak) {
       streak = await this._streakRepo.create(userId);
@@ -21,7 +21,7 @@ export class StreakService implements IStreakService {
     return streak;
   }
 
-  async updateUserStreak(userId: Types.ObjectId): Promise<IStreak> {
+  async updateUserStreak(userId: Types.ObjectId){
     const streak = await this.getOrCreateUserStreak(userId);
     const today = new Date();
     const lastAction = new Date(streak.lastActionDate);
@@ -46,9 +46,17 @@ export class StreakService implements IStreakService {
     streak.lastActionDate = today;
     return await this._streakRepo.update(streak);
   }
-
-  async resetUserStreak(userId: Types.ObjectId): Promise<IStreak> {
+  async checkAndResetUserStreak(userId: Types.ObjectId) {
     const streak = await this.getOrCreateUserStreak(userId);
+    const today = new Date();
+
+    const diffDays = Math.floor(
+      (today.getTime() - new Date(streak.lastActionDate).getTime()) / (1000 * 60 * 60 * 24)
+    )
+
+    if (diffDays <= 1) {
+      return streak;
+    }
     streak.currentStreak = 0;
     streak.lastActionDate = new Date();
     return await this._streakRepo.update(streak);

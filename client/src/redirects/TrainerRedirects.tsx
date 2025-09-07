@@ -1,3 +1,4 @@
+import { ROUTES } from "@/constants/routes";
 import api from "@/lib/axios";
 import { loginTrainer } from "@/redux/slices/trainerAuthSlice";
 import type { RootState } from "@/redux/store";
@@ -13,11 +14,14 @@ interface Props {
 export const TrainerPreventLoggedIn: React.FC<Props> = ({ children }) => {
   const { trainer } = useSelector((state: RootState) => state.trainerAuth);
 
+
   if (trainer) {
-    if (trainer.isVerified) {
-      return <Navigate to="/trainer/dashboard" replace />;
-    } else {
-      return <Navigate to="/trainer/waitlist" replace />;
+    if (trainer.profileStatus == 'approved') {
+      return <Navigate to={ROUTES.TRAINER_DASHBOARD} replace />;
+    } else if (trainer.profileStatus == 'rejected') {
+      return <Navigate to={ROUTES.TRAINER_WAITLIST} replace />;
+    }else{
+      return <Navigate to={ROUTES.TRAINER_WAITLIST} replace />;
     }
   }
 
@@ -41,20 +45,23 @@ export const TrainerProtectedRoute: React.FC<{ children: JSX.Element }> = ({ chi
   fetchProfile();
   const interval = setInterval(fetchProfile, 30000);
 
-  return () => clearInterval(interval); // cleanup on unmount
+  return () => clearInterval(interval);
 }, [dispatch]);
 
   if (!trainer) {
     return <Navigate to="/trainer/login" replace />;
   }
 
-  if (!trainer.isVerified && location.pathname !== "/trainer/waitlist") {
-    return <Navigate to="/trainer/waitlist" replace />;
+  if (trainer.profileStatus == 'pending' && location.pathname !== ROUTES.TRAINER_WAITLIST) {
+    return <Navigate to={ROUTES.TRAINER_WAITLIST} replace />;
   }
 
+  if (trainer.profileStatus == 'rejected' && location.pathname !== ROUTES.TRAINER_REJECTED) {
+    return <Navigate to={ROUTES.TRAINER_REJECTED} replace />;
+  }
 
-  if (trainer.isVerified && location.pathname === "/trainer/waitlist") {
-    return <Navigate to="/trainer/dashboard" replace />;
+  if (trainer.profileStatus === 'approved' && location.pathname !== ROUTES.TRAINER_DASHBOARD) {
+    return <Navigate to={ROUTES.TRAINER_DASHBOARD} replace />;
   }
 
   return children;

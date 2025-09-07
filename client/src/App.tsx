@@ -1,5 +1,4 @@
-// src/App.tsx
-import './App.css';
+
 import { BrowserRouter as _, Routes, Route } from 'react-router-dom';
 import { ROUTES } from './constants/routes';
 import Login from './pages/user/Login';
@@ -59,6 +58,8 @@ import TrainerAddSessionPage from './pages/trainer/TrainerAddSessionPage';
 import TrainerUserDietPage from './pages/trainer/TrainerUserDiet';
 import WorkoutTemplateForm from './pages/admin/AdminAddWorkoutTemplate';
 import WorkoutTemplates from './pages/user/WorkoutTemplates';
+import NewDietTemplate from './pages/admin/AdminAddDietTemplate';
+import TrainerReapply from './pages/trainer/TrainerReapply';
 
 function App() {
   return (
@@ -98,6 +99,7 @@ function App() {
         <Route path={ROUTES.TRAINER_APPLY} element={<TrainerPreventLoggedIn><TrainerApplyPage /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_VERIFY_OTP} element={<TrainerPreventLoggedIn><TrainerVerifyOtp /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_WAITLIST} element={<TrainerProtectedRoute><TrainerWaitlist /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_REJECTED} element={<TrainerProtectedRoute><TrainerReapply /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_DASHBOARD} element={<TrainerProtectedRoute><TrainerClients /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_INDIVIDUAL_CLIENT} element={<TrainerProtectedRoute><TrainerUserDetails /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_WORKOUT} element={<TrainerProtectedRoute><TrainerAddWorkoutPage /></TrainerProtectedRoute>} />
@@ -123,6 +125,7 @@ function App() {
         <Route path={ROUTES.ADMIN_GYM_APPLICATION} element={<AdminProtectedRoute><GymApplication /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_TEMPLATE_MANAGEMENT} element={<AdminProtectedRoute><TemplateManagement /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_ADD_WORKOUT_TEMPLATE} element={<AdminProtectedRoute><WorkoutTemplateForm /></AdminProtectedRoute>} />
+        <Route path={ROUTES.ADMIN_ADD_DIET_TEMPLATE} element={<AdminProtectedRoute><NewDietTemplate /></AdminProtectedRoute>} />
       </Routes>
     </>
   );
