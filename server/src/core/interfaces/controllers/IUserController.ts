@@ -10,7 +10,6 @@ export interface IUserController {
   resendOtp(req: Request, res: Response, next: NextFunction): Promise<void>;
   refreshAccessToken(req: Request, res: Response, next: NextFunction): Promise<void>;
   googleLogin(req: Request, res: Response, next: NextFunction): Promise<void>;
-  googleCallback(req: Request, res: Response, next: NextFunction): void;
   checkSession(req: Request, res: Response, next: NextFunction): Promise<void>;
   getTrainers(req: Request, res: Response, next: NextFunction): Promise<void>;
   logout(req: Request, res: Response, next: NextFunction): Promise<void>;

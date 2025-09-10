@@ -51,10 +51,11 @@ export default function Diets() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Function to check if a meal is missed
+
   const isMealMissed = (meal: Meal) => {
     if (meal.isEaten) return false;
     const now = new Date();
+    console.log('meal.time', meal.time);
     const [hours, minutes] = meal.time.split(':').map(Number);
     const mealDate = new Date();
     mealDate.setHours(hours, minutes, 0, 0);

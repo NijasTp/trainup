@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Dumbbell, Plus, Target, CheckCircle, XCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Dumbbell, Plus, Target, CheckCircle, XCircle, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -239,7 +239,6 @@ function WorkoutSessionCard({
                         loading="lazy"
                         onLoad={() => setImageLoaded(true)}
                       />
-
                     </div>
                     <div>
                       <p className="font-medium text-foreground">{exercise.name}</p>
@@ -479,6 +478,15 @@ export default function WorkoutPage() {
             </Card>
           )
         )}
+
+        <section className="flex justify-center py-8">
+          <Link to="/workouts/browse">
+            <Button className="bg-gradient-to-r from-[#4B8B9B] to-[#4B8B9B]/90 hover:from-[#4B8B9B]/90 hover:to-[#4B8B9B] shadow-lg hover:shadow-xl transition-all duration-300">
+              <FileText className="h-4 w-4 mr-2" />
+              Browse Public Templates
+            </Button>
+          </Link>
+        </section>
       </main>
       <SiteFooter />
     </div>

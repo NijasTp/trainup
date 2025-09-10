@@ -11,7 +11,6 @@ import {
 } from '../core/interfaces/services/IJwtService'
 import { IGymService } from '../core/interfaces/services/IGymService'
 import { STATUS_CODE } from '../constants/status'
-// import { JwtTokenUtil } from "../utils/jwtToken.util";
 
 @injectable()
 export class AdminController {
@@ -33,7 +32,8 @@ export class AdminController {
 
       res.status(STATUS_CODE.OK).json({ admin })
       return
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(401).json({ error: error.message || 'Login failed' })
     }
   }
@@ -74,7 +74,8 @@ export class AdminController {
         req.body
       )
       res.json(trainer)
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Error
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
         .json({ message: err.message })
@@ -85,7 +86,8 @@ export class AdminController {
     try {
       const trainer = await this._trainerService.getTrainerById(req.params.id)
       res.json(trainer)
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
@@ -96,7 +98,8 @@ export class AdminController {
         req.params.id
       )
       res.json(application)
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
@@ -253,9 +256,10 @@ export class AdminController {
       const jwtUser = req.user as JwtPayload
       this._adminService.updateTokenVersion(jwtUser.id)
       res.status(STATUS_CODE.OK).json({ message: 'Logged out successfully' })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       console.error('Logout error:', error)
-      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.data })
+      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message })
     }
   }
 }

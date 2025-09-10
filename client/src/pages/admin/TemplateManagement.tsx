@@ -27,8 +27,8 @@ const TemplateManagement = () => {
     const fetchTemplates = async () => {
       setLoading(true);
       try {
-        const endpoint = templateType === "workout" 
-          ? '/workout/admin/workout-templates' 
+        const endpoint = templateType === "workout"
+          ? '/workout/admin/workout-templates'
           : '/diet/admin/templates';
         const apiResponse = await API.get(endpoint, {
           params: {
@@ -37,9 +37,9 @@ const TemplateManagement = () => {
             search: searchQuery,
           },
         });
-        console.log('response:',apiResponse)
+        console.log('response:', apiResponse)
         setResponse({
-          templates: apiResponse.data.templates|| apiResponse.data.meals,
+          templates: apiResponse.data.templates || apiResponse.data.meals,
           total: apiResponse.data.total,
           page: apiResponse.data.page,
           totalPages: apiResponse.data.totalPages,
@@ -80,14 +80,13 @@ const TemplateManagement = () => {
 
   const handleDeleteTemplate = async (id: string) => {
     try {
-      const endpoint = templateType === "workout" 
-        ? `/workout/admin/workout-templates/${id}` 
+      const endpoint = templateType === "workout"
+        ? `/workout/admin/workout-templates/${id}`
         : `/diet/admin/templates/${id}`;
       await API.delete(endpoint);
       setCurrentPage(1);
-      // Refetch templates after deletion
-      const apiResponse = await API.get(templateType === "workout" 
-        ? '/workout/admin/workout-templates' 
+      const apiResponse = await API.get(templateType === "workout"
+        ? '/workout/admin/workout-templates'
         : '/diet/admin/templates', {
         params: {
           page: 1,
@@ -211,10 +210,10 @@ const TemplateManagement = () => {
                           ) : (
                             <>
                               <td className="py-4 px-4 text-gray-300">
-                                {(template as IDietTemplate).meals?.length ?? 0}
+                                {(template as IDietTemplate).templates?.length ?? 0}
                               </td>
                               <td className="py-4 px-4 text-gray-300">
-                                {(template as IDietTemplate).meals?.reduce((sum, meal) => sum + meal.calories, 0) ?? 0}
+                                {(template as IDietTemplate).templates?.reduce((sum, meal) => sum + meal.calories, 0) ?? 0}
                               </td>
                             </>
                           )}
@@ -253,7 +252,6 @@ const TemplateManagement = () => {
                   </table>
                 </div>
 
-                {/* Pagination */}
                 {response.totalPages > 1 && (
                   <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-700">
                     <div className="text-sm text-gray-400">
@@ -286,10 +284,9 @@ const TemplateManagement = () => {
           </CardContent>
         </Card>
 
-        {/* Template Details Modal */}
         {selectedTemplate && (
           <Dialog open={!!selectedTemplate} onOpenChange={() => setSelectedTemplate(null)}>
-            <DialogContent className="bg-[#111827] border-[#4B8B9B]/30 text-white max-w-2xl">
+            <DialogContent className="bg-[#111827] border-[#4B8B9B]/30 text-white max-w-2xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {templateType === "workout"
@@ -361,11 +358,11 @@ const TemplateManagement = () => {
                       {(selectedTemplate as IDietTemplate).description || "N/A"}
                     </p>
                     <h3 className="text-lg font-semibold text-white mb-2">Meals</h3>
-                    {(selectedTemplate as IDietTemplate).meals.length === 0 ? (
+                    {(selectedTemplate as IDietTemplate).templates.length === 0 ? (
                       <p className="text-gray-400">No meals added</p>
                     ) : (
                       <div className="space-y-4">
-                        {(selectedTemplate as IDietTemplate).meals.map((meal, index) => (
+                        {(selectedTemplate as IDietTemplate).templates.map((meal, index) => (
                           <Card key={index} className="bg-[#1F2A44]/50 border-[#4B8B9B]/30">
                             <CardContent className="p-4">
                               <h4 className="text-white font-medium">{meal.name}</h4>
@@ -393,12 +390,14 @@ const TemplateManagement = () => {
                               {meal.nutritions && meal.nutritions.length > 0 && (
                                 <div className="mt-2">
                                   <p className="text-gray-300 text-sm font-medium">Additional Nutrition:</p>
-                                  {meal.nutritions.map((nutrition, idx) => (
-                                    <p key={idx} className="text-gray-300 text-sm">
-                                      {nutrition.label}: {nutrition.value}
-                                      {nutrition.unit && ` ${nutrition.unit}`}
-                                    </p>
-                                  ))}
+                                  {meal.nutritions
+                                    .filter(n => ["Protein", "Carbs", "Fats", "Calories"].includes(n.label))
+                                    .map((nutrition, idx) => (
+                                      <p key={idx} className="text-gray-300 text-sm">
+                                        {nutrition.label}: {nutrition.value}
+                                        {nutrition.unit && ` ${nutrition.unit}`}
+                                      </p>
+                                    ))}
                                 </div>
                               )}
                               {meal.notes && (

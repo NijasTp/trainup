@@ -15,7 +15,7 @@ export interface ITemplate extends Document {
   title: string;
   description?: string;
   createdBy: Types.ObjectId; // admin id
-  meals: TemplateMeal[];
+  templates: TemplateMeal[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,7 +39,7 @@ const TemplateSchema = new Schema<ITemplate>(
     title: { type: String, required: true },
     description: String,
     createdBy: { type: Schema.Types.ObjectId, ref: "Admin", required: true },
-    meals: { type: [TemplateMealSchema], default: [] },
+    templates: { type: [TemplateMealSchema], default: [] },
   },
   { timestamps: true }
 );

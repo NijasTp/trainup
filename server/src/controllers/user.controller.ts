@@ -42,7 +42,8 @@ export class UserController implements IUserController {
     try {
       await this._otpService.requestOtp(dto.email, 'user')
       res.status(STATUS_CODE.OK).json({ message: 'OTP sent to email' })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
       logger.error('Error in requestOtp:', error)
     }
@@ -64,7 +65,8 @@ export class UserController implements IUserController {
         await this._userService.registerUser(dto.name, dto.email, dto.password)
       this._jwtService.setTokens(res, accessToken, refreshToken)
       res.status(STATUS_CODE.CREATED).json({ user })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
       logger.error('Error in verifyOtp:', error)
     }
@@ -83,7 +85,8 @@ export class UserController implements IUserController {
     try {
       const isAvailable = await this._userService.checkUsername(dto.username)
       res.status(STATUS_CODE.OK).json({ isAvailable })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
@@ -101,7 +104,8 @@ export class UserController implements IUserController {
     try {
       await this._otpService.requestForgotPasswordOtp(dto.email, 'user')
       res.status(STATUS_CODE.OK).json({ message: 'OTP Successfully Sent' })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
@@ -120,7 +124,8 @@ export class UserController implements IUserController {
       res
         .status(STATUS_CODE.OK)
         .json({ message: 'OTP verified. You can now reset your password.' })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
@@ -138,7 +143,8 @@ export class UserController implements IUserController {
     try {
       await this._userService.resetPassword(dto.email, dto.newPassword)
       res.status(STATUS_CODE.OK).json({ message: 'Password reset successful' })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
@@ -158,7 +164,8 @@ export class UserController implements IUserController {
         await this._userService.loginWithGoogle(dto.idToken)
       this._jwtService.setTokens(res, accessToken, refreshToken)
       res.status(STATUS_CODE.OK).json({ user })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res
         .status(STATUS_CODE.UNAUTHORIZED)
         .json({ error: error.message || 'Login failed' })
@@ -166,26 +173,6 @@ export class UserController implements IUserController {
     }
   }
 
-  googleCallback = (req: Request, res: Response) => {
-    passport.authenticate(
-      'google',
-      { session: false },
-      async (err: any, user: any) => {
-        if (err || !user) {
-          return res.redirect('http://localhost:5173/signup?error=auth_failed')
-        }
-
-        try {
-          const { accessToken, refreshToken } =
-            await this._userService.loginWithGoogle(user)
-          this._jwtService.setTokens(res, accessToken, refreshToken)
-          res.redirect(`http://localhost:5173/callback?token=${accessToken}`)
-        } catch (error: any) {
-          res.redirect(`http://localhost:5173/signup?error=${error.message}`)
-        }
-      }
-    )(req, res)
-  }
 
   login = async (req: Request, res: Response) => {
     const dto = plainToInstance(LoginDto, req.body)
@@ -203,7 +190,8 @@ export class UserController implements IUserController {
       this._jwtService.setTokens(res, accessToken, refreshToken)
       const streak = await this._streakService.checkAndResetUserStreak(user._id)
       res.status(STATUS_CODE.OK).json({ user, streak })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.UNAUTHORIZED).json({ error: error.message })
       logger.error('login error:', error)
     }
@@ -233,7 +221,8 @@ export class UserController implements IUserController {
     try {
       await this._otpService.requestOtp(dto.email, 'user')
       res.status(STATUS_CODE.OK).json({ message: 'OTP resent to email' })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
@@ -260,7 +249,8 @@ export class UserController implements IUserController {
         'true'
       )
       res.status(STATUS_CODE.OK).json({ trainers: result })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       logger.error('Controller error:', error)
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
@@ -281,7 +271,8 @@ export class UserController implements IUserController {
     try {
       const trainer = await this._trainerService.getTrainerById(dto.id)
       res.status(STATUS_CODE.OK).json({ trainer })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
         .json({ error: 'Failed to fetch trainers' })
@@ -296,7 +287,8 @@ export class UserController implements IUserController {
         user!.assignedTrainer!.toString()
       )
       res.status(STATUS_CODE.OK).json({ trainer })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
         .json({ error: error.message })
@@ -324,7 +316,8 @@ export class UserController implements IUserController {
       res
         .status(STATUS_CODE.OK)
         .json({ message: 'Subscription cancelled successfully' })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       logger.error('Error cancelling subscription:', error)
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
@@ -338,7 +331,8 @@ export class UserController implements IUserController {
       const id = jwtUser.id
       const user = await this._userService.getProfile(id)
       res.status(STATUS_CODE.OK).json({ user })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }

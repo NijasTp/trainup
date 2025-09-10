@@ -52,6 +52,35 @@ export class DietService {
     return this._dietRepo.addMeal(userId, date, mealPayload as IMeal)
   }
 
+    async addSession(
+    actor: { id: string; role: string },
+    userId: string,
+    date: string,
+    payload: { meals: Partial<IMeal>[]; givenBy: string; title?: string; description?: string; notes?: string }
+  ): Promise<IDietDay> {
+    if (actor.role !== 'user' && actor.role !== 'trainer') {
+      throw new Error(MESSAGES.FORBIDDEN);
+    }
+
+    const meals = payload.meals.map((meal) => {
+      if (meal.source === 'admin') {
+        throw new Error(
+          "Admin meals must be created as templates, not added directly to a user's day"
+        );
+      }
+      return {
+        ...meal,
+        source: actor.role === 'user' ? 'user' : 'trainer',
+        sourceId: actor.id,
+        usedBy: userId,
+        isEaten: meal.isEaten ?? false,
+      } as IMeal;
+    });
+
+    await this._dietRepo.createOrGet(userId, date);
+    return this._dietRepo.addMeals(userId, date, meals);
+  }
+
   async updateMeal (
     actor: { id: string; role: string },
     userId: string,

@@ -1,3 +1,4 @@
+import { type ProfileFormData }from "@/interfaces/user/completeProfile";
 import API from '../lib/axios';
 
 export const getTrainers = async (
@@ -27,5 +28,10 @@ export const getProfile = async () =>{
 }
 export const getTrainer = async (id: string) =>{
   const res = await API.get(`/user/trainers/${id}`)
+  return res.data
+}
+
+export const completeUserProfile = async (data: ProfileFormData) =>{
+  const res = await API.get('/user/complete-profile',{data})
   return res.data
 }

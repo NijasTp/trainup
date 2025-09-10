@@ -60,6 +60,8 @@ import WorkoutTemplateForm from './pages/admin/AdminAddWorkoutTemplate';
 import WorkoutTemplates from './pages/user/WorkoutTemplates';
 import NewDietTemplate from './pages/admin/AdminAddDietTemplate';
 import TrainerReapply from './pages/trainer/TrainerReapply';
+import CompleteProfile from './pages/user/CompleteProfile';
+import DietTemplates from './pages/user/DietTemplates';
 
 function App() {
   return (
@@ -75,6 +77,7 @@ function App() {
         <Route path={ROUTES.USER_HOME} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_HOME_ALT} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_PROFILE} element={<ProtectedRoute><UserProfile/></ProtectedRoute>} />
+        <Route path={ROUTES.USER_COMPLETE_PROFILE} element={<ProtectedRoute><CompleteProfile/></ProtectedRoute>} />
         <Route path={ROUTES.USER_DASHBOARD} element={<ProtectedRoute><UserDashboard/></ProtectedRoute>} />
         <Route path={ROUTES.USER_VERIFY_OTP} element={<PreventLoggedIn><VerifyOtp /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_TRAINER_PAGE} element={<ProtectedRoute><Trainers /></ProtectedRoute>} />
@@ -82,6 +85,7 @@ function App() {
         <Route path={ROUTES.MY_TRAINER_PROFILE} element={<ProtectedRoute><MyTrainerProfile /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WORKOUTS_PAGE} element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADMIN_WORKOUT_TEMPLATES} element={<ProtectedRoute><WorkoutTemplates /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_ADMIN_DIET_TEMPLATES} element={<ProtectedRoute><DietTemplates /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_WORKOUT} element={<ProtectedRoute><AddWorkoutPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_WORKOUT_SESSION} element={<ProtectedRoute><AddSessionPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_EDIT_WORKOUT_SESSION} element={<ProtectedRoute><EditSessionPage /></ProtectedRoute>} />

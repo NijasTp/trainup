@@ -106,6 +106,23 @@ export class DietController {
     }
   }
 
+    addSession = async (req: Request, res: Response) => {
+    try {
+      const actor = req.user as any;
+      const userId = req.query.userId || actor.id;
+      const { date } = req.params;
+      const payload = req.body; // { givenBy, meals, title, description, notes }
+      const day = await this._dietService.addSession(actor, userId, date, payload);
+      res.status(STATUS.CREATED).json(day);
+    } catch (err: any) {
+      const code =
+        err.message === MESSAGES.FORBIDDEN
+          ? STATUS.FORBIDDEN
+          : STATUS.BAD_REQUEST;
+      res.status(code).json({ error: err.message });
+    }
+  };
+
   updateMeal = async (req: Request, res: Response) => {
     try {
       const actor = req.user as any
@@ -202,21 +219,31 @@ export class DietController {
     }
   }
 
-  listTemplates = async (req: Request, res: Response) => {
+listTemplates = async (req: Request, res: Response) => {
     try {
-      const templates = await this._templateService.listTemplates()
-      res.json(templates)
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = (req.query.search as string) || "";
+
+      const result = await this._templateService.listTemplates(page, limit, search);
+
+
+      res.status(STATUS.OK).json({
+        templates: result.templates,
+        total: result.total,
+        page: result.page,
+        totalPages: result.totalPages,
+      });
     } catch (err: any) {
-      res.status(STATUS.BAD_REQUEST).json({ error: err.message })
+      res.status(STATUS.BAD_REQUEST).json({ error: err.message });
     }
-  }
+  };
 
   applyTemplate = async (req: Request, res: Response) => {
     try {
       const actor = req.user as any
       const userId = req.params.userId || actor.id
       const { date, templateId } = req.body
-      // only user can apply template to their own day (or trainer could apply on behalf of a user if you want)
       if (actor.role === 'user' && actor.id !== userId) {
         res.status(STATUS.FORBIDDEN).json({ error: MESSAGES.FORBIDDEN })
         return
@@ -228,8 +255,7 @@ export class DietController {
         return 
       }
 
-      // map template meals to day meals with source = 'admin' and sourceId = template.createdBy
-      const meals = template.meals.map(m => ({
+      const meals = template.templates.map(m => ({
         name: m.name,
         calories: m.calories,
         protein: m.protein,
@@ -244,7 +270,7 @@ export class DietController {
         notes: m.notes
       }))
 
-      // ensure day exists and push all meals
+
       await this._dietService.createOrGetDay(userId, date)
       let day = null
       for (const meal of meals) {

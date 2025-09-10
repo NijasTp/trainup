@@ -36,7 +36,7 @@ export interface IDietTemplate {
   title: string;
   description?: string;
   createdBy: string;
-  meals: TemplateMeal[];
+  templates: TemplateMeal[];
   createdAt: string;
   updatedAt: string;
 }

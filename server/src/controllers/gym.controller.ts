@@ -23,7 +23,8 @@ export class GymController {
     try {
       await this._otpService.requestOtp(email, ROLE.GYM);
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_SENT });
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error;
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message });
     }
   };
@@ -50,7 +51,8 @@ export class GymController {
 
       this._jwtService.setTokens(res, accessToken, refreshToken);
       res.status(STATUS_CODE.CREATED).json({ gym });
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error;
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message });
     }
   };
@@ -67,7 +69,8 @@ export class GymController {
       const data = await this._gymService.getGymData(gymId);
       res.status(STATUS_CODE.OK).json(data)
       return
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
       return
     }
@@ -80,7 +83,8 @@ export class GymController {
       const { gym, accessToken, refreshToken } = await this._gymService.loginGym(email, password);
       this._jwtService.setTokens(res, accessToken, refreshToken);
       res.status(STATUS_CODE.OK).json({ gym });
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error;
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message });
     }
   };

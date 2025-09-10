@@ -28,7 +28,8 @@ export class TrainerController {
         await this._trainerService.loginTrainer(email, password)
       this._JwtService.setTokens(res, accessToken, refreshToken)
       res.status(STATUS_CODE.OK).json({ trainer })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
       console.log(error.message)
     }
@@ -39,7 +40,8 @@ export class TrainerController {
       const { email } = req.body
       await this._trainerService.forgotPassword(email)
       res.json({ message: 'OTP sent to email' })
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
     }
   }
@@ -49,7 +51,8 @@ export class TrainerController {
     try {
       await this.otpService.requestForgotPasswordOtp(email, 'trainer')
       res.status(STATUS_CODE.OK).json({ messsage: 'OTP Resent Successfully' })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
       console.log(error.message)
     }
@@ -60,7 +63,8 @@ export class TrainerController {
     try {
       await this.otpService.requestOtp(email, 'trainer')
       res.status(STATUS_CODE.OK).json({ message: 'OTP sent successfully' })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
       console.log(error.message)
     }
@@ -71,7 +75,8 @@ export class TrainerController {
       const { email, otp } = req.body
       const verified = await this.otpService.verifyOtp(email, otp)
       res.status(STATUS_CODE.OK).json({ message: 'OTP Verified Succesfully' })
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
       console.log(err.message)
     }
@@ -82,7 +87,8 @@ export class TrainerController {
       const { email, password } = req.body
       await this._trainerService.resetPassword(email, password)
       res.json({ message: 'Password reset successfully' })
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
     }
   }
@@ -91,7 +97,8 @@ export class TrainerController {
     try {
       await this.otpService.requestOtp(email, 'trainer')
       res.status(STATUS_CODE.OK).json({ messsage: 'OTP Resent Successfully' })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
       console.log(error.message)
     }
@@ -143,7 +150,8 @@ export class TrainerController {
         message: 'Application submitted successfully',
         trainer
       })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({
         error: error.message || 'Failed to submit application'
       })
@@ -189,7 +197,8 @@ export class TrainerController {
         profileImage
       }
       this._trainerService.reapplyAsTrainer(trainerId, data)
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       logger.error('trainer reapply error:', error)
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
@@ -197,7 +206,7 @@ export class TrainerController {
 
   async getData (req: Request, res: Response) {
     try {
-      const id = (req as any).user?.id
+      const id = (req.user as JwtPayload).id
       if (!id) {
         res
           .status(STATUS_CODE.BAD_REQUEST)
@@ -206,14 +215,15 @@ export class TrainerController {
       }
       const trainer = await this._trainerService.getTrainerById(id)
       res.status(STATUS_CODE.OK).json({ trainer })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
 
   async getClients (req: Request, res: Response) {
     try {
-      const trainerId = (req as any).user?.id
+      const trainerId = (req.user as JwtPayload).id
       if (!trainerId) {
         res
           .status(STATUS_CODE.BAD_REQUEST)
@@ -228,7 +238,8 @@ export class TrainerController {
         search as string
       )
       res.status(STATUS_CODE.OK).json(clients)
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
@@ -238,7 +249,8 @@ export class TrainerController {
       const clientId = req.params.id
       const client = await this.userService.getUserById(clientId)
       res.status(STATUS_CODE.OK).json({ user: client })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }

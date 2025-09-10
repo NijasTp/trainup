@@ -1,7 +1,7 @@
 import { IGym } from "../../../models/gym.model";
 
 export interface PaginatedGyms {
-  gyms: Partial<IGym>[];
+  gyms: IGym[]; 
   total: number;
   page: number;
   totalPages: number;
@@ -15,9 +15,8 @@ export interface IGymRepository {
   getGymById(gymId: string): Promise<IGym | null>;
   getGymTrainers(gymId: string): Promise<any[]>;
   getGymMembers(gymId: string): Promise<any[]>;
-  findApplicationById(id: string): Promise<any | null>;
+  findApplicationById(id: string): Promise<IGym | null>;
   getGymAnnouncements(gymId: string): Promise<any[]>;
   findGyms(page: number, limit: number, searchQuery: string): Promise<PaginatedGyms>;
   updateStatus(id: string, updateData: Partial<IGym>): Promise<IGym | null>;
-  //more here
 }

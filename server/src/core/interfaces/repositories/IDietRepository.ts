@@ -4,6 +4,7 @@ export interface IDietDayRepository {
   createDay(userId: string, date: string): Promise<IDietDay>;
   getByUserAndDate(userId: string, date: string): Promise<IDietDay | null>;
   addMeal(userId: string, date: string, meal: Partial<IMeal>): Promise<IDietDay>;
+  addMeals(userId: string, date: string, meals: IMeal[]): Promise<IDietDay>
   updateMeal(userId: string, date: string, mealId: string, update: Partial<IMeal>): Promise<IDietDay | null>;
   markMeal(userId: string, date: string, mealId: string, isEaten: boolean): Promise<IDietDay | null>;
   removeMeal(userId: string, date: string, mealId: string): Promise<IDietDay | null>;

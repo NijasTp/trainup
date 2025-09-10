@@ -8,8 +8,27 @@ export class TemplateRepository {
     return doc.save();
   }
 
-  async list(filter: any = {}): Promise<ITemplate[]> {
-    return TemplateModel.find(filter).lean().exec();
+  async list(filter: any = {}, page: number, limit: number, search?: string) {
+    const query: any = { ...filter };
+
+    if (search) {
+      query.title = { $regex: search, $options: "i" }; 
+    }
+
+    const total = await TemplateModel.countDocuments(query);
+    const templates = await TemplateModel.find(query)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 }) 
+      .lean()
+      .exec();
+
+    return {
+      templates,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async getById(id: string): Promise<ITemplate | null> {

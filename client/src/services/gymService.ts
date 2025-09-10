@@ -1,9 +1,14 @@
 import API from '@/lib/axios'
+import type { FormData } from '@/pages/gym/GymReapply'
 
 
 export const getGymDetails= async ()=>{
     const res = await API.get('/gym/get-details')
     return res.data
+}
+
+export const reapplyGym = async (data: FormData) => {
+
 }
 
 

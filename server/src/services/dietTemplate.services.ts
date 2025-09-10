@@ -13,8 +13,8 @@ export class DietTemplateService implements IDietTemplateService{
     return this._dietTemplateRepo.create(payload);
   }
 
-  listTemplates(filter: any = {}) {
-    return this._dietTemplateRepo.list(filter);
+  async listTemplates(page: number, limit: number, search?: string) {
+    return this._dietTemplateRepo.list({}, page, limit, search);
   }
 
   getTemplate(id: string) {

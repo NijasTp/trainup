@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -19,6 +19,7 @@ import {
   Award,
   Activity,
   TrendingDown,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers } from "@/services/userService";
@@ -29,15 +30,15 @@ import { getMealsByDate as getDiet } from "@/services/dietServices";
 import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/homeInterface";
 import { useSelector } from "react-redux";
 
-
 export default function HomePage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
-  const user = useSelector((state: any) => state.userAuth.user)
-  const streak = user ? user.streak : 0
+  const user = useSelector((state: any) => state.userAuth.user);
+  const streak = user ? user.streak : 0;
 
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -46,8 +47,16 @@ export default function HomePage() {
     fetchHomeData();
   }, []);
 
-  const fetchHomeData = async () => {
+  useEffect(() => {
+   
+    if (user && !user.isProfileComplete) {
+      setIsModalOpen(false);
+    } else {
+      setIsModalOpen(false);
+    }
+  }, [user]);
 
+  const fetchHomeData = async () => {
     setIsLoading(true);
     try {
       try {
@@ -72,13 +81,17 @@ export default function HomePage() {
       } catch (err: any) {
         console.error("Failed to fetch diet:", err);
         toast.error("Failed to fetch diet");
-
       }
     } catch (error) {
       console.error("Error fetching home data:", error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCompleteProfile = () => {
+    navigate("/complete-profile");
+    setIsModalOpen(false);
   };
 
   const calculateDietProgress = () => {
@@ -104,16 +117,33 @@ export default function HomePage() {
   const dietProgress = calculateDietProgress();
   const workoutProgress = calculateWorkoutProgress();
 
-
   return (
     <div className="container min-h-screen bg-gradient-to-br from-background absolute inset-0 via-background/95 to-secondary/20">
-
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
       <SiteHeader />
-      <Button className="fixed bottom-8 right-8 z-50" onClick={() => navigate("/dashboard")}>
-        Go to Dashboard
-      </Button>
+
+      {/* Complete Profile Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              Complete Your Profile
+            </DialogTitle>
+            <DialogDescription>
+              To give you personalized workout and diet recommendations, please add more details about yourself like height, weight, and fitness goals.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 pt-4">
+            <Button onClick={handleCompleteProfile}>Complete Profile</Button>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Not Now
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <main className="relative container mx-auto px-4 py-8 space-y-8">
         {/* Welcome Section */}
         <div className="text-center space-y-4 mb-8">
@@ -124,7 +154,6 @@ export default function HomePage() {
           <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
             Welcome Back, Champion!
           </h1>
-
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Ready to crush today's goals? Let's see what's on your fitness agenda.
           </p>
@@ -139,13 +168,17 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">{streak} days</div>
-              {streak > 0 ? (<p className="text-xs text-green-700">
-                <TrendingUp className="inline h-3 w-3 mr-1" />
-                Keep it going!
-              </p>) : (<p className="text-xs text-muted-foreground">
-                <TrendingDown className="inline h-3 w-3 mr-1" />
-                Keep practicing, you can do it!
-              </p>)}
+              {streak > 0 ? (
+                <p className="text-xs text-green-700">
+                  <TrendingUp className="inline h-3 w-3 mr-1" />
+                  Keep it going!
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  <TrendingDown className="inline h-3 w-3 mr-1" />
+                  Keep practicing, you can do it!
+                </p>
+              )}
             </CardContent>
           </Card>
 

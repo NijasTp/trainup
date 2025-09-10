@@ -96,99 +96,35 @@ export class GetIndividualTrainerParamsDto {
 }
 
 
-export class UserResponseDto {
-  @IsString()
+export interface UserResponseDto {
   _id: string;
-
-  @IsString()
   name: string;
-
-  @IsEmail()
   email: string;
-
-  @IsOptional()
-  @IsString()
   phone?: string;
-
-  @IsOptional()
-  @IsBoolean()
   isVerified?: boolean;
-
-  @IsString()
+  googleId?: string;
   role: string;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
   goals?: string[];
-
-  @IsOptional()
-  @IsString()
   activityLevel?: string;
-
-  @IsOptional()
-  @IsBoolean()
   equipment?: boolean;
-
-  @IsOptional()
-  @IsString()
   assignedTrainer?: string | null;
-
-  @IsOptional()
-  @IsDate()
-  subscriptionStartDate?: Date | null;
-
-  @IsOptional()
-  @IsString()
+  subscriptionStartDate?: string | null;
   gymId?: string;
-
-  @IsOptional()
-  @IsBoolean()
   isPrivate?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   isBanned?: boolean;
-
-  @IsNumber()
   streak: number;
-
-  @IsOptional()
-  @IsDate()
-  lastActiveDate?: Date;
-
-  @IsNumber()
+  lastActiveDate?: string;
   xp: number;
-
-  @IsArray()
-  @IsString({ each: true })
+  xpLogs: { amount: number; reason: string; date: string }[];
   achievements: string[];
-
-  @IsOptional()
-  @IsNumber()
   todaysWeight?: number;
-
-  @IsOptional()
-  @IsNumber()
   goalWeight?: number;
-
-  @IsOptional()
-  @IsNumber()
+  weightHistory: { weight: number; date: string }[];
   height?: number;
-
-  @IsOptional()
-  @IsNumber()
   age?: number;
-
-  @IsOptional()
-  @IsString()
   gender?: 'male' | 'female' | 'other';
-
-  @IsDate()
-  createdAt: Date;
-
-  @IsDate()
-  updatedAt: Date;
+  createdAt: string; 
+  updatedAt: string; 
 }
 
 export class TrainerResponseDto {
@@ -214,7 +150,6 @@ export class GetTrainersResponseDto {
 
 export class LoginResponseDto {
   @ValidateNested()
-  @Type(() => UserResponseDto)
   user: UserResponseDto;
 
   @IsNumber()
@@ -247,5 +182,5 @@ export class SimpleMessageResponseDto {
 
 export class CheckUsernameResponseDto {
   @IsBoolean()
-  isAvailable: boolean;
+  isAvailable: boolean | null;
 }

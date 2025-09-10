@@ -17,6 +17,7 @@ router.post('/admin/templates', authMiddleware, dietController.createTemplate.bi
 router.get('/admin/templates', authMiddleware, dietController.listTemplates.bind(dietController));
 
 router.post("/:date/meals", authMiddleware, dietController.addMeal.bind(dietController));
+router.post("/:date/add-session", authMiddleware, dietController.addSession.bind(dietController));
 router.patch("/:date/meals/:mealId", authMiddleware, dietController.updateMeal.bind(dietController));
 router.delete("/:date/meals/:mealId", authMiddleware, dietController.removeMeal.bind(dietController));
 router.patch("/:date/meals/:mealId/eaten", authMiddleware, dietController.markEaten.bind(dietController));

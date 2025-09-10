@@ -24,7 +24,7 @@ export class DietDayRepository implements IDietDayRepository {
     return this.createDay(userId, date);
   }
 
-  async addMeal(userId: string, date: string, meal: Partial<IMeal>): Promise<IDietDay> {
+  async addMeal(userId: string, date: string, meal: Partial<IMeal>) {
     const updated = await DietDayModel.findOneAndUpdate(
       { user: userId, date },
       { $push: { meals: meal } },
@@ -33,6 +33,16 @@ export class DietDayRepository implements IDietDayRepository {
     if (!updated) throw new Error("Failed to add meal");
     return updated;
   }
+    async addMeals(userId: string, date: string, meals: IMeal[]) {
+    const updated = await DietDayModel.findOneAndUpdate(
+      { user: userId, date },
+      { $push: { meals: { $each: meals } } },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    ).exec();
+    if (!updated) throw new Error("Failed to add meals");
+    return updated;
+  }
+
 
   async updateMeal(userId: string, date: string, mealId: string, update: Partial<IMeal>): Promise<IDietDay | null> {
     const set: any = {};

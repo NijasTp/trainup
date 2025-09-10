@@ -109,6 +109,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = () => {
                 </Link>
               </DropdownMenu.Item>
               <DropdownMenu.Item asChild>
+                <Link to="/dashboard" className="block cursor-pointer px-2 py-2 text-sm">
+                  Dashboard
+                </Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item asChild>
                 <Link to="/settings" className="block px-2 cursor-pointer py-2 text-sm">
                   Settings
                 </Link>

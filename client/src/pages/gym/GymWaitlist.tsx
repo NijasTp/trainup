@@ -6,22 +6,13 @@ import { gymLogout } from '@/services/authService';
 import { logoutGym } from '@/redux/slices/gymAuthSlice';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import type { GymApplication } from '@/interfaces/gym/iGymWaitlist';
 
-interface GymApplication {
-    name: string;
-    email: string;
-    location: string;
-    certificate: string | null;
-    profileImage: string | null;
-    images: string[];
-    submittedAt?: string;
-    status?: string;
-}
 
 interface WaitlistHeaderProps {
     onLogout: () => void;
 }
-// Header Component
+
 const WaitlistHeader: React.FC<WaitlistHeaderProps> = ({ onLogout }) => (
     <div className="relative text-center mb-8">
         <button
@@ -149,7 +140,6 @@ const ImageGallery: React.FC<{ images: string[]; profileImage: string | null }> 
     </div>
 );
 
-// Application Details Modal Component
 const ApplicationModal: React.FC<{
     isOpen: boolean;
     onClose: () => void;

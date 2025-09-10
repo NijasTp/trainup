@@ -27,8 +27,9 @@ export interface UserType {
   equipment?: boolean;
   equipmentAvailability?: boolean;
   goals?: string[];
-  height?: number | null;           
-  weight?: number | null;           
+  height?: number | string | null;
+  weight?: number | string | null;
+  isProfileComplete?: boolean; 
   isBanned?: boolean;
   isPrivate?: boolean;
   assignedTrainer?: string;
@@ -71,9 +72,9 @@ export const userAuthSlice = createSlice({
         equipment: payload.equipment || false,
         equipmentAvailability: payload.equipmentAvailability || false,
         goals: payload.goals || [],
-        height: payload.height || null, 
-        weight: payload.weight || null, 
-        assignedTrainer: payload.assignedTrainer,
+        height: payload.height || null,
+        weight: payload.weight || null,
+        isProfileComplete: payload.isProfileComplete || false, 
         isBanned: payload.isBanned || false,
         isPrivate: payload.isPrivate || false,
         isVerified: payload.isVerified || false,
@@ -94,9 +95,18 @@ export const userAuthSlice = createSlice({
         state.user = { ...state.user, ...action.payload };
       }
     },
+    completeProfile: (state, action: PayloadAction<Partial<UserType>>) => {
+      if (state.user) {
+        state.user = {
+          ...state.user,
+          ...action.payload,
+          isProfileComplete: true,
+        };
+      }
+    },
   },
 });
 
-export const { login, logout, setLoading, updateUser } = userAuthSlice.actions;
+export const { login, logout, setLoading, updateUser, completeProfile } = userAuthSlice.actions;
 
 export default userAuthSlice.reducer;
