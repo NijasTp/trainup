@@ -1,0 +1,38 @@
+import { injectable, inject } from 'inversify';
+import { ITransactionService } from '../core/interfaces/services/ITransactionService';
+import { ITransactionRepository } from '../core/interfaces/repositories/ITransactionRepository';
+import { ITransaction } from '../models/transaction.model';
+import TYPES from '../core/types/types';
+import { logger } from '../utils/logger.util';
+
+@injectable()
+export class TransactionService implements ITransactionService {
+  constructor(
+    @inject(TYPES.ITransactionRepository)
+    private transactionRepository: ITransactionRepository
+  ) {}
+
+  async createTransaction(data: Partial<ITransaction>): Promise<ITransaction> {
+    return await this.transactionRepository.createTransaction(data);
+  }
+
+  async updateTransactionStatus(
+    orderId: string,
+    status: "completed" | "failed",
+    paymentId?: string
+  ): Promise<ITransaction | null> {
+    return await this.transactionRepository.updateTransactionStatusByOrderId(
+      orderId,
+      status,
+      paymentId
+    );
+  }
+
+  async getTransactionById(id: string): Promise<ITransaction | null> {
+    return await this.transactionRepository.getTransactionById(id);
+  }
+
+  async findByOrderId(orderId: string): Promise<ITransaction | null> {
+    return await this.transactionRepository.findByOrderId(orderId);
+  }
+}

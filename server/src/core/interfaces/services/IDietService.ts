@@ -1,23 +1,29 @@
-import { IDietDay, IMeal } from "../../../models/diet.model";
+import { CreateOrGetDayResponseDto, MealDto } from '../../../dtos/diet.dto';
+import { IDietDay, IMeal } from '../../../models/diet.model'
 
 export interface IDietService {
-  createOrGetDay(userId: string, date: string): Promise<IDietDay>;
-  getDay(userId: string, date: string): Promise<IDietDay | null>;
-
+  createOrGetDay(
+    userId: string,
+    date: string
+  ): Promise<CreateOrGetDayResponseDto>
+  getDay(
+    userId: string,
+    date: string
+  ): Promise<CreateOrGetDayResponseDto | null>
   addMeal(
     actor: { id: string; role: string },
     userId: string,
     date: string,
-    mealPayload: Partial<IMeal>
-  ): Promise<IDietDay>;
+    mealPayload: Partial<MealDto>
+  ): Promise<CreateOrGetDayResponseDto>
 
   updateMeal(
     actor: { id: string; role: string },
     userId: string,
     date: string,
     mealId: string,
-    update: Partial<IMeal>
-  ): Promise<IDietDay | null>;
+    update: Partial<MealDto>
+  ): Promise<CreateOrGetDayResponseDto | null>
 
   markMealEaten(
     actor: { id: string; role: string },
@@ -25,12 +31,12 @@ export interface IDietService {
     date: string,
     mealId: string,
     isEaten: boolean
-  ): Promise<IDietDay | null>;
+  ): Promise<CreateOrGetDayResponseDto | null>
 
   removeMeal(
     actor: { id: string; role: string },
     userId: string,
     date: string,
     mealId: string
-  ): Promise<IDietDay | null>;
+  ): Promise<CreateOrGetDayResponseDto | null>
 }

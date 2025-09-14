@@ -22,6 +22,7 @@ import API from "@/lib/axios";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow, addMonths } from "date-fns";
+import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 
 interface Trainer {
     _id: string;
@@ -158,14 +159,15 @@ export default function MyTrainerProfile() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+            <SiteHeader/>
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
             <div className="relative border-b border-border/50 bg-card/20 backdrop-blur-sm">
                 <div className="container mx-auto px-4 py-6">
-                    <Link to="/dashboard">
+                    <Link to="/home">
                         <Button variant="ghost" className="group hover:bg-primary/5 transition-all duration-300">
                             <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                            Back to Dashboard
+                            Back to Home
                         </Button>
                     </Link>
                 </div>

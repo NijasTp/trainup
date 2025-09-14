@@ -7,6 +7,7 @@ import { IGym } from "../models/gym.model";
 import cloudinary from "../config/cloudinary";
 import { UploadedFile } from "express-fileupload";
 import { IJwtService } from "../core/interfaces/services/IJwtService";
+import { GymLoginResponseDto, GymResponseDto, GymDataResponseDto } from '../dtos/gym.dto'
 
 @injectable()
 export class GymService implements IGymService {
@@ -22,7 +23,7 @@ export class GymService implements IGymService {
       profileImage?: UploadedFile;
       images?: UploadedFile | UploadedFile[];
     }
-  ): Promise<{ gym: IGym; accessToken: string; refreshToken: string }> {
+  ): Promise<GymLoginResponseDto> {
     let certificateUrl: string | undefined;
     let profileImageUrl: string | undefined;
     const imageUrls: string[] = [];
@@ -70,7 +71,6 @@ export class GymService implements IGymService {
       images: imageUrls,
     });
 
-    // Generate tokens
     const accessToken = this._jwtService.generateAccessToken(
       gym._id.toString(),
       gym.role,
@@ -82,10 +82,14 @@ export class GymService implements IGymService {
       gym.tokenVersion ?? 0
     );
 
-    return { gym, accessToken, refreshToken };
+    return { 
+      gym: this.mapToResponseDto(gym), 
+      accessToken, 
+      refreshToken 
+    };
   }
 
-    async getAllGyms(page: number, limit: number, searchQuery: string) {
+  async getAllGyms(page: number, limit: number, searchQuery: string) {
     return await this._gymRepo.findGyms(page, limit, searchQuery);
   }
 
@@ -97,32 +101,43 @@ export class GymService implements IGymService {
     return await this._gymRepo.findById(id);
   }
 
-  async getGymData(gymId: string) {
+  async getGymData(gymId: string): Promise<GymDataResponseDto> {
     const gymDetails = await this._gymRepo.getGymById(gymId);
     const trainers = await this._gymRepo.getGymTrainers(gymId);
     const members = await this._gymRepo.getGymMembers(gymId);
     const announcements = await this._gymRepo.getGymAnnouncements(gymId);
 
     return {
-      gymDetails,
+      gymDetails: this.mapToResponseDto(gymDetails!),
       trainers,
       members,
-      announcements
+      announcements: announcements.map(ann => ({
+        title: ann.title,
+        message: ann.message,
+        date: ann.date
+      }))
     };
   }
+  
   async getGymApplication(id: string) {
-  return await this._gymRepo.findApplicationById(id);
-}
+    return await this._gymRepo.findApplicationById(id);
+  }
 
-  async loginGym(email: string, password: string) {
+  async loginGym(email: string, password: string): Promise<GymLoginResponseDto> {
     const gym = await this._gymRepo.findByEmail(email);
     if (!gym) throw new Error("Gym not found");
     if (gym.verifyStatus === 'rejected') throw new Error(`Gym verification was rejected: ${gym.rejectReason}`);
     const valid = await bcrypt.compare(password, gym.password!);
     if (!valid) throw new Error("Invalid credentials");
+    
     const accessToken = this._jwtService.generateAccessToken(gym._id.toString(), gym.role, gym.tokenVersion?? 0);
     const refreshToken = this._jwtService.generateRefreshToken(gym._id.toString(), gym.role, gym.tokenVersion?? 0);
-    return { gym, accessToken, refreshToken };
+    
+    return { 
+      gym: this.mapToResponseDto(gym), 
+      accessToken, 
+      refreshToken 
+    };
   }
 
   async getProfile(id: string) {
@@ -131,5 +146,30 @@ export class GymService implements IGymService {
 
   async updateProfile(id: string, data: Partial<IGym>) {
     return this._gymRepo.updateGym(id, data);
+  }
+
+  private mapToResponseDto(gym: IGym): GymResponseDto {
+    return {
+      _id: gym._id.toString(),
+      role: gym.role,
+      name: gym.name!,
+      email: gym.email!,
+      location: gym.location!,
+      certificate: gym.certificate,
+      verifyStatus: gym.verifyStatus,
+      rejectReason: gym.rejectReason || undefined,
+      isBanned: gym.isBanned,
+      profileImage: gym.profileImage || undefined,
+      images: gym.images || undefined,
+      trainers: gym.trainers?.map(t => t.toString()) || undefined,
+      members: gym.members?.map(m => m.toString()) || undefined,
+      announcements: gym.announcements.map(ann => ({
+        title: ann.title,
+        message: ann.message,
+        date: ann.date
+      })),
+      createdAt: gym.createdAt!,
+      updatedAt: gym.updatedAt!
+    };
   }
 }

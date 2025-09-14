@@ -1,78 +1,167 @@
-import { Request, Response } from "express";
-import { inject, injectable } from "inversify";
-import { STATUS_CODE } from "../constants/status";
-import TYPES  from "../core/types/types";
-import { IPaymentService } from "../core/interfaces/services/IPaymentService";
-import { IUserService } from "../core/interfaces/services/IUserService";
-import { ITrainerService } from "../core/interfaces/services/ITrainerService";
-import { JwtPayload } from "../core/interfaces/services/IJwtService";
+import { Request, Response } from 'express';
+import { inject, injectable } from 'inversify';
+import { STATUS_CODE } from '../constants/status';
+import TYPES from '../core/types/types';
+import { IPaymentService } from '../core/interfaces/services/IPaymentService';
+import { IUserService } from '../core/interfaces/services/IUserService';
+import { ITrainerService } from '../core/interfaces/services/ITrainerService';
+import { ITransactionService } from '../core/interfaces/services/ITransactionService';
+import { JwtPayload } from '../core/interfaces/services/IJwtService';
+import { CreateOrderRequestDto, CreateOrderResponseDto, VerifyPaymentRequestDto, VerifyPaymentResponseDto } from '../dtos/payment.dto';
+import { MESSAGES } from '../constants/messages';
+import { logger } from '../utils/logger.util';
+import { ITransaction } from '../models/transaction.model';
 
 @injectable()
 export class PaymentController {
-    constructor(
-        @inject(TYPES.IPaymentService) private _paymentService: IPaymentService,
-        @inject(TYPES.IUserService) private _userService: IUserService,
-        @inject(TYPES.ITrainerService) private _trainerService: ITrainerService
-    ) {}
+  constructor(
+    @inject(TYPES.IPaymentService) private _paymentService: IPaymentService,
+    @inject(TYPES.IUserService) private _userService: IUserService,
+    @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
+    @inject(TYPES.ITransactionService) private _transactionService: ITransactionService
+  ) {}
 
-    async createOrder(req: Request, res: Response): Promise<void> {
-        try {
-            const { amount, currency, receipt } = req.body;
-            const order = await this._paymentService.createOrder(amount, currency, receipt);
-            res.status(STATUS_CODE.OK).json(order);
-        } catch (error: any) {
-            res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
-        }
+  async createOrder(req: Request, res: Response): Promise<void> {
+    try {
+      const dto: CreateOrderRequestDto = req.body;
+      const userId = (req.user as JwtPayload).id;
+      const trainerId = req.body.trainerId;
+      const months = req.body.months 
+
+
+      if (!trainerId) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Missing trainer ID' });
+        return;
+      }
+      if ( !userId ) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Missing user ' });
+        return;
+      }
+      if (!months) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Missing months' });
+        return;
+      }
+
+      const order: CreateOrderResponseDto = await this._paymentService.createOrder(dto.amount, dto.currency, dto.receipt);
+
+  
+      const transactionData: Partial<ITransaction> = {
+        userId,
+        trainerId,
+        amount: dto.amount,
+        months,
+        razorpayOrderId: order.id,
+        razorpayPaymentId: '',
+        status: 'pending',
+        createdAt: new Date(),
+      };
+
+      await this._transactionService.createTransaction(transactionData);
+
+      res.status(STATUS_CODE.OK).json(order);
+    } catch (err) {
+      const error = err as Error;
+      logger.error('Create Order Error', error);
+      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
+    }
+  }
+async verifyPayment(req: Request, res: Response): Promise<void> {
+  try {
+    const dto: VerifyPaymentRequestDto = req.body;
+    const userId = (req.user as JwtPayload).id;
+
+    if (!dto.trainerId || !userId || !dto.months) {
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ success: false, message: 'Missing user, trainer ID, or months' });
+      return;
     }
 
-    async verifyPayment(req: Request, res: Response): Promise<void> {
-        try {
-            const { orderId, paymentId, signature, trainerId } = req.body;
-            const userId = (req.user as JwtPayload).id; 
-            if (!trainerId || !userId) {
-                 res
-                    .status(STATUS_CODE.BAD_REQUEST)
-                    .json({ success: false, message: "Missing user or trainer ID" });
-                    return
-            }
+    // verify payment signature
+    const isValid = await this._paymentService.verifyPayment(
+      dto.orderId,
+      dto.paymentId,
+      dto.signature,
+      userId,
+      dto.trainerId,
+      dto.months,
+      dto.amount
+    );
 
-            const isValid = await this._paymentService.verifyPayment(orderId, paymentId, signature);
-            if (!isValid) {
-                 res
-                    .status(STATUS_CODE.BAD_REQUEST)
-                    .json({ success: false, message: "Invalid signature" });
-                    return
-            }
-
-            // Validate trainer exists
-            const trainer = await this._trainerService.getTrainerById(trainerId);
-            if (!trainer) {
-                 res
-                    .status(STATUS_CODE.BAD_REQUEST)
-                    .json({ success: false, message: "Trainer not found" });
-                    return
-            }
-
-            // Check if user has a trainer
-            const user = await this._userService.getUserById(userId);
-            if (user?.assignedTrainer) {
-                 res
-                    .status(STATUS_CODE.BAD_REQUEST)
-                    .json({ success: false, message: "User already has a trainer" });
-                    return
-            }
-
-            // Update user and trainer
-            await this._userService.updateUserTrainerId(userId, trainerId);
-            await this._trainerService.addClientToTrainer(trainerId, userId);
-
-            res.status(STATUS_CODE.OK).json({
-                success: true,
-                message: "Payment verified and trainer hired successfully!",
-            });
-        } catch (error: any) {
-            console.log("Verify Payment Error", error);
-            res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
-        }
+    // find existing transaction created in createOrder
+    let transaction = await this._transactionService.findByOrderId(dto.orderId);
+    if (!transaction) {
+      res.status(STATUS_CODE.BAD_REQUEST).json({
+        success: false,
+        message: 'Transaction not found for this order',
+      });
+      return;
     }
+
+    if (!isValid) {
+      transaction = await this._transactionService.updateTransactionStatus(
+        dto.orderId,
+        'failed',
+        dto.paymentId
+      );
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ success: false, message: MESSAGES.INVALID_SIGNATURE });
+      return;
+    }
+
+    const trainer = await this._trainerService.getTrainerById(dto.trainerId);
+    if (!trainer) {
+      transaction = await this._transactionService.updateTransactionStatus(
+        dto.orderId,
+        'failed',
+        dto.paymentId
+      );
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ success: false, message: MESSAGES.TRAINER_NOT_FOUND });
+      return;
+    }
+
+    const user = await this._userService.getUserById(userId);
+    if (user?.assignedTrainer) {
+      transaction = await this._transactionService.updateTransactionStatus(
+        dto.orderId,
+        'failed',
+        dto.paymentId
+      );
+      res.status(STATUS_CODE.BAD_REQUEST).json({
+        success: false,
+        message: 'User already has a trainer',
+      });
+      return;
+    }
+
+    // ✅ update transaction to completed
+    transaction = await this._transactionService.updateTransactionStatus(
+      dto.orderId,
+      'completed',
+      dto.paymentId
+    );
+
+    // assign trainer
+    await this._userService.updateUserTrainerId(userId, dto.trainerId);
+    await this._trainerService.addClientToTrainer(dto.trainerId, userId);
+
+    const response: VerifyPaymentResponseDto = {
+      success: true,
+      message: 'Payment verified and trainer hired successfully!',
+      transactionId: transaction?._id,
+    };
+
+    res.status(STATUS_CODE.OK).json(response);
+  } catch (err) {
+    const error = err as Error;
+    logger.error('Verify Payment Error', error);
+    res
+      .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
+  }
+}
+
 }

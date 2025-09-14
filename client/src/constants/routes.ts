@@ -8,6 +8,8 @@ export const ROUTES = {
   USER_HOME: "/",
   USER_HOME_ALT: "/home",
   USER_PROFILE: "/profile",
+  USER_EDIT_PROFILE: "/edit-profile",
+  USER_TRANSACTIONS:'/transactions',
   USER_DASHBOARD:'/dashboard',
   USER_VERIFY_OTP: "/verify-otp",
   USER_TRAINER_PAGE:'/trainers',
@@ -64,4 +66,5 @@ export const ROUTES = {
   ADMIN_TEMPLATE_MANAGEMENT: "/admin/templates",
   ADMIN_ADD_WORKOUT_TEMPLATE: "/admin/templates/new/workout",
   ADMIN_ADD_DIET_TEMPLATE: "/admin/templates/new/diet",
+  ADMIN_EDIT_TEMPLATE: "/admin/templates/:id/:template/edit",
 };

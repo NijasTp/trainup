@@ -7,6 +7,7 @@ import { IJwtService } from '../core/interfaces/services/IJwtService'
 import { IUser } from '../models/user.model'
 import { OAuth2Client } from 'google-auth-library'
 import { MESSAGES } from '../constants/messages'
+import { LoginResponseDto, UserResponseDto } from '../dtos/user.dto'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ''
 const JWT_SECRET = process.env.JWT_SECRET 
@@ -22,7 +23,7 @@ export class UserService implements IUserService {
     this.googleClient = new OAuth2Client(GOOGLE_CLIENT_ID)
   }
 
-  public async registerUser (name: string, email: string, password: string) {
+  public async registerUser (name: string, email: string, password: string): Promise<LoginResponseDto> {
     const existingUser = await this._userRepo.findByEmail(email)
     if (existingUser) throw new Error(MESSAGES.USER_EXISTS)
 
@@ -44,10 +45,14 @@ export class UserService implements IUserService {
       user.tokenVersion ?? 0
     )
 
-    return { user, accessToken, refreshToken }
+    return { 
+      user: this.mapToResponseDto(user), 
+      accessToken, 
+      refreshToken 
+    }
   }
 
-  async checkUsername (username: string) {
+  async checkUsername (username: string): Promise<boolean> {
     return (await this._userRepo.checkUsername(username)) ? true : false
   }
 
@@ -65,7 +70,7 @@ export class UserService implements IUserService {
     })
   }
 
-  public async loginUser (email: string, password: string) {
+  public async loginUser (email: string, password: string): Promise<LoginResponseDto> {
     const user = await this._userRepo.findByEmail(email)
 
     if (!user) throw new Error('User not found')
@@ -86,14 +91,14 @@ export class UserService implements IUserService {
       user.tokenVersion ?? 0
     )
 
-    
-
-    return { user, accessToken, refreshToken }
+    return { 
+      user: this.mapToResponseDto(user), 
+      accessToken, 
+      refreshToken 
+    }
   }
 
-  async loginWithGoogle (
-    idToken: string
-  ): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
+  async loginWithGoogle (idToken: string): Promise<LoginResponseDto> {
     const ticket = await this.googleClient.verifyIdToken({
       idToken,
       audience: GOOGLE_CLIENT_ID
@@ -132,7 +137,12 @@ export class UserService implements IUserService {
       user.role,
       user.tokenVersion ?? 0
     )
-    return { user, accessToken, refreshToken }
+    
+    return { 
+      user: this.mapToResponseDto(user), 
+      accessToken, 
+      refreshToken 
+    }
   }
 
   async getAllUsers (
@@ -154,16 +164,19 @@ export class UserService implements IUserService {
       endDate
     )
   }
-  async getUserById (id: string) {
-    return await this._userRepo.findById(id)
+  
+  async getUserById (id: string): Promise<UserResponseDto | null> {
+    const user = await this._userRepo.findById(id)
+    return user ? this.mapToResponseDto(user) : null
   }
 
   async incrementTokenVersion (id: string) {
     return await this._userRepo.updateStatusAndIncrementVersion(id, {})
   }
 
-  async getProfile (id: string) {
-    return await this._userRepo.findById(id)
+  async getProfile (id: string): Promise<UserResponseDto | null> {
+    const user = await this._userRepo.findById(id)
+    return user ? this.mapToResponseDto(user) : null
   }
 
   async updateUserStatus (id: string, updateData: Partial<IUser>) {
@@ -189,5 +202,44 @@ export class UserService implements IUserService {
       assignedTrainer: null,
       subscriptionStartDate: null
     })
+  }
+
+  private mapToResponseDto(user: IUser): UserResponseDto {
+    return {
+      _id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      isVerified: user.isVerified || false,
+      role: user.role,
+      goals: user.goals,
+      activityLevel: user.activityLevel,
+      equipment: user.equipment,
+      assignedTrainer: user.assignedTrainer?.toString(),
+      subscriptionStartDate: user.subscriptionStartDate || undefined,
+      gymId: user.gymId?.toString(),
+      isPrivate: user.isPrivate,
+      isBanned: user.isBanned,
+      streak: user.streak,
+      lastActiveDate: user.lastActiveDate,
+      xp: user.xp,
+      xpLogs: user.xpLogs.map(log => ({
+        amount: log.amount,
+        reason: log.reason,
+        date: log.date
+      })),
+      achievements: user.achievements,
+      todaysWeight: user.todaysWeight,
+      goalWeight: user.goalWeight,
+      weightHistory: user.weightHistory.map(weight => ({
+        weight: weight.weight,
+        date: weight.date
+      })),
+      height: user.height,
+      age: user.age,
+      gender: user.gender,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
   }
 }

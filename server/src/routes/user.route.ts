@@ -27,9 +27,13 @@ router.get('/session',authMiddleware,userController.checkSession.bind(userContro
 
 router.get('/get-profile',authMiddleware,roleMiddleware(['user']), userController.getProfile.bind(userController))
 
+
 router.get('/trainers', authMiddleware, roleMiddleware(['user']), userController.getTrainers.bind(userController));
 router.get('/trainers/:id', authMiddleware, roleMiddleware(['user']), userController.getIndividualTrainer.bind(userController));
 router.get("/my-trainer", authMiddleware, userController.getMyTrainer.bind(userController));
 router.post("/cancel-subscription", authMiddleware, userController.cancelSubscription.bind(userController));
+
+
+
 
 export default router;

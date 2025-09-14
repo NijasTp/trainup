@@ -16,7 +16,6 @@ export interface ITrainer extends Document {
   specialization: string
   tokenVersion?: number
   experience: string
-  badges: string[]
   rating: number
   certificate: string
   profileImage: string
@@ -42,7 +41,6 @@ const TrainerSchema: Schema<ITrainer> = new Schema(
     specialization: { type: String, default: '' },
     tokenVersion: { type: Number, default: 0 },
     experience: { type: String, default: '' },
-    badges: [{ type: String }],
     rating: { type: Number, default: 0 },
     certificate: { type: String, required:true },
     profileImage: { type: String },

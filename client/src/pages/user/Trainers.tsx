@@ -135,7 +135,9 @@ export default function Trainers() {
                 {!isLoading && !error && trainers.length > 0 && (
                     <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {trainers.map((trainer, index) => (
-                            <TrainerCard key={trainer.id} trainer={trainer} index={index} />
+                            <Link to={`/trainers/${trainer._id}`}>
+                            <TrainerCard key={trainer._id} trainer={trainer} index={index} />
+                            </Link>
                         ))}
                     </div>
                 )}

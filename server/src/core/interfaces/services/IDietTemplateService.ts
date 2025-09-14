@@ -1,8 +1,8 @@
-import { ITemplate } from "../../../models/dietTemplate.model";
+import { CreateTemplateRequestDto, TemplateResponseDto } from '../../../dtos/diet.dto'
 
 export interface IDietTemplateService {
-  createTemplate(adminId: string, payload: Partial<ITemplate>): Promise<ITemplate>;
-  listTemplates(filter?: any): Promise<ITemplate[]>;
-  getTemplate(id: string): Promise<ITemplate | null>;
-  deleteTemplate(id: string): Promise<void|null>;
+  createTemplate(adminId: string, dto: CreateTemplateRequestDto): Promise<TemplateResponseDto>
+  listTemplates(filter?: any): Promise<TemplateResponseDto[]>
+  getTemplate(id: string): Promise<TemplateResponseDto | null>
+  deleteTemplate(id: string): Promise<void>
 }

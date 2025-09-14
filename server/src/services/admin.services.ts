@@ -4,6 +4,7 @@ import { IAdminService } from '../core/interfaces/services/IAdminService'
 import { IAdminRepository } from '../core/interfaces/repositories/IAdminRepository'
 import TYPES from '../core/types/types'
 import { IJwtService } from '../core/interfaces/services/IJwtService'
+import { AdminLoginRequestDto, AdminLoginResponseDto } from '../dtos/admin.dto'
 
 @injectable()
 export class AdminService implements IAdminService {
@@ -12,11 +13,11 @@ export class AdminService implements IAdminService {
     @inject(TYPES.IJwtService) private _jwtService: IJwtService
   ) {}
 
-  async login (email: string, password: string) {
-    const admin = await this._adminRepository.findByEmail(email)
+  async login (dto: AdminLoginRequestDto): Promise<AdminLoginResponseDto> {
+    const admin = await this._adminRepository.findByEmail(dto.email)
     if (!admin) throw new Error('Invalid credentials')
 
-    const isMatch = await bcrypt.compare(password, admin.password)
+    const isMatch = await bcrypt.compare(dto.password, admin.password)
     if (!isMatch) throw new Error('Invalid credentials')
 
     const adminId = admin._id as string

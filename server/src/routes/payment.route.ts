@@ -9,7 +9,7 @@ const router = express.Router();
 const paymentController = container.get<PaymentController>(TYPES.PaymentController);
 
 
-router.post("/create-order", paymentController.createOrder.bind(paymentController));
+router.post("/create-order", authMiddleware, paymentController.createOrder.bind(paymentController));
 router.post("/verify-payment", authMiddleware, paymentController.verifyPayment.bind(paymentController));
 
 export default router;

@@ -11,6 +11,8 @@ export interface IExercise {
 }
 
 export interface IWorkoutSession extends Document {
+  createdAt: Date;
+  updatedAt: Date;
   _id: Types.ObjectId;
   name: string;
   givenBy: "trainer" | "user" | "admin";

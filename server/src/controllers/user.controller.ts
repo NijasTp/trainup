@@ -1,7 +1,5 @@
-import { NextFunction, Request, Response } from 'express'
+import { Request, Response } from 'express'
 import { injectable, inject } from 'inversify'
-import { plainToInstance } from 'class-transformer'
-import { validate } from 'class-validator'
 import TYPES from '../core/types/types'
 import { IUserService } from '../core/interfaces/services/IUserService'
 import { IOTPService } from '../core/interfaces/services/IOtpService'
@@ -15,9 +13,26 @@ import { STATUS_CODE } from '../constants/status'
 import passport from 'passport'
 import { logger } from '../utils/logger.util'
 import { IStreakService } from '../core/interfaces/services/IStreakService'
-import { CheckUsernameDto, ForgotPasswordDto, GetIndividualTrainerParamsDto, GetTrainersQueryDto, GoogleLoginDto, LoginDto, RequestOtpDto, ResendOtpDto, ResetPasswordDto, VerifyForgotPasswordOtpDto, VerifyOtpDto } from '../dtos/user.dto'
-
-
+import {
+  RequestOtpDto,
+  VerifyOtpDto,
+  CheckUsernameDto,
+  CheckUsernameResponseDto,
+  ForgotPasswordDto,
+  VerifyForgotPasswordOtpDto,
+  ResetPasswordDto,
+  GoogleLoginDto,
+  LoginDto,
+  LoginResponseDto,
+  ResendOtpDto,
+  GetTrainersQueryDto,
+  GetTrainersResponseDto,
+  GetIndividualTrainerParamsDto,
+  GetIndividualTrainerResponseDto,
+  GetMyTrainerResponseDto,
+  GetProfileResponseDto,
+  RefreshTokenResponseDto
+} from '../dtos/user.dto'
 
 @injectable()
 export class UserController implements IUserController {
@@ -30,14 +45,7 @@ export class UserController implements IUserController {
   ) {}
 
   requestOtp = async (req: Request, res: Response) => {
-    const dto = plainToInstance(RequestOtpDto, req.body)
-    const errors = await validate(dto)
-    if (errors.length > 0) {
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ errors: errors.map(e => e.constraints) })
-      return
-    }
+    const dto: RequestOtpDto = req.body
 
     try {
       await this._otpService.requestOtp(dto.email, 'user')
@@ -49,21 +57,13 @@ export class UserController implements IUserController {
   }
 
   verifyOtp = async (req: Request, res: Response) => {
-    const dto = plainToInstance(VerifyOtpDto, req.body)
-    const errors = await validate(dto)
-    if (errors.length > 0) {
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ errors: errors.map(e => e.constraints) })
-      return
-    }
+    const dto: VerifyOtpDto = req.body
 
     try {
       await this._otpService.verifyOtp(dto.email, dto.otp)
-      const { user, accessToken, refreshToken } =
-        await this._userService.registerUser(dto.name, dto.email, dto.password)
-      this._jwtService.setTokens(res, accessToken, refreshToken)
-      res.status(STATUS_CODE.CREATED).json({ user })
+      const result: LoginResponseDto = await this._userService.registerUser(dto.name, dto.email, dto.password)
+      this._jwtService.setTokens(res, result.accessToken, result.refreshToken)
+      res.status(STATUS_CODE.CREATED).json({ user: result.user })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
       logger.error('Error in verifyOtp:', error)
@@ -71,32 +71,19 @@ export class UserController implements IUserController {
   }
 
   async checkUsername (req: Request, res: Response) {
-    const dto = plainToInstance(CheckUsernameDto, req.body)
-    const errors = await validate(dto)
-    if (errors.length > 0) {
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ errors: errors.map(e => e.constraints) })
-      return
-    }
+    const dto: CheckUsernameDto = req.body
 
     try {
       const isAvailable = await this._userService.checkUsername(dto.username)
-      res.status(STATUS_CODE.OK).json({ isAvailable })
+      const response: CheckUsernameResponseDto = { isAvailable }
+      res.status(STATUS_CODE.OK).json(response)
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
 
   forgotPassword = async (req: Request, res: Response) => {
-    const dto = plainToInstance(ForgotPasswordDto, req.body)
-    const errors = await validate(dto)
-    if (errors.length > 0) {
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ errors: errors.map(e => e.constraints) })
-      return
-    }
+    const dto: ForgotPasswordDto = req.body
 
     try {
       await this._otpService.requestForgotPasswordOtp(dto.email, 'user')
@@ -107,13 +94,7 @@ export class UserController implements IUserController {
   }
 
   verifyForgotPasswordOtp = async (req: Request, res: Response) => {
-    const dto = plainToInstance(VerifyForgotPasswordOtpDto, req.body)
-    const errors = await validate(dto)
-    if (errors.length > 0) {
-      return res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ errors: errors.map(e => e.constraints) })
-    }
+    const dto: VerifyForgotPasswordOtpDto = req.body
 
     try {
       await this._otpService.verifyOtp(dto.email, dto.otp)
@@ -126,14 +107,7 @@ export class UserController implements IUserController {
   }
 
   resetPassword = async (req: Request, res: Response) => {
-    const dto = plainToInstance(ResetPasswordDto, req.body)
-    const errors = await validate(dto)
-    if (errors.length > 0) {
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ errors: errors.map(e => e.constraints) })
-      return
-    }
+    const dto: ResetPasswordDto = req.body
 
     try {
       await this._userService.resetPassword(dto.email, dto.newPassword)
@@ -144,20 +118,12 @@ export class UserController implements IUserController {
   }
 
   async googleLogin (req: Request, res: Response) {
-    const dto = plainToInstance(GoogleLoginDto, req.body)
-    const errors = await validate(dto)
-    if (errors.length > 0) {
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ errors: errors.map(e => e.constraints) })
-      return
-    }
+    const dto: GoogleLoginDto = req.body
 
     try {
-      const { user, accessToken, refreshToken } =
-        await this._userService.loginWithGoogle(dto.idToken)
-      this._jwtService.setTokens(res, accessToken, refreshToken)
-      res.status(STATUS_CODE.OK).json({ user })
+      const result: LoginResponseDto = await this._userService.loginWithGoogle(dto.idToken)
+      this._jwtService.setTokens(res, result.accessToken, result.refreshToken)
+      res.status(STATUS_CODE.OK).json({ user: result.user })
     } catch (error: any) {
       res
         .status(STATUS_CODE.UNAUTHORIZED)
@@ -176,10 +142,9 @@ export class UserController implements IUserController {
         }
 
         try {
-          const { accessToken, refreshToken } =
-            await this._userService.loginWithGoogle(user)
-          this._jwtService.setTokens(res, accessToken, refreshToken)
-          res.redirect(`http://localhost:5173/callback?token=${accessToken}`)
+          const result: LoginResponseDto = await this._userService.loginWithGoogle(user)
+          this._jwtService.setTokens(res, result.accessToken, result.refreshToken)
+          res.redirect(`http://localhost:5173/callback?token=${result.accessToken}`)
         } catch (error: any) {
           res.redirect(`http://localhost:5173/signup?error=${error.message}`)
         }
@@ -188,21 +153,14 @@ export class UserController implements IUserController {
   }
 
   login = async (req: Request, res: Response) => {
-    const dto = plainToInstance(LoginDto, req.body)
-    const errors = await validate(dto)
-    if (errors.length > 0) {
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ errors: errors.map(e => e.constraints) })
-      return
-    }
+    const dto: LoginDto = req.body
 
     try {
-      const { user, accessToken, refreshToken } =
-        await this._userService.loginUser(dto.email, dto.password)
-      this._jwtService.setTokens(res, accessToken, refreshToken)
-      const streak = await this._streakService.checkAndResetUserStreak(user._id)
-      res.status(STATUS_CODE.OK).json({ user, streak })
+      const result: LoginResponseDto = await this._userService.loginUser(dto.email, dto.password)
+      this._jwtService.setTokens(res, result.accessToken, result.refreshToken)
+      const streak = await this._streakService.checkAndResetUserStreak(result.user._id as any)
+      const response: LoginResponseDto = { ...result, streak }
+      res.status(STATUS_CODE.OK).json(response)
     } catch (error: any) {
       res.status(STATUS_CODE.UNAUTHORIZED).json({ error: error.message })
       logger.error('login error:', error)
@@ -221,14 +179,7 @@ export class UserController implements IUserController {
   }
 
   resendOtp = async (req: Request, res: Response) => {
-    const dto = plainToInstance(ResendOtpDto, req.body)
-    const errors = await validate(dto)
-    if (errors.length > 0) {
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ errors: errors.map(e => e.constraints) })
-      return
-    }
+    const dto: ResendOtpDto = req.body
 
     try {
       await this._otpService.requestOtp(dto.email, 'user')
@@ -239,14 +190,7 @@ export class UserController implements IUserController {
   }
 
   async getTrainers (req: Request, res: Response): Promise<void> {
-    const dto = plainToInstance(GetTrainersQueryDto, req.query)
-    const errors = await validate(dto)
-    if (errors.length > 0) {
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ errors: errors.map(e => e.constraints) })
-      return
-    }
+    const dto: GetTrainersQueryDto = req.query as any
 
     try {
      const page = Number(dto.page) || 1;
@@ -259,7 +203,8 @@ export class UserController implements IUserController {
         'false',
         'true'
       )
-      res.status(STATUS_CODE.OK).json({ trainers: result })
+      const response: GetTrainersResponseDto = { trainers: result }
+      res.status(STATUS_CODE.OK).json(response)
     } catch (error: any) {
       logger.error('Controller error:', error)
       res
@@ -269,18 +214,12 @@ export class UserController implements IUserController {
   }
 
   async getIndividualTrainer (req: Request, res: Response): Promise<void> {
-    const dto = plainToInstance(GetIndividualTrainerParamsDto, req.params)
-    const errors = await validate(dto)
-    if (errors.length > 0) {
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ errors: errors.map(e => e.constraints) })
-      return
-    }
+    const dto: GetIndividualTrainerParamsDto = req.params as any
 
     try {
       const trainer = await this._trainerService.getTrainerById(dto.id)
-      res.status(STATUS_CODE.OK).json({ trainer })
+      const response: GetIndividualTrainerResponseDto = { trainer: trainer as any }
+      res.status(STATUS_CODE.OK).json(response)
     } catch (error: any) {
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
@@ -295,7 +234,8 @@ export class UserController implements IUserController {
       const trainer = await this._trainerService.getTrainerById(
         user!.assignedTrainer!.toString()
       )
-      res.status(STATUS_CODE.OK).json({ trainer })
+      const response: GetMyTrainerResponseDto = { trainer: trainer as any }
+      res.status(STATUS_CODE.OK).json(response)
     } catch (error: any) {
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
@@ -337,7 +277,8 @@ export class UserController implements IUserController {
       const jwtUser = req.user as JwtPayload
       const id = jwtUser.id
       const user = await this._userService.getProfile(id)
-      res.status(STATUS_CODE.OK).json({ user })
+      const response: GetProfileResponseDto = { user: user as any }
+      res.status(STATUS_CODE.OK).json(response)
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
@@ -371,7 +312,8 @@ export class UserController implements IUserController {
       )
       this._jwtService.setTokens(res, accessToken, refreshToken)
 
-      res.status(STATUS_CODE.OK).json({ accessToken, refreshToken })
+      const response: RefreshTokenResponseDto = { accessToken, refreshToken }
+      res.status(STATUS_CODE.OK).json(response)
     } catch (err) {
       res
         .status(STATUS_CODE.FORBIDDEN)

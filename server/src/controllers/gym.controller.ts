@@ -3,12 +3,18 @@ import { injectable, inject } from "inversify";
 import TYPES from "../core/types/types";
 import { IGymService } from "../core/interfaces/services/IGymService";
 import { IOTPService } from "../core/interfaces/services/IOtpService";
-import { JwtService } from "../utils/jwt";
 import { UploadedFile } from "express-fileupload";
 import { IJwtService, JwtPayload } from "../core/interfaces/services/IJwtService";
 import { STATUS_CODE } from "../constants/status";
 import { MESSAGES } from "../constants/messages";
 import { ROLE } from "../constants/role";
+import {
+  GymRequestOtpDto,
+  GymVerifyOtpDto,
+  GymLoginDto,
+  GymLoginResponseDto,
+  GymDataResponseDto
+} from '../dtos/gym.dto'
 
 @injectable()
 export class GymController {
@@ -19,9 +25,9 @@ export class GymController {
   ) { }
 
   requestOtp = async (req: Request, res: Response) => {
-    const { email } = req.body;
+    const dto: GymRequestOtpDto = req.body;
     try {
-      await this._otpService.requestOtp(email, ROLE.GYM);
+      await this._otpService.requestOtp(dto.email, ROLE.GYM);
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_SENT });
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message });
@@ -29,17 +35,17 @@ export class GymController {
   };
 
   verifyOtp = async (req: Request, res: Response) => {
-    const { email, otp, name, password, location } = req.body;
+    const dto: GymVerifyOtpDto = req.body;
 
     try {
-      await this._otpService.verifyOtp(email, otp);
+      await this._otpService.verifyOtp(dto.email, dto.otp);
 
-      const { gym, accessToken, refreshToken } = await this._gymService.registerGym(
+      const result: GymLoginResponseDto = await this._gymService.registerGym(
         {
-          name,
-          email,
-          password,
-          location,
+          name: dto.name,
+          email: dto.email,
+          password: dto.password,
+          location: dto.location,
         },
         req.files as {
           certificate?: UploadedFile;
@@ -48,8 +54,8 @@ export class GymController {
         }
       );
 
-      this._jwtService.setTokens(res, accessToken, refreshToken);
-      res.status(STATUS_CODE.CREATED).json({ gym });
+      this._jwtService.setTokens(res, result.accessToken, result.refreshToken);
+      res.status(STATUS_CODE.CREATED).json({ gym: result.gym });
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message });
     }
@@ -64,7 +70,7 @@ export class GymController {
         return
       }
 
-      const data = await this._gymService.getGymData(gymId);
+      const data: GymDataResponseDto = await this._gymService.getGymData(gymId);
       res.status(STATUS_CODE.OK).json(data)
       return
     } catch (error: any) {
@@ -73,21 +79,18 @@ export class GymController {
     }
   }
 
-
   login = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const dto: GymLoginDto = req.body;
     try {
-      const { gym, accessToken, refreshToken } = await this._gymService.loginGym(email, password);
-      this._jwtService.setTokens(res, accessToken, refreshToken);
-      res.status(STATUS_CODE.OK).json({ gym });
+      const result: GymLoginResponseDto = await this._gymService.loginGym(dto.email, dto.password);
+      this._jwtService.setTokens(res, result.accessToken, result.refreshToken);
+      res.status(STATUS_CODE.OK).json({ gym: result.gym });
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message });
     }
   };
 
-  
-
-    async logout(req: Request, res: Response) {
+  async logout(req: Request, res: Response) {
     try {
       this._jwtService.clearTokens(res);
        res.status(STATUS_CODE.OK).json({ message: "Logged out successfully" });
@@ -98,4 +101,4 @@ export class GymController {
        return
     }
   }
-} 
+}

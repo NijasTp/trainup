@@ -5,6 +5,7 @@ import { IWorkoutSessionRepository } from '../core/interfaces/repositories/IWork
 import { IWorkoutDayRepository } from '../core/interfaces/repositories/IWorkoutDayRepository';
 import { IWorkoutSession } from '../models/workout.model';
 import { IStreakService } from '../core/interfaces/services/IStreakService';
+import { WorkoutSessionResponseDto, WorkoutDayResponseDto, GetAdminTemplatesResponseDto } from '../dtos/workout.dto'
 
 @injectable()
 export class WorkoutService implements IWorkoutService {
@@ -16,9 +17,7 @@ export class WorkoutService implements IWorkoutService {
     @inject(TYPES.IStreakService) private _streakService : IStreakService
   ) {}
 
-  async createSession (
-    payload: Partial<IWorkoutSession>
-  ): Promise<IWorkoutSession> {
+  async createSession (payload: Partial<IWorkoutSession>): Promise<WorkoutSessionResponseDto> {
     const session = await this._sessionRepo.create(payload)
 
     if (payload.givenBy === 'user' || payload.givenBy === 'admin') {
@@ -35,22 +34,25 @@ export class WorkoutService implements IWorkoutService {
         })
       }
 
-      const res = await this._workoutDayRepo.addSessionToDay(
+      await this._workoutDayRepo.addSessionToDay(
         day._id.toString(),
         session._id.toString()
       )
     }
-    return session
+    return this.mapToSessionResponseDto(session)
   }
 
-  getSession (id: string) {
-    return this._sessionRepo.findById(id)
+  async getSession (id: string): Promise<WorkoutSessionResponseDto> {
+    const session = await this._sessionRepo.findById(id)
+    if (!session) throw new Error('Session not found')
+    return this.mapToSessionResponseDto(session as any)
   }
+  
   async trainerCreateSession (
     trainerId: string,
     clientId: string,
     payload: Partial<IWorkoutSession>
-  ): Promise<IWorkoutSession> {
+  ): Promise<WorkoutSessionResponseDto> {
     const sessionPayload = {
       ...payload,
       givenBy: 'trainer' as const,
@@ -76,10 +78,10 @@ export class WorkoutService implements IWorkoutService {
       session._id.toString()
     )
 
-    return session
+    return this.mapToSessionResponseDto(session)
   }
 
-  async updateSession (id: string, payload: IWorkoutSessionPayload) {
+  async updateSession (id: string, payload: IWorkoutSessionPayload): Promise<WorkoutSessionResponseDto> {
     if (payload.notes && payload.givenBy && payload.givenBy !== 'trainer') {
       throw new Error('Only trainers can set notes')
     }
@@ -87,7 +89,6 @@ export class WorkoutService implements IWorkoutService {
     if (payload.exerciseUpdates) {
       const session = await this._sessionRepo.findById(id)
       if (!session) throw new Error('Session not found')
-
 
       const updatedExercises = session.exercises.map(exercise => {
         const update = payload.exerciseUpdates?.find(
@@ -99,19 +100,24 @@ export class WorkoutService implements IWorkoutService {
       delete payload.exerciseUpdates
     }
 
-    return this._sessionRepo.update(id, payload)
+    const updated = await this._sessionRepo.update(id, payload)
+    if (!updated) throw new Error('Session not found')
+    return this.mapToSessionResponseDto(updated)
   }
+  
   async deleteSession (id: string) {
     return this._sessionRepo.delete(id)
   }
 
-  async createDay (userId: string, date: string) {
+  async createDay (userId: string, date: string): Promise<WorkoutDayResponseDto> {
     const existing = await this._workoutDayRepo.findByUserAndDate(userId, date)
-    if (existing) return existing
-    return this._workoutDayRepo.create({ userId, date, sessions: [] })
+    if (existing) return this.mapToDayResponseDto(existing)
+    
+    const day = await this._workoutDayRepo.create({ userId, date, sessions: [] })
+    return this.mapToDayResponseDto(day)
   }
 
-  async addSessionToDay (userId: string, date: string, sessionId: string) {
+  async addSessionToDay (userId: string, date: string, sessionId: string): Promise<WorkoutDayResponseDto> {
     let day = await this._workoutDayRepo.findByUserAndDate(userId, date)
     if (!day)
       day = await this._workoutDayRepo.create({
@@ -124,14 +130,15 @@ export class WorkoutService implements IWorkoutService {
         day._id.toString(),
         sessionId
       )
-    return day
+    return this.mapToDayResponseDto(day!)
   }
 
-  async getDay (userId: string, date: string) {
-    return this._workoutDayRepo.findByUserAndDate(userId, date)
+  async getDay (userId: string, date: string): Promise<WorkoutDayResponseDto | null> {
+    const day = await this._workoutDayRepo.findByUserAndDate(userId, date)
+    return day ? this.mapToDayResponseDto(day) : null
   }
 
-  async createAdminTemplate(payload: Partial<IWorkoutSession>): Promise<IWorkoutSession> {
+  async createAdminTemplate(payload: Partial<IWorkoutSession>): Promise<WorkoutSessionResponseDto> {
     const template = await this._sessionRepo.create({
       ...payload,
       givenBy: 'admin',
@@ -141,26 +148,75 @@ export class WorkoutService implements IWorkoutService {
       time: undefined,
       isDone: false,
     });
-    return template;
+    return this.mapToSessionResponseDto(template);
   }
 
-  async getAdminTemplates(page: number, limit: number, search: string): Promise<{ templates: IWorkoutSession[], total: number, page: number, totalPages: number }> {
-    return this._sessionRepo.findAdminTemplates(page, limit, search);
+  async getAdminTemplates(page: number, limit: number, search: string): Promise<GetAdminTemplatesResponseDto> {
+    const result = await this._sessionRepo.findAdminTemplates(page, limit, search);
+    return {
+      templates: result.templates.map(template => this.mapToSessionResponseDto(template as any)),
+      total: result.total,
+      page: result.page,
+      totalPages: result.totalPages
+    };
   }
 
-  async updateAdminTemplate(id: string, payload: Partial<IWorkoutSession>): Promise<IWorkoutSession | null> {
+  async updateAdminTemplate(id: string, payload: Partial<IWorkoutSession>): Promise<WorkoutSessionResponseDto> {
     const session = await this._sessionRepo.findById(id);
     if (!session || session.givenBy !== 'admin') {
       throw new Error('Template not found or not an admin template');
     }
-    return this._sessionRepo.update(id, {
+    const updated = await this._sessionRepo.update(id, {
       ...payload,
       date: undefined,
       userId: undefined,
       trainerId: undefined,
       time: undefined,
     });
+    if (!updated) throw new Error('Failed to update template')
+    return this.mapToSessionResponseDto(updated);
   }
 
+  private mapToSessionResponseDto(session: IWorkoutSession): WorkoutSessionResponseDto {
+    return {
+      _id: session._id.toString(),
+      name: session.name,
+      givenBy: session.givenBy,
+      trainerId: session.trainerId?.toString(),
+      userId: session.userId?.toString(),
+      date: session.date,
+      time: session.time,
+      exercises: session.exercises.map(exercise => ({
+        id: exercise.id,
+        name: exercise.name,
+        image: exercise.image,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        time: exercise.time,
+        timeTaken: exercise.timeTaken
+      })),
+      goal: session.goal,
+      notes: session.notes,
+      isDone: session.isDone,
+      createdAt: session.createdAt!,
+      updatedAt: session.updatedAt!
+    };
+  }
 
+  private mapToDayResponseDto(day: any): WorkoutDayResponseDto {
+    return {
+      _id: day._id.toString(),
+      userId: day.userId.toString(),
+      date: day.date,
+      sessions: Array.isArray(day.sessions) 
+        ? day.sessions.map((session: any) => 
+            typeof session === 'string' 
+              ? { _id: session } as any 
+              : this.mapToSessionResponseDto(session)
+          )
+        : [],
+      createdAt: day.createdAt,
+      updatedAt: day.updatedAt
+    };
+  }
 }

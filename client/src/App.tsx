@@ -60,6 +60,9 @@ import WorkoutTemplateForm from './pages/admin/AdminAddWorkoutTemplate';
 import WorkoutTemplates from './pages/user/WorkoutTemplates';
 import NewDietTemplate from './pages/admin/AdminAddDietTemplate';
 import TrainerReapply from './pages/trainer/TrainerReapply';
+import Transactions from './pages/user/UserTransactions';
+import EditTemplate from './pages/admin/EditAdminTemplate';
+import EditProfile from './pages/user/UserEditProfile';
 
 function App() {
   return (
@@ -75,6 +78,8 @@ function App() {
         <Route path={ROUTES.USER_HOME} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_HOME_ALT} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_PROFILE} element={<ProtectedRoute><UserProfile/></ProtectedRoute>} />
+        <Route path={ROUTES.USER_EDIT_PROFILE} element={<ProtectedRoute><EditProfile/></ProtectedRoute>} />
+        <Route path={ROUTES.USER_TRANSACTIONS} element={<ProtectedRoute><Transactions/></ProtectedRoute>} />
         <Route path={ROUTES.USER_DASHBOARD} element={<ProtectedRoute><UserDashboard/></ProtectedRoute>} />
         <Route path={ROUTES.USER_VERIFY_OTP} element={<PreventLoggedIn><VerifyOtp /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_TRAINER_PAGE} element={<ProtectedRoute><Trainers /></ProtectedRoute>} />
@@ -126,6 +131,7 @@ function App() {
         <Route path={ROUTES.ADMIN_TEMPLATE_MANAGEMENT} element={<AdminProtectedRoute><TemplateManagement /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_ADD_WORKOUT_TEMPLATE} element={<AdminProtectedRoute><WorkoutTemplateForm /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_ADD_DIET_TEMPLATE} element={<AdminProtectedRoute><NewDietTemplate /></AdminProtectedRoute>} />
+        <Route path={ROUTES.ADMIN_EDIT_TEMPLATE} element={<AdminProtectedRoute><EditTemplate /></AdminProtectedRoute>} />
       </Routes>
     </>
   );

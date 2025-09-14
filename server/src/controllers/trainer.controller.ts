@@ -2,7 +2,6 @@ import TYPES from '../core/types/types'
 import { Request, Response } from 'express'
 import { inject, injectable } from 'inversify'
 import { ITrainerService } from '../core/interfaces/services/ITrainerService'
-import { JwtService } from '../utils/jwt'
 import { UploadedFile } from 'express-fileupload'
 import { IOTPService } from '../core/interfaces/services/IOtpService'
 import {
@@ -12,6 +11,22 @@ import {
 import { STATUS_CODE } from '../constants/status'
 import { IUserService } from '../core/interfaces/services/IUserService'
 import { logger } from '../utils/logger.util'
+import {
+  TrainerLoginDto,
+  TrainerLoginResponseDto,
+  TrainerRequestOtpDto,
+  TrainerVerifyOtpDto,
+  TrainerResendOtpDto,
+  TrainerForgotPasswordDto,
+  TrainerResetPasswordDto,
+  TrainerApplyDto,
+  TrainerReapplyDto,
+  TrainerResponseDto,
+  GetClientsQueryDto,
+  GetClientsResponseDto,
+  GetClientParamsDto,
+  GetClientResponseDto
+} from '../dtos/trainer.dto'
 
 @injectable()
 export class TrainerController {
@@ -21,13 +36,13 @@ export class TrainerController {
     @inject(TYPES.IOtpService) private otpService: IOTPService,
     @inject(TYPES.IUserService) private userService: IUserService
   ) {}
+  
   async login (req: Request, res: Response): Promise<void> {
-    const { email, password } = req.body
+    const dto: TrainerLoginDto = req.body
     try {
-      const { trainer, accessToken, refreshToken } =
-        await this._trainerService.loginTrainer(email, password)
-      this._JwtService.setTokens(res, accessToken, refreshToken)
-      res.status(STATUS_CODE.OK).json({ trainer })
+      const result: TrainerLoginResponseDto = await this._trainerService.loginTrainer(dto.email, dto.password)
+      this._JwtService.setTokens(res, result.accessToken, result.refreshToken)
+      res.status(STATUS_CODE.OK).json({ trainer: result.trainer })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
       console.log(error.message)
@@ -36,8 +51,8 @@ export class TrainerController {
 
   forgotPassword = async (req: Request, res: Response) => {
     try {
-      const { email } = req.body
-      await this._trainerService.forgotPassword(email)
+      const dto: TrainerForgotPasswordDto = req.body
+      await this._trainerService.forgotPassword(dto.email)
       res.json({ message: 'OTP sent to email' })
     } catch (err: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
@@ -45,9 +60,9 @@ export class TrainerController {
   }
 
   forgotPasswordResendOtp = async (req: Request, res: Response) => {
-    const { email } = req.body
+    const dto: TrainerRequestOtpDto = req.body
     try {
-      await this.otpService.requestForgotPasswordOtp(email, 'trainer')
+      await this.otpService.requestForgotPasswordOtp(dto.email, 'trainer')
       res.status(STATUS_CODE.OK).json({ messsage: 'OTP Resent Successfully' })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -56,9 +71,9 @@ export class TrainerController {
   }
 
   async requestOtp (req: Request, res: Response) {
-    const { email } = req.body
+    const dto: TrainerRequestOtpDto = req.body
     try {
-      await this.otpService.requestOtp(email, 'trainer')
+      await this.otpService.requestOtp(dto.email, 'trainer')
       res.status(STATUS_CODE.OK).json({ message: 'OTP sent successfully' })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -68,8 +83,8 @@ export class TrainerController {
 
   async verifyOtp (req: Request, res: Response) {
     try {
-      const { email, otp } = req.body
-      const verified = await this.otpService.verifyOtp(email, otp)
+      const dto: TrainerVerifyOtpDto = req.body
+      const verified = await this.otpService.verifyOtp(dto.email, dto.otp)
       res.status(STATUS_CODE.OK).json({ message: 'OTP Verified Succesfully' })
     } catch (err: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
@@ -79,17 +94,18 @@ export class TrainerController {
 
   resetPassword = async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body
-      await this._trainerService.resetPassword(email, password)
+      const dto: TrainerResetPasswordDto = req.body
+      await this._trainerService.resetPassword(dto.email, dto.password)
       res.json({ message: 'Password reset successfully' })
     } catch (err: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
     }
   }
+  
   async resendOtp (req: Request, res: Response) {
-    const { email } = req.body
+    const dto: TrainerResendOtpDto = req.body
     try {
-      await this.otpService.requestOtp(email, 'trainer')
+      await this.otpService.requestOtp(dto.email, 'trainer')
       res.status(STATUS_CODE.OK).json({ messsage: 'OTP Resent Successfully' })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -99,17 +115,7 @@ export class TrainerController {
 
   async apply (req: Request, res: Response) {
     try {
-      const {
-        fullName,
-        email,
-        password,
-        phone,
-        price,
-        location,
-        experience,
-        specialization,
-        bio
-      } = req.body
+      const dto: TrainerApplyDto = req.body
       const { certificate, profileImage } = req.files as {
         certificate: UploadedFile
         profileImage: UploadedFile
@@ -123,25 +129,24 @@ export class TrainerController {
       }
 
       const trainerData = {
-        name: fullName,
-        email,
-        password,
-        phone,
-        price,
-        location,
-        experience,
-        specialization,
-        bio,
+        name: dto.fullName,
+        email: dto.email,
+        password: dto.password,
+        phone: dto.phone,
+        price: dto.price,
+        location: dto.location,
+        experience: dto.experience,
+        specialization: dto.specialization,
+        bio: dto.bio,
         certificate,
         profileImage
       }
 
-      const { trainer, accessToken, refreshToken } =
-        await this._trainerService.applyAsTrainer(trainerData)
-      this._JwtService.setTokens(res, accessToken, refreshToken)
+      const result: TrainerLoginResponseDto = await this._trainerService.applyAsTrainer(trainerData)
+      this._JwtService.setTokens(res, result.accessToken, result.refreshToken)
       res.status(STATUS_CODE.CREATED).json({
         message: 'Application submitted successfully',
-        trainer
+        trainer: result.trainer
       })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({
@@ -152,17 +157,7 @@ export class TrainerController {
 
   async reapply (req: Request, res: Response) {
     try {
-      const {
-        fullName,
-        email,
-        password,
-        phone,
-        price,
-        location,
-        experience,
-        specialization,
-        bio
-      } = req.body
+      const dto: TrainerReapplyDto = req.body
       const trainerId = (req.user as JwtPayload).id
       const { certificate, profileImage } = req.files as {
         certificate: UploadedFile
@@ -176,15 +171,15 @@ export class TrainerController {
       }
 
       const data = {
-        name: fullName,
-        email,
-        password,
-        phone,
-        price,
-        location,
-        experience,
-        specialization,
-        bio,
+        name: dto.fullName,
+        email: dto.email,
+        password: dto.password,
+        phone: dto.phone,
+        price: dto.price,
+        location: dto.location,
+        experience: dto.experience,
+        specialization: dto.specialization,
+        bio: dto.bio,
         certificate,
         profileImage
       }
@@ -204,7 +199,7 @@ export class TrainerController {
           .json({ error: 'Invalid trainer ID' })
         return
       }
-      const trainer = await this._trainerService.getTrainerById(id)
+      const trainer: TrainerResponseDto = await this._trainerService.getTrainerById(id)
       res.status(STATUS_CODE.OK).json({ trainer })
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
@@ -220,12 +215,16 @@ export class TrainerController {
           .json({ error: 'Invalid trainer ID' })
         return
       }
-      const { page = 1, limit = 10, search = '' } = req.query
-      const clients = await this._trainerService.getTrainerClients(
+      const dto: GetClientsQueryDto = req.query as any
+      const page = parseInt(dto.page as any) || 1
+      const limit = parseInt(dto.limit as any) || 10
+      const search = dto.search || ''
+      
+      const clients: GetClientsResponseDto = await this._trainerService.getTrainerClients(
         trainerId,
-        parseInt(page as string),
-        parseInt(limit as string),
-        search as string
+        page,
+        limit,
+        search
       )
       res.status(STATUS_CODE.OK).json(clients)
     } catch (error: any) {
@@ -235,9 +234,10 @@ export class TrainerController {
 
   async getClient (req: Request, res: Response) {
     try {
-      const clientId = req.params.id
-      const client = await this.userService.getUserById(clientId)
-      res.status(STATUS_CODE.OK).json({ user: client })
+      const dto: GetClientParamsDto = req.params as any
+      const client = await this.userService.getUserById(dto.id)
+      const response: GetClientResponseDto = { user: client as any }
+      res.status(STATUS_CODE.OK).json(response)
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }

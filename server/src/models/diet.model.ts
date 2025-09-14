@@ -27,8 +27,9 @@ export interface IMeal {
 }
 
 export interface IDietDay extends Document {
+  _id: Types.ObjectId | string;
   user: Types.ObjectId;
-  date: string; // "YYYY-MM-DD"
+  date: string; //* "YYYY-MM-DD" 
   meals: IMeal[];
   createdAt: Date;
   updatedAt: Date;

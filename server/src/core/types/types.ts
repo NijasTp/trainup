@@ -14,12 +14,16 @@ const TYPES = {
   PaymentController:Symbol.for("PaymentController"),
   IPaymentRepository:Symbol.for("IPaymentRepository"),
   IPaymentService:Symbol.for("IPaymentService"),
+
+  ITransactionRepository:Symbol.for("ITransactionRepository"),
+  ITransactionService:Symbol.for("ITransactionService"),
   
   TrainerController:Symbol.for("TrainerController"),
 
   IGymRepository:Symbol.for('IGymRepository'),
   IGymService:Symbol.for("IGymService"),
   GymController:Symbol.for("GymController"),
+  
 
   WorkoutSessionRepository: Symbol.for("WorkoutSessionRepository"),
   WorkoutDayRepository: Symbol.for("WorkoutDayRepository"),

@@ -11,7 +11,17 @@ import {
 } from '../core/interfaces/services/IJwtService'
 import { IGymService } from '../core/interfaces/services/IGymService'
 import { STATUS_CODE } from '../constants/status'
-// import { JwtTokenUtil } from "../utils/jwtToken.util";
+import { 
+  AdminLoginRequestDto,
+  AdminLoginResponseDto,
+  GetAllTrainersQueryDto,
+  UpdateTrainerStatusDto,
+  GetAllUsersQueryDto,
+  UpdateUserStatusDto,
+  GetAllGymsQueryDto,
+  UpdateGymStatusDto,
+  CheckSessionResponseDto
+} from '../dtos/admin.dto'
 
 @injectable()
 export class AdminController {
@@ -25,13 +35,11 @@ export class AdminController {
 
   async login (req: Request, res: Response) {
     try {
-      const { email, password } = req.body
-      const { accessToken, refreshToken, admin } =
-        await this._adminService.login(email, password)
-      // Set cookies
-      this._JwtService.setTokens(res, accessToken, refreshToken)
-
-      res.status(STATUS_CODE.OK).json({ admin })
+      const dto: AdminLoginRequestDto = req.body
+      const result: AdminLoginResponseDto = await this._adminService.login(dto)
+      
+      this._JwtService.setTokens(res, result.accessToken, result.refreshToken)
+      res.status(STATUS_CODE.OK).json({ admin: result.admin })
       return
     } catch (error: any) {
       res.status(401).json({ error: error.message || 'Login failed' })
@@ -40,13 +48,14 @@ export class AdminController {
 
   async getAllTrainers (req: Request, res: Response): Promise<void> {
     try {
-      const page = Number(req.query.page) || 1
-      const limit = Number(req.query.limit) || 5
-      const search = String(req.query.search || '')
-      const isBanned = req.query.isBanned as string | undefined
-      const isVerified = req.query.isVerified as string | undefined
-      const startDate = req.query.startDate as string | undefined
-      const endDate = req.query.endDate as string | undefined
+      const dto: GetAllTrainersQueryDto = req.query as any
+      const page = Number(dto.page) || 1
+      const limit = Number(dto.limit) || 5
+      const search = String(dto.search || '')
+      const isBanned = dto.isBanned
+      const isVerified = dto.isVerified
+      const startDate = dto.startDate
+      const endDate = dto.endDate
 
       const result: PaginatedTrainers =
         await this._trainerService.getAllTrainers(
@@ -69,9 +78,10 @@ export class AdminController {
 
   async updateTrainer (req: Request, res: Response) {
     try {
+      const dto: UpdateTrainerStatusDto = req.body
       const trainer = await this._trainerService.updateTrainerStatus(
         req.params.id,
-        req.body
+        dto
       )
       res.json(trainer)
     } catch (err: any) {
@@ -103,13 +113,14 @@ export class AdminController {
 
   async getAllUsers (req: Request, res: Response): Promise<void> {
     try {
-      const page = Number(req.query.page) || 1
-      const limit = Number(req.query.limit) || 5
-      const search = String(req.query.search || '')
-      const isBanned = req.query.isBanned as string | undefined
-      const isVerified = req.query.isVerified as string | undefined
-      const startDate = req.query.startDate as string | undefined
-      const endDate = req.query.endDate as string | undefined
+      const dto: GetAllUsersQueryDto = req.query as any
+      const page = Number(dto.page) || 1
+      const limit = Number(dto.limit) || 5
+      const search = String(dto.search || '')
+      const isBanned = dto.isBanned
+      const isVerified = dto.isVerified
+      const startDate = dto.startDate
+      const endDate = dto.endDate
 
       const result = await this._userService.getAllUsers(
         page,
@@ -149,11 +160,9 @@ export class AdminController {
   async updateUserStatus (req: Request, res: Response) {
     try {
       const { id } = req.params
-      const { isBanned } = req.body
+      const dto: UpdateUserStatusDto = req.body
 
-      const updatedUser = await this._userService.updateUserStatus(id, {
-        isBanned
-      })
+      const updatedUser = await this._userService.updateUserStatus(id, dto)
 
       if (!updatedUser) {
         res.status(STATUS_CODE.NOT_FOUND).json({ message: 'User not found' })
@@ -171,7 +180,12 @@ export class AdminController {
   checkSession = async (req: Request, res: Response) => {
     try {
       const user = req.user as { id: string; role: string }
-      res.json({ valid: true, id: user.id, role: user.role })
+      const response: CheckSessionResponseDto = { 
+        valid: true, 
+        id: user.id, 
+        role: user.role 
+      }
+      res.json(response)
     } catch (err) {
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
@@ -181,9 +195,10 @@ export class AdminController {
 
   async getGyms (req: Request, res: Response) {
     try {
-      const page = parseInt(req.query.page as string) || 1
-      const limit = parseInt(req.query.limit as string) || 10
-      const searchQuery = (req.query.searchQuery as string) || ''
+      const dto: GetAllGymsQueryDto = req.query as any
+      const page = parseInt(dto.page as any) || 1
+      const limit = parseInt(dto.limit as any) || 10
+      const searchQuery = dto.searchQuery || ''
 
       const result = await this._gymService.getAllGyms(page, limit, searchQuery)
       res.status(STATUS_CODE.OK).json(result)
@@ -197,7 +212,8 @@ export class AdminController {
   async updateGymStatus (req: Request, res: Response) {
     try {
       const { id } = req.params
-      const updatedGym = await this._gymService.updateGymStatus(id, req.body)
+      const dto: UpdateGymStatusDto = req.body
+      const updatedGym = await this._gymService.updateGymStatus(id, dto)
 
       if (!updatedGym) {
         res.status(STATUS_CODE.NOT_FOUND).json({ message: 'Gym not found' })
@@ -247,6 +263,7 @@ export class AdminController {
         .json({ error: 'Failed to fetch gym' })
     }
   }
+  
   logout (req: Request, res: Response) {
     try {
       this._JwtService.clearTokens(res)

@@ -3,6 +3,7 @@ import Razorpay from 'razorpay'
 import crypto from 'crypto'
 import { IPaymentService } from '../core/interfaces/services/IPaymentService'
 import dotenv from 'dotenv'
+import { CreateOrderResponseDto } from '../dtos/payment.dto'
 dotenv.config()
 @injectable()
 export class PaymentService implements IPaymentService {
@@ -15,12 +16,30 @@ export class PaymentService implements IPaymentService {
     })
   }
 
-  async createOrder (amount: number, currency: string, receipt?: string) {
-    return await this._razorpay.orders.create({
+  async createOrder(
+    amount: number,
+    currency: string,
+    receipt?: string
+  ): Promise<CreateOrderResponseDto> {
+    const order = await this._razorpay.orders.create({
       amount: amount * 100,
       currency,
-      receipt: receipt || `receipt_${Date.now()}`
-    })
+      receipt: receipt || `receipt_${Date.now()}`,
+    });
+
+    const response: CreateOrderResponseDto = {
+      id: order.id,
+      entity: order.entity,
+      amount: Number(order.amount),
+      amount_paid: Number(order.amount_paid),
+      amount_due: Number(order.amount_due),
+      currency: order.currency,
+      receipt: order.receipt ?? undefined,
+      status: order.status,
+      created_at: order.created_at,
+    };
+
+    return response;
   }
 
   async verifyPayment (

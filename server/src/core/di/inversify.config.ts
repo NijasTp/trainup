@@ -16,52 +16,56 @@ import { ITrainerService } from "../interfaces/services/ITrainerService";
 import { IAdminController } from "../interfaces/controllers/IAdminController";
 import { IGymService } from "../interfaces/services/IGymService";
 import { IGymRepository } from "../interfaces/repositories/IGymRepository";
+import { IJwtService } from "../interfaces/services/IJwtService";
+import { IWorkoutSessionRepository } from "../interfaces/repositories/IWorkoutSessionRepository";
+import { IWorkoutDayRepository } from "../interfaces/repositories/IWorkoutDayRepository";
+import { IWorkoutService } from "../interfaces/services/IWorkoutService";
+import { ITemplateRepository } from "../interfaces/repositories/IDietTemplateRepository";
+import { IPaymentRepository } from "../interfaces/repositories/IPaymentRepository";
+import { IPaymentService } from "../interfaces/services/IPaymentService";
+import { IStreakService } from "../interfaces/services/IStreakService";
+import { IStreakRepository } from "../interfaces/repositories/IStreakRepository";
 
 // Implementations
 
-import { UserService } from "../../services/user.services";
+import { UserService } from "../../services/user.service";
 import { UserRepository } from "../../repositories/user.repository";
 import { AdminService } from "../../services/admin.services";
 import { AdminRepository } from "../../repositories/admin.repository";
-import { OtpService } from "../../services/otp.services";
+import { OtpService } from "../../services/otp.service";
 import { OtpRepository } from "../../repositories/otp.repository";
 import { JwtService } from "../../utils/jwt";
 import { UserController } from "../../controllers/user.controller";
 import { AdminController } from "../../controllers/admin.controller";
-import { MailService } from "../../services/mail.services";
+import { MailService } from "../../services/mail.service";
 import { TrainerRepository } from "../../repositories/trainer.repository";
-import { TrainerService } from "../../services/trainer.services";
+import { TrainerService } from "../../services/trainer.service";
 import { TrainerController } from "../../controllers/trainer.controller";
 import { GymController } from "../../controllers/gym.controller";
 import { GymRepository } from "../../repositories/gym.repository";
-import { GymService } from "../../services/gym.services";
-import { IJwtService } from "../interfaces/services/IJwtService";
+import { GymService } from "../../services/gym.service";
 import { PassportConfig } from "../../config/passport";
-import { IWorkoutSessionRepository } from "../interfaces/repositories/IWorkoutSessionRepository";
-import { IWorkoutDayRepository } from "../interfaces/repositories/IWorkoutDayRepository";
-import { IWorkoutService } from "../interfaces/services/IWorkoutService";
 import { WorkoutController } from "../../controllers/workout.controller";
-import { WorkoutService } from "../../services/workout.services";
+import { WorkoutService } from "../../services/workout.service";
 import { WorkoutDayRepository } from "../../repositories/workoutDay.repository";
 import { WorkoutSessionRepository } from "../../repositories/workout.repository";
 import { DietDayRepository } from "../../repositories/diet.repository";
-import { DietService } from "../../services/diet.services";
+import { DietService } from "../../services/diet.service";
 import { TemplateRepository } from "../../repositories/dietTemplate.repository";
-import { DietTemplateService } from "../../services/dietTemplate.services";
+import { DietTemplateService } from "../../services/dietTemplate.service";
 import { DietController } from "../../controllers/diet.controller";
 import { IDietDayRepository } from "../interfaces/repositories/IDietRepository";
-import { ITemplateRepository } from "../interfaces/repositories/IDietTemplateRepository";
 import { IDietService } from "../interfaces/services/IDietService";
 import { IDietTemplateService } from "../interfaces/services/IDietTemplateService";
 import { PaymentRepository } from "../../repositories/payment.repository";
-import { PaymentService } from "../../services/payment.services";
+import { PaymentService } from "../../services/payment.service";
 import { PaymentController } from "../../controllers/payment.controller";
-import { IPaymentRepository } from "../interfaces/repositories/IPaymentRepository";
-import { IPaymentService } from "../interfaces/services/IPaymentService";
-import { IStreakService } from "../interfaces/services/IStreakService";
-import { StreakService } from "../../services/streak.services";
+import { StreakService } from "../../services/streak.service";
 import { StreakRepository } from "../../repositories/streak.repository";
-import { IStreakRepository } from "../interfaces/repositories/IStreakRepository";
+import { ITransactionRepository } from "../interfaces/repositories/ITransactionRepository";
+import { TransactionRepository } from "../../repositories/transaction.repository";
+import { TransactionService } from "../../services/transaction.service";
+import { ITransactionService } from "../interfaces/services/ITransactionService";
 
 
 // Create container 
@@ -73,6 +77,9 @@ container.bind<IUserService>(TYPES.IUserService).to(UserService);
 container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepository);
 container.bind<OAuthClient>(TYPES.OAuthClient).to(OAuthClient);
 container.bind<PassportConfig>(TYPES.PassportConfig).to(PassportConfig).inSingletonScope();
+
+container.bind<ITransactionRepository>(TYPES.ITransactionRepository).to(TransactionRepository);
+container.bind<ITransactionService>(TYPES.ITransactionService).to(TransactionService);
 
 container.bind<IStreakService>(TYPES.IStreakService).to(StreakService);
 container.bind<IStreakRepository>(TYPES.IStreakRepository).to(StreakRepository);
