@@ -31,8 +31,10 @@ import {
   GetIndividualTrainerResponseDto,
   GetMyTrainerResponseDto,
   GetProfileResponseDto,
-  RefreshTokenResponseDto
+  RefreshTokenResponseDto,
+  UpdateUserRequestDto
 } from '../dtos/user.dto'
+import { MESSAGES } from '../constants/messages'
 
 @injectable()
 export class UserController implements IUserController {
@@ -124,10 +126,11 @@ export class UserController implements IUserController {
       const result: LoginResponseDto = await this._userService.loginWithGoogle(dto.idToken)
       this._jwtService.setTokens(res, result.accessToken, result.refreshToken)
       res.status(STATUS_CODE.OK).json({ user: result.user })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res
         .status(STATUS_CODE.UNAUTHORIZED)
-        .json({ error: error.message || 'Login failed' })
+        .json({ error: error.message || MESSAGES.LOGIN_FAILED })
       logger.error('google login error:', error)
     }
   }
@@ -218,9 +221,10 @@ export class UserController implements IUserController {
 
     try {
       const trainer = await this._trainerService.getTrainerById(dto.id)
-      const response: GetIndividualTrainerResponseDto = { trainer: trainer as any }
+      const response: GetIndividualTrainerResponseDto = { trainer: trainer }
       res.status(STATUS_CODE.OK).json(response)
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
         .json({ error: 'Failed to fetch trainers' })
@@ -281,6 +285,26 @@ export class UserController implements IUserController {
       res.status(STATUS_CODE.OK).json(response)
     } catch (error: any) {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
+    }
+  }
+
+  async updateProfile (req: Request, res: Response){
+    try {
+      const userId = (req.user as JwtPayload).id;
+      const dto: UpdateUserRequestDto = req.body; 
+      const updatedUser = await this._userService.updateProfile(userId, dto);
+      if (!updatedUser) {
+        res.status(STATUS_CODE.NOT_FOUND).json({ error: MESSAGES.USER_NOT_FOUND });
+        return;
+      }
+      const response: GetProfileResponseDto = { user: updatedUser };
+      res.status(STATUS_CODE.OK).json(response);
+
+    } catch (err) {
+      const error = err as Error;
+      logger.error('Update Profile Error', error);
+      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
+      
     }
   }
 

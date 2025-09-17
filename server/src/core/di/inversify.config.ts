@@ -30,7 +30,7 @@ import { IStreakRepository } from "../interfaces/repositories/IStreakRepository"
 
 import { UserService } from "../../services/user.service";
 import { UserRepository } from "../../repositories/user.repository";
-import { AdminService } from "../../services/admin.services";
+import { AdminService } from "../../services/admin.service";
 import { AdminRepository } from "../../repositories/admin.repository";
 import { OtpService } from "../../services/otp.service";
 import { OtpRepository } from "../../repositories/otp.repository";

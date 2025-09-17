@@ -1,7 +1,6 @@
 
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { JwtService } from "../utils/jwt";
-import { UserRepository } from "../repositories/user.repository";
 import container from "../core/di/inversify.config";
 import { IUserRepository } from "../core/interfaces/repositories/IUserRepository";
 import { ITrainerRepository } from "../core/interfaces/repositories/ITrainerRepository";
@@ -9,6 +8,7 @@ import { IAdminRepository } from "../core/interfaces/repositories/IAdminReposito
 import { IGymRepository } from "../core/interfaces/repositories/IGymRepository";
 import TYPES from "../core/types/types";
 import { ROLE } from "../constants/role";
+import { MESSAGES } from "../constants/messages";
 
 export const roleMiddleware = (allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -25,8 +25,9 @@ export const roleMiddleware = (allowedRoles: string[]) => {
       }
 
       next();
-    } catch (error) {
-      res.status(500).json({ error: "Server error" });
+    } catch (err) {
+      const error = err as Error;
+      res.status(500).json({ error: error.message || MESSAGES.SERVER_ERROR });
     }
   };
 }
@@ -73,7 +74,8 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
 
     req.user = { id: decoded.id, role: decoded.role };
     next();
-  } catch (error: any) {
+  } catch (err) {
+    const error = err as Error;
     console.log("Token error:", error);
      res.status(401).json({ error: "Invalid token" });
   }

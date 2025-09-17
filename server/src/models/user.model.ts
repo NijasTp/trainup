@@ -29,21 +29,17 @@
     isPrivate?: boolean;
     tokenVersion?: number;
     isBanned: boolean;
-
     streak: number;
     lastActiveDate?: Date; 
     xp: number;
     xpLogs: IXPLog[];
     achievements: string[];
-
     todaysWeight?: number;
     goalWeight?: number;
     weightHistory: IWeightLog[];
-
     height?: number; 
     age?: number;
-    gender?: "male" | "female" | "other";
-
+    gender?: string;
     createdAt: Date;
     updatedAt: Date;
   }

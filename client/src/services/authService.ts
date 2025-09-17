@@ -10,7 +10,7 @@ export const login = async (email: string, password: string) => {
     throw new Error(response?.data?.error || 'Login failed');
   } catch (err: any) {
     console.log('API error:', err);
-    throw new Error(err.response?.data?.error || err.message || 'Login failed: Unable to connect to the server');
+    throw new Error( 'Login failed: Unable to connect to the server');
   }
 };
 

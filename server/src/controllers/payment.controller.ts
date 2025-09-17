@@ -77,7 +77,6 @@ async verifyPayment(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // verify payment signature
     const isValid = await this._paymentService.verifyPayment(
       dto.orderId,
       dto.paymentId,
@@ -88,7 +87,6 @@ async verifyPayment(req: Request, res: Response): Promise<void> {
       dto.amount
     );
 
-    // find existing transaction created in createOrder
     let transaction = await this._transactionService.findByOrderId(dto.orderId);
     if (!transaction) {
       res.status(STATUS_CODE.BAD_REQUEST).json({
@@ -137,14 +135,14 @@ async verifyPayment(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // ✅ update transaction to completed
+
     transaction = await this._transactionService.updateTransactionStatus(
       dto.orderId,
       'completed',
       dto.paymentId
     );
 
-    // assign trainer
+
     await this._userService.updateUserTrainerId(userId, dto.trainerId);
     await this._trainerService.addClientToTrainer(dto.trainerId, userId);
 

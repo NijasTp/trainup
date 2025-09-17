@@ -1,10 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { Types } from 'mongoose';
-import { IStreak } from '../models/streak.model';
 import { IStreakService } from '../core/interfaces/services/IStreakService';
 import { IStreakRepository } from '../core/interfaces/repositories/IStreakRepository';
 import TYPES from '../core/types/types';
-import { logger } from '../utils/logger.util';
 
 @injectable()
 export class StreakService implements IStreakService {

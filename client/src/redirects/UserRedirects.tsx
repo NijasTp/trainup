@@ -6,7 +6,7 @@ import type { RootState } from "../redux/store";
 import { toast } from "react-toastify";
 import { logout } from "@/redux/slices/userAuthSlice";
 import { checkUserSession } from "@/services/authService";
-
+import { LifeLine } from "react-loading-indicators";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = useSelector((state: RootState) => state.userAuth);
@@ -40,7 +40,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     checkSession();
   }, [user, location.pathname, dispatch]);
 
-  if (checking) return <div>Loading session...</div>;
+  if (checking) return <LifeLine color="#32cd32" size="medium" text="Loading Session..." textColor="" />;
 
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location }} />;

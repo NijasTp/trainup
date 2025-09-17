@@ -27,8 +27,11 @@ export interface UserType {
   equipment?: boolean;
   equipmentAvailability?: boolean;
   goals?: string[];
-  height?: number | null;           
-  weight?: number | null;           
+  age?: number | null;
+  gender?: string | null;
+  height?: number | null;
+  weight?: number | null;
+  goalWeight?: number | null; 
   isBanned?: boolean;
   isPrivate?: boolean;
   assignedTrainer?: string;
@@ -71,9 +74,10 @@ export const userAuthSlice = createSlice({
         equipment: payload.equipment || false,
         equipmentAvailability: payload.equipmentAvailability || false,
         goals: payload.goals || [],
-        height: payload.height || null, 
-        weight: payload.weight || null, 
-        assignedTrainer: payload.assignedTrainer,
+        age: payload.age || null,
+        height: payload.height || null,
+        weight: payload.todaysWeight || null, 
+        goalWeight: payload.goalWeight || null, 
         isBanned: payload.isBanned || false,
         isPrivate: payload.isPrivate || false,
         isVerified: payload.isVerified || false,

@@ -1,4 +1,3 @@
-// src/repositories/WorkoutSessionRepository.ts
 import { injectable } from 'inversify'
 import WorkoutSessionModel, { IWorkoutSession } from '../models/workout.model'
 import { IWorkoutSessionRepository } from '../core/interfaces/repositories/IWorkoutSessionRepository'
@@ -25,7 +24,7 @@ export class WorkoutSessionRepository implements IWorkoutSessionRepository {
     await WorkoutSessionModel.findByIdAndDelete(id).exec()
   }
 
-  async findTemplates (filter: any = {}) {
+  async findTemplates (filter = {}) {
     return WorkoutSessionModel.find({ date: { $exists: false }, ...filter })
       .lean()
       .exec()
@@ -35,7 +34,7 @@ async findAdminTemplates(
   limit: number = 5,
   search: string = ''
 ) {
-  const query: Record<string, any> = { date: { $exists: false }, givenBy: 'admin' }
+  const query: Record<string,any> = { date: { $exists: false }, givenBy: 'admin' }
 
   if (search) {
     query.name = { $regex: search, $options: 'i' }

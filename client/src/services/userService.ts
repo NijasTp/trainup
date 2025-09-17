@@ -1,3 +1,4 @@
+import type { UpdateProfileData } from '@/interfaces/user/iUpdateProfile'
 import API from '../lib/axios'
 
 export const getTrainers = async (
@@ -31,3 +32,8 @@ export const getTrainer = async () => {
   const res = await API.get('/user/my-trainer')
   return res.data
 }
+
+export const updateProfile = async (data: UpdateProfileData) => {
+  const response = await API.put("/user/update-profile", data);
+  return response.data;
+};

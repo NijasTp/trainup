@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,11 +21,45 @@ import {
   Weight,
   Activity
 } from "lucide-react";
-import { toast } from "sonner";
-import { getProfile } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { useNavigate } from "react-router-dom";
-import API from "@/lib/axios";
+import { useDispatch } from "react-redux";
+import { updateUser } from "@/redux/slices/userAuthSlice";
+import { getProfile, updateProfile } from "@/services/userService"; 
+import { z } from "zod";
+import { toast } from "react-toastify";
+
+
+const profileSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").trim(),
+  phone: z.string().optional().refine(
+    (val) => !val || /^\+?[\d\s-()]{10,}$/.test(val),
+    { message: "Please enter a valid phone number" }
+  ),
+  height: z.string().optional().refine(
+    (val) => !val || (Number(val) >= 100 && Number(val) <= 250),
+    { message: "Height must be between 100-250 cm" }
+  ),
+  age: z.string().optional().refine(
+    (val) => !val || (Number(val) >= 13 && Number(val) <= 100),
+    { message: "Age must be between 13-100 years" }
+  ),
+  gender: z.enum(["male", "female", "other"]).nullable().optional(),
+  goals: z.array(z.string()).optional(),
+  activityLevel: z.string().optional(),
+  equipment: z.boolean().optional(),
+  isPrivate: z.boolean().optional(),
+  todaysWeight: z.string().optional().refine(
+    (val) => !val || (Number(val) >= 30 && Number(val) <= 300),
+    { message: "Current weight must be between 30-300 kg" }
+  ),
+  goalWeight: z.string().optional().refine(
+    (val) => !val || (Number(val) >= 30 && Number(val) <= 300),
+    { message: "Goal weight must be between 30-300 kg" }
+  ),
+});
+
+export type ProfileFormData = z.infer<typeof profileSchema>;
 
 const goalOptions = [
   "Weight Loss", 
@@ -47,13 +81,13 @@ const activityLevels = [
 ];
 
 export default function EditProfile() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProfileFormData>({
     name: "",
     phone: "",
     height: "",
     age: "",
-    gender: "",
-    goals: [] as string[],
+    gender: null,
+    goals: [],
     activityLevel: "",
     equipment: false,
     isPrivate: false,
@@ -63,8 +97,9 @@ export default function EditProfile() {
   const [newGoal, setNewGoal] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof ProfileFormData, string>>>({});
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     document.title = "TrainUp - Edit Profile";
@@ -76,14 +111,12 @@ export default function EditProfile() {
     try {
       const response = await getProfile();
       const userProfile = response.user;
-      
-
       setFormData({
         name: userProfile.name || "",
         phone: userProfile.phone || "",
         height: userProfile.height?.toString() || "",
         age: userProfile.age?.toString() || "",
-        gender: userProfile.gender || "",
+        gender: userProfile.gender || null,
         goals: userProfile.goals || [],
         activityLevel: userProfile.activityLevel || "",
         equipment: userProfile.equipment || false,
@@ -94,7 +127,7 @@ export default function EditProfile() {
     } catch (err) {
       console.error("API error:", err);
       toast.error("Error loading profile", {
-        description: "Please try again later",
+        data: "Please try again later",
       });
       navigate("/profile");
     } finally {
@@ -102,105 +135,78 @@ export default function EditProfile() {
     }
   }
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    } else if (formData.name.length < 2) {
-      newErrors.name = "Name must be at least 2 characters";
-    }
-
-    // Phone validation (optional but if provided should be valid)
-    if (formData.phone && !/^\+?[\d\s-()]{10,}$/.test(formData.phone)) {
-      newErrors.phone = "Please enter a valid phone number";
-    }
-
-    // Height validation
-    if (formData.height) {
-      const height = parseFloat(formData.height);
-      if (isNaN(height) || height < 100 || height > 250) {
-        newErrors.height = "Height must be between 100-250 cm";
-      }
-    }
-
-    // Age validation
-    if (formData.age) {
-      const age = parseInt(formData.age);
-      if (isNaN(age) || age < 13 || age > 100) {
-        newErrors.age = "Age must be between 13-100 years";
-      }
-    }
-
-    // Weight validations
-    if (formData.todaysWeight) {
-      const weight = parseFloat(formData.todaysWeight);
-      if (isNaN(weight) || weight < 30 || weight > 300) {
-        newErrors.todaysWeight = "Current weight must be between 30-300 kg";
-      }
-    }
-
-    if (formData.goalWeight) {
-      const goalWeight = parseFloat(formData.goalWeight);
-      if (isNaN(goalWeight) || goalWeight < 30 || goalWeight > 300) {
-        newErrors.goalWeight = "Goal weight must be between 30-300 kg";
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      toast.error("Please fix the errors in the form");
-      return;
-    }
 
-    setIsSaving(true);
     try {
+
+      const validatedData = profileSchema.parse(formData);
+      setErrors({});
+
+      setIsSaving(true);
       const updateData = {
-        name: formData.name.trim(),
-        phone: formData.phone.trim() || null,
-        height: formData.height ? parseInt(formData.height) : null,
-        age: formData.age ? parseInt(formData.age) : null,
-        gender: formData.gender || null,
-        goals: formData.goals,
-        activityLevel: formData.activityLevel || null,
-        equipment: formData.equipment,
-        isPrivate: formData.isPrivate,
-        todaysWeight: formData.todaysWeight ? parseFloat(formData.todaysWeight) : null,
-        goalWeight: formData.goalWeight ? parseFloat(formData.goalWeight) : null
+        name: validatedData.name,
+        phone: validatedData.phone || null,
+        height: validatedData.height ? parseInt(validatedData.height) : null,
+        age: validatedData.age ? parseInt(validatedData.age) : null,
+        gender: validatedData.gender || null,
+        goals: validatedData.goals || [],
+        activityLevel: validatedData.activityLevel || null,
+        equipment: validatedData.equipment || false,
+        isPrivate: validatedData.isPrivate || false,
+        todaysWeight: validatedData.todaysWeight ? parseFloat(validatedData.todaysWeight) : null,
+        goalWeight: validatedData.goalWeight ? parseFloat(validatedData.goalWeight) : null
       };
 
-      await API.put("/user/update-profile", updateData);
+      const response = await updateProfile(updateData);
+      dispatch(updateUser({
+        name: response.user.name,
+        phone: response.user.phone,
+        height: response.user.height,
+        age: response.user.age,
+        gender: response.user.gender,
+        goals: response.user.goals,
+        activityLevel: response.user.activityLevel,
+        equipment: response.user.equipment,
+        isPrivate: response.user.isPrivate,
+        weight: response.user.todaysWeight, 
+        goalWeight: response.user.goalWeight,
+      }));
       toast.success("Profile updated successfully!");
       navigate("/profile");
     } catch (err: any) {
-      console.error("Update error:", err);
-      toast.error("Failed to update profile", {
-        description: err.response?.data?.message || "Please try again later"
-      });
+      if (err instanceof z.ZodError) {
+        const newErrors: Partial<Record<keyof ProfileFormData, string>> = {};
+        err.issues.forEach((error) => {
+          if (error.path[0]) {
+            newErrors[error.path[0] as keyof ProfileFormData] = error.message;
+          }
+        });
+        setErrors(newErrors);
+        toast.error("Please fix the errors in the form");
+      } else {
+        console.error("Update error:", err);
+        toast.error("Failed to update profile", {
+          data: err.response?.data?.message || "Please try again later"
+        });
+      }
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: keyof ProfileFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+      setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
 
   const addGoal = () => {
-    if (newGoal.trim() && !formData.goals.includes(newGoal)) {
+    if (newGoal.trim() && !formData.goals!.includes(newGoal)) {
       setFormData(prev => ({
         ...prev,
-        goals: [...prev.goals, newGoal]
+        goals: [...prev.goals!, newGoal]
       }));
       setNewGoal("");
     }
@@ -209,15 +215,15 @@ export default function EditProfile() {
   const removeGoal = (goalToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      goals: prev.goals.filter(goal => goal !== goalToRemove)
+      goals: prev.goals!.filter(goal => goal !== goalToRemove)
     }));
   };
 
   const addPredefinedGoal = (goal: string) => {
-    if (!formData.goals.includes(goal)) {
+    if (!formData.goals!.includes(goal)) {
       setFormData(prev => ({
         ...prev,
-        goals: [...prev.goals, goal]
+        goals: [...prev.goals!, goal]
       }));
     }
   };
@@ -243,7 +249,6 @@ export default function EditProfile() {
       <SiteHeader />
       
       <main className="relative container mx-auto px-4 py-12 space-y-8">
-        {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button 
             variant="ghost" 
@@ -269,7 +274,6 @@ export default function EditProfile() {
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
-          {/* Personal Information */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -323,7 +327,7 @@ export default function EditProfile() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender" className="font-medium">Gender</Label>
-                  <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+                  <Select value={formData.gender || undefined} onValueChange={(value) => handleInputChange("gender", value)}>
                     <SelectTrigger className="bg-transparent border-border/50">
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
@@ -338,7 +342,6 @@ export default function EditProfile() {
             </CardContent>
           </Card>
 
-          {/* Physical Information */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -388,7 +391,7 @@ export default function EditProfile() {
                   )}
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="goalWeight" className="font-medium flex items-center gap-2">
+                  <Label htmlFor="goalWeight" className="file://Users/shivam/Documents/GitHub/TrainUp-Web/src/pages/user/EditProfile.tsx font-medium flex items-center gap-2">
                     <Target className="h-4 w-4" />
                     Goal Weight (kg)
                   </Label>
@@ -411,7 +414,6 @@ export default function EditProfile() {
             </CardContent>
           </Card>
 
-          {/* Fitness Information */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -420,11 +422,10 @@ export default function EditProfile() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Goals */}
               <div className="space-y-4">
                 <Label className="font-medium">Fitness Goals</Label>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {formData.goals.map((goal, index) => (
+                  {formData.goals!.map((goal, index) => (
                     <Badge
                       key={index}
                       variant="secondary"
@@ -456,7 +457,7 @@ export default function EditProfile() {
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">Quick add popular goals:</p>
                   <div className="flex flex-wrap gap-2">
-                    {goalOptions.filter(goal => !formData.goals.includes(goal)).map((goal) => (
+                    {goalOptions.filter(goal => !formData.goals!.includes(goal)).map((goal) => (
                       <Button
                         key={goal}
                         type="button"
@@ -473,7 +474,6 @@ export default function EditProfile() {
                 </div>
               </div>
 
-              {/* Activity Level */}
               <div className="space-y-2">
                 <Label htmlFor="activityLevel" className="font-medium">Activity Level</Label>
                 <Select value={formData.activityLevel} onValueChange={(value) => handleInputChange("activityLevel", value)}>
@@ -490,7 +490,6 @@ export default function EditProfile() {
                 </Select>
               </div>
 
-              {/* Equipment */}
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -506,10 +505,9 @@ export default function EditProfile() {
             </CardContent>
           </Card>
 
-          {/* Privacy Settings */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <CardTitle className="text-2xl font-bold textPandoc text-foreground flex items-center gap-2">
                 {formData.isPrivate ? <EyeOff className="h-6 w-6 text-primary" /> : <Eye className="h-6 w-6 text-primary" />}
                 Privacy Settings
               </CardTitle>
@@ -530,7 +528,6 @@ export default function EditProfile() {
               </p>
             </CardContent>
           </Card>
-
 
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
@@ -555,7 +552,6 @@ export default function EditProfile() {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
           <div className="flex gap-4 justify-end pt-6">
             <Button
               type="button"

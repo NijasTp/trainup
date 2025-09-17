@@ -9,8 +9,7 @@ import { OAuth2Client } from 'google-auth-library'
 import { MESSAGES } from '../constants/messages'
 import { LoginResponseDto, UserResponseDto } from '../dtos/user.dto'
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ''
-const JWT_SECRET = process.env.JWT_SECRET 
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID 
 
 @injectable()
 export class UserService implements IUserService {
@@ -174,9 +173,14 @@ export class UserService implements IUserService {
     return await this._userRepo.updateStatusAndIncrementVersion(id, {})
   }
 
-  async getProfile (id: string): Promise<UserResponseDto | null> {
+  async getProfile (id: string) {
     const user = await this._userRepo.findById(id)
     return user ? this.mapToResponseDto(user) : null
+  }
+
+  async updateProfile (id: string,updateData: Partial<IUser>){
+    const user = await this._userRepo.updateUser(id, updateData);
+    return user ? this.mapToResponseDto(user) : null;
   }
 
   async updateUserStatus (id: string, updateData: Partial<IUser>) {

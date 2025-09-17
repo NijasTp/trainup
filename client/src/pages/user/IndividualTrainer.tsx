@@ -29,16 +29,9 @@ import API from "@/lib/axios";
 import React, { useRef } from 'react';
 import SubscriptionModal from "@/components/ui/SubscriptionModal";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import type { Position, SpotlightCardProps, Trainer, User } from "@/interfaces/user/iIndividualTrainer";
 
-interface Position {
-    x: number;
-    y: number;
-}
 
-interface SpotlightCardProps extends React.PropsWithChildren {
-    className?: string;
-    spotlightColor?: `rgba(${number}, ${number}, ${number}, ${number})`;
-}
 
 const SpotlightCard: React.FC<SpotlightCardProps> = ({
     children,
@@ -96,37 +89,6 @@ const SpotlightCard: React.FC<SpotlightCardProps> = ({
         </div>
     );
 };
-
-interface Trainer {
-    _id: string;
-    name: string;
-    email: string;
-    phone: string;
-    isVerified: boolean;
-    isBanned: boolean;
-    role: string;
-    clients: string[];
-    bio: string;
-    location: string;
-    specialization: string;
-    tokenVersion: number;
-    experience: string;
-    badges: string[];
-    rating: number;
-    certificate: string;
-    profileImage: string;
-    profileStatus: string;
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
-    price?: string;
-}
-
-interface User {
-    _id: string;
-    assignedTrainer?: string;
-}
-
 
 export default function TrainerPage() {
     const params = useParams();

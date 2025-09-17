@@ -11,7 +11,7 @@ export interface ITrainerRepository {
     isVerified?: string,
     startDate?: string,
     endDate?: string
-  ): Promise<any[]>;
+  ): Promise<ITrainer[]>;
   count(
     search: string,
     isBanned?: string,

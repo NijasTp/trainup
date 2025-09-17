@@ -12,7 +12,7 @@ export class DietTemplateService implements IDietTemplateService{
   async createTemplate(adminId: string, dto: CreateTemplateRequestDto): Promise<TemplateResponseDto> {
     const payload: Partial<ITemplate> = {
       ...dto,
-      createdBy: adminId as any
+      createdBy: adminId 
     };
     const template = await this._dietTemplateRepo.create(payload);
     return this.mapToResponseDto(template);

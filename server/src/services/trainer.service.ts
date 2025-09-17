@@ -1,10 +1,9 @@
 import { inject, injectable } from "inversify";
 import TYPES from "../core/types/types";
-import { ITrainerService, PaginatedClients, TrainerApplyData } from "../core/interfaces/services/ITrainerService";
+import { ITrainerService, TrainerApplyData } from "../core/interfaces/services/ITrainerService";
 import { ITrainerRepository } from "../core/interfaces/repositories/ITrainerRepository";
 import { v2 as cloudinary } from "cloudinary";
 import { ITrainer } from "../models/trainer.model";
-import { UploadedFile } from 'express-fileupload';
 import bcrypt from 'bcryptjs'
 import { IOTPService } from "../core/interfaces/services/IOtpService";
 import { IJwtService } from "../core/interfaces/services/IJwtService";

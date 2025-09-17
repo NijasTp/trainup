@@ -10,6 +10,7 @@ const userController = container.get<UserController>(TYPES.UserController);
 
 //auth
 router.post("/refresh-token", userController.refreshAccessToken.bind(userController));
+
 router.post("/login", userController.login.bind(userController));
 router.post("/request-otp", userController.requestOtp.bind(userController));
 router.post("/verify-otp", userController.verifyOtp.bind(userController));
@@ -26,6 +27,7 @@ router.post("/logout",authMiddleware,roleMiddleware(['user']), userController.lo
 router.get('/session',authMiddleware,userController.checkSession.bind(userController));
 
 router.get('/get-profile',authMiddleware,roleMiddleware(['user']), userController.getProfile.bind(userController))
+router.put('/update-profile', authMiddleware, roleMiddleware(['user']), userController.updateProfile.bind(userController));
 
 
 router.get('/trainers', authMiddleware, roleMiddleware(['user']), userController.getTrainers.bind(userController));

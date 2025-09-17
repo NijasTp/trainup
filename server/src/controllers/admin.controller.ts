@@ -22,6 +22,8 @@ import {
   UpdateGymStatusDto,
   CheckSessionResponseDto
 } from '../dtos/admin.dto'
+import { MESSAGES } from '../constants/messages'
+import { logger } from '../utils/logger.util'
 
 @injectable()
 export class AdminController {
@@ -41,14 +43,15 @@ export class AdminController {
       this._JwtService.setTokens(res, result.accessToken, result.refreshToken)
       res.status(STATUS_CODE.OK).json({ admin: result.admin })
       return
-    } catch (error: any) {
-      res.status(401).json({ error: error.message || 'Login failed' })
+    } catch (err) {
+      const error = err as Error
+      res.status(401).json({ error: error.message || MESSAGES.LOGIN_FAILED })
     }
   }
 
   async getAllTrainers (req: Request, res: Response): Promise<void> {
     try {
-      const dto: GetAllTrainersQueryDto = req.query as any
+      const dto: GetAllTrainersQueryDto = req.query
       const page = Number(dto.page) || 1
       const limit = Number(dto.limit) || 5
       const search = String(dto.search || '')
@@ -69,10 +72,10 @@ export class AdminController {
         )
       res.status(STATUS_CODE.OK).json(result)
     } catch (err) {
-      console.error('Controller error:', err)
+      const error = err as Error
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
-        .json({ message: 'Failed to fetch trainers' })
+        .json({ message: error.message || MESSAGES.FAILED_TO_FETCH.TRAINER })
     }
   }
 
@@ -84,7 +87,8 @@ export class AdminController {
         dto
       )
       res.json(trainer)
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Error
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
         .json({ message: err.message })
@@ -95,7 +99,8 @@ export class AdminController {
     try {
       const trainer = await this._trainerService.getTrainerById(req.params.id)
       res.json(trainer)
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
@@ -106,14 +111,15 @@ export class AdminController {
         req.params.id
       )
       res.json(application)
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
     }
   }
 
   async getAllUsers (req: Request, res: Response): Promise<void> {
     try {
-      const dto: GetAllUsersQueryDto = req.query as any
+      const dto: GetAllUsersQueryDto = req.query
       const page = Number(dto.page) || 1
       const limit = Number(dto.limit) || 5
       const search = String(dto.search || '')
@@ -133,10 +139,11 @@ export class AdminController {
       )
       res.status(STATUS_CODE.OK).json(result)
     } catch (err) {
-      console.error('Controller error:', err)
+      const error = err as Error
+      logger.error('Controller error:', error)
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
-        .json({ message: 'Failed to fetch users' })
+        .json({ message:error.message ||  MESSAGES.FAILED_TO_FETCH.USERS })
     }
   }
 
@@ -145,7 +152,7 @@ export class AdminController {
       const id = req.params.id
       const user = await this._userService.getUserById(id)
       if (!user) {
-        res.status(STATUS_CODE.NOT_FOUND).json({ message: 'User not found' })
+        res.status(STATUS_CODE.NOT_FOUND).json({ message: MESSAGES.USER_NOT_FOUND })
         return
       }
       res.status(STATUS_CODE.OK).json(user)
@@ -153,7 +160,7 @@ export class AdminController {
       console.error(err)
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
-        .json({ message: 'Failed to fetch user' })
+        .json({ message: MESSAGES.FAILED_TO_FETCH.USERS })
     }
   }
 
@@ -165,7 +172,7 @@ export class AdminController {
       const updatedUser = await this._userService.updateUserStatus(id, dto)
 
       if (!updatedUser) {
-        res.status(STATUS_CODE.NOT_FOUND).json({ message: 'User not found' })
+        res.status(STATUS_CODE.NOT_FOUND).json({ message: MESSAGES.USER_NOT_FOUND })
         return
       }
 
@@ -173,7 +180,7 @@ export class AdminController {
     } catch (err) {
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
-        .json({ message: 'Failed to update user ban status' })
+        .json({ message: MESSAGES.FAILED_TO_UPDATE_USER_BAN })
     }
   }
 
@@ -195,9 +202,9 @@ export class AdminController {
 
   async getGyms (req: Request, res: Response) {
     try {
-      const dto: GetAllGymsQueryDto = req.query as any
-      const page = parseInt(dto.page as any) || 1
-      const limit = parseInt(dto.limit as any) || 10
+      const dto: GetAllGymsQueryDto = req.query
+      const page = parseInt(String(dto.page)) || 1
+      const limit = parseInt(String(dto.limit)) || 10
       const searchQuery = dto.searchQuery || ''
 
       const result = await this._gymService.getAllGyms(page, limit, searchQuery)
@@ -205,7 +212,7 @@ export class AdminController {
     } catch (err) {
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
-        .json({ error: 'Failed to fetch gyms' })
+        .json({ error: MESSAGES.FETCH_GYMS_ERROR })
     }
   }
 
@@ -216,7 +223,7 @@ export class AdminController {
       const updatedGym = await this._gymService.updateGymStatus(id, dto)
 
       if (!updatedGym) {
-        res.status(STATUS_CODE.NOT_FOUND).json({ message: 'Gym not found' })
+        res.status(STATUS_CODE.NOT_FOUND).json({ message: MESSAGES.GYM_NOT_FOUND })
         return
       }
 
@@ -270,9 +277,10 @@ export class AdminController {
       const jwtUser = req.user as JwtPayload
       this._adminService.updateTokenVersion(jwtUser.id)
       res.status(STATUS_CODE.OK).json({ message: 'Logged out successfully' })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       console.error('Logout error:', error)
-      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.data })
+      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message })
     }
   }
 }

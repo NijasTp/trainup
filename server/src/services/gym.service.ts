@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { IGymService, GymRegisterData } from "../core/interfaces/services/IGymService";
+import { IGymService } from "../core/interfaces/services/IGymService";
 import { IGymRepository } from "../core/interfaces/repositories/IGymRepository";
 import TYPES from "../core/types/types";
 import bcrypt from "bcryptjs";

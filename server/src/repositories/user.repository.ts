@@ -81,7 +81,7 @@ export class UserRepository implements IUserRepository {
 
   async updateUser(id: string, data: Partial<IUser>) {
     if (data.assignedTrainer) {
-      data.assignedTrainer = new Types.ObjectId(data.assignedTrainer) as any;
+      data.assignedTrainer = new Types.ObjectId(data.assignedTrainer) 
     }
     return await UserModel.findByIdAndUpdate(id, { $set: data }, { new: true }).exec();
   }

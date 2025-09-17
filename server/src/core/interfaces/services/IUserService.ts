@@ -15,8 +15,9 @@ export interface IUserService {
     isVerified?: string,
     startDate?: string,
     endDate?: string
-  ): Promise<any>;
+  ): Promise<IUser[]>;
   getUserById(id: string): Promise<UserResponseDto | null>;
+  updateProfile(id: string, updateData: Partial<IUser>): Promise<UserResponseDto | null>;
   incrementTokenVersion(id: string): Promise<IUser | null>;
   getProfile(id: string): Promise<UserResponseDto | null>;
   updateUserStatus(id: string, updateData: Partial<IUser>): Promise<IUser | null>;

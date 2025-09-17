@@ -10,6 +10,7 @@ import dietRoutes from './routes/diet.routes'
 import paymentRoutes from './routes/payment.route'
 import dotenv from "dotenv";
 import cookieParser from 'cookie-parser';
+import BASE_ROUTE from "./constants/baseRoute";
 import cors from 'cors';
 import { errorHandler } from "./middlewares/error.midleware";
 dotenv.config();
@@ -32,13 +33,13 @@ app.use(fileUpload({
 }));
 
 // Routes
-app.use("/api/user", userRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/trainer", trainerRoutes)
-app.use("/api/gym", gymRoutes)
-app.use("/api/workout", workoutRoutes)
-app.use("/api/diet", dietRoutes);
-app.use("/api/payment", paymentRoutes);
+app.use(BASE_ROUTE.USER, userRoutes);
+app.use(BASE_ROUTE.ADMIN, adminRoutes);
+app.use(BASE_ROUTE.TRAINER, trainerRoutes)
+app.use(BASE_ROUTE.GYM, gymRoutes)
+app.use(BASE_ROUTE.WORKOUT, workoutRoutes)
+app.use(BASE_ROUTE.DIET, dietRoutes);
+app.use(BASE_ROUTE.PAYMENT, paymentRoutes);
 
 app.use(errorHandler);
 

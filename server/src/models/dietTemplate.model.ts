@@ -15,7 +15,7 @@ export interface ITemplate extends Document {
   _id: Types.ObjectId | string;
   title: string;
   description?: string;
-  createdBy: Types.ObjectId; // admin id
+  createdBy: Types.ObjectId | string; 
   meals: TemplateMeal[];
   createdAt: Date;
   updatedAt: Date;

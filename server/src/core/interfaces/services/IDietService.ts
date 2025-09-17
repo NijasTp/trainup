@@ -1,5 +1,4 @@
 import { CreateOrGetDayResponseDto, MealDto } from '../../../dtos/diet.dto';
-import { IDietDay, IMeal } from '../../../models/diet.model'
 
 export interface IDietService {
   createOrGetDay(

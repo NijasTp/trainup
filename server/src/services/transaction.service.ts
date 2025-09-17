@@ -3,7 +3,6 @@ import { ITransactionService } from '../core/interfaces/services/ITransactionSer
 import { ITransactionRepository } from '../core/interfaces/repositories/ITransactionRepository';
 import { ITransaction } from '../models/transaction.model';
 import TYPES from '../core/types/types';
-import { logger } from '../utils/logger.util';
 
 @injectable()
 export class TransactionService implements ITransactionService {
