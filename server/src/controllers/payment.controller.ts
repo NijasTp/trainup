@@ -25,26 +25,23 @@ export class PaymentController {
     try {
       const dto: CreateOrderRequestDto = req.body;
       const userId = (req.user as JwtPayload).id;
-      const trainerId = req.body.trainerId;
-      const months = req.body.months 
-
+      const { trainerId, months } = req.body;
 
       if (!trainerId) {
-        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Missing trainer ID' });
+        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: MESSAGES.MISSING_REQUIRED_FIELDS });
         return;
       }
-      if ( !userId ) {
-        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Missing user ' });
+      if (!userId) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: MESSAGES.INVALID_USER_ID });
         return;
       }
       if (!months) {
-        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Missing months' });
+        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: MESSAGES.MISSING_REQUIRED_FIELDS });
         return;
       }
 
       const order: CreateOrderResponseDto = await this._paymentService.createOrder(dto.amount, dto.currency, dto.receipt);
 
-  
       const transactionData: Partial<ITransaction> = {
         userId,
         trainerId,
@@ -62,126 +59,130 @@ export class PaymentController {
     } catch (err) {
       const error = err as Error;
       logger.error('Create Order Error', error);
-      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
+      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message || MESSAGES.SERVER_ERROR });
     }
   }
-async verifyPayment(req: Request, res: Response): Promise<void> {
-  try {
-    const dto: VerifyPaymentRequestDto = req.body;
-    const userId = (req.user as JwtPayload).id;
 
-    if (!dto.trainerId || !userId || !dto.months) {
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ success: false, message: 'Missing user, trainer ID, or months' });
-      return;
-    }
+  async verifyPayment(req: Request, res: Response): Promise<void> {
+    try {
+      const dto: VerifyPaymentRequestDto = req.body;
+      const userId = (req.user as JwtPayload).id;
 
-    const isValid = await this._paymentService.verifyPayment(
-      dto.orderId,
-      dto.paymentId,
-      dto.signature,
-      userId,
-      dto.trainerId,
-      dto.months,
-      dto.amount
-    );
+      if (!dto.trainerId || !userId || !dto.months) {
+        res
+          .status(STATUS_CODE.BAD_REQUEST)
+          .json({ success: false, message: MESSAGES.MISSING_REQUIRED_FIELDS });
+        return;
+      }
 
-    let transaction = await this._transactionService.findByOrderId(dto.orderId);
-    if (!transaction) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({
-        success: false,
-        message: 'Transaction not found for this order',
-      });
-      return;
-    }
+      const isValid = await this._paymentService.verifyPayment(
+        dto.orderId,
+        dto.paymentId,
+        dto.signature,
+        userId,
+        dto.trainerId,
+        dto.months,
+        dto.amount
+      );
 
-    if (!isValid) {
+      let transaction = await this._transactionService.findByOrderId(dto.orderId);
+      if (!transaction) {
+        res.status(STATUS_CODE.BAD_REQUEST).json({
+          success: false,
+          message: MESSAGES.NOT_FOUND,
+        });
+        return;
+      }
+
+      if (!isValid) {
+        transaction = await this._transactionService.updateTransactionStatus(
+          dto.orderId,
+          'failed',
+          dto.paymentId
+        );
+        res
+          .status(STATUS_CODE.BAD_REQUEST)
+          .json({ success: false, message: MESSAGES.INVALID_SIGNATURE });
+        return;
+      }
+
+      const trainer = await this._trainerService.getTrainerById(dto.trainerId);
+      if (!trainer) {
+        transaction = await this._transactionService.updateTransactionStatus(
+          dto.orderId,
+          'failed',
+          dto.paymentId
+        );
+        res
+          .status(STATUS_CODE.BAD_REQUEST)
+          .json({ success: false, message: MESSAGES.TRAINER_NOT_FOUND });
+        return;
+      }
+
+      const user = await this._userService.getUserById(userId);
+      if (user?.assignedTrainer) {
+        transaction = await this._transactionService.updateTransactionStatus(
+          dto.orderId,
+          'failed',
+          dto.paymentId
+        );
+        res.status(STATUS_CODE.BAD_REQUEST).json({
+          success: false,
+          message: 'User already has a trainer',
+        });
+        return;
+      }
+
       transaction = await this._transactionService.updateTransactionStatus(
         dto.orderId,
-        'failed',
+        'completed',
         dto.paymentId
       );
+
+      await this._userService.updateUserTrainerId(userId, dto.trainerId);
+      await this._trainerService.addClientToTrainer(dto.trainerId, userId);
+
+      const response: VerifyPaymentResponseDto = {
+        success: true,
+        message: 'Payment verified and trainer hired successfully!',
+        transactionId: transaction?._id,
+      };
+
+      res.status(STATUS_CODE.OK).json(response);
+    } catch (err) {
+      const error = err as Error;
+      logger.error('Verify Payment Error', error);
       res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ success: false, message: MESSAGES.INVALID_SIGNATURE });
-      return;
+        .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
+        .json({ error: error.message || MESSAGES.SERVER_ERROR });
     }
-
-    const trainer = await this._trainerService.getTrainerById(dto.trainerId);
-    if (!trainer) {
-      transaction = await this._transactionService.updateTransactionStatus(
-        dto.orderId,
-        'failed',
-        dto.paymentId
-      );
-      res
-        .status(STATUS_CODE.BAD_REQUEST)
-        .json({ success: false, message: MESSAGES.TRAINER_NOT_FOUND });
-      return;
-    }
-
-    const user = await this._userService.getUserById(userId);
-    if (user?.assignedTrainer) {
-      transaction = await this._transactionService.updateTransactionStatus(
-        dto.orderId,
-        'failed',
-        dto.paymentId
-      );
-      res.status(STATUS_CODE.BAD_REQUEST).json({
-        success: false,
-        message: 'User already has a trainer',
-      });
-      return;
-    }
-
-
-    transaction = await this._transactionService.updateTransactionStatus(
-      dto.orderId,
-      'completed',
-      dto.paymentId
-    );
-
-
-    await this._userService.updateUserTrainerId(userId, dto.trainerId);
-    await this._trainerService.addClientToTrainer(dto.trainerId, userId);
-
-    const response: VerifyPaymentResponseDto = {
-      success: true,
-      message: 'Payment verified and trainer hired successfully!',
-      transactionId: transaction?._id,
-    };
-
-    res.status(STATUS_CODE.OK).json(response);
-  } catch (err) {
-    const error = err as Error;
-    logger.error('Verify Payment Error', error);
-    res
-      .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
-      .json({ error: error.message });
   }
-}
 
-async getTransactions(req: Request, res: Response): Promise<void> {
+  async getTransactions(req: Request, res: Response): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id;
-      const { page = '1', limit = '10', search = '', status = '', sort = 'newest' } = req.query;
+      const { page = '1', limit = '10', search = '', status = '', sort = 'newest' } = req.query as {
+        page?: string;
+        limit?: string;
+        search?: string;
+        status?: string;
+        sort?: string;
+      };
 
       const transactions = await this._transactionService.getUserTransactions(
         userId,
-        parseInt(page as string),
-        parseInt(limit as string),
-        search as string,
-        status as string,
-        sort as string
+        parseInt(page, 10),
+        parseInt(limit, 10),
+        search,
+        status,
+        sort
       );
 
       res.status(STATUS_CODE.OK).json(transactions);
     } catch (err) {
       const error = err as Error;
       logger.error('Get Transactions Error', error);
-      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
+      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message || MESSAGES.SERVER_ERROR });
     }
   }
-
 }

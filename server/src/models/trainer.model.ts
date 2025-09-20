@@ -18,6 +18,7 @@ export interface ITrainer extends Document {
   experience: string
   rating: number
   certificate: string
+  isAvailable?: boolean
   profileImage: string
   profileStatus: 'pending' | 'approved' | 'rejected' | 'suspended'
   rejectReason: string
@@ -33,6 +34,7 @@ const TrainerSchema: Schema<ITrainer> = new Schema(
     phone: { type: String, required: true },
     price: { type: String, required: true },
     isBanned: { type: Boolean, default: false },
+    isAvailable: { type: Boolean, default: true },
     role: { type: String, default: 'trainer' },
     gymId: { type: mongoose.Schema.Types.ObjectId, ref: 'Gym' },
     clients: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],

@@ -1,6 +1,6 @@
-import TYPES from '../core/types/types'
 import { Request, Response } from 'express'
 import { inject, injectable } from 'inversify'
+import TYPES from '../core/types/types'
 import { ITrainerService } from '../core/interfaces/services/ITrainerService'
 import { UploadedFile } from 'express-fileupload'
 import { IOTPService } from '../core/interfaces/services/IOtpService'
@@ -27,6 +27,7 @@ import {
   GetClientParamsDto,
   GetClientResponseDto
 } from '../dtos/trainer.dto'
+import { MESSAGES } from '../constants/messages'
 
 @injectable()
 export class TrainerController {
@@ -36,95 +37,117 @@ export class TrainerController {
     @inject(TYPES.IOtpService) private otpService: IOTPService,
     @inject(TYPES.IUserService) private userService: IUserService
   ) {}
-  
+
   async login (req: Request, res: Response): Promise<void> {
     const dto: TrainerLoginDto = req.body
     try {
-      const result: TrainerLoginResponseDto = await this._trainerService.loginTrainer(dto.email, dto.password)
+      const result: TrainerLoginResponseDto =
+        await this._trainerService.loginTrainer(dto.email, dto.password)
       this._JwtService.setTokens(res, result.accessToken, result.refreshToken)
       res.status(STATUS_CODE.OK).json({ trainer: result.trainer })
-    } catch (error: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
-      console.log(error.message)
+    } catch (err) {
+      const error = err as Error
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ error: error.message || MESSAGES.LOGIN_FAILED })
+      logger.error('Login error:', error)
     }
   }
 
-  forgotPassword = async (req: Request, res: Response) => {
+  async forgotPassword (req: Request, res: Response): Promise<void> {
     try {
       const dto: TrainerForgotPasswordDto = req.body
       await this._trainerService.forgotPassword(dto.email)
-      res.json({ message: 'OTP sent to email' })
-    } catch (err: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_SENT })
+    } catch (err) {
+      const error = err as Error
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ error: error.message || MESSAGES.INVALID_REQUEST })
     }
   }
 
-  forgotPasswordResendOtp = async (req: Request, res: Response) => {
+  async forgotPasswordResendOtp (req: Request, res: Response): Promise<void> {
     const dto: TrainerRequestOtpDto = req.body
     try {
       await this.otpService.requestForgotPasswordOtp(dto.email, 'trainer')
-      res.status(STATUS_CODE.OK).json({ messsage: 'OTP Resent Successfully' })
-    } catch (error: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
-      console.log(error.message)
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_SENT })
+    } catch (err) {
+      const error = err as Error
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ error: error.message || MESSAGES.INVALID_REQUEST })
+      logger.error('Forgot password resend OTP error:', error)
     }
   }
 
-  async requestOtp (req: Request, res: Response) {
+  async requestOtp (req: Request, res: Response): Promise<void> {
     const dto: TrainerRequestOtpDto = req.body
     try {
       await this.otpService.requestOtp(dto.email, 'trainer')
-      res.status(STATUS_CODE.OK).json({ message: 'OTP sent successfully' })
-    } catch (error: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
-      console.log(error.message)
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_SENT })
+    } catch (err) {
+      const error = err as Error
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ error: error.message || MESSAGES.INVALID_REQUEST })
+      logger.error('Request OTP error:', error)
     }
   }
 
-  async verifyOtp (req: Request, res: Response) {
+  async verifyOtp (req: Request, res: Response): Promise<void> {
     try {
       const dto: TrainerVerifyOtpDto = req.body
-      const verified = await this.otpService.verifyOtp(dto.email, dto.otp)
-      res.status(STATUS_CODE.OK).json({ message: 'OTP Verified Succesfully' })
-    } catch (err: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
-      console.log(err.message)
+      await this.otpService.verifyOtp(dto.email, dto.otp)
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_VERIFIED })
+    } catch (err) {
+      const error = err as Error
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ error: error.message || MESSAGES.INVALID_REQUEST })
+      logger.error('Verify OTP error:', error)
     }
   }
 
-  resetPassword = async (req: Request, res: Response) => {
+  async resetPassword (req: Request, res: Response): Promise<void> {
     try {
       const dto: TrainerResetPasswordDto = req.body
       await this._trainerService.resetPassword(dto.email, dto.password)
-      res.json({ message: 'Password reset successfully' })
-    } catch (err: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
-    }
-  }
-  
-  async resendOtp (req: Request, res: Response) {
-    const dto: TrainerResendOtpDto = req.body
-    try {
-      await this.otpService.requestOtp(dto.email, 'trainer')
-      res.status(STATUS_CODE.OK).json({ messsage: 'OTP Resent Successfully' })
-    } catch (error: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
-      console.log(error.message)
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.PASSWORD_RESET })
+    } catch (err) {
+      const error = err as Error
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ error: error.message || MESSAGES.INVALID_REQUEST })
     }
   }
 
-  async apply (req: Request, res: Response) {
+  async resendOtp (req: Request, res: Response): Promise<void> {
+    const dto: TrainerResendOtpDto = req.body
+    try {
+      await this.otpService.requestOtp(dto.email, 'trainer')
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_SENT })
+    } catch (err) {
+      const error = err as Error
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ error: error.message || MESSAGES.INVALID_REQUEST })
+      logger.error('Resend OTP error:', error)
+    }
+  }
+
+  async apply (req: Request, res: Response): Promise<void> {
     try {
       const dto: TrainerApplyDto = req.body
       const { certificate, profileImage } = req.files as {
-        certificate: UploadedFile
-        profileImage: UploadedFile
+        certificate?: UploadedFile
+        profileImage?: UploadedFile
       }
 
       if (!certificate) {
         res
           .status(STATUS_CODE.BAD_REQUEST)
-          .json({ error: 'Certificate file is required' })
+          .json({ error: MESSAGES.CERTIFICATE_REQUIRED })
         return
       }
 
@@ -142,31 +165,33 @@ export class TrainerController {
         profileImage
       }
 
-      const result: TrainerLoginResponseDto = await this._trainerService.applyAsTrainer(trainerData)
+      const result: TrainerLoginResponseDto =
+        await this._trainerService.applyAsTrainer(trainerData)
       this._JwtService.setTokens(res, result.accessToken, result.refreshToken)
       res.status(STATUS_CODE.CREATED).json({
-        message: 'Application submitted successfully',
+        message: MESSAGES.APPLICATION_SUBMITTED,
         trainer: result.trainer
       })
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error
       res.status(STATUS_CODE.BAD_REQUEST).json({
-        error: error.message || 'Failed to submit application'
+        error: error.message || MESSAGES.APPLICATION_FAILED
       })
     }
   }
 
-  async reapply (req: Request, res: Response) {
+  async reapply (req: Request, res: Response): Promise<void> {
     try {
       const dto: TrainerReapplyDto = req.body
       const trainerId = (req.user as JwtPayload).id
       const { certificate, profileImage } = req.files as {
-        certificate: UploadedFile
-        profileImage: UploadedFile
+        certificate?: UploadedFile
+        profileImage?: UploadedFile
       }
       if (!certificate) {
         res
           .status(STATUS_CODE.BAD_REQUEST)
-          .json({ error: 'Certificate file is required' })
+          .json({ error: MESSAGES.CERTIFICATE_REQUIRED })
         return
       }
 
@@ -183,77 +208,99 @@ export class TrainerController {
         certificate,
         profileImage
       }
-      this._trainerService.reapplyAsTrainer(trainerId, data)
-    } catch (error: any) {
-      logger.error('trainer reapply error:', error)
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
+      await this._trainerService.reapplyAsTrainer(trainerId, data)
+      res
+        .status(STATUS_CODE.OK)
+        .json({ message: MESSAGES.APPLICATION_SUBMITTED })
+    } catch (err) {
+      const error = err as Error
+      logger.error('Trainer reapply error:', error)
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ error: error.message || MESSAGES.APPLICATION_FAILED })
     }
   }
 
-  async getData (req: Request, res: Response) {
+  async getData (req: Request, res: Response): Promise<void> {
     try {
-      const id = (req as any).user?.id
+      const id = (req.user as JwtPayload).id
       if (!id) {
         res
           .status(STATUS_CODE.BAD_REQUEST)
-          .json({ error: 'Invalid trainer ID' })
+          .json({ error: MESSAGES.INVALID_TRAINER_ID })
         return
       }
-      const trainer: TrainerResponseDto = await this._trainerService.getTrainerById(id)
+      const trainer: TrainerResponseDto =
+        await this._trainerService.getTrainerById(id)
       res.status(STATUS_CODE.OK).json({ trainer })
-    } catch (error: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
+    } catch (err) {
+      const error = err as Error
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ error: error.message || MESSAGES.TRAINER_NOT_FOUND })
     }
   }
 
-  async getClients (req: Request, res: Response) {
+  async getClients (req: Request, res: Response): Promise<void> {
     try {
-      const trainerId = (req as any).user?.id
+      const trainerId = (req.user as JwtPayload).id
       if (!trainerId) {
         res
           .status(STATUS_CODE.BAD_REQUEST)
-          .json({ error: 'Invalid trainer ID' })
+          .json({ error: MESSAGES.INVALID_TRAINER_ID })
         return
       }
-      const dto: GetClientsQueryDto = req.query as any
-      const page = parseInt(dto.page as any) || 1
-      const limit = parseInt(dto.limit as any) || 10
-      const search = dto.search || ''
-      
-      const clients: GetClientsResponseDto = await this._trainerService.getTrainerClients(
-        trainerId,
-        page,
-        limit,
-        search
-      )
+      const dto: GetClientsQueryDto = req.query
+      const page = parseInt(String(dto.page)) || 1
+      const limit = parseInt(String(dto.limit)) || 10
+      const search = String(dto.search || '')
+
+      const clients: GetClientsResponseDto =
+        await this._trainerService.getTrainerClients(
+          trainerId,
+          page,
+          limit,
+          search
+        )
       res.status(STATUS_CODE.OK).json(clients)
-    } catch (error: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
+    } catch (err) {
+      const error = err as Error
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ error: error.message || MESSAGES.FAILED_TO_FETCH.USERS })
     }
   }
 
-  async getClient (req: Request, res: Response) {
+  async getClient (req: Request, res: Response): Promise<void> {
     try {
-      const dto: GetClientParamsDto = req.params as any
+      const dto: GetClientParamsDto = { id: req.params.id }
       const client = await this.userService.getUserById(dto.id)
-      const response: GetClientResponseDto = { user: client as any }
+      if (!client) {
+        res
+          .status(STATUS_CODE.NOT_FOUND)
+          .json({ error: MESSAGES.USER_NOT_FOUND })
+        return
+      }
+      const response: GetClientResponseDto = { user: client }
       res.status(STATUS_CODE.OK).json(response)
-    } catch (error: any) {
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message })
+    } catch (err) {
+      const error = err as Error
+      res
+        .status(STATUS_CODE.BAD_REQUEST)
+        .json({ error: error.message || MESSAGES.USER_NOT_FOUND })
     }
   }
 
-  async logout (req: Request, res: Response) {
+  async logout (req: Request, res: Response): Promise<void> {
     try {
       this._JwtService.clearTokens(res)
-      res.status(STATUS_CODE.OK).json({ message: 'Logged out successfully' })
-      return
-    } catch (error) {
-      console.error('Logout error:', error)
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.DELETED })
+    } catch (err) {
+      const error = err as Error
+      logger.error('Logout error:', error)
       res
         .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
-        .json({ error: 'Failed to log out' })
-      return
+        .json({ error: error.message || MESSAGES.FAILED_TO_LOGOUT })
     }
   }
 }
