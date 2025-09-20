@@ -1,5 +1,5 @@
 import { IUser } from "../../../models/user.model";
-import { LoginResponseDto, UserResponseDto } from '../../../dtos/user.dto'
+import { GetWeightHistoryResponseDto, LoginResponseDto, UserResponseDto } from '../../../dtos/user.dto'
 
 export interface IUserService {
   registerUser(name: string, email: string, password: string): Promise<LoginResponseDto>;
@@ -15,12 +15,14 @@ export interface IUserService {
     isVerified?: string,
     startDate?: string,
     endDate?: string
-  ): Promise<IUser[]>;
+  ): Promise<any>;
   getUserById(id: string): Promise<UserResponseDto | null>;
-  updateProfile(id: string, updateData: Partial<IUser>): Promise<UserResponseDto | null>;
-  incrementTokenVersion(id: string): Promise<IUser | null>;
+  incrementTokenVersion(id: string): Promise<void>;
   getProfile(id: string): Promise<UserResponseDto | null>;
-  updateUserStatus(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
+  updateProfile(id: string, updateData: Partial<IUser>): Promise<UserResponseDto | null>;
+  updateUserStatus(id: string, updateData: Partial<IUser>): Promise<void>;
   updateUserTrainerId(userId: string, trainerId: string): Promise<void>;
   cancelSubscription(userId: string, trainerId: string): Promise<void>;
+   getWeightHistory(userId: string): Promise<GetWeightHistoryResponseDto>;
+  addWeight(userId: string, weight: number): Promise<UserResponseDto>;
 }

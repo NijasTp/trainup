@@ -47,7 +47,38 @@ export class WorkoutService implements IWorkoutService {
     if (!session) throw new Error('Session not found')
     return this.mapToSessionResponseDto(session as any)
   }
-  
+
+  async getSessions(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+    search: string = ''
+  ): Promise<{ sessions: WorkoutSessionResponseDto[]; total: number; totalPages: number }> {
+    const query: any = {
+      $or: [
+        { userId },
+        { givenBy: 'user', userId },
+        { givenBy: 'trainer', userId },
+        { givenBy: 'admin' }
+      ],
+      date: { $exists: true } 
+    };
+
+    if (search) {
+      query.name = { $regex: search, $options: 'i' };
+    }
+
+    const { sessions, total } = await this._sessionRepo.findSessions(query, page, limit);
+
+    return {
+      sessions: sessions.map((session: IWorkoutSession) => this.mapToSessionResponseDto(session)),
+      total,
+      totalPages: Math.ceil(total / limit)
+    };
+  }
+
+
+
   async trainerCreateSession (
     trainerId: string,
     clientId: string,

@@ -8,11 +8,11 @@ export interface PaginatedUsers {
 }
 
 export interface IUserRepository {
-  findByEmail(email: string): Promise<IUser | null>
-  checkUsername(username: string): Promise<IUser | null>
-  createUser(data: Partial<IUser>): Promise<IUser>
-  findAll(skip: number, limit: number): Promise<IUser[]>
-  findByGoogleId(googleId: string): Promise<IUser | null>
+  createUser(data: Partial<IUser>): Promise<IUser>;
+  findByEmail(email: string): Promise<IUser | null>;
+  checkUsername(username: string): Promise<IUser | null>;
+  findByGoogleId(googleId: string): Promise<IUser | null>;
+  findAll(skip: number, limit: number): Promise<IUser[]>;
   findUsers(
     page: number,
     limit: number,
@@ -21,13 +21,12 @@ export interface IUserRepository {
     isVerified?: string,
     startDate?: string,
     endDate?: string
-  ): Promise<any>
-  count(): Promise<number>
-  updateUser(id: string, data: Partial<IUser>): Promise<IUser | null>
-  updateStatusAndIncrementVersion(
-    id: string,
-    status: Partial<IUser>
-  ): Promise<IUser | null>
-  updateStatus(id: string, updateData: Partial<IUser>): Promise<IUser | null>
-  findById(id: string): Promise<IUser | null>
+  ): Promise<{ users: IUser[]; total: number; page: number; totalPages: number }>;
+  count(): Promise<number>;
+  updateUser(id: string, data: Partial<IUser>): Promise<IUser | null>;
+  updateStatusAndIncrementVersion(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
+  updateStatus(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
+  getWeightHistory(userId: string): Promise<{ weight: number; date: Date }[]>;
+  findById(id: string): Promise<IUser | null>;
+  addWeight(userId: string, weight: number, date: Date): Promise<IUser | null>;
 }

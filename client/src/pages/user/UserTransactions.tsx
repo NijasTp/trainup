@@ -15,6 +15,7 @@ interface Transaction {
   amount: number;
   status: 'completed' | 'failed' | 'pending';
   trainerId: {
+    _id: string;
     name: string;
     profileImage?: string;
   };
@@ -23,6 +24,7 @@ interface Transaction {
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
 }
+
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -101,12 +103,12 @@ export default function Transactions() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <SiteHeader />
-      
+
       <main className="relative container mx-auto px-4 py-12 space-y-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={() => navigate('/profile')}
             className="hover:bg-primary/5"
           >
@@ -230,8 +232,8 @@ export default function Transactions() {
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                             {transaction.trainerId?.profileImage ? (
-                              <img 
-                                src={transaction.trainerId.profileImage} 
+                              <img
+                                src={transaction.trainerId.profileImage}
                                 alt={transaction.trainerId.name}
                                 className="w-12 h-12 rounded-full object-cover"
                               />
@@ -263,7 +265,7 @@ export default function Transactions() {
                           <div className="text-2xl font-bold text-foreground">
                             ₹{transaction.amount.toLocaleString()}
                           </div>
-                          <Badge className={`${getStatusColor(transaction.status)}`}>
+                          <Badge className={getStatusColor(transaction.status)}>
                             {transaction.status.toUpperCase()}
                           </Badge>
                         </div>

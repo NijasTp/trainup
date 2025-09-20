@@ -171,10 +171,7 @@ export class AdminController {
 
       const updatedUser = await this._userService.updateUserStatus(id, dto)
 
-      if (!updatedUser) {
-        res.status(STATUS_CODE.NOT_FOUND).json({ message: MESSAGES.USER_NOT_FOUND })
-        return
-      }
+ 
 
       res.status(STATUS_CODE.OK).json(updatedUser)
     } catch (err) {

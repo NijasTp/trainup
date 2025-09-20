@@ -37,3 +37,13 @@ export const updateProfile = async (data: UpdateProfileData) => {
   const response = await API.put("/user/update-profile", data);
   return response.data;
 };
+
+export const addWeight = async (weight: number) => {
+  const response = await API.post("/user/weight", { weight });
+  return response.data;
+}
+
+export const getWeightHistory = async () => {
+  const response = await API.get("/user/weight");
+  return response.data;
+}

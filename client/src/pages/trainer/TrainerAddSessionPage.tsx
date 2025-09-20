@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell, Plus, Search, ArrowLeft, Trash2 } from "lucide-react";
+import { Dumbbell, Plus, ArrowLeft, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
@@ -42,18 +42,6 @@ interface Exercise {
   time?: string;
   weight?: number;
   image?: string;
-}
-
-interface WorkoutSession {
-  _id: string;
-  name: string;
-  givenBy: "trainer" | "user";
-  trainerId?: string;
-  date: string;
-  time: string;
-  exercises: Exercise[];
-  goal?: string;
-  notes?: string;
 }
 
 function ExerciseSuggestionCard({
@@ -243,40 +231,37 @@ export default function TrainerAddSessionPage() {
       setSuggestions(data.suggestions || []);
     } catch (err: any) {
       setError(err.message || "Error fetching exercise suggestions");
-      console.error('err',err);
+      console.error('err', err);
       toast.error("Failed to load suggestions", { description: err.message });
     } finally {
       setIsSuggestionsLoading(false);
     }
   }
-async function handleSelectExercise(exerciseId: string, exerciseName: string) {
-  setIsLoading(true);
-  setError(null);
 
-  try {
-    console.log("Fetching exercise:", exerciseId);
-    const response = await fetch(`https://wger.de/api/v2/exerciseinfo/${exerciseId}/?language=2`);
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch exercise details: ${response.status}`);
+  async function handleSelectExercise(exerciseId: string, exerciseName: string) {
+    setIsLoading(true);
+    setError(null);
+    try {
+      console.log("Fetching exercise:", exerciseId);
+      const response = await fetch(`https://wger.de/api/v2/exerciseinfo/${exerciseId}/?language=2`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch exercise details: ${response.status}`);
+      }
+      const data = await response.json();
+      setSelectedExercise({ ...data, name: exerciseName });
+      setShowConfig(true);
+      setSets(3);
+      setReps("10-12");
+      setTimeDuration("30 min");
+      setWeight(0);
+    } catch (err: any) {
+      console.error("Fetch error:", err);
+      setError(err.message || "Error fetching exercise details");
+      toast.error("Failed to load exercise details", { description: err.message });
+    } finally {
+      setIsLoading(false);
     }
-
-    const data = await response.json();
-    setSelectedExercise({ ...data, name: exerciseName });
-    setShowConfig(true);
-    setSets(3);
-    setReps("10-12");
-    setTimeDuration("30 min");
-    setWeight(0);
-  } catch (err: any) {
-    console.error("Fetch error:", err);
-    setError(err.message || "Error fetching exercise details");
-    toast.error("Failed to load exercise details", { description: err.message });
-  } finally {
-    setIsLoading(false);
   }
-}
-
 
   function handleAddExercise() {
     if (selectedExercise) {
@@ -309,26 +294,39 @@ async function handleSelectExercise(exerciseId: string, exerciseName: string) {
       toast.error("Session name, time, and date are required");
       return;
     }
+    setIsLoading(true);
+    setError(null);
     try {
-      let sessionId = null;
-      if (!sessionId) {
-        const response = await API.post("/workout/trainer-create-workout-session", {
+      if (sessionId) {
+        // Update existing session
+        await API.patch(`/workout/sessions/${sessionId}`, {
+          name,
+          date,
+          time,
+          goal,
+          notes,
+          exercises,
+        });
+        toast.success("Session updated");
+      } else {
+        // Create new session
+        await API.post("/workout/trainer-create-workout-session", {
           clientId,
           date,
           name,
           time,
           goal,
           notes,
+          exercises,
         });
-        sessionId = response.data._id;
+        toast.success("Session created");
       }
-      if (exercises.length > 0) {
-        await API.patch(`/workout/sessions/${sessionId}`, { exercises });
-      }
-      toast.success(sessionId ? "Session updated" : "Session created");
       navigate(`/trainer/workout/${clientId}`);
     } catch (err: any) {
       toast.error(sessionId ? "Failed to update session" : "Failed to create session");
+      setError(sessionId ? "Failed to update session" : "Failed to create session");
+    } finally {
+      setIsLoading(false);
     }
   }
 

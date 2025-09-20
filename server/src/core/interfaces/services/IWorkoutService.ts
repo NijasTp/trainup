@@ -30,6 +30,12 @@ export interface IWorkoutService {
   ): Promise<WorkoutSessionResponseDto>;
   updateSession(id: string, payload: IWorkoutSessionPayload): Promise<WorkoutSessionResponseDto>;
   deleteSession(id: string): Promise<void>;
+  getSessions(
+    userId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ sessions: WorkoutSessionResponseDto[]; total: number; totalPages: number }>
   createDay(userId: string, date: string): Promise<WorkoutDayResponseDto>;
   addSessionToDay(userId: string, date: string, sessionId: string): Promise<WorkoutDayResponseDto>;
   getDay(userId: string, date: string): Promise<WorkoutDayResponseDto | null>;

@@ -1,22 +1,21 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-// use your own icon import if react-icons is not available
 import { GoArrowUpRight } from 'react-icons/go';
 
-type CardNavLink = {
+interface CardNavLink {
   label: string;
   href: string;
   ariaLabel: string;
-};
+}
 
-export type CardNavItem = {
+interface CardNavItem {
   label: string;
   bgColor: string;
   textColor: string;
   links: CardNavLink[];
-};
+}
 
-export interface CardNavProps {
+interface CardNavProps {
   logo: string;
   logoAlt?: string;
   items: CardNavItem[];
@@ -26,6 +25,7 @@ export interface CardNavProps {
   menuColor?: string;
   buttonBgColor?: string;
   buttonTextColor?: string;
+  children?: React.ReactNode;
 }
 
 const CardNav: React.FC<CardNavProps> = ({

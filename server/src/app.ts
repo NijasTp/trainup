@@ -41,7 +41,6 @@ app.use(BASE_ROUTE.WORKOUT, workoutRoutes)
 app.use(BASE_ROUTE.DIET, dietRoutes);
 app.use(BASE_ROUTE.PAYMENT, paymentRoutes);
 
-app.use(errorHandler);
 
 
 export default app;

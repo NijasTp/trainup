@@ -1,6 +1,8 @@
 import { UserModel, IUser } from '../models/user.model'
 import { IUserRepository } from '../core/interfaces/repositories/IUserRepository'
 import { Types } from 'mongoose'
+import { MESSAGES } from '../constants/messages'
+
 export class UserRepository implements IUserRepository {
   async createUser (data: Partial<IUser>) {
     return await UserModel.create(data)
@@ -38,14 +40,12 @@ export class UserRepository implements IUserRepository {
     endDate?: string
   ) {
     const query: any = {}
-
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } }
       ]
     }
-
     if (isBanned === 'active') query.isBanned = false
     if (isBanned === 'banned') query.isBanned = true
     if (isVerified === 'verified') query.isVerified = true
@@ -57,7 +57,6 @@ export class UserRepository implements IUserRepository {
     }
 
     const skip = (page - 1) * limit
-
     const [users, total] = await Promise.all([
       UserModel.find(query)
         .skip(skip)
@@ -79,12 +78,17 @@ export class UserRepository implements IUserRepository {
     return await UserModel.countDocuments()
   }
 
-  async updateUser(id: string, data: Partial<IUser>) {
+  async updateUser (id: string, data: Partial<IUser>) {
     if (data.assignedTrainer) {
-      data.assignedTrainer = new Types.ObjectId(data.assignedTrainer) 
+      data.assignedTrainer = new Types.ObjectId(data.assignedTrainer)
     }
-    return await UserModel.findByIdAndUpdate(id, { $set: data }, { new: true }).exec();
+    return await UserModel.findByIdAndUpdate(
+      id,
+      { $set: data },
+      { new: true }
+    ).exec()
   }
+
   async updateStatusAndIncrementVersion (
     id: string,
     updateData: Partial<IUser>
@@ -102,7 +106,38 @@ export class UserRepository implements IUserRepository {
   ): Promise<IUser | null> {
     return await UserModel.findByIdAndUpdate(id, updateData, { new: true })
   }
-    async findById (id: string) {
+
+  async findById (id: string) {
     return UserModel.findById(id).select('-password')
   }
+
+  async getWeightHistory (
+    userId: string
+  ): Promise<{ weight: number; date: Date }[]> {
+    const user = await UserModel.findById(userId).select('weightHistory').lean()
+    if (!user || !user.weightHistory?.length) {
+      return []
+    }
+    return user.weightHistory.sort(
+      (a, b) => b.date.getTime() - a.date.getTime()
+    )
+  }
+
+  async addWeight (
+    userId: string,
+    weight: number,
+    date: Date
+  ): Promise<IUser | null> {
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      {
+        $set: { currentWeight: weight },
+        $push: { weightHistory: { weight, date } }
+      },
+      { new: true }
+    ).select('-password')
+    if (!user) throw new Error(MESSAGES.USER_NOT_FOUND)
+    return user
+  }
 }
+;[]

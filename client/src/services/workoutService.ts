@@ -1,10 +1,10 @@
-import type { WorkoutSessionPayload } from '@/pages/user/AddWorkoutSession'
+
 import API from '../lib/axios'
 import { format } from 'date-fns'
 import type { IWorkoutSession } from '@/pages/user/UserWorkoutEdit'
 
 export const createWorkoutSession = async (
-  sessionData: WorkoutSessionPayload
+  sessionData: any
 ) => {
   const res = await API.post('/workout/sessions', sessionData)
   return res.data

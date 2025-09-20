@@ -16,6 +16,7 @@ import {
     ArrowLeft,
     Shield,
     AlertTriangle,
+  
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import API from "@/lib/axios";
@@ -23,6 +24,7 @@ import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow, addMonths } from "date-fns";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Trainer {
     _id: string;
@@ -62,6 +64,7 @@ export default function MyTrainerProfile() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [imageLoaded, setImageLoaded] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
         document.title = "TrainUp - My Trainer Profile";
@@ -159,7 +162,7 @@ export default function MyTrainerProfile() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-            <SiteHeader/>
+            <SiteHeader />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
             <div className="relative border-b border-border/50 bg-card/20 backdrop-blur-sm">
@@ -278,7 +281,7 @@ export default function MyTrainerProfile() {
                                                 <AlertDialogHeader>
                                                     <AlertDialogTitle className="text-foreground">Confirm Subscription Cancellation</AlertDialogTitle>
                                                     <AlertDialogDescription className="text-muted-foreground">
-                                                        Your subscription with {trainer.name} has {getRemainingTime()} remaining this month. 
+                                                        Your subscription with {trainer.name} has {getRemainingTime()} remaining this month.
                                                         Cancelling now means you will lose the payment for the current period. Are you sure you want to proceed?
                                                     </AlertDialogDescription>
                                                 </AlertDialogHeader>
@@ -333,11 +336,9 @@ export default function MyTrainerProfile() {
                                 <h2 className="text-2xl font-bold text-foreground">Certifications</h2>
                             </CardHeader>
                             <CardContent>
-                                <a
-                                    href={trainer.certificate}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="group inline-flex items-center gap-3 p-4 bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/20 hover:border-primary/30 transition-all duration-300"
+                                <button
+                                    onClick={() => setIsOpen(true)}
+                                    className="group inline-flex items-center gap-3 p-4 bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/20 hover:border-primary/30 transition-all duration-300 w-full text-left"
                                 >
                                     <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
                                         <FileText className="h-5 w-5 text-primary" />
@@ -346,9 +347,30 @@ export default function MyTrainerProfile() {
                                         <p className="font-medium text-foreground">Professional Certificate</p>
                                         <p className="text-sm text-muted-foreground">Click to view credentials</p>
                                     </div>
-                                </a>
+                                </button>
                             </CardContent>
                         </Card>
+
+                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                            <DialogContent className="max-w-3xl">
+                                <DialogHeader>
+                                    <DialogTitle className="flex items-center justify-between">
+                                        Professional Certificate
+                                        <button
+                                            onClick={() => setIsOpen(false)}
+                                            className="text-foreground hover:text-primary transition-colors"
+                                        >
+                                         
+                                        </button>
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <img
+                                    src={trainer.certificate}
+                                    alt="Professional Certificate"
+                                    className="w-full h-auto rounded-lg border border-border/50"
+                                />
+                            </DialogContent>
+                        </Dialog>
                     </div>
 
                     <div className="space-y-6">

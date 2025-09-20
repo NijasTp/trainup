@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
@@ -450,15 +449,6 @@ export default function StartSessionPage() {
                         {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
                       </p>
                     )}
-                  </div>
-                  <div className="space-y-4">
-                    <label className="text-gray-300 font-medium">Notes:</label>
-                    <Textarea
-                      value={currentNotes}
-                      onChange={(e) => setCurrentNotes(e.target.value)}
-                      className="bg-gray-700/50 border-gray-600 text-gray-100"
-                      placeholder="Add or edit notes for this exercise..."
-                    />
                   </div>
                   <div className="flex flex-col sm:flex-row gap-4">
                     {currentExerciseIndex > 0 && (

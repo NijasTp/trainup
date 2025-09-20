@@ -15,7 +15,7 @@ export interface ITrainerRepository {
   count(
     search: string,
     isBanned?: string,
-    isVerified?: string,
+    isVerified?: string ,
     startDate?: string,
     endDate?: string
   ): Promise<number>;

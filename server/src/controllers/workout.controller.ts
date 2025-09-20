@@ -64,7 +64,7 @@ export class WorkoutController {
     }
   }
 
-  updateSession = async (req: Request, res: Response) => {
+  async updateSession (req: Request, res: Response) {
     try {
       const paramsDto: UpdateSessionParamsDto = req.params as any
       const dto: UpdateSessionRequestDto = req.body
@@ -85,6 +85,17 @@ export class WorkoutController {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message })
     }
   }
+
+async getSessions(req: Request, res: Response) {
+  try {
+    const jwtUser = req.user as JwtPayload;
+    const { page = 1, limit = 10, search = '' } = req.query as any;
+    const result = await this._workoutService.getSessions(jwtUser.id, +page, +limit, search);
+    res.status(STATUS_CODE.OK).json(result);
+  } catch (err: any) {
+    res.status(STATUS_CODE.BAD_REQUEST).json({ error: err.message });
+  }
+}
 
   createOrGetDay = async (req: Request, res: Response) => {
     try {

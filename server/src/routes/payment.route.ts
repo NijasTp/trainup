@@ -11,5 +11,5 @@ const paymentController = container.get<PaymentController>(TYPES.PaymentControll
 
 router.post("/create-order", authMiddleware, paymentController.createOrder.bind(paymentController));
 router.post("/verify-payment", authMiddleware, paymentController.verifyPayment.bind(paymentController));
-
+router.get("/transactions", authMiddleware, paymentController.getTransactions.bind(paymentController));
 export default router;

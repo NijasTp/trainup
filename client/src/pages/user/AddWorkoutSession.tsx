@@ -1,3 +1,5 @@
+// File: AddSessionPage.tsx
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { InfoModal } from "@/components/user/general/InfoModal";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import * as z from "zod";
 import type { AddedExercise, WgerExerciseInfo, WgerExerciseSuggestion, WorkoutSessionPayload } from "@/interfaces/user/addWorkoutSession";
 
 function ExerciseSuggestionCard({
@@ -135,6 +138,27 @@ function AddedExerciseCard({
     );
 }
 
+const sessionSchema = z.object({
+    name: z.string().min(1, { message: "Session name is required" }),
+    givenBy: z.literal("user"),
+    date: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date format" }),
+    time: z.string().regex(/^\d{2}:\d{2}$/, { message: "Invalid time format (HH:mm)" }),
+    goal: z.string().optional(),
+    exercises: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        sets: z.number(),
+        reps: z.string().optional(),
+        time: z.string().optional(),
+        weight: z.number().optional(),
+        image: z.string(),
+    })).min(1, { message: "At least one exercise is required" }),
+});
+
+const baseExerciseSchema = z.object({
+    sets: z.number().int().min(1, { message: "Sets must be at least 1" }),
+});
+
 export default function AddSessionPage() {
     const [sessionName, setSessionName] = useState<string>("");
     const [sessionDate, setSessionDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
@@ -202,16 +226,49 @@ export default function AddSessionPage() {
 
     function handleAddToSession() {
         if (selectedExercise) {
+            const isCardio = selectedExercise.category === 15;
+            const isWeighted = selectedExercise.equipment && selectedExercise.equipment.length > 0 && !selectedExercise.equipment.includes(7);
+
+            let exerciseSchema = baseExerciseSchema;
+            if (isCardio) {
+                exerciseSchema = exerciseSchema.extend({
+                    time: z.string().min(1, { message: "Time is required for cardio exercises" }),
+                });
+            } else {
+                exerciseSchema = exerciseSchema.extend({
+                    reps: z.string().min(1, { message: "Reps are required for non-cardio exercises" }),
+                });
+            }
+            if (isWeighted) {
+                exerciseSchema = exerciseSchema.extend({
+                    weight: z.number().nonnegative({ message: "Weight must be non-negative" }),
+                });
+            }
+
+            try {
+                exerciseSchema.parse({
+                    sets,
+                    reps: isCardio ? undefined : reps,
+                    time: isCardio ? time : undefined,
+                    weight: isWeighted ? weight : undefined,
+                });
+            } catch (e: any) {
+                if (e instanceof z.ZodError) {
+                    const errorMessages = e.issues.map((err) => err.message).join("\n");
+                    toast.error(`Validation failed:\n${errorMessages}`);
+                } else {
+                    toast.error("An unexpected error occurred during validation");
+                }
+                return;
+            }
+
             const newExercise: AddedExercise = {
                 id: selectedExercise.id.toString(),
                 name: selectedExercise.name,
                 sets,
-                reps: selectedExercise.category === 15 ? undefined : reps,
-                time: selectedExercise.category === 15 ? time : undefined,
-                weight:
-                    selectedExercise.equipment && selectedExercise.equipment.length > 0 && !selectedExercise.equipment.includes(7)
-                        ? weight
-                        : undefined,
+                reps: isCardio ? undefined : reps,
+                time: isCardio ? time : undefined,
+                weight: isWeighted ? weight : undefined,
                 image:
                     selectedExercise.images?.find((img) => img.is_main)?.image ||
                     selectedExercise.images?.[0]?.image ||
@@ -239,6 +296,18 @@ export default function AddSessionPage() {
                 image: ex.image,
             })),
         };
+
+        try {
+            sessionSchema.parse(payload);
+        } catch (e: any) {
+            if (e instanceof z.ZodError) {
+                const errorMessages = e.issues.map((err) => err.message).join("\n");
+                toast.error(`Validation failed:\n${errorMessages}`);
+            } else {
+                toast.error("An unexpected error occurred during validation");
+            }
+            return;
+        }
 
         setIsLoading(true);
         try {

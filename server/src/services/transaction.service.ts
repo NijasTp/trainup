@@ -31,6 +31,17 @@ export class TransactionService implements ITransactionService {
     return await this.transactionRepository.getTransactionById(id);
   }
 
+  async getUserTransactions(
+    userId: string,
+    page: number,
+    limit: number,
+    search: string,
+    status: string,
+    sort: string
+  ): Promise<{ transactions: ITransaction[]; totalPages: number }> {
+    return this.transactionRepository.getUserTransactions(userId, page, limit, search, status, sort);
+  }
+
   async findByOrderId(orderId: string): Promise<ITransaction | null> {
     return await this.transactionRepository.findByOrderId(orderId);
   }

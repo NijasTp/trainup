@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { verifyTrainer, rejectTrainer } from '@/services/adminService';
-import { 
-  ArrowLeft, 
-  CheckCircle, 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Award, 
-  Briefcase, 
-  FileText, 
-  FileCheck, 
+import {
+  ArrowLeft,
+  CheckCircle,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Award,
+  Briefcase,
+  FileText,
+  FileCheck,
   Calendar,
   Loader2,
   Shield,
@@ -22,12 +22,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Logo } from '@/components/ui/logo';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -54,6 +54,7 @@ const TrainerApplication = () => {
   const [loading, setLoading] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
 
   const handleVerify = async () => {
     setLoading(true);
@@ -179,7 +180,7 @@ const TrainerApplication = () => {
                   </div>
                   <p className="text-white">{application.email}</p>
                 </div>
-                
+
                 <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
                   <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
                     <Phone className="h-4 w-4" />
@@ -187,7 +188,7 @@ const TrainerApplication = () => {
                   </div>
                   <p className="text-white">{application.phone}</p>
                 </div>
-                
+
                 <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
                   <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
                     <MapPin className="h-4 w-4" />
@@ -195,7 +196,7 @@ const TrainerApplication = () => {
                   </div>
                   <p className="text-white">{application.location}</p>
                 </div>
-                
+
                 <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
                   <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
                     <Briefcase className="h-4 w-4" />
@@ -220,7 +221,7 @@ const TrainerApplication = () => {
                   </div>
                   <p className="text-white whitespace-pre-wrap">{application.bio}</p>
                 </div>
-                
+
                 {application.certificate && (
                   <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
                     <div className="flex items-center justify-between">
@@ -235,13 +236,51 @@ const TrainerApplication = () => {
                     <Button
                       variant="outline"
                       className="mt-3 text-[#4B8B9B] border-[#4B8B9B]/30 hover:bg-[#4B8B9B]/10"
-                      onClick={() => window.open(application.certificate, '_blank')}
+                      onClick={() => setIsCertificateModalOpen(true)}
                     >
                       View Certificate
                     </Button>
                   </div>
                 )}
               </div>
+              {/* Certificate Modal */}
+              {application.certificate && (
+                <Dialog open={isCertificateModalOpen} onOpenChange={setIsCertificateModalOpen}>
+                  <DialogContent className="bg-[#111827] border-[#4B8B9B]/30 text-white max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-semibold flex items-center">
+                        <FileCheck className="h-5 w-5 mr-2 text-green-500" />
+                        Trainer Certificate
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 flex justify-center items-center">
+                      {/* If it's an image, show image. If PDF, show iframe. */}
+                      {application.certificate.match(/\.(jpeg|jpg|gif|png)$/i) ? (
+                        <img
+                          src={application.certificate}
+                          alt="Trainer Certificate"
+                          className="max-h-[400px] rounded-lg border border-[#4B8B9B]/30"
+                        />
+                      ) : (
+                        <iframe
+                          src={application.certificate}
+                          title="Trainer Certificate"
+                          className="w-full h-[400px] rounded-lg border border-[#4B8B9B]/30 bg-white"
+                        />
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsCertificateModalOpen(false)}
+                        className="text-gray-400 border-gray-600 hover:bg-gray-700/50"
+                      >
+                        Close
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
 
             {/* Action Buttons */}

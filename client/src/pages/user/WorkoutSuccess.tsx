@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams, useNavigate, } from "react-router-dom";
+import { useLocation, useParams, useNavigate, Link, } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Clock } from "lucide-react";
@@ -128,7 +128,8 @@ export default function SuccessPage() {
             <p className="text-muted-foreground font-medium">Saving your progress...</p>
           </div>
         ) : (
-          <Card className="group relative bg-card/40 backdrop-blur-sm border-primary/30 w-full max-w-2xl shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+      
+          <Card onClick={()=> navigate('/workouts')} className="group relative bg-card/40 backdrop-blur-sm border-primary/30 w-full max-w-2xl shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <CardHeader>
               <CardTitle className="text-3xl font-bold text-foreground">Workout Summary</CardTitle>
@@ -170,6 +171,7 @@ export default function SuccessPage() {
                 </Button>
             </CardContent>
           </Card>
+      
         )}
       </main>
       <SiteFooter />

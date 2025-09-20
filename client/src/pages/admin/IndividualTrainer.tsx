@@ -12,7 +12,6 @@ import {
   MapPin,
   Star,
   Users,
-  Award,
   Loader2,
   Ban,
   CheckCircle,
@@ -345,24 +344,6 @@ const IndividualTrainer = () => {
               </Card>
             )}
 
-            <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Award className="mr-2 h-5 w-5 text-[#4B8B9B]" />
-                  Certifications
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {trainer.badges.map((badge, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-[#1F2A44]/30 rounded">
-                      <Award className="h-4 w-4 text-yellow-400" />
-                      <span className="text-white text-sm">{badge}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>

@@ -30,6 +30,7 @@ import React, { useRef } from 'react';
 import SubscriptionModal from "@/components/ui/SubscriptionModal";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import type { Position, SpotlightCardProps, Trainer, User } from "@/interfaces/user/iIndividualTrainer";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 
 
@@ -100,7 +101,7 @@ export default function TrainerPage() {
     const [error, setError] = useState<string | null>(null);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-
+    const [isOpen, setIsOpen] = useState(false);
     useEffect(() => {
         document.title = "TrainUp - Trainer Profile";
         fetchTrainer();
@@ -478,6 +479,47 @@ export default function TrainerPage() {
                                 )}
                             </div>
                         </SpotlightCard>
+
+                          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                            <CardHeader>
+                                <h2 className="text-2xl font-bold text-foreground">Certifications</h2>
+                            </CardHeader>
+                            <CardContent>
+                                <button
+                                    onClick={() => setIsOpen(true)}
+                                    className="group inline-flex items-center gap-3 p-4 bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/20 hover:border-primary/30 transition-all duration-300 w-full text-left"
+                                >
+                                    <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                                        <FileText className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-foreground">Professional Certificate</p>
+                                        <p className="text-sm text-muted-foreground">Click to view credentials</p>
+                                    </div>
+                                </button>
+                            </CardContent>
+                        </Card>
+
+                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                            <DialogContent className="max-w-3xl">
+                                <DialogHeader>
+                                    <DialogTitle className="flex items-center justify-between">
+                                        Professional Certificate
+                                        <button
+                                            onClick={() => setIsOpen(false)}
+                                            className="text-foreground hover:text-primary transition-colors"
+                                        >
+                                         
+                                        </button>
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <img
+                                    src={trainer.certificate}
+                                    alt="Professional Certificate"
+                                    className="w-full h-auto rounded-lg border border-border/50"
+                                />
+                            </DialogContent>
+                        </Dialog>
                     </div>
 
                     <div className="space-y-6">

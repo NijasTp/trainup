@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 
 import { useEffect, useState } from "react"
@@ -100,7 +98,7 @@ export default function TrainerClients() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <TrainerSiteHeader/>
+      {/* <TrainerSiteHeader/> */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <main className="relative container mx-auto px-4 py-12 space-y-8">
         <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">

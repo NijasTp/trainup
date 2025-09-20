@@ -16,7 +16,6 @@ router.post("/request-otp", userController.requestOtp.bind(userController));
 router.post("/verify-otp", userController.verifyOtp.bind(userController));
 router.post('/check-username',userController.checkUsername.bind(userController))
 router.post("/google-login", userController.googleLogin.bind(userController));
-router.get("/auth/google/callback", userController.googleCallback.bind(userController))
 
 router.post("/resend-otp", userController.resendOtp.bind(userController));
 router.post('/forgot-password',userController.forgotPassword.bind(userController))
@@ -28,6 +27,10 @@ router.get('/session',authMiddleware,userController.checkSession.bind(userContro
 
 router.get('/get-profile',authMiddleware,roleMiddleware(['user']), userController.getProfile.bind(userController))
 router.put('/update-profile', authMiddleware, roleMiddleware(['user']), userController.updateProfile.bind(userController));
+
+router
+.post('/weight', authMiddleware, roleMiddleware(['user']), userController.addWeight.bind(userController))
+.get('/weight', authMiddleware, roleMiddleware(['user']), userController.getWeightHistory.bind(userController));
 
 
 router.get('/trainers', authMiddleware, roleMiddleware(['user']), userController.getTrainers.bind(userController));

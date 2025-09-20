@@ -60,9 +60,6 @@ export const TrainerProtectedRoute: React.FC<{ children: JSX.Element }> = ({ chi
     return <Navigate to={ROUTES.TRAINER_REJECTED} replace />;
   }
 
-  if (trainer.profileStatus === 'approved' && location.pathname !== ROUTES.TRAINER_DASHBOARD) {
-    return <Navigate to={ROUTES.TRAINER_DASHBOARD} replace />;
-  }
 
   return children;
 };

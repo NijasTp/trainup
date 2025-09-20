@@ -162,4 +162,26 @@ async verifyPayment(req: Request, res: Response): Promise<void> {
   }
 }
 
+async getTransactions(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id;
+      const { page = '1', limit = '10', search = '', status = '', sort = 'newest' } = req.query;
+
+      const transactions = await this._transactionService.getUserTransactions(
+        userId,
+        parseInt(page as string),
+        parseInt(limit as string),
+        search as string,
+        status as string,
+        sort as string
+      );
+
+      res.status(STATUS_CODE.OK).json(transactions);
+    } catch (err) {
+      const error = err as Error;
+      logger.error('Get Transactions Error', error);
+      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message });
+    }
+  }
+
 }

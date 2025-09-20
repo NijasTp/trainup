@@ -111,11 +111,7 @@ export default function HomePage() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
       <SiteHeader />
-      <Button className="fixed bottom-8 right-8 z-50" onClick={() => navigate("/dashboard")}>
-        Go to Dashboard
-      </Button>
       <main className="relative container mx-auto px-4 py-8 space-y-8">
-        {/* Welcome Section */}
         <div className="text-center space-y-4 mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
             <Flame className="h-4 w-4 text-primary" />
@@ -234,9 +230,9 @@ export default function HomePage() {
                         </div>
                       </div>
                     </div>
-                    <Button variant={workout.isDone ? "secondary" : "default"} size="sm">
-                      {workout.isDone ? "Completed" : "Start"}
-                    </Button>
+                    
+                      {workout.isDone && "Completed"}
+                    
                   </div>
                 ))}
               </div>
@@ -337,7 +333,7 @@ export default function HomePage() {
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {trainers.slice(0, 3).map((trainer) => (
                   <div
-                    key={trainer.id}
+                    key={trainer._id}
                     className="group relative overflow-hidden bg-secondary/30 rounded-lg border border-border/30 hover:border-border transition-all duration-300 hover:shadow-lg"
                   >
                     <div className="relative h-48 overflow-hidden">
@@ -369,7 +365,7 @@ export default function HomePage() {
                         <span className="font-bold text-primary">{trainer.price}</span>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{trainer.bio}</p>
-                      <Button className="w-full mt-3" size="sm">
+                      <Button onClick={()=>navigate(`/trainers/${trainer._id}`)} className="w-full mt-3" size="sm">
                         View Profile
                       </Button>
                     </div>

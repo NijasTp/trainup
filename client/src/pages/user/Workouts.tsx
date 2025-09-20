@@ -204,7 +204,7 @@ function WorkoutSessionCard({
                     </Button>
                   </Link>
                 )}
-                {!isSessionPast && !session.isDone && (
+                {!isSessionPast && !session.isDone && session.givenBy === 'user' && (
                   <Link to={`/workouts/${session._id}`}>
                     <Button
                       variant="outline"

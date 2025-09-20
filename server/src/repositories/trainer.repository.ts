@@ -38,8 +38,8 @@ export class TrainerRepository implements ITrainerRepository {
 
     if (isBanned === 'active') query.isBanned = false
     if (isBanned === 'banned') query.isBanned = true
-    if (isVerified === 'verified') query.isVerified = true
-    if (isVerified === 'unverified') query.isVerified = false
+    if (isVerified === 'verified') query.profileStatus == 'approved'
+    if (isVerified === 'unverified') query.profileStatus == 'pending'
     if (startDate || endDate) {
       query.createdAt = {}
       if (startDate) query.createdAt.$gte = new Date(startDate)
@@ -68,8 +68,8 @@ export class TrainerRepository implements ITrainerRepository {
 
     if (isBanned === 'active') query.isBanned = false
     if (isBanned === 'banned') query.isBanned = true
-    if (isVerified === 'verified') query.isVerified = true
-    if (isVerified === 'unverified') query.isVerified = false
+    if (isVerified === 'verified') query.profileStatus == 'approved'
+    if (isVerified === 'unverified') query.profileStatus == 'pending'
     if (startDate || endDate) {
       query.createdAt = {}
       if (startDate) query.createdAt.$gte = new Date(startDate)

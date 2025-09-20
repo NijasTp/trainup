@@ -9,22 +9,29 @@ import { Input } from "@/components/ui/input"
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
 import { Avatar } from "@radix-ui/react-avatar"
 import { AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useEffect } from "react"
 
 type SiteHeaderProps = {}
 
 export const SiteHeader: React.FC<SiteHeaderProps> = () => {
+  const navigate = useNavigate()
   const user = useSelector((state: RootState) => state.userAuth.user)
+  useEffect(()=>{
+    if (!user) {
+      navigate("/login")
+   }
+  },[])
+ 
   const userName = user?.name || "Me"
   const userAvatar =
     user?.profileImage || "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=300&auto=format&fit=crop"
   const dispatch = useDispatch()
-  const navigate = useNavigate()
 
-  const handleSignOut = async () => {
+  async function handleSignOut()  {
     dispatch(logout())
      logoutApi()
     console.log("Successfully signed out")
-    navigate("/login")
+    navigate("/user/login")
   }
 
   return (
@@ -106,6 +113,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = () => {
               <DropdownMenu.Item asChild>
                 <Link to="/profile" className="block cursor-pointer px-2 py-2 text-sm">
                   Profile
+                </Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item asChild>
+                <Link to="/dashboard" className="block px-2 cursor-pointer py-2 text-sm">
+                  Dashboard
                 </Link>
               </DropdownMenu.Item>
               <DropdownMenu.Item asChild>

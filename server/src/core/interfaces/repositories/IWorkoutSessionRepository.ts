@@ -5,6 +5,9 @@ export interface IWorkoutSessionRepository {
   create(session: Partial<IWorkoutSession>): Promise<IWorkoutSession>;
   findById(id: string | Types.ObjectId): Promise<IWorkoutSession | null>;
   update(id: string, update: Partial<IWorkoutSession>): Promise<IWorkoutSession | null>;
+  count(filter: any): Promise<number>;
+  findAll(filter:any): Promise<IWorkoutSession[]>;
+  findSessions(query: any, page: number, limit: number): Promise<{ sessions: IWorkoutSession[], total: number}>;
   delete(id: string): Promise<void>;
   findTemplates(filter?: Record<string, unknown>): Promise<IWorkoutSession[]>;
   findAdminTemplates(page?: number, limit?: number, search?: string): Promise<{ templates: IWorkoutSession[], total: number, page: number, totalPages: number }>;

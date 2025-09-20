@@ -13,6 +13,7 @@ router
 .get("/sessions/:id", authMiddleware, workoutController.getSession.bind(workoutController))
 .patch("/sessions/:id", authMiddleware, workoutController.updateSession.bind(workoutController))
 .delete("/sessions/:id", authMiddleware, workoutController.deleteSession.bind(workoutController))
+router.get("/get-sessions", authMiddleware, workoutController.getSessions.bind(workoutController));
 
 router.post("/days", authMiddleware, workoutController.createOrGetDay.bind(workoutController)); 
 router.post("/days/:date/sessions", authMiddleware, workoutController.addSessionToDay.bind(workoutController)); 

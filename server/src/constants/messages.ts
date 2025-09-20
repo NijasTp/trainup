@@ -7,29 +7,36 @@ export const MESSAGES = {
   UPDATED: "Updated",
   DELETED: "Deleted",
   BANNED: "Banned",
-  SERVER_ERROR:"Server Error",
+  SERVER_ERROR: "Server Error",
   OTP_SENT: "OTP sent successfully",
-  USER_EXISTS:'User already exists',
-  USER_NOT_FOUND: 'User not found',
-  FAILED_TO_UPDATE_USER_BAN:'Failed to update user ban status',
-  MISSING_REQUIRED_FIELDS: 'Missing required fields',
-  INVALID_SIGNATURE:'Invalid Signature',
-  FAILED_TO_FETCH:{
-    TRAINER:'Failed to fetch trainers',
-    GYMS:'Failed to fetch gyms',
-    USERS:'Failed to fetch users'
+  USER_EXISTS: "User already exists",
+  USER_NOT_FOUND: "User not found",
+  FAILED_TO_UPDATE_USER_BAN: "Failed to update user ban status",
+  MISSING_REQUIRED_FIELDS: "Missing required fields",
+  INVALID_SIGNATURE: "Invalid Signature",
+  FAILED_TO_FETCH: {
+    TRAINER: "Failed to fetch trainers",
+    GYMS: "Failed to fetch gyms",
+    USERS: "Failed to fetch users",
   },
-
-
-
-  TRAINER_REQUIRED:'Trainer role required',
-  TRAINER_NOT_FOUND:'Trainer not Found',
-
-
-  FETCH_GYMS_ERROR:'Failed to fetch gyms',
-  GYM_NOT_FOUND:'Gym not found',
-
-
-  ADMIN_REQUIRED:'Admin role required'
-
-} 
+  TRAINER_REQUIRED: "Trainer role required",
+  TRAINER_NOT_FOUND: "Trainer not Found",
+  FETCH_GYMS_ERROR: "Failed to fetch gyms",
+  GYM_NOT_FOUND: "Gym not found",
+  ADMIN_REQUIRED: "Admin role required",
+  // Newly added messages
+  OTP_VERIFIED: "OTP verified successfully",
+  FAILED_TO_UPDATE_GYM_STATUS: "Failed to update gym status",
+  PASSWORD_RESET: "Password reset successfully",
+  APPLICATION_SUBMITTED: "Application submitted successfully",
+  INVALID_TRAINER_ID: "Invalid trainer ID",
+  CERTIFICATE_REQUIRED: "Certificate file is required",
+  APPLICATION_FAILED: "Failed to submit application",
+  FAILED_TO_LOGOUT: "Failed to log out",
+  INVALID_GYM_ID: "Invalid gym ID",
+  FAILED_TO_FETCH_GYM: "Failed to fetch gym",
+  FAILED_TO_FETCH_GYM_APPLICATION: "Failed to fetch gym application",
+  INVALID_DAY: "Invalid day",
+  SESSION_NOT_FOUND: "Session not found",
+  INVALID_USER_ID: "Missing user",
+};
