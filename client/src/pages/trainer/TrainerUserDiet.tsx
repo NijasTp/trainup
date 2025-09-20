@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, ChevronLeft, ChevronRight, Trash2, PlusCircle } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import API from "@/lib/axios";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";

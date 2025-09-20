@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   User, 
   Ruler, 
@@ -19,7 +20,10 @@ import {
   EyeOff,
   Key,
   Weight,
-  Activity
+  Activity,
+  Camera,
+  Upload,
+  Loader2
 } from "lucide-react";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +32,6 @@ import { updateUser } from "@/redux/slices/userAuthSlice";
 import { getProfile, updateProfile } from "@/services/userService"; 
 import { z } from "zod";
 import { toast } from "react-toastify";
-
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").trim(),
@@ -94,9 +97,12 @@ export default function EditProfile() {
     todaysWeight: "",
     goalWeight: ""
   });
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string>("");
   const [newGoal, setNewGoal] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof ProfileFormData, string>>>({});
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -121,44 +127,76 @@ export default function EditProfile() {
         activityLevel: userProfile.activityLevel || "",
         equipment: userProfile.equipment || false,
         isPrivate: userProfile.isPrivate || false,
-        todaysWeight: userProfile.todaysWeight?.toString() || "",
+        todaysWeight: userProfile.currentWeight?.toString() || "",
         goalWeight: userProfile.goalWeight?.toString() || ""
       });
+      setProfileImagePreview(userProfile.profileImage || "");
     } catch (err) {
       console.error("API error:", err);
-      toast.error("Error loading profile", {
-        data: "Please try again later",
-      });
+      toast.error("Error loading profile");
       navigate("/profile");
     } finally {
       setIsLoading(false);
     }
   }
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+      
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+
+      setProfileImage(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-
       const validatedData = profileSchema.parse(formData);
       setErrors({});
 
       setIsSaving(true);
-      const updateData = {
-        name: validatedData.name,
-        phone: validatedData.phone || null,
-        height: validatedData.height ? parseInt(validatedData.height) : null,
-        age: validatedData.age ? parseInt(validatedData.age) : null,
-        gender: validatedData.gender || null,
-        goals: validatedData.goals || [],
-        activityLevel: validatedData.activityLevel || null,
-        equipment: validatedData.equipment || false,
-        isPrivate: validatedData.isPrivate || false,
-        todaysWeight: validatedData.todaysWeight ? parseFloat(validatedData.todaysWeight) : null,
-        goalWeight: validatedData.goalWeight ? parseFloat(validatedData.goalWeight) : null
-      };
+      
+      // Prepare form data for file upload
+      const submitData = new FormData();
+      
+      // Add text fields
+      submitData.append('name', validatedData.name);
+      if (validatedData.phone) submitData.append('phone', validatedData.phone);
+      if (validatedData.height) submitData.append('height', validatedData.height);
+      if (validatedData.age) submitData.append('age', validatedData.age);
+      if (validatedData.gender) submitData.append('gender', validatedData.gender);
+      if (validatedData.goals) submitData.append('goals', JSON.stringify(validatedData.goals));
+      if (validatedData.activityLevel) submitData.append('activityLevel', validatedData.activityLevel);
+      submitData.append('equipment', validatedData.equipment?.toString() || 'false');
+      submitData.append('isPrivate', validatedData.isPrivate?.toString() || 'false');
+      if (validatedData.todaysWeight) submitData.append('todaysWeight', validatedData.todaysWeight);
+      if (validatedData.goalWeight) submitData.append('goalWeight', validatedData.goalWeight);
+      
 
-      const response = await updateProfile(updateData);
+      if (profileImage) {
+        submitData.append('profileImage', profileImage);
+      }
+
+      const response = await updateProfile(submitData);
       dispatch(updateUser({
         name: response.user.name,
         phone: response.user.phone,
@@ -169,9 +207,11 @@ export default function EditProfile() {
         activityLevel: response.user.activityLevel,
         equipment: response.user.equipment,
         isPrivate: response.user.isPrivate,
-        weight: response.user.todaysWeight, 
+        weight: response.user.currentWeight,
         goalWeight: response.user.goalWeight,
+        profileImage: response.user.profileImage,
       }));
+      
       toast.success("Profile updated successfully!");
       navigate("/profile");
     } catch (err: any) {
@@ -186,9 +226,7 @@ export default function EditProfile() {
         toast.error("Please fix the errors in the form");
       } else {
         console.error("Update error:", err);
-        toast.error("Failed to update profile", {
-          data: err.response?.data?.message || "Please try again later"
-        });
+        toast.error("Failed to update profile");
       }
     } finally {
       setIsSaving(false);
@@ -274,6 +312,59 @@ export default function EditProfile() {
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
+          {/* Profile Image Upload */}
+          <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Camera className="h-6 w-6 text-primary" />
+                Profile Picture
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center space-y-4">
+              <Avatar className="h-32 w-32">
+                <AvatarImage src={profileImagePreview} />
+                <AvatarFallback className="text-4xl">
+                  {formData.name ? formData.name[0]?.toUpperCase() : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex items-center gap-4">
+                <Label htmlFor="profileImage" className="cursor-pointer">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
+                    <Upload className="h-4 w-4" />
+                    <span className="text-sm font-medium">Upload Photo</span>
+                  </div>
+                  <Input
+                    id="profileImage"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="sr-only"
+                  />
+                </Label>
+                
+                {profileImagePreview && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setProfileImage(null);
+                      setProfileImagePreview("");
+                    }}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+              
+              <p className="text-xs text-muted-foreground text-center">
+                JPG, PNG or GIF (max. 5MB)
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Personal Information */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -342,6 +433,7 @@ export default function EditProfile() {
             </CardContent>
           </Card>
 
+          {/* Physical Information */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -391,7 +483,7 @@ export default function EditProfile() {
                   )}
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="goalWeight" className="file://Users/shivam/Documents/GitHub/TrainUp-Web/src/pages/user/EditProfile.tsx font-medium flex items-center gap-2">
+                  <Label htmlFor="goalWeight" className="font-medium flex items-center gap-2">
                     <Target className="h-4 w-4" />
                     Goal Weight (kg)
                   </Label>
@@ -414,6 +506,7 @@ export default function EditProfile() {
             </CardContent>
           </Card>
 
+          {/* Fitness Information */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -505,9 +598,10 @@ export default function EditProfile() {
             </CardContent>
           </Card>
 
+          {/* Privacy Settings */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold textPandoc text-foreground flex items-center gap-2">
+              <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
                 {formData.isPrivate ? <EyeOff className="h-6 w-6 text-primary" /> : <Eye className="h-6 w-6 text-primary" />}
                 Privacy Settings
               </CardTitle>
@@ -529,6 +623,7 @@ export default function EditProfile() {
             </CardContent>
           </Card>
 
+          {/* Security */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -568,7 +663,7 @@ export default function EditProfile() {
             >
               {isSaving ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   Saving...
                 </>
               ) : (

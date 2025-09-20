@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -28,26 +27,61 @@ import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";
 import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/homeInterface";
 import { useSelector } from "react-redux";
-
+import ProfileCompletionModal from "@/components/user/general/ProfileCompletionModal";
 
 export default function HomePage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const navigate = useNavigate();
-  const user = useSelector((state: any) => state.userAuth.user)
-  const streak = user ? user.streak : 0
+  const user = useSelector((state: any) => state.userAuth.user);
+  const streak = user ? user.streak : 0;
 
   const today = format(new Date(), "yyyy-MM-dd");
 
   useEffect(() => {
     document.title = "TrainUp - Your Fitness Journey";
     fetchHomeData();
+    checkProfileCompletion();
   }, []);
 
-  const fetchHomeData = async () => {
+  const checkProfileCompletion = () => {
+    if (!user) return;
 
+    // Check if user has skipped profile completion recently (within 7 days)
+    const skipped = localStorage.getItem("profileCompletionSkipped");
+    const skipDate = localStorage.getItem("profileCompletionSkipDate");
+    
+    if (skipped && skipDate) {
+      const daysSinceSkip = Math.floor((Date.now() - parseInt(skipDate)) / (1000 * 60 * 60 * 24));
+      if (daysSinceSkip < 7) return; // Don't show again for 7 days
+    }
+
+    // Check profile completion
+    const requiredFields = [
+      user.phone,
+      user.age,
+      user.gender,
+      user.height,
+      user.weight,
+      user.goals?.length > 0,
+      user.activityLevel
+    ];
+
+    const completedFields = requiredFields.filter(field => field && field !== "").length;
+    const completionPercentage = (completedFields / requiredFields.length) * 100;
+
+    // Show modal if profile is less than 70% complete
+    if (completionPercentage < 70) {
+      setShowProfileModal(true);
+    }
+  };
+
+
+
+  const fetchHomeData = async () => {
     setIsLoading(true);
     try {
       try {
@@ -72,7 +106,6 @@ export default function HomePage() {
       } catch (err: any) {
         console.error("Failed to fetch diet:", err);
         toast.error("Failed to fetch diet");
-
       }
     } catch (error) {
       console.error("Error fetching home data:", error);
@@ -104,13 +137,17 @@ export default function HomePage() {
   const dietProgress = calculateDietProgress();
   const workoutProgress = calculateWorkoutProgress();
 
-
   return (
     <div className="container min-h-screen bg-gradient-to-br from-background absolute inset-0 via-background/95 to-secondary/20">
-
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
       <SiteHeader />
+      
+      <ProfileCompletionModal 
+        open={showProfileModal} 
+        onOpenChange={setShowProfileModal}
+      />
+
       <main className="relative container mx-auto px-4 py-8 space-y-8">
         <div className="text-center space-y-4 mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
@@ -120,7 +157,6 @@ export default function HomePage() {
           <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
             Welcome Back, Champion!
           </h1>
-
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Ready to crush today's goals? Let's see what's on your fitness agenda.
           </p>
@@ -135,13 +171,17 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">{streak} days</div>
-              {streak > 0 ? (<p className="text-xs text-green-700">
-                <TrendingUp className="inline h-3 w-3 mr-1" />
-                Keep it going!
-              </p>) : (<p className="text-xs text-muted-foreground">
-                <TrendingDown className="inline h-3 w-3 mr-1" />
-                Keep practicing, you can do it!
-              </p>)}
+              {streak > 0 ? (
+                <p className="text-xs text-green-700">
+                  <TrendingUp className="inline h-3 w-3 mr-1" />
+                  Keep it going!
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  <TrendingDown className="inline h-3 w-3 mr-1" />
+                  Keep practicing, you can do it!
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -230,9 +270,7 @@ export default function HomePage() {
                         </div>
                       </div>
                     </div>
-                    
-                      {workout.isDone && "Completed"}
-                    
+                    {workout.isDone && "Completed"}
                   </div>
                 ))}
               </div>
@@ -365,7 +403,7 @@ export default function HomePage() {
                         <span className="font-bold text-primary">{trainer.price}</span>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{trainer.bio}</p>
-                      <Button onClick={()=>navigate(`/trainers/${trainer._id}`)} className="w-full mt-3" size="sm">
+                      <Button onClick={() => navigate(`/trainers/${trainer._id}`)} className="w-full mt-3" size="sm">
                         View Profile
                       </Button>
                     </div>

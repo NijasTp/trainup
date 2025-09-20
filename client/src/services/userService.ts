@@ -33,7 +33,7 @@ export const getTrainer = async () => {
   return res.data
 }
 
-export const updateProfile = async (data: UpdateProfileData) => {
+export const updateProfile = async (data: FormData) => {
   const response = await API.put("/user/update-profile", data);
   return response.data;
 };
