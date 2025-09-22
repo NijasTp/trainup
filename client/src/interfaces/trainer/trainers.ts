@@ -6,5 +6,7 @@ export type Trainer = {
     price: string;
     rating: number;
     bio: string;
+    experience: string;
+    specialization: string;
     profileImage: string;
 };

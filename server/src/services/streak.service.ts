@@ -3,15 +3,14 @@ import { Types } from 'mongoose';
 import { IStreakService } from '../core/interfaces/services/IStreakService';
 import { IStreakRepository } from '../core/interfaces/repositories/IStreakRepository';
 import TYPES from '../core/types/types';
+import { IStreak } from '../models/streak.model';
+import { MESSAGES } from '../constants/messages';
 
 @injectable()
 export class StreakService implements IStreakService {
-  constructor(
-    @inject(TYPES.IStreakRepository)
-    private _streakRepo: IStreakRepository
-  ) {}
+  constructor(@inject(TYPES.IStreakRepository) private _streakRepo: IStreakRepository) {}
 
-  async getOrCreateUserStreak(userId: Types.ObjectId) {
+  async getOrCreateUserStreak(userId: Types.ObjectId): Promise<IStreak> {
     let streak = await this._streakRepo.findByUserId(userId);
     if (!streak) {
       streak = await this._streakRepo.create(userId);
@@ -19,14 +18,12 @@ export class StreakService implements IStreakService {
     return streak;
   }
 
-  async updateUserStreak(userId: Types.ObjectId){
+  async updateUserStreak(userId: Types.ObjectId): Promise<IStreak> {
     const streak = await this.getOrCreateUserStreak(userId);
     const today = new Date();
     const lastAction = new Date(streak.lastActionDate);
-    
-    const diffDays = Math.floor(
-      (today.getTime() - lastAction.getTime()) / (1000 * 60 * 60 * 24)
-    );
+
+    const diffDays = Math.floor((today.getTime() - lastAction.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) {
       return streak;
@@ -44,13 +41,14 @@ export class StreakService implements IStreakService {
     streak.lastActionDate = today;
     return await this._streakRepo.update(streak);
   }
-  async checkAndResetUserStreak(userId: Types.ObjectId) {
+
+  async checkAndResetUserStreak(userId: Types.ObjectId): Promise<IStreak> {
     const streak = await this.getOrCreateUserStreak(userId);
     const today = new Date();
 
     const diffDays = Math.floor(
       (today.getTime() - new Date(streak.lastActionDate).getTime()) / (1000 * 60 * 60 * 24)
-    )
+    );
 
     if (diffDays <= 1) {
       return streak;

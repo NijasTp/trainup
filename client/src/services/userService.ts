@@ -1,22 +1,30 @@
-import type { UpdateProfileData } from '@/interfaces/user/iUpdateProfile'
 import API from '../lib/axios'
 
 export const getTrainers = async (
   page: number,
-  limit: number = 5,
-  search: string = ''
+  limit: number = 8,
+  search: string = '',
+  specialization: string = '',
+  experience: string = '',
+  minRating: string = '',
+  minPrice: string = '',
+  maxPrice: string = ''
 ) => {
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
-    search
-  })
+    search,
+    specialization,
+    experience,
+    minRating,
+    minPrice,
+    maxPrice,
+  });
 
-  const url = `/user/trainers?${params.toString()}`
-
-  const res = await API.get(url)
-  return res.data
-}
+  const url = `/user/trainers?${params.toString()}`;
+  const res = await API.get(url);
+  return res.data;
+};
 
 export const getProfile = async () => {
   const res = await API.get('/user/get-profile')

@@ -49,7 +49,12 @@ export interface ITrainerService {
     isBanned?: string,
     isVerified?: string,
     startDate?: string,
-    endDate?: string
+    endDate?: string,
+    specialization?: string,
+    experience?: string,
+    minRating?: string,
+    minPrice?: string,
+    maxPrice?: string
   ): Promise<PaginatedTrainers>;
   getTrainerApplication(id: string): Promise<Partial<ITrainer> | null>
   updateTrainerStatus(id: string, updateData: Partial<ITrainer>): Promise<ITrainer | null>;

@@ -162,14 +162,31 @@ export class UserController implements IUserController {
       res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message || MESSAGES.INVALID_REQUEST });
     }
   }
-
-  async getTrainers(req: Request, res: Response): Promise<void> {
+ async getTrainers(req: Request, res: Response): Promise<void> {
     const dto: GetTrainersQueryDto = req.query;
     try {
       const page = Number(dto.page) || 1;
-      const limit = Number(dto.limit) || 5;
+      const limit = Number(dto.limit) || 8;
       const search = String(dto.search || '');
-      const result = await this._trainerService.getAllTrainers(page, limit, search, 'active', 'verified');
+      const specialization = String(dto.specialization || '');
+      const experience = String(dto.experience || '');
+      const minRating = String(dto.minRating || '');
+      const minPrice = String(dto.minPrice || '');
+      const maxPrice = String(dto.maxPrice || '');
+      const result = await this._trainerService.getAllTrainers(
+        page,
+        limit,
+        search,
+        'active',
+        'verified',
+        undefined,
+        undefined,
+        specialization,
+        experience,
+        minRating,
+        minPrice,
+        maxPrice
+      );
       const response: GetTrainersResponseDto = { trainers: result };
       res.status(STATUS_CODE.OK).json(response);
     } catch (err) {

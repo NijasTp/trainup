@@ -175,7 +175,8 @@ export default function TrainerAddSessionPage() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [debouncedQuery] = useDebounce(searchQuery, 300);
-  const [suggestions, setSuggestions] = useState<WgerExerciseSuggestion[]>([]);
+  const [allSuggestions, setAllSuggestions] = useState<WgerExerciseSuggestion[]>([]);
+  const [displayedSuggestions, setDisplayedSuggestions] = useState<WgerExerciseSuggestion[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<WgerExerciseInfo | null>(null);
   const [sets, setSets] = useState<number>(3);
   const [reps, setReps] = useState<string>("10-12");
@@ -186,6 +187,8 @@ export default function TrainerAddSessionPage() {
   const [error, setError] = useState<string | null>(null);
   const [showExerciseSearch, setShowExerciseSearch] = useState<boolean>(false);
   const [showConfig, setShowConfig] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const [perPage] = useState<number>(8);
 
   useEffect(() => {
     if (sessionId) {
@@ -196,10 +199,18 @@ export default function TrainerAddSessionPage() {
   useEffect(() => {
     if (debouncedQuery && showExerciseSearch && !selectedExercise) {
       fetchSuggestions(debouncedQuery);
+      setPage(1);
     } else {
-      setSuggestions([]);
+      setAllSuggestions([]);
+      setDisplayedSuggestions([]);
     }
   }, [debouncedQuery, showExerciseSearch, selectedExercise]);
+
+  useEffect(() => {
+    const start = (page - 1) * perPage;
+    const end = start + perPage;
+    setDisplayedSuggestions(allSuggestions.slice(start, end));
+  }, [page, allSuggestions]);
 
   async function fetchSession() {
     setIsLoading(true);
@@ -228,7 +239,7 @@ export default function TrainerAddSessionPage() {
       const response = await fetch(`https://wger.de/api/v2/exercise/search/?term=${term}&language=2`);
       if (!response.ok) throw new Error("Failed to fetch exercise suggestions");
       const data = await response.json();
-      setSuggestions(data.suggestions || []);
+      setAllSuggestions(data.suggestions || []);
     } catch (err: any) {
       setError(err.message || "Error fetching exercise suggestions");
       console.error('err', err);
@@ -333,6 +344,7 @@ export default function TrainerAddSessionPage() {
   const isWeighted =
     selectedExercise?.equipment && selectedExercise.equipment.length > 0 && !selectedExercise.equipment.includes(7);
   const isCardio = selectedExercise?.category === 15;
+  const totalPages = Math.ceil(allSuggestions.length / perPage);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
@@ -476,9 +488,9 @@ export default function TrainerAddSessionPage() {
                         </div>
                       </div>
                     )}
-                    {!isSuggestionsLoading && !error && suggestions.length > 0 && (
+                    {!isSuggestionsLoading && !error && displayedSuggestions.length > 0 && (
                       <div className="grid gap-4 sm:grid-cols-2">
-                        {suggestions.map((sug) => (
+                        {displayedSuggestions.map((sug) => (
                           <ExerciseSuggestionCard
                             key={sug.data.id}
                             suggestion={sug}
@@ -488,7 +500,28 @@ export default function TrainerAddSessionPage() {
                         ))}
                       </div>
                     )}
-                    {!isSuggestionsLoading && !error && suggestions.length === 0 && searchQuery && (
+                    {!isSuggestionsLoading && !error && allSuggestions.length > 0 && (
+                      <div className="flex justify-between items-center mt-4">
+                        <Button
+                          variant="outline"
+                          disabled={page === 1 || isSuggestionsLoading}
+                          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                        >
+                          Previous
+                        </Button>
+                        <span className="text-muted-foreground">
+                          Page {page} of {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          disabled={page >= totalPages || isSuggestionsLoading}
+                          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    )}
+                    {!isSuggestionsLoading && !error && allSuggestions.length === 0 && searchQuery && (
                       <div className="text-center py-8 text-muted-foreground">
                         <h3 className="text-lg font-semibold text-foreground">No exercises found</h3>
                         <p>Try a different search term or check your spelling.</p>

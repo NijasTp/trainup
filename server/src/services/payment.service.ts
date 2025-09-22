@@ -1,26 +1,25 @@
-import { injectable } from 'inversify'
-import Razorpay from 'razorpay'
-import crypto from 'crypto'
-import { IPaymentService } from '../core/interfaces/services/IPaymentService'
-import dotenv from 'dotenv'
-import { CreateOrderResponseDto } from '../dtos/payment.dto'
-dotenv.config()
+import { injectable } from 'inversify';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
+import { IPaymentService } from '../core/interfaces/services/IPaymentService';
+import dotenv from 'dotenv';
+import { CreateOrderResponseDto } from '../dtos/payment.dto';
+import { MESSAGES } from '../constants/messages';
+
+dotenv.config();
+
 @injectable()
 export class PaymentService implements IPaymentService {
-  private _razorpay: Razorpay
+  private _razorpay: Razorpay;
 
-  constructor () {
+  constructor() {
     this._razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID!,
-      key_secret: process.env.RAZORPAY_KEY_SECRET!
-    })
+      key_secret: process.env.RAZORPAY_KEY_SECRET!,
+    });
   }
 
-  async createOrder(
-    amount: number,
-    currency: string,
-    receipt?: string
-  ): Promise<CreateOrderResponseDto> {
+  async createOrder(amount: number, currency: string, receipt?: string): Promise<CreateOrderResponseDto> {
     const order = await this._razorpay.orders.create({
       amount: amount * 100,
       currency,
@@ -42,17 +41,12 @@ export class PaymentService implements IPaymentService {
     return response;
   }
 
-  async verifyPayment (
-    orderId: string,
-    paymentId: string,
-    signature: string
-  ): Promise<boolean> {
+  async verifyPayment(orderId: string, paymentId: string, signature: string): Promise<boolean> {
     const generatedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
       .update(orderId + '|' + paymentId)
-      .digest('hex')
+      .digest('hex');
 
-
-    return generatedSignature === signature
+    return generatedSignature === signature;
   }
 }

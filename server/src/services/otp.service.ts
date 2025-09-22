@@ -1,13 +1,14 @@
-import { injectable, inject } from "inversify";
-import { IOTPService } from "../core/interfaces/services/IOtpService";
-import { IUserRepository } from "../core/interfaces/repositories/IUserRepository";
-import { IOtpRepository } from "../core/interfaces/repositories/IOtpRepository";
-import TYPES from "../core/types/types";
-import { IMailService } from "../core/interfaces/services/IMailService";
-import { sendOtpHtml } from "../utils/sendEmail";
-import { IGymRepository } from "../core/interfaces/repositories/IGymRepository";
-import { ITrainerRepository } from "../core/interfaces/repositories/ITrainerRepository";
-import { logger } from "../utils/logger.util";
+import { injectable, inject } from 'inversify';
+import { IOTPService } from '../core/interfaces/services/IOtpService';
+import { IUserRepository } from '../core/interfaces/repositories/IUserRepository';
+import { IOtpRepository } from '../core/interfaces/repositories/IOtpRepository';
+import TYPES from '../core/types/types';
+import { IMailService } from '../core/interfaces/services/IMailService';
+import { sendOtpHtml } from '../utils/sendEmail';
+import { IGymRepository } from '../core/interfaces/repositories/IGymRepository';
+import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepository';
+import { logger } from '../utils/logger.util';
+import { MESSAGES } from '../constants/messages';
 
 @injectable()
 export class OtpService implements IOTPService {
@@ -18,80 +19,72 @@ export class OtpService implements IOTPService {
     @inject(TYPES.IAdminRepository) private _adminRepo: IUserRepository,
     @inject(TYPES.IOtpRepository) private _otpRepo: IOtpRepository,
     @inject(TYPES.IMailService) private _mailService: IMailService
-  ) { }
+  ) {}
 
-  private generateOtp() {
+  private generateOtp(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
   private getRepoByRole(role: 'user' | 'trainer' | 'gym' | 'admin') {
-  switch (role) {
-    case 'user':
-      return this._userRepo;
-    case 'trainer':
-      return this._trainerRepo;
-    case 'gym':
-      return this._gymRepo;
-    case 'admin':
-      return this._adminRepo;
-    default:
-      throw new Error("Invalid role");
-  }
-  }
-
-async requestOtp(email: string, role: 'user' | 'trainer' | 'gym' | 'admin') {
-  const repo = this.getRepoByRole(role);
-  const existing = await repo.findByEmail(email);
-  if (existing) {
-    throw new Error("Email is already registered");
+    switch (role) {
+      case 'user':
+        return this._userRepo;
+      case 'trainer':
+        return this._trainerRepo;
+      case 'gym':
+        return this._gymRepo;
+      case 'admin':
+        return this._adminRepo;
+      default:
+        throw new Error(MESSAGES.INVALID_ROLE);
+    }
   }
 
-  const otp = this.generateOtp();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  async requestOtp(email: string, role: 'user' | 'trainer' | 'gym' | 'admin'): Promise<string> {
+    const repo = this.getRepoByRole(role);
+    const existing = await repo.findByEmail(email);
+    if (existing) {
+      throw new Error(MESSAGES.EMAIL_ALREADY_REGISTERED);
+    }
 
-  logger.info(`OTP sent to ${email}: ${otp}`);
-  await this._otpRepo.saveOtp(email, otp, expiresAt);
-  await this._mailService.sendMail(
-    email,
-    "Your OTP Code",
-    sendOtpHtml(otp)
-  );
+    const otp = this.generateOtp();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-  return otp;
-}
+    logger.info(`OTP sent to ${email}: ${otp}`);
+    await this._otpRepo.saveOtp(email, otp, expiresAt);
+    await this._mailService.sendMail(email, 'Your OTP Code', sendOtpHtml(otp));
 
-async requestForgotPasswordOtp(email: string, role: 'user' | 'trainer' | 'gym' | 'admin') {
-  const repo = this.getRepoByRole(role);
-  const existing = await repo.findByEmail(email);
-  if (!existing) {
-    throw new Error("Email not found");
+    return otp;
   }
 
-  const otp = this.generateOtp();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  async requestForgotPasswordOtp(email: string, role: 'user' | 'trainer' | 'gym' | 'admin'): Promise<string> {
+    const repo = this.getRepoByRole(role);
+    const existing = await repo.findByEmail(email);
+    if (!existing) {
+      throw new Error(MESSAGES.EMAIL_NOT_FOUND);
+    }
 
-  logger.info(`OTP sent to ${email}: ${otp}`);
-  await this._otpRepo.saveOtp(email, otp, expiresAt);
-  await this._mailService.sendMail(
-    email,
-    "Trainup Forgot Password OTP Verification",
-    sendOtpHtml(otp)
-  );
+    const otp = this.generateOtp();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-  return otp;
-}
+    logger.info(`OTP sent to ${email}: ${otp}`);
+    await this._otpRepo.saveOtp(email, otp, expiresAt);
+    await this._mailService.sendMail(email, 'Trainup Forgot Password OTP Verification', sendOtpHtml(otp));
 
-  async verifyOtp(email: string, otp: string) {
+    return otp;
+  }
+
+  async verifyOtp(email: string, otp: string): Promise<boolean> {
     const record = await this._otpRepo.findOtpByEmail(email);
-    if (!record) throw new Error("No OTP requested for this email");
-    if (record.expiresAt < new Date()) throw new Error("OTP expired");
-    if (record.otp !== otp) throw new Error("Invalid OTP");
+    if (!record) throw new Error(MESSAGES.NO_OTP_REQUESTED);
+    if (record.expiresAt < new Date()) throw new Error(MESSAGES.OTP_EXPIRED);
+    if (record.otp !== otp) throw new Error(MESSAGES.INVALID_OTP);
 
     await this._otpRepo.deleteOtp(record._id.toString());
     return true;
   }
 
-  async clearOtp(email:string){
-    await this._otpRepo.deleteOtp(email)
+  async clearOtp(email: string): Promise<void> {
+    await this._otpRepo.deleteOtp(email);
   }
 }

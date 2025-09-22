@@ -7,6 +7,16 @@ export const MESSAGES = {
   UPDATED: "Updated",
   DELETED: "Deleted",
   BANNED: "Banned",
+  INVALID_ROLE: "Invalid role",
+  MAIL_CONFIG_INCOMPLETE: "Mail configuration is incomplete",
+  MAIL_DELIVERY_FAILED: "Failed to deliver email",
+  EMAIL_NOT_FOUND: "Email not found",
+
+  NO_OTP_REQUESTED: "No OTP requested for this email",
+  OTP_EXPIRED: "OTP has expired",
+  INVALID_OTP: "Invalid OTP",
+  EMAIL_ALREADY_REGISTERED: "Email is already registered",
+
   SERVER_ERROR: "Server Error",
   OTP_SENT: "OTP sent successfully",
   USER_EXISTS: "User already exists",
@@ -23,6 +33,9 @@ export const MESSAGES = {
   TRAINER_NOT_FOUND: "Trainer not Found",
   FETCH_GYMS_ERROR: "Failed to fetch gyms",
   GYM_NOT_FOUND: "Gym not found",
+  GYM_VERIFICATION_REJECTED: "Gym verification rejected",
+  ADMIN_NOT_FOUND: "Admin not found",
+  ADMIN_MEALS_NOT_ALLOWED: "Admin created meals are not allowed",
   ADMIN_REQUIRED: "Admin role required",
   // Newly added messages
   OTP_VERIFIED: "OTP verified successfully",

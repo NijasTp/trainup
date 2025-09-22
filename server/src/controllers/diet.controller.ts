@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import { DietService } from '../services/diet.service';
 import TYPES from '../core/types/types';
 import { STATUS_CODE as STATUS } from '../constants/status';
 import { MESSAGES } from '../constants/messages';
@@ -24,11 +23,12 @@ import {
   ApplyTemplateRequestDto,
   ApplyTemplateParamsDto,
 } from '../dtos/diet.dto';
+import { IDietService } from '../core/interfaces/services/IDietService';
 
 @injectable()
 export class DietController {
   constructor(
-    @inject(TYPES.IDietService) private _dietService: DietService,
+    @inject(TYPES.IDietService) private _dietService: IDietService,
     @inject(TYPES.ITemplateService) private _templateService: DietTemplateService
   ) {}
 

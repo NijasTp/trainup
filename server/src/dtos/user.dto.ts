@@ -98,8 +98,13 @@ export class GetTrainersQueryDto {
   page?: string;
   limit?: string;
   search?: string;
+  specialization?: string;
+  location?: string;
+  experience?: string;
+  minRating?: string;
+  minPrice?: string;
+  maxPrice?: string;
 }
-
 export class GetTrainersResponseDto {
   trainers: {
     trainers: TrainerPublicDto[];

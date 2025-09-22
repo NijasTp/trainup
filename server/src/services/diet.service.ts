@@ -1,154 +1,139 @@
-import { inject, injectable } from 'inversify'
-import { IDietDayRepository } from '../core/interfaces/repositories/IDietRepository'
-import TYPES from '../core/types/types'
-import { IDietDay, IMeal } from '../models/diet.model'
-import { MESSAGES } from '../constants/messages'
-import { IStreakService } from '../core/interfaces/services/IStreakService'
-import { CreateOrGetDayResponseDto, MealDto } from '../dtos/diet.dto'
-import { IDietService } from '../core/interfaces/services/IDietService'
+import { inject, injectable } from 'inversify';
+import { IDietDayRepository } from '../core/interfaces/repositories/IDietRepository';
+import TYPES from '../core/types/types';
+import { IDietDay, IMeal } from '../models/diet.model';
+import { MESSAGES } from '../constants/messages';
+import { IStreakService } from '../core/interfaces/services/IStreakService';
+import { CreateOrGetDayResponseDto, MealDto } from '../dtos/diet.dto';
+import { IDietService } from '../core/interfaces/services/IDietService';
+import { JwtPayload } from '../core/interfaces/services/IJwtService';
+import { ROLE } from '../constants/role';
 
 @injectable()
 export class DietService implements IDietService {
-  constructor (
+  constructor(
     @inject(TYPES.IDietDayRepository) private _dietRepo: IDietDayRepository,
     @inject(TYPES.IStreakService) private _streakService: IStreakService
   ) {}
 
-  async createOrGetDay (
-    userId: string,
-    date: string
-  ): Promise<CreateOrGetDayResponseDto> {
-    const day = await this._dietRepo.createOrGet(userId, date)
-    return this.mapToResponseDto(day)
+  async createOrGetDay(userId: string, date: string): Promise<CreateOrGetDayResponseDto> {
+    const day = await this._dietRepo.createOrGet(userId, date);
+    return this.mapToResponseDto(day);
   }
 
-  async getDay (
-    userId: string,
-    date: string
-  ): Promise<CreateOrGetDayResponseDto | null> {
-    const day = await this._dietRepo.getByUserAndDate(userId, date)
-    return day ? this.mapToResponseDto(day) : null
+  async getDay(userId: string, date: string): Promise<CreateOrGetDayResponseDto | null> {
+    const day = await this._dietRepo.getByUserAndDate(userId, date);
+    return day ? this.mapToResponseDto(day) : null;
   }
 
-  async addMeal (
-    actor: { id: string; role: string },
+  async addMeal(
+    actor: JwtPayload,
     userId: string,
     date: string,
     mealPayload: Partial<MealDto>
   ): Promise<CreateOrGetDayResponseDto> {
-    if (mealPayload.source === 'admin') {
-      throw new Error(
-        "Admin meals must be created as templates, not added directly to a user's day"
-      )
+    if (mealPayload.source === ROLE.ADMIN) {
+      throw new Error(MESSAGES.ADMIN_MEALS_NOT_ALLOWED);
     }
 
-    if (actor.role === 'user') {
-      mealPayload.source = 'user'
-      mealPayload.sourceId = actor.id
+    if (actor.role === ROLE.USER) {
+      mealPayload.source = ROLE.USER;
+      mealPayload.sourceId = actor.id;
     }
 
-    if (actor.role === 'trainer') {
-      mealPayload.source = 'trainer'
-      mealPayload.sourceId = actor.id
+    if (actor.role === ROLE.TRAINER) {
+      mealPayload.source = ROLE.TRAINER;
+      mealPayload.sourceId = actor.id;
     }
 
-    if (actor.role !== 'user' && actor.role !== 'trainer') {
-      throw new Error(MESSAGES.FORBIDDEN)
+    if (actor.role !== ROLE.USER && actor.role !== ROLE.TRAINER) {
+      throw new Error(MESSAGES.FORBIDDEN);
     }
 
-    mealPayload.usedBy = userId
+    mealPayload.usedBy = userId;
 
-    await this._dietRepo.createOrGet(userId, date)
-    const day = await this._dietRepo.addMeal(userId, date, mealPayload as IMeal)
-    return this.mapToResponseDto(day)
+    await this._dietRepo.createOrGet(userId, date);
+    const day = await this._dietRepo.addMeal(userId, date, mealPayload as IMeal);
+    return this.mapToResponseDto(day);
   }
 
-  async updateMeal (
-    actor: { id: string; role: string },
+  async updateMeal(
+    actor: JwtPayload,
     userId: string,
     date: string,
     mealId: string,
     update: Partial<MealDto>
   ): Promise<CreateOrGetDayResponseDto | null> {
-    const day = await this._dietRepo.getByUserAndDate(userId, date)
-    if (!day) throw new Error(MESSAGES.NOT_FOUND)
+    const day = await this._dietRepo.getByUserAndDate(userId, date);
+    if (!day) throw new Error(MESSAGES.NOT_FOUND);
 
-    const meal = day.meals.find(m => m._id?.toString() === mealId)
-    if (!meal) throw new Error(MESSAGES.NOT_FOUND)
+    const meal = day.meals.find((m) => m._id?.toString() === mealId);
+    if (!meal) throw new Error(MESSAGES.NOT_FOUND);
 
-    const creatorId = meal.sourceId?.toString()
-    if (actor.role === 'admin') throw new Error(MESSAGES.FORBIDDEN)
+    const creatorId = meal.sourceId?.toString();
+    if (actor.role === ROLE.ADMIN) throw new Error(MESSAGES.FORBIDDEN);
 
-    if (actor.role === 'trainer') {
-      if (creatorId !== actor.id) throw new Error(MESSAGES.FORBIDDEN)
+    if (actor.role === ROLE.TRAINER) {
+      if (creatorId !== actor.id) throw new Error(MESSAGES.FORBIDDEN);
     }
 
-    if (actor.role === 'user') {
-      if (meal.source !== 'user' || actor.id !== creatorId)
-        throw new Error(MESSAGES.FORBIDDEN)
+    if (actor.role === ROLE.USER) {
+      if (meal.source !== ROLE.USER || actor.id !== creatorId) throw new Error(MESSAGES.FORBIDDEN);
     }
 
-    const updated = await this._dietRepo.updateMeal(
-      userId,
-      date,
-      mealId,
-      update as any
-    )
-    return updated ? this.mapToResponseDto(updated) : null
+    const updated = await this._dietRepo.updateMeal(userId, date, mealId, update as Partial<IMeal>);
+    return updated ? this.mapToResponseDto(updated) : null;
   }
 
-  async markMealEaten (
-    actor: { id: string; role: string },
+  async markMealEaten(
+    actor: JwtPayload,
     userId: string,
     date: string,
     mealId: string,
     isEaten: boolean
   ): Promise<CreateOrGetDayResponseDto | null> {
-    if (actor.role === 'user' && actor.id !== userId)
-      throw new Error(MESSAGES.FORBIDDEN)
-    if (actor.role !== 'user' && actor.role !== 'trainer')
-      throw new Error(MESSAGES.FORBIDDEN)
+    if (actor.role === ROLE.USER && actor.id !== userId) throw new Error(MESSAGES.FORBIDDEN);
+    if (actor.role !== ROLE.USER && actor.role !== ROLE.TRAINER) throw new Error(MESSAGES.FORBIDDEN);
 
-    await this._streakService.updateUserStreak(userId as any)
+    await this._streakService.updateUserStreak(userId);
 
-    const updated = await this._dietRepo.markMeal(userId, date, mealId, isEaten)
-    return updated ? this.mapToResponseDto(updated) : null
+    const updated = await this._dietRepo.markMeal(userId, date, mealId, isEaten);
+    return updated ? this.mapToResponseDto(updated) : null;
   }
 
-  async removeMeal (
-    actor: { id: string; role: string },
+  async removeMeal(
+    actor: JwtPayload,
     userId: string,
     date: string,
     mealId: string
   ): Promise<CreateOrGetDayResponseDto | null> {
-    const day = await this._dietRepo.getByUserAndDate(userId, date)
-    if (!day) throw new Error(MESSAGES.NOT_FOUND)
-    const meal = day.meals.find(m => m._id?.toString() === mealId)
-    if (!meal) throw new Error(MESSAGES.NOT_FOUND)
+    const day = await this._dietRepo.getByUserAndDate(userId, date);
+    if (!day) throw new Error(MESSAGES.NOT_FOUND);
+    const meal = day.meals.find((m) => m._id?.toString() === mealId);
+    if (!meal) throw new Error(MESSAGES.NOT_FOUND);
 
-    const creatorId = meal.sourceId?.toString()
+    const creatorId = meal.sourceId?.toString();
 
-    if (actor.role === 'admin') throw new Error(MESSAGES.FORBIDDEN)
+    if (actor.role === ROLE.ADMIN) throw new Error(MESSAGES.FORBIDDEN);
 
-    if (actor.role === 'trainer') {
-      if (creatorId !== actor.id) throw new Error(MESSAGES.FORBIDDEN)
+    if (actor.role === ROLE.TRAINER) {
+      if (creatorId !== actor.id) throw new Error(MESSAGES.FORBIDDEN);
     }
 
-    if (actor.role === 'user') {
-      if (meal.source !== 'user' || creatorId !== actor.id)
-        throw new Error(MESSAGES.FORBIDDEN)
+    if (actor.role === ROLE.USER) {
+      if (meal.source !== ROLE.USER || creatorId !== actor.id) throw new Error(MESSAGES.FORBIDDEN);
     }
 
-    const updated = await this._dietRepo.removeMeal(userId, date, mealId)
-    return updated ? this.mapToResponseDto(updated) : null
+    const updated = await this._dietRepo.removeMeal(userId, date, mealId);
+    return updated ? this.mapToResponseDto(updated) : null;
   }
 
-  private mapToResponseDto (day: IDietDay): CreateOrGetDayResponseDto {
+  private mapToResponseDto(day: IDietDay): CreateOrGetDayResponseDto {
     return {
       _id: day._id.toString(),
       user: day.user.toString(),
       date: day.date,
-      meals: day.meals.map(meal => ({
+      meals: day.meals.map((meal) => ({
         _id: meal._id?.toString(),
         name: meal.name,
         calories: meal.calories,
@@ -163,10 +148,10 @@ export class DietService implements IDietService {
         nutritions: meal.nutritions,
         notes: meal.notes,
         createdAt: meal.createdAt,
-        updatedAt: meal.updatedAt
+        updatedAt: meal.updatedAt,
       })),
       createdAt: day.createdAt,
-      updatedAt: day.updatedAt
-    }
+      updatedAt: day.updatedAt,
+    };
   }
 }

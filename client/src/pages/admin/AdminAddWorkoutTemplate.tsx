@@ -23,9 +23,12 @@ const WorkoutTemplateForm = () => {
         exercises: [],
     });
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<WgerExercise[]>([]);
+    const [allSearchResults, setAllSearchResults] = useState<WgerExercise[]>([]);
+    const [displayedSearchResults, setDisplayedSearchResults] = useState<WgerExercise[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [page, setPage] = useState<number>(1);
+    const [perPage] = useState<number>(8);
 
     useEffect(() => {
         if (id && type === "workout") {
@@ -59,7 +62,8 @@ const WorkoutTemplateForm = () => {
                     if (!response.ok) throw new Error("Failed to fetch exercises");
 
                     const data = await response.json();
-                    setSearchResults(data.suggestions || []);
+                    setAllSearchResults(data.suggestions || []);
+                    setPage(1);
                 } catch (error) {
                     console.error("Error fetching WGER exercises:", error);
                     toast.error("Failed to search exercises");
@@ -71,9 +75,16 @@ const WorkoutTemplateForm = () => {
             const debounce = setTimeout(fetchExercises, 300);
             return () => clearTimeout(debounce);
         } else {
-            setSearchResults([]);
+            setAllSearchResults([]);
+            setDisplayedSearchResults([]);
         }
     }, [searchQuery, type]);
+
+    useEffect(() => {
+        const start = (page - 1) * perPage;
+        const end = start + perPage;
+        setDisplayedSearchResults(allSearchResults.slice(start, end));
+    }, [page, allSearchResults]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -104,7 +115,8 @@ const WorkoutTemplateForm = () => {
             ],
         }));
         setSearchQuery("");
-        setSearchResults([]);
+        setAllSearchResults([]);
+        setDisplayedSearchResults([]);
     };
 
     const removeExercise = (index: number) => {
@@ -178,6 +190,7 @@ const WorkoutTemplateForm = () => {
             </AdminLayout>
         );
     }
+    const totalPages = Math.ceil(allSearchResults.length / perPage);
 
     return (
         <AdminLayout>
@@ -245,12 +258,12 @@ const WorkoutTemplateForm = () => {
                                         <span className="ml-2 text-gray-400">Searching...</span>
                                     </div>
                                 )}
-                                {searchResults.length > 0 && (
+                                {displayedSearchResults.length > 0 && (
                                     <Card className="group relative overflow-hidden bg-card/40 backdrop-blur-sm border-border/50 hover:border-border transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 max-h-60 overflow-y-auto">
                                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
                                         <CardContent className="p-2 space-y-2">
-                                            {searchResults.map((exercise) => (
+                                            {displayedSearchResults.map((exercise) => (
                                                 <div
                                                     key={exercise.data.id}
                                                     className="flex items-center justify-between p-2 rounded-md bg-background/20 hover:bg-background/30 transition-colors cursor-pointer"
@@ -285,6 +298,27 @@ const WorkoutTemplateForm = () => {
                                             ))}
                                         </CardContent>
                                     </Card>
+                                )}
+                                {allSearchResults.length > 0 && (
+                                    <div className="flex justify-between items-center mt-4">
+                                        <Button
+                                            variant="outline"
+                                            disabled={page === 1 || searchLoading}
+                                            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                                        >
+                                            Previous
+                                        </Button>
+                                        <span className="text-muted-foreground">
+                                            Page {page} of {totalPages}
+                                        </span>
+                                        <Button
+                                            variant="outline"
+                                            disabled={page >= totalPages || searchLoading}
+                                            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                                        >
+                                            Next
+                                        </Button>
+                                    </div>
                                 )}
                             </div>
 
