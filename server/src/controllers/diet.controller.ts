@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { inject, injectable } from 'inversify';
+import { Request, Response, NextFunction } from 'express';
+import { injectable, inject } from 'inversify';
 import TYPES from '../core/types/types';
 import { STATUS_CODE as STATUS } from '../constants/status';
 import { MESSAGES } from '../constants/messages';
@@ -24,6 +24,7 @@ import {
   ApplyTemplateParamsDto,
 } from '../dtos/diet.dto';
 import { IDietService } from '../core/interfaces/services/IDietService';
+import { AppError } from '../utils/appError.util';
 
 @injectable()
 export class DietController {
@@ -32,93 +33,72 @@ export class DietController {
     @inject(TYPES.ITemplateService) private _templateService: DietTemplateService
   ) {}
 
-  async createOrGetDay(req: Request, res: Response): Promise<void> {
+  async createOrGetDay(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id;
       const dto: CreateOrGetDayRequestDto = req.body;
+      if (!dto.date) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS.BAD_REQUEST);
       const day: CreateOrGetDayResponseDto = await this._dietService.createOrGetDay(userId, dto.date);
       res.status(STATUS.OK).json(day);
     } catch (err) {
-      const error = err as Error;
-      res.status(STATUS.BAD_REQUEST).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async trainerCreateOrGetDay(req: Request, res: Response): Promise<void> {
+  async trainerCreateOrGetDay(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const queryDto: GetDayQueryDto = req.query;
       const userId = queryDto.userId;
-      if (!userId) {
-        res.status(STATUS.BAD_REQUEST).json({ error: MESSAGES.INVALID_USER_ID });
-        return;
-      }
+      if (!userId) throw new AppError(MESSAGES.INVALID_USER_ID, STATUS.BAD_REQUEST);
       const dto: CreateOrGetDayRequestDto = req.body;
+      if (!dto.date) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS.BAD_REQUEST);
       const day: CreateOrGetDayResponseDto = await this._dietService.createOrGetDay(userId, dto.date);
       res.status(STATUS.OK).json(day);
     } catch (err) {
-      const error = err as Error;
-      res.status(STATUS.BAD_REQUEST).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async getDay(req: Request, res: Response): Promise<void> {
+  async getDay(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id;
       const dto: GetDayParamsDto = { date: req.params.date };
       const day = await this._dietService.getDay(userId, dto.date);
-      if (!day) {
-        res.status(STATUS.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND });
-        return;
-      }
+      if (!day) throw new AppError(MESSAGES.NOT_FOUND, STATUS.NOT_FOUND);
       res.status(STATUS.OK).json(day);
     } catch (err) {
-      const error = err as Error;
-      res.status(STATUS.BAD_REQUEST).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async trainerGetDay(req: Request, res: Response): Promise<void> {
+  async trainerGetDay(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const queryDto: GetDayQueryDto = req.query;
       const userId = queryDto.userId;
-      if (!userId) {
-        res.status(STATUS.BAD_REQUEST).json({ error: MESSAGES.INVALID_USER_ID });
-        return;
-      }
+      if (!userId) throw new AppError(MESSAGES.INVALID_USER_ID, STATUS.BAD_REQUEST);
       const dto: GetDayParamsDto = { date: req.params.date };
       const day = await this._dietService.getDay(userId, dto.date);
-      if (!day) {
-        res.status(STATUS.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND });
-        return;
-      }
+      if (!day) throw new AppError(MESSAGES.NOT_FOUND, STATUS.NOT_FOUND);
       res.status(STATUS.OK).json(day);
     } catch (err) {
-      const error = err as Error;
-      res.status(STATUS.BAD_REQUEST).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async createDietSession(req: Request, res: Response): Promise<void> {
+  async createDietSession(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const actor = req.user as JwtPayload;
-      if (actor.role !== 'trainer') {
-        res.status(STATUS.FORBIDDEN).json({ error: MESSAGES.FORBIDDEN });
-        return;
-      }
+      if (actor.role !== 'trainer') throw new AppError(MESSAGES.FORBIDDEN, STATUS.FORBIDDEN);
       const dto: CreateDietSessionRequestDto = req.body;
-      if (!dto.userId || !dto.date) {
-        res.status(STATUS.BAD_REQUEST).json({ error: MESSAGES.MISSING_REQUIRED_FIELDS });
-        return;
-      }
+      if (!dto.userId || !dto.date) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS.BAD_REQUEST);
       const day = await this._dietService.createOrGetDay(dto.userId, dto.date);
       res.status(STATUS.CREATED).json(day);
     } catch (err) {
-      const error = err as Error;
-      res.status(STATUS.BAD_REQUEST).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async addMeal(req: Request, res: Response): Promise<void> {
+  async addMeal(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const actor = req.user as JwtPayload;
       const queryDto: GetDayQueryDto = req.query;
@@ -128,108 +108,85 @@ export class DietController {
       const day = await this._dietService.addMeal(actor, userId, paramsDto.date, dto);
       res.status(STATUS.CREATED).json(day);
     } catch (err) {
-      const error = err as Error;
-      const code = error.message === MESSAGES.FORBIDDEN ? STATUS.FORBIDDEN : STATUS.BAD_REQUEST;
-      res.status(code).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async updateMeal(req: Request, res: Response): Promise<void> {
+  async updateMeal(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const actor = req.user as JwtPayload;
       const paramsDto: UpdateMealParamsDto = {
         date: req.params.date,
         mealId: req.params.mealId,
-        userId: req.params.userId
+        userId: req.params.userId,
       };
       const userId = paramsDto.userId || actor.id;
       const dto: UpdateMealRequestDto = req.body;
       const updated = await this._dietService.updateMeal(actor, userId, paramsDto.date, paramsDto.mealId, dto);
-      if (!updated) {
-        res.status(STATUS.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND });
-        return;
-      }
+      if (!updated) throw new AppError(MESSAGES.NOT_FOUND, STATUS.NOT_FOUND);
       res.status(STATUS.OK).json(updated);
     } catch (err) {
-      const error = err as Error;
-      const code = error.message === MESSAGES.FORBIDDEN ? STATUS.FORBIDDEN : STATUS.BAD_REQUEST;
-      res.status(code).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async markEaten(req: Request, res: Response): Promise<void> {
+  async markEaten(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const actor = req.user as JwtPayload;
       const paramsDto: MarkEatenParamsDto = {
         date: req.params.date,
         mealId: req.params.mealId,
-        userId: req.params.userId
+        userId: req.params.userId,
       };
       const userId = paramsDto.userId || actor.id;
       const dto: MarkEatenRequestDto = req.body;
       const updated = await this._dietService.markMealEaten(actor, userId, paramsDto.date, paramsDto.mealId, !!dto.isEaten);
-      if (!updated) {
-        res.status(STATUS.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND });
-        return;
-      }
+      if (!updated) throw new AppError(MESSAGES.NOT_FOUND, STATUS.NOT_FOUND);
       res.status(STATUS.OK).json(updated);
     } catch (err) {
-      const error = err as Error;
-      const code = error.message === MESSAGES.FORBIDDEN ? STATUS.FORBIDDEN : STATUS.BAD_REQUEST;
-      res.status(code).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async removeMeal(req: Request, res: Response): Promise<void> {
+  async removeMeal(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const actor = req.user as JwtPayload;
       const paramsDto: RemoveMealParamsDto = {
         date: req.params.date,
         mealId: req.params.mealId,
-        userId: req.params.userId
+        userId: req.params.userId,
       };
       const userId = paramsDto.userId || actor.id;
       const updated = await this._dietService.removeMeal(actor, userId, paramsDto.date, paramsDto.mealId);
-      if (!updated) {
-        res.status(STATUS.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND });
-        return;
-      }
+      if (!updated) throw new AppError(MESSAGES.NOT_FOUND, STATUS.NOT_FOUND);
       res.status(STATUS.OK).json(updated);
     } catch (err) {
-      const error = err as Error;
-      const code = error.message === MESSAGES.FORBIDDEN ? STATUS.FORBIDDEN : STATUS.BAD_REQUEST;
-      res.status(code).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async createTemplate(req: Request, res: Response): Promise<void> {
+  async createTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const actor = req.user as JwtPayload;
-      if (actor.role !== 'admin') {
-        res.status(STATUS.FORBIDDEN).json({ error: MESSAGES.FORBIDDEN });
-        return;
-      }
-
+      if (actor.role !== 'admin') throw new AppError(MESSAGES.FORBIDDEN, STATUS.FORBIDDEN);
       const dto: CreateTemplateRequestDto = req.body;
       const created: TemplateResponseDto = await this._templateService.createTemplate(actor.id, dto);
       res.status(STATUS.CREATED).json(created);
     } catch (err) {
-      const error = err as Error;
-      res.status(STATUS.BAD_REQUEST).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async listTemplates(req: Request, res: Response): Promise<void> {
+  async listTemplates(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const templates = await this._templateService.listTemplates();
       res.status(STATUS.OK).json(templates);
     } catch (err) {
-      const error = err as Error;
-      res.status(STATUS.BAD_REQUEST).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async applyTemplate(req: Request, res: Response): Promise<void> {
+  async applyTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const actor = req.user as JwtPayload;
       const paramsDto: ApplyTemplateParamsDto = req.params;
@@ -237,14 +194,12 @@ export class DietController {
       const dto: ApplyTemplateRequestDto = req.body;
 
       if (actor.role === 'user' && actor.id !== userId) {
-        res.status(STATUS.FORBIDDEN).json({ error: MESSAGES.FORBIDDEN });
-        return;
+        throw new AppError(MESSAGES.FORBIDDEN, STATUS.FORBIDDEN);
       }
 
       const template = await this._templateService.getTemplate(dto.templateId);
       if (!template) {
-        res.status(STATUS.NOT_FOUND).json({ error: MESSAGES.NOT_FOUND });
-        return;
+        throw new AppError(MESSAGES.NOT_FOUND, STATUS.NOT_FOUND);
       }
 
       const meals = template.meals.map((m) => ({
@@ -270,8 +225,7 @@ export class DietController {
 
       res.status(STATUS.OK).json(day);
     } catch (err) {
-      const error = err as Error;
-      res.status(STATUS.BAD_REQUEST).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 }

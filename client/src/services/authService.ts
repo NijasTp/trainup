@@ -2,16 +2,11 @@ import API from '../lib/axios';
 
 
 export const login = async (email: string, password: string) => {
-  try {
+
     const response = await API.post('/user/login', { email, password });
-    if (response?.status >= 200 && response?.status < 300) {
-      return response.data;
-    }
-    throw new Error(response?.data?.error || 'Login failed');
-  } catch (err: any) {
-    console.log('API error:', err);
-    throw new Error( 'Login failed: Unable to connect to the server');
-  }
+    return response.data;
+
+
 };
 
 export const checkUserSession = async () => {

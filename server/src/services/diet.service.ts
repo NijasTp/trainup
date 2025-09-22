@@ -8,6 +8,8 @@ import { CreateOrGetDayResponseDto, MealDto } from '../dtos/diet.dto';
 import { IDietService } from '../core/interfaces/services/IDietService';
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import { ROLE } from '../constants/role';
+import { AppError } from '../utils/appError.util';
+import { STATUS_CODE } from '../constants/status';
 
 @injectable()
 export class DietService implements IDietService {
@@ -33,7 +35,7 @@ export class DietService implements IDietService {
     mealPayload: Partial<MealDto>
   ): Promise<CreateOrGetDayResponseDto> {
     if (mealPayload.source === ROLE.ADMIN) {
-      throw new Error(MESSAGES.ADMIN_MEALS_NOT_ALLOWED);
+      throw new AppError(MESSAGES.ADMIN_MEALS_NOT_ALLOWED, STATUS_CODE.FORBIDDEN);
     }
 
     if (actor.role === ROLE.USER) {
@@ -47,7 +49,7 @@ export class DietService implements IDietService {
     }
 
     if (actor.role !== ROLE.USER && actor.role !== ROLE.TRAINER) {
-      throw new Error(MESSAGES.FORBIDDEN);
+      throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
     }
 
     mealPayload.usedBy = userId;
@@ -65,20 +67,20 @@ export class DietService implements IDietService {
     update: Partial<MealDto>
   ): Promise<CreateOrGetDayResponseDto | null> {
     const day = await this._dietRepo.getByUserAndDate(userId, date);
-    if (!day) throw new Error(MESSAGES.NOT_FOUND);
+    if (!day) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND);
 
     const meal = day.meals.find((m) => m._id?.toString() === mealId);
-    if (!meal) throw new Error(MESSAGES.NOT_FOUND);
+    if (!meal) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND);
 
     const creatorId = meal.sourceId?.toString();
-    if (actor.role === ROLE.ADMIN) throw new Error(MESSAGES.FORBIDDEN);
+    if (actor.role === ROLE.ADMIN) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
 
     if (actor.role === ROLE.TRAINER) {
-      if (creatorId !== actor.id) throw new Error(MESSAGES.FORBIDDEN);
+      if (creatorId !== actor.id) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
     }
 
     if (actor.role === ROLE.USER) {
-      if (meal.source !== ROLE.USER || actor.id !== creatorId) throw new Error(MESSAGES.FORBIDDEN);
+      if (meal.source !== ROLE.USER || actor.id !== creatorId) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
     }
 
     const updated = await this._dietRepo.updateMeal(userId, date, mealId, update as Partial<IMeal>);
@@ -92,8 +94,8 @@ export class DietService implements IDietService {
     mealId: string,
     isEaten: boolean
   ): Promise<CreateOrGetDayResponseDto | null> {
-    if (actor.role === ROLE.USER && actor.id !== userId) throw new Error(MESSAGES.FORBIDDEN);
-    if (actor.role !== ROLE.USER && actor.role !== ROLE.TRAINER) throw new Error(MESSAGES.FORBIDDEN);
+    if (actor.role === ROLE.USER && actor.id !== userId) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
+    if (actor.role !== ROLE.USER && actor.role !== ROLE.TRAINER) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
 
     await this._streakService.updateUserStreak(userId);
 
@@ -108,20 +110,20 @@ export class DietService implements IDietService {
     mealId: string
   ): Promise<CreateOrGetDayResponseDto | null> {
     const day = await this._dietRepo.getByUserAndDate(userId, date);
-    if (!day) throw new Error(MESSAGES.NOT_FOUND);
+    if (!day) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND);
     const meal = day.meals.find((m) => m._id?.toString() === mealId);
-    if (!meal) throw new Error(MESSAGES.NOT_FOUND);
+    if (!meal) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND);
 
     const creatorId = meal.sourceId?.toString();
 
-    if (actor.role === ROLE.ADMIN) throw new Error(MESSAGES.FORBIDDEN);
+    if (actor.role === ROLE.ADMIN) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
 
     if (actor.role === ROLE.TRAINER) {
-      if (creatorId !== actor.id) throw new Error(MESSAGES.FORBIDDEN);
+      if (creatorId !== actor.id) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
     }
 
     if (actor.role === ROLE.USER) {
-      if (meal.source !== ROLE.USER || creatorId !== actor.id) throw new Error(MESSAGES.FORBIDDEN);
+      if (meal.source !== ROLE.USER || creatorId !== actor.id) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
     }
 
     const updated = await this._dietRepo.removeMeal(userId, date, mealId);

@@ -9,6 +9,8 @@ import { IGymRepository } from '../core/interfaces/repositories/IGymRepository';
 import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepository';
 import { logger } from '../utils/logger.util';
 import { MESSAGES } from '../constants/messages';
+import { AppError } from '../utils/appError.util';
+import { STATUS_CODE } from '../constants/status';
 
 @injectable()
 export class OtpService implements IOTPService {
@@ -36,7 +38,7 @@ export class OtpService implements IOTPService {
       case 'admin':
         return this._adminRepo;
       default:
-        throw new Error(MESSAGES.INVALID_ROLE);
+        throw new AppError(MESSAGES.INVALID_ROLE, STATUS_CODE.BAD_REQUEST);
     }
   }
 
@@ -44,7 +46,7 @@ export class OtpService implements IOTPService {
     const repo = this.getRepoByRole(role);
     const existing = await repo.findByEmail(email);
     if (existing) {
-      throw new Error(MESSAGES.EMAIL_ALREADY_REGISTERED);
+      throw new AppError(MESSAGES.EMAIL_ALREADY_REGISTERED, STATUS_CODE.BAD_REQUEST);
     }
 
     const otp = this.generateOtp();
@@ -61,7 +63,7 @@ export class OtpService implements IOTPService {
     const repo = this.getRepoByRole(role);
     const existing = await repo.findByEmail(email);
     if (!existing) {
-      throw new Error(MESSAGES.EMAIL_NOT_FOUND);
+      throw new AppError(MESSAGES.EMAIL_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     }
 
     const otp = this.generateOtp();
@@ -76,9 +78,9 @@ export class OtpService implements IOTPService {
 
   async verifyOtp(email: string, otp: string): Promise<boolean> {
     const record = await this._otpRepo.findOtpByEmail(email);
-    if (!record) throw new Error(MESSAGES.NO_OTP_REQUESTED);
-    if (record.expiresAt < new Date()) throw new Error(MESSAGES.OTP_EXPIRED);
-    if (record.otp !== otp) throw new Error(MESSAGES.INVALID_OTP);
+    if (!record) throw new AppError(MESSAGES.NO_OTP_REQUESTED, STATUS_CODE.BAD_REQUEST);
+    if (record.expiresAt < new Date()) throw new AppError(MESSAGES.OTP_EXPIRED, STATUS_CODE.BAD_REQUEST);
+    if (record.otp !== otp) throw new AppError(MESSAGES.INVALID_OTP, STATUS_CODE.BAD_REQUEST);
 
     await this._otpRepo.deleteOtp(record._id.toString());
     return true;

@@ -25,7 +25,7 @@ const LoginForm = () => {
       toast.success("Login successful");
       navigate("/home");
     } catch (err: any) {
-      const errorMessage = err.message || "Login failed";
+      const errorMessage = err.response?.data?.error || "Login failed";
       setError(errorMessage);
       console.error("Login error:", err);
     }

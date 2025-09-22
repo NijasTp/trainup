@@ -3,6 +3,8 @@ import { IMailService } from '../core/interfaces/services/IMailService';
 import { MailUtil } from '../utils/mail.util';
 import dotenv from 'dotenv';
 import { MESSAGES } from '../constants/messages';
+import { AppError } from '../utils/appError.util';
+import { STATUS_CODE } from '../constants/status';
 
 dotenv.config();
 
@@ -17,7 +19,7 @@ export class MailService implements IMailService {
 
   private validateEnv(): void {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      throw new Error(MESSAGES.MAIL_CONFIG_INCOMPLETE);
+      throw new AppError(MESSAGES.MAIL_CONFIG_INCOMPLETE, STATUS_CODE.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -26,7 +28,7 @@ export class MailService implements IMailService {
       await this._mailUtil.send(to, subject, html);
     } catch (err) {
       const error = err as Error;
-      throw new Error(error.message || MESSAGES.MAIL_DELIVERY_FAILED);
+      throw new AppError(error.message || MESSAGES.MAIL_DELIVERY_FAILED, STATUS_CODE.INTERNAL_SERVER_ERROR);
     }
   }
 }

@@ -6,6 +6,9 @@ import { IWorkoutDayRepository } from '../core/interfaces/repositories/IWorkoutD
 import { IWorkoutSession } from '../models/workout.model';
 import { IStreakService } from '../core/interfaces/services/IStreakService';
 import { WorkoutSessionResponseDto, WorkoutDayResponseDto, GetAdminTemplatesResponseDto } from '../dtos/workout.dto'
+import { AppError } from '../utils/appError.util';
+import { STATUS_CODE } from '../constants/status'
+import { MESSAGES } from '../constants/messages'
 
 @injectable()
 export class WorkoutService implements IWorkoutService {
@@ -18,6 +21,9 @@ export class WorkoutService implements IWorkoutService {
   ) {}
 
   async createSession (payload: Partial<IWorkoutSession>): Promise<WorkoutSessionResponseDto> {
+    if (!payload.userId && payload.givenBy === 'user') {
+      throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
+    }
     const session = await this._sessionRepo.create(payload)
 
     if (payload.givenBy === 'user' || payload.givenBy === 'admin') {
@@ -44,7 +50,7 @@ export class WorkoutService implements IWorkoutService {
 
   async getSession (id: string): Promise<WorkoutSessionResponseDto> {
     const session = await this._sessionRepo.findById(id)
-    if (!session) throw new Error('Session not found')
+    if (!session) throw new AppError(MESSAGES.SESSION_NOT_FOUND, STATUS_CODE.NOT_FOUND)
     return this.mapToSessionResponseDto(session as any)
   }
 
@@ -61,7 +67,7 @@ export class WorkoutService implements IWorkoutService {
         { givenBy: 'trainer', userId },
         { givenBy: 'admin' }
       ],
-      date: { $exists: true } 
+      date: { $exists: true }
     };
 
     if (search) {
@@ -76,8 +82,6 @@ export class WorkoutService implements IWorkoutService {
       totalPages: Math.ceil(total / limit)
     };
   }
-
-
 
   async trainerCreateSession (
     trainerId: string,
@@ -114,12 +118,12 @@ export class WorkoutService implements IWorkoutService {
 
   async updateSession (id: string, payload: IWorkoutSessionPayload): Promise<WorkoutSessionResponseDto> {
     if (payload.notes && payload.givenBy && payload.givenBy !== 'trainer') {
-      throw new Error('Only trainers can set notes')
+      throw new AppError('Only trainers can set notes', STATUS_CODE.FORBIDDEN)
     }
 
     if (payload.exerciseUpdates) {
       const session = await this._sessionRepo.findById(id)
-      if (!session) throw new Error('Session not found')
+      if (!session) throw new AppError('Session not found', STATUS_CODE.NOT_FOUND)
 
       const updatedExercises = session.exercises.map(exercise => {
         const update = payload.exerciseUpdates?.find(
@@ -132,18 +136,19 @@ export class WorkoutService implements IWorkoutService {
     }
 
     const updated = await this._sessionRepo.update(id, payload)
-    if (!updated) throw new Error('Session not found')
+    if (!updated) throw new AppError('Session not found', STATUS_CODE.NOT_FOUND)
     return this.mapToSessionResponseDto(updated)
   }
-  
+
   async deleteSession (id: string) {
-    return this._sessionRepo.delete(id)
+    const success = await this._sessionRepo.delete(id)
+   
   }
 
   async createDay (userId: string, date: string): Promise<WorkoutDayResponseDto> {
     const existing = await this._workoutDayRepo.findByUserAndDate(userId, date)
     if (existing) return this.mapToDayResponseDto(existing)
-    
+
     const day = await this._workoutDayRepo.create({ userId, date, sessions: [] })
     return this.mapToDayResponseDto(day)
   }
@@ -161,6 +166,7 @@ export class WorkoutService implements IWorkoutService {
         day._id.toString(),
         sessionId
       )
+    if (!day) throw new AppError(MESSAGES.INVALID_DAY, STATUS_CODE.BAD_REQUEST)
     return this.mapToDayResponseDto(day!)
   }
 
@@ -195,7 +201,7 @@ export class WorkoutService implements IWorkoutService {
   async updateAdminTemplate(id: string, payload: Partial<IWorkoutSession>): Promise<WorkoutSessionResponseDto> {
     const session = await this._sessionRepo.findById(id);
     if (!session || session.givenBy !== 'admin') {
-      throw new Error('Template not found or not an admin template');
+      throw new AppError('Template not found or not an admin template', STATUS_CODE.NOT_FOUND);
     }
     const updated = await this._sessionRepo.update(id, {
       ...payload,
@@ -204,7 +210,7 @@ export class WorkoutService implements IWorkoutService {
       trainerId: undefined,
       time: undefined,
     });
-    if (!updated) throw new Error('Failed to update template')
+    if (!updated) throw new AppError('Failed to update template', STATUS_CODE.INTERNAL_SERVER_ERROR)
     return this.mapToSessionResponseDto(updated);
   }
 
@@ -239,10 +245,10 @@ export class WorkoutService implements IWorkoutService {
       _id: day._id.toString(),
       userId: day.userId.toString(),
       date: day.date,
-      sessions: Array.isArray(day.sessions) 
-        ? day.sessions.map((session: any) => 
-            typeof session === 'string' 
-              ? { _id: session } as any 
+      sessions: Array.isArray(day.sessions)
+        ? day.sessions.map((session: any) =>
+            typeof session === 'string'
+              ? { _id: session } as any
               : this.mapToSessionResponseDto(session)
           )
         : [],

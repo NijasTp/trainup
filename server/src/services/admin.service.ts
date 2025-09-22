@@ -6,6 +6,8 @@ import TYPES from '../core/types/types';
 import { IJwtService } from '../core/interfaces/services/IJwtService';
 import { AdminLoginRequestDto, AdminLoginResponseDto } from '../dtos/admin.dto';
 import { MESSAGES } from '../constants/messages';
+import { AppError } from '../utils/appError.util';
+import { STATUS_CODE } from '../constants/status';
 
 @injectable()
 export class AdminService implements IAdminService {
@@ -16,10 +18,10 @@ export class AdminService implements IAdminService {
 
   async login(dto: AdminLoginRequestDto): Promise<AdminLoginResponseDto> {
     const admin = await this._adminRepository.findByEmail(dto.email);
-    if (!admin) throw new Error(MESSAGES.LOGIN_FAILED);
+    if (!admin) throw new AppError(MESSAGES.LOGIN_FAILED, STATUS_CODE.UNAUTHORIZED);
 
     const isMatch = await bcrypt.compare(dto.password, admin.password);
-    if (!isMatch) throw new Error(MESSAGES.LOGIN_FAILED);
+    if (!isMatch) throw new AppError(MESSAGES.LOGIN_FAILED, STATUS_CODE.UNAUTHORIZED);
 
     const adminId = admin._id as string;
 
@@ -49,7 +51,7 @@ export class AdminService implements IAdminService {
   async updateTokenVersion(adminId: string): Promise<void> {
     const admin = await this._adminRepository.findById(adminId);
     if (!admin) {
-      throw new Error(MESSAGES.ADMIN_NOT_FOUND);
+      throw new AppError(MESSAGES.ADMIN_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     }
 
     const newTokenVersion = (admin.tokenVersion || 0) + 1;

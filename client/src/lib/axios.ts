@@ -65,7 +65,6 @@ api.interceptors.response.use(
         await api.post("/user/refresh-token", {}, { withCredentials: true });
         return api(originalRequest);      
       } catch (refreshError) {
-        toast.error("Session expired");
 
         const state = store.getState();
         let role: string | null = null;

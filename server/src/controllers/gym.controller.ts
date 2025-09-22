@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../core/types/types';
 import { IGymService } from '../core/interfaces/services/IGymService';
@@ -16,6 +16,7 @@ import {
   GymDataResponseDto,
 } from '../dtos/gym.dto';
 import { logger } from '../utils/logger.util';
+import { AppError } from '../utils/appError.util';
 
 @injectable()
 export class GymController {
@@ -25,22 +26,20 @@ export class GymController {
     @inject(TYPES.IJwtService) private _jwtService: IJwtService
   ) {}
 
-  async requestOtp(req: Request, res: Response): Promise<void> {
-    const dto: GymRequestOtpDto = req.body;
+  async requestOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const dto: GymRequestOtpDto = req.body;
       await this._otpService.requestOtp(dto.email, ROLE.GYM);
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_SENT });
     } catch (err) {
-      const error = err as Error;
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async verifyOtp(req: Request, res: Response): Promise<void> {
-    const dto: GymVerifyOtpDto = req.body;
+  async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const dto: GymVerifyOtpDto = req.body;
       await this._otpService.verifyOtp(dto.email, dto.otp);
-
       const result: GymLoginResponseDto = await this._gymService.registerGym(
         {
           name: dto.name,
@@ -54,56 +53,43 @@ export class GymController {
           images?: UploadedFile | UploadedFile[];
         }
       );
-
       this._jwtService.setTokens(res, result.accessToken, result.refreshToken);
       res.status(STATUS_CODE.CREATED).json({ gym: result.gym });
     } catch (err) {
-      const error = err as Error;
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message || MESSAGES.INVALID_REQUEST });
+      next(err);
     }
   }
 
-  async getData(req: Request, res: Response): Promise<void> {
+  async getData(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const jwtUser = req.user as JwtPayload;
       const gymId = jwtUser.id;
-      if (!gymId) {
-        res.status(STATUS_CODE.BAD_REQUEST).json({ error: MESSAGES.INVALID_GYM_ID });
-        return;
-      }
-
+      if (!gymId) throw new AppError(MESSAGES.INVALID_GYM_ID, STATUS_CODE.BAD_REQUEST);
       const data: GymDataResponseDto = await this._gymService.getGymData(gymId);
       res.status(STATUS_CODE.OK).json(data);
     } catch (err) {
-      const error = err as Error;
-      res
-        .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
-        .json({ error: error.message || MESSAGES.SERVER_ERROR });
+      next(err);
     }
   }
 
-  async login(req: Request, res: Response): Promise<void> {
-    const dto: GymLoginDto = req.body;
+  async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const dto: GymLoginDto = req.body;
       const result: GymLoginResponseDto = await this._gymService.loginGym(dto.email, dto.password);
       this._jwtService.setTokens(res, result.accessToken, result.refreshToken);
       res.status(STATUS_CODE.OK).json({ gym: result.gym });
     } catch (err) {
-      const error = err as Error;
-      res.status(STATUS_CODE.BAD_REQUEST).json({ error: error.message || MESSAGES.LOGIN_FAILED });
+      next(err);
     }
   }
 
-  async logout(req: Request, res: Response): Promise<void> {
+  async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       this._jwtService.clearTokens(res);
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.DELETED });
     } catch (err) {
-      const error = err as Error;
-      logger.error('Logout error:', error);
-      res
-        .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
-        .json({ error: error.message || MESSAGES.FAILED_TO_LOGOUT });
+      logger.error('Logout error:', err);
+      next(err);
     }
   }
 }

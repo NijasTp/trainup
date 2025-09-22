@@ -11,6 +11,15 @@ export const MESSAGES = {
   MAIL_CONFIG_INCOMPLETE: "Mail configuration is incomplete",
   MAIL_DELIVERY_FAILED: "Failed to deliver email",
   EMAIL_NOT_FOUND: "Email not found",
+  LOGOUT_SUCCESS: "Logged out successfully",
+  USER_UPDATED:" User updated successfully",
+  INVALID_PASSWORD: "Invalid password",
+
+  PAYMENT_CONFIG_INCOMPLETE: "Payment configuration is incomplete",
+  PAYMENT_CREATION_FAILED: "Failed to create payment order",
+
+  FAILED_TO_UPDATE_STREAK: "Failed to update streak",
+
 
   NO_OTP_REQUESTED: "No OTP requested for this email",
   OTP_EXPIRED: "OTP has expired",
@@ -37,7 +46,6 @@ export const MESSAGES = {
   ADMIN_NOT_FOUND: "Admin not found",
   ADMIN_MEALS_NOT_ALLOWED: "Admin created meals are not allowed",
   ADMIN_REQUIRED: "Admin role required",
-  // Newly added messages
   OTP_VERIFIED: "OTP verified successfully",
   FAILED_TO_UPDATE_GYM_STATUS: "Failed to update gym status",
   PASSWORD_RESET: "Password reset successfully",

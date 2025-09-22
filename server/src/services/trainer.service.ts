@@ -17,6 +17,9 @@ import {
   GetClientsResponseDto,
   ClientDto
 } from '../dtos/trainer.dto'
+import { AppError } from '../utils/appError.util'
+import { STATUS_CODE } from '../constants/status'
+import { MESSAGES } from '../constants/messages'
 
 @injectable()
 export class TrainerService implements ITrainerService {
@@ -32,16 +35,16 @@ export class TrainerService implements ITrainerService {
   ): Promise<TrainerLoginResponseDto> {
     const trainer = await this._trainerRepo.findByEmail(email)
     if (!trainer) {
-      throw new Error("Trainer doesn't exist")
+      throw new AppError("Trainer doesn't exist", STATUS_CODE.NOT_FOUND)
     }
 
     if (trainer.isBanned) {
-      throw new Error('Your account has been banned.')
+      throw new AppError('Your account has been banned.', STATUS_CODE.FORBIDDEN)
     }
 
     const isPasswordValid = await bcrypt.compare(password, trainer.password)
     if (!isPasswordValid) {
-      throw new Error('Invalid password')
+      throw new AppError('Invalid password', STATUS_CODE.UNAUTHORIZED)
     }
 
     const accessToken = this._jwtService.generateAccessToken(
@@ -64,13 +67,13 @@ export class TrainerService implements ITrainerService {
 
   async forgotPassword (email: string) {
     const trainer = await this._trainerRepo.findByEmail(email)
-    if (!trainer) throw new Error('Trainer not found')
+    if (!trainer) throw new AppError('Trainer not found', STATUS_CODE.NOT_FOUND)
     await this._otpService.requestForgotPasswordOtp(email, 'trainer')
   }
 
   async verifyOtp (email: string, otp: string) {
     const isValid = await this._otpService.verifyOtp(email, otp)
-    if (!isValid) throw new Error('Invalid or expired OTP')
+    if (!isValid) throw new AppError('Invalid or expired OTP', STATUS_CODE.BAD_REQUEST)
   }
 
   async resetPassword (email: string, password: string) {
@@ -90,8 +93,9 @@ export class TrainerService implements ITrainerService {
       !trainerData.certificate ||
       !trainerData.profileImage
     ) {
-      throw new Error(
-        'Missing required fields: name, email, phone, password, certificate, profileImage'
+      throw new AppError(
+        'Missing required fields: name, email, phone, password, certificate, profileImage',
+        STATUS_CODE.BAD_REQUEST
       )
     }
 
@@ -99,7 +103,7 @@ export class TrainerService implements ITrainerService {
       trainerData.email
     )
     if (existingTrainer) {
-      throw new Error('Email already registered')
+      throw new AppError('Email already registered', STATUS_CODE.BAD_REQUEST)
     }
 
     const salt = await bcrypt.genSalt(10)
@@ -115,7 +119,7 @@ export class TrainerService implements ITrainerService {
       )
       certificateUrl = certificateUploadResult.secure_url
     } catch (error: any) {
-      console.error('Cloudinary certificate upload error:', {
+      logger.error('Cloudinary certificate upload error:', {
         message: error.message,
         status: error.http_code,
         details: error,
@@ -125,8 +129,9 @@ export class TrainerService implements ITrainerService {
           mimetype: trainerData.certificate.mimetype
         }
       })
-      throw new Error(
-        `Failed to upload certificate: ${error.message || 'Unknown error'}`
+      throw new AppError(
+        `Failed to upload certificate: ${error.message || 'Unknown error'}`,
+        STATUS_CODE.INTERNAL_SERVER_ERROR
       )
     }
 
@@ -137,9 +142,10 @@ export class TrainerService implements ITrainerService {
       )
       profileImageUrl = profileImageUploadResult.secure_url
     } catch (error: any) {
-      console.error('Cloudinary profile image upload error:', error)
-      throw new Error(
-        `Failed to upload profile image: ${error.message || 'Unknown error'}`
+      logger.error('Cloudinary profile image upload error:', error)
+      throw new AppError(
+        `Failed to upload profile image: ${error.message || 'Unknown error'}`,
+        STATUS_CODE.INTERNAL_SERVER_ERROR
       )
     }
 
@@ -180,7 +186,7 @@ export class TrainerService implements ITrainerService {
   async reapplyAsTrainer (trainerId: string, trainerData: TrainerApplyData) {
     const existingTrainer = await this._trainerRepo.findById(trainerId)
     if (!existingTrainer) {
-      throw new Error('Trainer not found')
+      throw new AppError('Trainer not found', STATUS_CODE.NOT_FOUND)
     }
     const trainerToUpdate: Partial<ITrainer> = {
       name: trainerData.name || existingTrainer.name,
@@ -204,8 +210,9 @@ export class TrainerService implements ITrainerService {
         trainerToUpdate.certificate = certificateUploadResult.secure_url
       } catch (error: any) {
         logger.error('cloudinary error:', error)
-        throw new Error(
-          `Failed to upload certificate: ${error.message || 'Unknown error'}`
+        throw new AppError(
+          `Failed to upload certificate: ${error.message || 'Unknown error'}`,
+          STATUS_CODE.INTERNAL_SERVER_ERROR
         )
       }
     }
@@ -218,9 +225,10 @@ export class TrainerService implements ITrainerService {
         )
         trainerToUpdate.profileImage = profileImageUploadResult.secure_url
       } catch (error: any) {
-        console.error('Cloudinary profile image upload error:', error)
-        throw new Error(
-          `Failed to upload profile image: ${error.message || 'Unknown error'}`
+        logger.error('Cloudinary profile image upload error:', error)
+        throw new AppError(
+          `Failed to upload profile image: ${error.message || 'Unknown error'}`,
+          STATUS_CODE.INTERNAL_SERVER_ERROR
         )
       }
     }
@@ -234,7 +242,7 @@ export class TrainerService implements ITrainerService {
 
   async getTrainerById (id: string): Promise<TrainerResponseDto> {
     const trainer = await this._trainerRepo.findById(id)
-    if (!trainer) throw new Error('Trainer not found')
+    if (!trainer) throw new AppError('Trainer not found', STATUS_CODE.NOT_FOUND)
     return this.mapToResponseDto(trainer)
   }
 
@@ -284,18 +292,24 @@ export class TrainerService implements ITrainerService {
       trainers: trainers.map(trainer => this.mapToResponseDto(trainer)),
       total,
       page,
-      totalPages: Math.ceil(total / limit) || 1 
+      totalPages: Math.ceil(total / limit) || 1
     }
   }
   async getTrainerApplication (id: string) {
-    return await this._trainerRepo.findApplicationByTrainerId(id)
+    const application = await this._trainerRepo.findApplicationByTrainerId(id)
+    if (!application) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    return application
   }
 
   async updateTrainerStatus (id: string, updateData: Partial<ITrainer>) {
-    return await this._trainerRepo.updateStatus(id, updateData)
+    const trainer = await this._trainerRepo.updateStatus(id, updateData)
+    if (!trainer) throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    return trainer
   }
 
   async addClientToTrainer (trainerId: string, userId: string): Promise<void> {
+    const trainer = await this._trainerRepo.findById(trainerId)
+    if (!trainer) throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
     await this._trainerRepo.addClient(trainerId, userId)
   }
 
@@ -303,6 +317,8 @@ export class TrainerService implements ITrainerService {
     trainerId: string,
     userId: string
   ): Promise<void> {
+    const trainer = await this._trainerRepo.findById(trainerId)
+    if (!trainer) throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
     await this._trainerRepo.removeClient(trainerId, userId)
   }
 

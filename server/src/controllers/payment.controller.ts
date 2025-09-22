@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { inject, injectable } from 'inversify';
 import { STATUS_CODE } from '../constants/status';
 import TYPES from '../core/types/types';
@@ -11,6 +11,7 @@ import { CreateOrderRequestDto, CreateOrderResponseDto, VerifyPaymentRequestDto,
 import { MESSAGES } from '../constants/messages';
 import { logger } from '../utils/logger.util';
 import { ITransaction } from '../models/transaction.model';
+import { AppError } from '../utils/appError.util';
 
 @injectable()
 export class PaymentController {
@@ -21,24 +22,15 @@ export class PaymentController {
     @inject(TYPES.ITransactionService) private _transactionService: ITransactionService
   ) {}
 
-  async createOrder(req: Request, res: Response): Promise<void> {
+  async createOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: CreateOrderRequestDto = req.body;
       const userId = (req.user as JwtPayload).id;
       const { trainerId, months } = req.body;
 
-      if (!trainerId) {
-        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: MESSAGES.MISSING_REQUIRED_FIELDS });
-        return;
-      }
-      if (!userId) {
-        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: MESSAGES.INVALID_USER_ID });
-        return;
-      }
-      if (!months) {
-        res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: MESSAGES.MISSING_REQUIRED_FIELDS });
-        return;
-      }
+      if (!trainerId) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
+      if (!userId) throw new AppError(MESSAGES.INVALID_USER_ID, STATUS_CODE.BAD_REQUEST);
+      if (!months) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
 
       const order: CreateOrderResponseDto = await this._paymentService.createOrder(dto.amount, dto.currency, dto.receipt);
 
@@ -54,25 +46,20 @@ export class PaymentController {
       };
 
       await this._transactionService.createTransaction(transactionData);
-
       res.status(STATUS_CODE.OK).json(order);
     } catch (err) {
-      const error = err as Error;
-      logger.error('Create Order Error', error);
-      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message || MESSAGES.SERVER_ERROR });
+      logger.error('Create Order Error', err);
+      next(err);
     }
   }
 
-  async verifyPayment(req: Request, res: Response): Promise<void> {
+  async verifyPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: VerifyPaymentRequestDto = req.body;
       const userId = (req.user as JwtPayload).id;
 
       if (!dto.trainerId || !userId || !dto.months) {
-        res
-          .status(STATUS_CODE.BAD_REQUEST)
-          .json({ success: false, message: MESSAGES.MISSING_REQUIRED_FIELDS });
-        return;
+        throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
       }
 
       const isValid = await this._paymentService.verifyPayment(
@@ -87,11 +74,7 @@ export class PaymentController {
 
       let transaction = await this._transactionService.findByOrderId(dto.orderId);
       if (!transaction) {
-        res.status(STATUS_CODE.BAD_REQUEST).json({
-          success: false,
-          message: MESSAGES.NOT_FOUND,
-        });
-        return;
+        throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.BAD_REQUEST);
       }
 
       if (!isValid) {
@@ -100,10 +83,7 @@ export class PaymentController {
           'failed',
           dto.paymentId
         );
-        res
-          .status(STATUS_CODE.BAD_REQUEST)
-          .json({ success: false, message: MESSAGES.INVALID_SIGNATURE });
-        return;
+        throw new AppError(MESSAGES.INVALID_SIGNATURE, STATUS_CODE.BAD_REQUEST);
       }
 
       const trainer = await this._trainerService.getTrainerById(dto.trainerId);
@@ -113,10 +93,7 @@ export class PaymentController {
           'failed',
           dto.paymentId
         );
-        res
-          .status(STATUS_CODE.BAD_REQUEST)
-          .json({ success: false, message: MESSAGES.TRAINER_NOT_FOUND });
-        return;
+        throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.BAD_REQUEST);
       }
 
       const user = await this._userService.getUserById(userId);
@@ -126,11 +103,7 @@ export class PaymentController {
           'failed',
           dto.paymentId
         );
-        res.status(STATUS_CODE.BAD_REQUEST).json({
-          success: false,
-          message: 'User already has a trainer',
-        });
-        return;
+        throw new AppError('User already has a trainer', STATUS_CODE.BAD_REQUEST);
       }
 
       transaction = await this._transactionService.updateTransactionStatus(
@@ -150,15 +123,12 @@ export class PaymentController {
 
       res.status(STATUS_CODE.OK).json(response);
     } catch (err) {
-      const error = err as Error;
-      logger.error('Verify Payment Error', error);
-      res
-        .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
-        .json({ error: error.message || MESSAGES.SERVER_ERROR });
+      logger.error('Verify Payment Error', err);
+      next(err);
     }
   }
 
-  async getTransactions(req: Request, res: Response): Promise<void> {
+  async getTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id;
       const { page = '1', limit = '10', search = '', status = '', sort = 'newest' } = req.query as {
@@ -180,9 +150,8 @@ export class PaymentController {
 
       res.status(STATUS_CODE.OK).json(transactions);
     } catch (err) {
-      const error = err as Error;
-      logger.error('Get Transactions Error', error);
-      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message || MESSAGES.SERVER_ERROR });
+      logger.error('Get Transactions Error', err);
+      next(err);
     }
   }
 }

@@ -3,16 +3,16 @@ import { TemplateRepository } from "../repositories/dietTemplate.repository";
 import { ITemplate } from "../models/dietTemplate.model";
 import TYPES from "../core/types/types";
 import { IDietTemplateService } from "../core/interfaces/services/IDietTemplateService";
-import { CreateTemplateRequestDto, TemplateResponseDto } from '../dtos/diet.dto'
+import { CreateTemplateRequestDto, TemplateResponseDto } from '../dtos/diet.dto';
 
 @injectable()
-export class DietTemplateService implements IDietTemplateService{
+export class DietTemplateService implements IDietTemplateService {
   constructor(@inject(TYPES.ITemplateRepository) private _dietTemplateRepo: TemplateRepository) {}
 
   async createTemplate(adminId: string, dto: CreateTemplateRequestDto): Promise<TemplateResponseDto> {
     const payload: Partial<ITemplate> = {
       ...dto,
-      createdBy: adminId 
+      createdBy: adminId
     };
     const template = await this._dietTemplateRepo.create(payload);
     return this.mapToResponseDto(template);
@@ -28,8 +28,8 @@ export class DietTemplateService implements IDietTemplateService{
     return template ? this.mapToResponseDto(template) : null;
   }
 
-  deleteTemplate(id: string) {
-    return this._dietTemplateRepo.delete(id);
+  async deleteTemplate(id: string): Promise<void> {
+    const success = await this._dietTemplateRepo.delete(id);
   }
 
   private mapToResponseDto(template: ITemplate): TemplateResponseDto {

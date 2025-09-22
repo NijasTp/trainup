@@ -5,6 +5,8 @@ import { IStreakRepository } from '../core/interfaces/repositories/IStreakReposi
 import TYPES from '../core/types/types';
 import { IStreak } from '../models/streak.model';
 import { MESSAGES } from '../constants/messages';
+import { AppError } from '../utils/appError.util';
+import { STATUS_CODE } from '../constants/status';
 
 @injectable()
 export class StreakService implements IStreakService {
@@ -39,7 +41,9 @@ export class StreakService implements IStreakService {
     }
 
     streak.lastActionDate = today;
-    return await this._streakRepo.update(streak);
+    const updated = await this._streakRepo.update(streak);
+    if (!updated) throw new AppError(MESSAGES.FAILED_TO_UPDATE_STREAK, STATUS_CODE.INTERNAL_SERVER_ERROR);
+    return updated;
   }
 
   async checkAndResetUserStreak(userId: Types.ObjectId): Promise<IStreak> {
@@ -55,6 +59,8 @@ export class StreakService implements IStreakService {
     }
     streak.currentStreak = 0;
     streak.lastActionDate = new Date();
-    return await this._streakRepo.update(streak);
+    const updated = await this._streakRepo.update(streak);
+    if (!updated) throw new AppError(MESSAGES.FAILED_TO_UPDATE_STREAK, STATUS_CODE.INTERNAL_SERVER_ERROR);
+    return updated;
   }
 }

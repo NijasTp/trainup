@@ -9,6 +9,8 @@ import { UploadedFile } from 'express-fileupload';
 import { IJwtService } from '../core/interfaces/services/IJwtService';
 import { GymLoginResponseDto, GymResponseDto, GymDataResponseDto } from '../dtos/gym.dto';
 import { MESSAGES } from '../constants/messages';
+import { AppError } from '../utils/appError.util';
+import { STATUS_CODE } from '../constants/status';
 
 @injectable()
 export class GymService implements IGymService {
@@ -29,20 +31,32 @@ export class GymService implements IGymService {
     let profileImageUrl: string | undefined;
     const imageUrls: string[] = [];
 
-    const hashedPassword = await bcrypt.hash(data.password!, 10);
+    if (!data.password) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
     if (files?.certificate) {
-      const certUpload = await cloudinary.uploader.upload(files.certificate.tempFilePath, {
-        folder: 'trainup/gyms/certificate',
-      });
-      certificateUrl = certUpload.secure_url;
+      try {
+        const certUpload = await cloudinary.uploader.upload(files.certificate.tempFilePath, {
+          folder: 'trainup/gyms/certificate',
+        });
+        certificateUrl = certUpload.secure_url;
+      } catch (err) {
+        const error = err as Error;
+        throw new AppError(`Failed to upload certificate: ${error.message || 'Unknown error'}`, STATUS_CODE.INTERNAL_SERVER_ERROR);
+      }
     }
 
     if (files?.profileImage) {
-      const profileUpload = await cloudinary.uploader.upload(files.profileImage.tempFilePath, {
-        folder: 'trainup/gyms/profiles',
-      });
-      profileImageUrl = profileUpload.secure_url;
+      try {
+        const profileUpload = await cloudinary.uploader.upload(files.profileImage.tempFilePath, {
+          folder: 'trainup/gyms/profiles',
+        });
+        profileImageUrl = profileUpload.secure_url;
+      } catch (err) {
+        const error = err as Error;
+        throw new AppError(`Failed to upload profile image: ${error.message || 'Unknown error'}`, STATUS_CODE.INTERNAL_SERVER_ERROR);
+      }
     }
 
     if (files?.images) {
@@ -58,8 +72,13 @@ export class GymService implements IGymService {
             }),
           ];
 
-      const results = await Promise.all(uploadPromises);
-      results.forEach((res) => imageUrls.push(res.secure_url));
+      try {
+        const results = await Promise.all(uploadPromises);
+        results.forEach((res) => imageUrls.push(res.secure_url));
+      } catch (err) {
+        const error = err as Error;
+        throw new AppError(`Failed to upload images: ${error.message || 'Unknown error'}`, STATUS_CODE.INTERNAL_SERVER_ERROR);
+      }
     }
 
     const gym = await this._gymRepo.createGym({
@@ -94,7 +113,7 @@ export class GymService implements IGymService {
 
   async getGymData(gymId: string): Promise<GymDataResponseDto> {
     const gymDetails = await this._gymRepo.getGymById(gymId);
-    if (!gymDetails) throw new Error(MESSAGES.GYM_NOT_FOUND);
+    if (!gymDetails) throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     const trainers = await this._gymRepo.getGymTrainers(gymId);
     const members = await this._gymRepo.getGymMembers(gymId);
     const announcements = await this._gymRepo.getGymAnnouncements(gymId);
@@ -117,10 +136,10 @@ export class GymService implements IGymService {
 
   async loginGym(email: string, password: string): Promise<GymLoginResponseDto> {
     const gym = await this._gymRepo.findByEmail(email);
-    if (!gym) throw new Error(MESSAGES.GYM_NOT_FOUND);
-    if (gym.verifyStatus === 'rejected') throw new Error(`${MESSAGES.GYM_VERIFICATION_REJECTED}: ${gym.rejectReason}`);
+    if (!gym) throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    if (gym.verifyStatus === 'rejected') throw new AppError(`${MESSAGES.GYM_VERIFICATION_REJECTED}: ${gym.rejectReason}`, STATUS_CODE.BAD_REQUEST);
     const valid = await bcrypt.compare(password, gym.password!);
-    if (!valid) throw new Error(MESSAGES.LOGIN_FAILED);
+    if (!valid) throw new AppError(MESSAGES.LOGIN_FAILED, STATUS_CODE.UNAUTHORIZED);
 
     const accessToken = this._jwtService.generateAccessToken(gym._id.toString(), gym.role, gym.tokenVersion ?? 0);
     const refreshToken = this._jwtService.generateRefreshToken(gym._id.toString(), gym.role, gym.tokenVersion ?? 0);

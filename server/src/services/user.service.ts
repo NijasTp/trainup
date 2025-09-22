@@ -8,6 +8,8 @@ import { IUser } from '../models/user.model';
 import { OAuth2Client } from 'google-auth-library';
 import { MESSAGES } from '../constants/messages';
 import { GetWeightHistoryResponseDto, LoginResponseDto, UserResponseDto } from '../dtos/user.dto';
+import { AppError } from '../utils/appError.util';
+import { STATUS_CODE } from '../constants/status';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
@@ -23,7 +25,7 @@ export class UserService implements IUserService {
 
   public async registerUser(name: string, email: string, password: string): Promise<LoginResponseDto> {
     const existingUser = await this._userRepo.findByEmail(email);
-    if (existingUser) throw new Error(MESSAGES.USER_EXISTS);
+    if (existingUser) throw new AppError(MESSAGES.USER_EXISTS, STATUS_CODE.BAD_REQUEST);
 
     const hashed = await bcrypt.hash(password, 10);
     const user = await this._userRepo.createUser({
@@ -48,7 +50,7 @@ export class UserService implements IUserService {
 
   public async resetPassword(email: string, newPassword: string) {
     const user = await this._userRepo.findByEmail(email);
-    if (!user) throw new Error(MESSAGES.USER_NOT_FOUND);
+    if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this._userRepo.updateUser(user._id.toString(), { password: hashedPassword });
@@ -56,12 +58,12 @@ export class UserService implements IUserService {
 
   public async loginUser(email: string, password: string): Promise<LoginResponseDto> {
     const user = await this._userRepo.findByEmail(email);
-    if (!user) throw new Error(MESSAGES.USER_NOT_FOUND);
-    if (!user.password) throw new Error(MESSAGES.INVALID_REQUEST);
-    if (user.isBanned) throw new Error(MESSAGES.BANNED);
+    if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    if (!user.password) throw new AppError(MESSAGES.INVALID_REQUEST, STATUS_CODE.BAD_REQUEST);
+    if (user.isBanned) throw new AppError(MESSAGES.BANNED, STATUS_CODE.FORBIDDEN);
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) throw new Error(MESSAGES.LOGIN_FAILED);
+    if (!isMatch) throw new AppError(MESSAGES.INVALID_PASSWORD, STATUS_CODE.BAD_REQUEST);
 
     const accessToken = this._jwtService.generateAccessToken(user._id.toString(), user.role, user.tokenVersion ?? 0);
     const refreshToken = this._jwtService.generateRefreshToken(user._id.toString(), user.role, user.tokenVersion ?? 0);
@@ -79,10 +81,10 @@ export class UserService implements IUserService {
       audience: GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
-    if (!payload) throw new Error(MESSAGES.INVALID_REQUEST);
+    if (!payload) throw new AppError(MESSAGES.INVALID_REQUEST, STATUS_CODE.BAD_REQUEST);
 
     const { sub: googleId, email, name } = payload;
-    if (!googleId || !email) throw new Error(MESSAGES.MISSING_REQUIRED_FIELDS);
+    if (!googleId || !email) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
 
     let user = await this._userRepo.findByGoogleId(googleId);
     if (!user) user = await this._userRepo.findByEmail(email);
@@ -90,7 +92,7 @@ export class UserService implements IUserService {
     if (!user) {
       user = await this._userRepo.createUser({ googleId, email, name });
     } else if (!user.googleId) {
-      throw new Error(MESSAGES.INVALID_REQUEST);
+      throw new AppError(MESSAGES.INVALID_REQUEST, STATUS_CODE.BAD_REQUEST);
     }
 
     const accessToken = this._jwtService.generateAccessToken(user._id.toString(), user.role, user.tokenVersion ?? 0);
@@ -109,41 +111,51 @@ export class UserService implements IUserService {
 
   async getUserById(id: string): Promise<UserResponseDto | null> {
     const user = await this._userRepo.findById(id);
-    return user ? this.mapToResponseDto(user) : null;
+    if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    return this.mapToResponseDto(user);
   }
 
   async incrementTokenVersion(id: string) {
+    const user = await this._userRepo.findById(id);
+    if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     await this._userRepo.updateStatusAndIncrementVersion(id, {});
   }
 
   async getProfile(id: string) {
     const user = await this._userRepo.findById(id);
-    return user ? this.mapToResponseDto(user) : null;
+    if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    return this.mapToResponseDto(user);
   }
 
   async updateProfile(id: string, updateData: Partial<IUser>) {
     const user = await this._userRepo.updateUser(id, updateData);
-    return user ? this.mapToResponseDto(user) : null;
+    if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    return this.mapToResponseDto(user);
   }
 
   async updateUserStatus(id: string, updateData: Partial<IUser>) {
     if (updateData.isBanned !== undefined) {
       const updatedUser = await this._userRepo.updateStatusAndIncrementVersion(id, { isBanned: updateData.isBanned });
-      if (!updatedUser) throw new Error(MESSAGES.FAILED_TO_UPDATE_USER_BAN);
+      if (!updatedUser) throw new AppError(MESSAGES.FAILED_TO_UPDATE_USER_BAN, STATUS_CODE.INTERNAL_SERVER_ERROR);
       return;
     }
-    await this._userRepo.updateStatus(id, updateData);
+    const updatedUser = await this._userRepo.updateStatus(id, updateData);
+    if (!updatedUser) throw new AppError(MESSAGES.FAILED_TO_UPDATE_USER_BAN, STATUS_CODE.INTERNAL_SERVER_ERROR);
   }
 
-  async updateUserTrainerId(userId: string, trainerId: string): Promise<void> {
+  async updateUserTrainerId(userId: string, trainerId: string){
+    const user = await this._userRepo.findById(userId);
+    if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     await this._userRepo.updateUser(userId, {
       assignedTrainer: trainerId,
       subscriptionStartDate: new Date(),
     });
   }
 
-  async cancelSubscription(userId: string, trainerId: string): Promise<void> {
-    if (!trainerId) return;
+  async cancelSubscription(userId: string, trainerId: string) {
+    if (!trainerId) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    const user = await this._userRepo.findById(userId);
+    if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     await this._userRepo.updateUser(userId, {
       assignedTrainer: null,
       subscriptionStartDate: null,
@@ -152,10 +164,12 @@ export class UserService implements IUserService {
 
   async addWeight(userId: string, weight: number): Promise<UserResponseDto> {
     const user = await this._userRepo.addWeight(userId, weight, new Date());
-    if (!user) throw new Error(MESSAGES.USER_NOT_FOUND);
+    if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     return this.mapToResponseDto(user);
   }
     async getWeightHistory(userId: string): Promise<GetWeightHistoryResponseDto> {
+    const user = await this._userRepo.findById(userId);
+    if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     const weightHistory = await this._userRepo.getWeightHistory(userId);
     return {
       weightHistory: weightHistory.map((entry) => ({
