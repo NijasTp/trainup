@@ -42,7 +42,6 @@ async getUserTransactions(
       ];
     }
 
-    // Define sort options with proper typing for Mongoose
     const sortOptions: { [key: string]: { [field: string]: SortOrder } } = {
       newest: { createdAt: -1 },
       oldest: { createdAt: 1 },

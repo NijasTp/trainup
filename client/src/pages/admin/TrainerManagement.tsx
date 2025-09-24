@@ -74,9 +74,8 @@ const TrainerManagement = () => {
   const handleBanToggle = async (trainerId: string, currentBanStatus: boolean) => {
     setActionLoading(trainerId);
     try {
+      
       await toggleTrainerBan(trainerId, !currentBanStatus);
-      const res = await getTrainers(currentPage, trainersPerPage, searchQuery, isBannedFilter, isVerifiedFilter, startDate, endDate);
-      setResponse(res as TrainerResponse);
       setError(null);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -288,7 +287,9 @@ const TrainerManagement = () => {
                             <div className="flex items-center gap-2">
                               <Button
                                 variant="default"
-                                onClick={() => handleBanToggle(trainer._id, trainer.isBanned)}
+                                onClick={() => {handleBanToggle(trainer._id, trainer.isBanned)
+                                trainer.isBanned = !trainer.isBanned 
+                                }}
                                 disabled={actionLoading === trainer._id}
                                 className="flex items-center gap-1 text-xs px-2 py-1"
                               >

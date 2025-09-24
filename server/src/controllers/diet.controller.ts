@@ -25,12 +25,13 @@ import {
 } from '../dtos/diet.dto';
 import { IDietService } from '../core/interfaces/services/IDietService';
 import { AppError } from '../utils/appError.util';
+import { IDietTemplateService } from '../core/interfaces/services/IDietTemplateService';
 
 @injectable()
 export class DietController {
   constructor(
     @inject(TYPES.IDietService) private _dietService: IDietService,
-    @inject(TYPES.ITemplateService) private _templateService: DietTemplateService
+    @inject(TYPES.ITemplateService) private _templateService: IDietTemplateService
   ) {}
 
   async createOrGetDay(req: Request, res: Response, next: NextFunction): Promise<void> {

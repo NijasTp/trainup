@@ -102,7 +102,6 @@ export default function EditProfile() {
   const [newGoal, setNewGoal] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof ProfileFormData, string>>>({});
   const navigate = useNavigate();
   const dispatch = useDispatch();

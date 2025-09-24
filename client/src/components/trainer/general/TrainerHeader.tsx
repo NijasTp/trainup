@@ -23,8 +23,6 @@ export default function TrainerSiteHeader() {
   const dispatch = useDispatch();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
-  const [trainerName, setTrainerName] = useState("Trainer");
 
   useEffect(() => {
     fetchTrainerProfile();
@@ -33,9 +31,7 @@ export default function TrainerSiteHeader() {
 
   const fetchTrainerProfile = async () => {
     try {
-      const response = await API.get("/trainer/get-details");
-      setTrainerName(response.data.name || "Trainer");
-      setProfileImage(response.data.profileImage);
+       await API.get("/trainer/get-details");
     } catch (err: any) {
       toast.error("Failed to load profile");
     }
