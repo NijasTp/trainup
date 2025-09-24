@@ -4,14 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { format } from "date-fns";
+import { format, isBefore, parse, startOfDay } from "date-fns";
 import { Dumbbell, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "use-debounce";
 import { createWorkoutSession } from "@/services/workoutService";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { InfoModal } from "@/components/user/general/InfoModal";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import * as z from "zod";
@@ -27,7 +27,6 @@ function ExerciseSuggestionCard({
     isLoading: boolean;
 }) {
     const [imageLoaded, setImageLoaded] = useState(false);
-    console.log(suggestion.data.image);
     return (
         <Card className="group relative overflow-hidden bg-card/40 backdrop-blur-sm border-border/50 hover:border-border transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
@@ -120,8 +119,7 @@ function AddedExerciseCard({
                         <img
                             src={exercise.image || "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"}
                             alt={exercise.name}
-                            className={`h-16 w-16 object-cover rounded-md transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"
-                                }`}
+                            className={`h-16 w-16 object-cover rounded-md transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
                             loading="lazy"
                             onLoad={() => setImageLoaded(true)}
                         />
@@ -136,25 +134,71 @@ function AddedExerciseCard({
     );
 }
 
-const sessionSchema = z.object({
-    name: z.string().min(1, { message: "Session name is required" }),
-    givenBy: z.literal("user"),
-    date: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date format" }),
-    time: z.string().regex(/^\d{2}:\d{2}$/, { message: "Invalid time format (HH:mm)" }),
-    goal: z.string().optional(),
-    exercises: z.array(z.object({
-        id: z.string(),
-        name: z.string(),
-        sets: z.number(),
-        reps: z.string().optional(),
-        time: z.string().optional(),
-        weight: z.number().optional(),
-        image: z.string(),
-    })).min(1, { message: "At least one exercise is required" }),
-});
-
 const baseExerciseSchema = z.object({
     sets: z.number().int().min(1, { message: "Sets must be at least 1" }),
+});
+
+const cardioExerciseSchema = baseExerciseSchema.extend({
+    time: z.string().min(1, { message: "Time is required for cardio exercises" }).regex(/^\d+\s*(min|sec|s|m)$/, {
+        message: "Time must be a number followed by 'min', 'sec', 's', or 'm' (e.g., '30 min')",
+    }),
+});
+
+const nonCardioExerciseSchema = baseExerciseSchema.extend({
+    reps: z.string().min(1, { message: "Reps are required for non-cardio exercises" }).regex(/^\d+-\d+$|^\d+$/, {
+        message: "Reps must be a number or range (e.g., '10' or '10-12')",
+    }),
+});
+
+const weightedExerciseSchema = z.object({
+    weight: z.number().nonnegative({ message: "Weight must be non-negative" }).optional(),
+});
+
+const exerciseSchema = z.object({
+    id: z.string().min(1, { message: "Exercise ID is required" }),
+    name: z.string().min(1, { message: "Exercise name is required" }).max(100, { message: "Exercise name must be 100 characters or less" }),
+    sets: z.number().int().min(1, { message: "Sets must be at least 1" }),
+    reps: z.string().optional(),
+    time: z.string().optional(),
+    weight: z.number().nonnegative().optional(),
+    image: z.string().url().optional(),
+}).superRefine((data, ctx) => {
+    const isCardio = data.id && data.id.startsWith("cardio_");
+    const isWeighted = data.weight !== undefined;
+
+    if (isCardio) {
+        if (!data.time?.trim()) {
+            ctx.addIssue({ code: "custom", message: "Time is required for cardio exercises", path: ["time"] });
+        } else if (!/^\d+\s*(min|sec|s|m)$/.test(data.time)) {
+            ctx.addIssue({ code: "custom", message: "Time must be a number followed by 'min', 'sec', 's', or 'm' (e.g., '30 min')", path: ["time"] });
+        }
+    } else {
+        if (!data.reps?.trim()) {
+            ctx.addIssue({ code: "custom", message: "Reps are required for non-cardio exercises", path: ["reps"] });
+        } else if (!/^\d+-\d+$|^\d+$/.test(data.reps)) {
+            ctx.addIssue({ code: "custom", message: "Reps must be a number or range (e.g., '10' or '10-12')", path: ["reps"] });
+        }
+    }
+
+    if (isWeighted && data.weight! < 0) {
+        ctx.addIssue({ code: "custom", message: "Weight must be non-negative", path: ["weight"] });
+    }
+});
+
+const sessionSchema = z.object({
+    name: z.string().min(1, { message: "Session name is required" }).max(100, { message: "Session name must be 100 characters or less" }),
+    givenBy: z.literal("user"),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Invalid date format (YYYY-MM-DD)" }).refine(
+        (val) => {
+            const selectedDate = parse(val, "yyyy-MM-dd", new Date());
+            const currentDate = startOfDay(new Date("2025-09-24T15:29:00+05:30"));
+            return !isBefore(selectedDate, currentDate);
+        },
+        { message: "Date cannot be in the past" }
+    ),
+    time: z.string().regex(/^\d{2}:\d{2}$/, { message: "Invalid time format (HH:mm)" }),
+    goal: z.string().max(500, { message: "Goal must be 500 characters or less" }).optional(),
+    exercises: z.array(exerciseSchema).min(1, { message: "At least one exercise is required" }),
 });
 
 export default function AddSessionPage() {
@@ -179,6 +223,12 @@ export default function AddSessionPage() {
     const [page, setPage] = useState<number>(1);
     const [perPage] = useState<number>(8);
     const navigate = useNavigate();
+
+    // Character counters for name and goal
+    const nameCharCount = sessionName.length;
+    const goalCharCount = sessionGoal.length;
+    const maxNameChars = 100;
+    const maxGoalChars = 500;
 
     useEffect(() => {
         if (debouncedQuery) {
@@ -206,7 +256,7 @@ export default function AddSessionPage() {
             setAllSuggestions(data.suggestions || []);
         } catch (err: any) {
             setError(err.message || "Error fetching exercise suggestions");
-            toast.error("Failed to load suggestions", { description: err.message });
+            toast.error("Failed to load suggestions");
         } finally {
             setIsSuggestionsLoading(false);
         }
@@ -227,109 +277,81 @@ export default function AddSessionPage() {
             setWeight(0);
         } catch (err: any) {
             setError(err.message || "Error fetching exercise details");
-            toast.error("Failed to load exercise details", { description: err.message });
+            toast.error("Failed to load exercise details");
         } finally {
             setIsLoading(false);
         }
     }
 
     function handleAddToSession() {
-        if (selectedExercise) {
-            const isCardio = selectedExercise.category === 15;
-            const isWeighted = selectedExercise.equipment && selectedExercise.equipment.length > 0 && !selectedExercise.equipment.includes(7);
+        if (!selectedExercise) return;
 
-            let exerciseSchema = baseExerciseSchema;
-            if (isCardio) {
-                exerciseSchema = exerciseSchema.extend({
-                    time: z.string().min(1, { message: "Time is required for cardio exercises" }),
-                });
-            } else {
-                exerciseSchema = exerciseSchema.extend({
-                    reps: z.string().min(1, { message: "Reps are required for non-cardio exercises" }),
-                });
-            }
-            if (isWeighted) {
-                exerciseSchema = exerciseSchema.extend({
-                    weight: z.number().nonnegative({ message: "Weight must be non-negative" }),
-                });
-            }
+        const isCardio = selectedExercise.category === 15;
+        const isWeighted = selectedExercise.equipment && selectedExercise.equipment.length > 0 && !selectedExercise.equipment.includes(7);
 
-            try {
-                exerciseSchema.parse({
-                    sets,
-                    reps: isCardio ? undefined : reps,
-                    time: isCardio ? time : undefined,
-                    weight: isWeighted ? weight : undefined,
-                });
-            } catch (e: any) {
-                if (e instanceof z.ZodError) {
-                    const errorMessages = e.issues.map((err) => err.message).join("\n");
-                    toast.error(`Validation failed:\n${errorMessages}`);
-                } else {
-                    toast.error("An unexpected error occurred during validation");
-                }
-                return;
-            }
-
-            const newExercise: AddedExercise = {
-                id: selectedExercise.id.toString(),
-                name: selectedExercise.name,
-                sets,
-                reps: isCardio ? undefined : reps,
-                time: isCardio ? time : undefined,
-                weight: isWeighted ? weight : undefined,
-                image:
-                    selectedExercise.images?.find((img) => img.is_main)?.image ||
-                    selectedExercise.images?.[0]?.image ||
-                    "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp",
-            };
-            setAddedExercises([...addedExercises, newExercise]);
-            setModalOpen(false);
-        }
-    }
-
-    async function handleCreateSession() {
-        const payload: WorkoutSessionPayload = {
-            name: sessionName,
-            givenBy: "user",
-            date: sessionDate,
-            time: sessionTime,
-            goal: sessionGoal,
-            exercises: addedExercises.map((ex) => ({
-                id: ex.id,
-                name: ex.name,
-                sets: ex.sets,
-                reps: ex.reps,
-                time: ex.time,
-                weight: ex.weight,
-                image: ex.image,
-            })),
+        const exerciseData = {
+            id: selectedExercise.id.toString(),
+            name: selectedExercise.name,
+            sets,
+            reps: isCardio ? undefined : reps,
+            time: isCardio ? time : undefined,
+            weight: isWeighted ? weight : undefined,
+            image:
+                selectedExercise.images?.find((img) => img.is_main)?.image ||
+                selectedExercise.images?.[0]?.image ||
+                "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp",
         };
 
-        try {
-            sessionSchema.parse(payload);
-        } catch (e: any) {
-            if (e instanceof z.ZodError) {
-                const errorMessages = e.issues.map((err) => err.message).join("\n");
-                toast.error(`Validation failed:\n${errorMessages}`);
-            } else {
-                toast.error("An unexpected error occurred during validation");
-            }
+        const result = exerciseSchema.safeParse(exerciseData);
+        if (!result.success) {
+            const errorMessages = result.error.issues.map((err) => err.message).join("\n");
+            toast.error(`Validation failed:\n${errorMessages}`);
             return;
         }
 
-        setIsLoading(true);
-        try {
-            await createWorkoutSession(payload);
-            toast.success("Workout session created!", { description: "Your session has been added to your plan." });
-            navigate("/workouts");
-        } catch (err: any) {
-            setError(err.message || "Error creating workout session");
-            toast.error("Failed to create session", { description: err.message });
-        } finally {
-            setIsLoading(false);
-        }
+        setAddedExercises([...addedExercises, result.data]);
+        setModalOpen(false);
     }
+
+async function handleCreateSession() {
+    const payload: WorkoutSessionPayload = {
+        name: sessionName,
+        givenBy: "user",
+        date: sessionDate,
+        time: sessionTime,
+        goal: sessionGoal,
+        exercises: addedExercises,
+    };
+
+    const [hours, minutes] = sessionTime.split(":").map(Number);
+    const selectedDateTime = parse(sessionDate, "yyyy-MM-dd", new Date());
+    selectedDateTime.setHours(hours, minutes);
+    const currentDateTime = new Date("2025-09-24T15:29:00+05:30"); 
+
+    if (isBefore(selectedDateTime, currentDateTime)) {
+        toast.error("Validation failed: Time cannot be in the past");
+        return;
+    }
+
+    const result = sessionSchema.safeParse(payload);
+    if (!result.success) {
+        const errorMessages = result.error.issues.map((err) => err.message).join("\n");
+        toast.error(`Validation failed:\n${errorMessages}`);
+        return;
+    }
+
+    setIsLoading(true);
+    try {
+        await createWorkoutSession(result.data);
+        toast.success("Workout session created!");
+        navigate("/workouts");
+    } catch (err: any) {
+        setError(err.message || "Error creating workout session");
+        toast.error("Failed to create session");
+    } finally {
+        setIsLoading(false);
+    }
+}
 
     function handleRemoveExercise(id: string) {
         setAddedExercises(addedExercises.filter((ex) => ex.id !== id));
@@ -365,10 +387,14 @@ export default function AddSessionPage() {
                                 <Input
                                     id="session-name"
                                     value={sessionName}
-                                    onChange={(e) => setSessionName(e.target.value)}
+                                    onChange={(e) => setSessionName(e.target.value.slice(0, maxNameChars))}
                                     placeholder="e.g., Morning Strength Training"
                                     className="bg-transparent border-border/50 focus-visible:ring-2 focus-visible:ring-primary/30"
+                                    maxLength={maxNameChars}
                                 />
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    {nameCharCount}/{maxNameChars} characters
+                                </p>
                             </div>
                             <div>
                                 <Label htmlFor="session-goal" className="text-foreground font-medium">
@@ -377,10 +403,14 @@ export default function AddSessionPage() {
                                 <Input
                                     id="session-goal"
                                     value={sessionGoal}
-                                    onChange={(e) => setSessionGoal(e.target.value)}
+                                    onChange={(e) => setSessionGoal(e.target.value.slice(0, maxGoalChars))}
                                     placeholder="e.g., Build muscle and increase strength"
                                     className="bg-transparent border-border/50 focus-visible:ring-2 focus-visible:ring-primary/30"
+                                    maxLength={maxGoalChars}
                                 />
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    {goalCharCount}/{maxGoalChars} characters
+                                </p>
                             </div>
                             <div className="flex gap-4">
                                 <div className="flex-1">
@@ -392,6 +422,7 @@ export default function AddSessionPage() {
                                         type="date"
                                         value={sessionDate}
                                         onChange={(e) => setSessionDate(e.target.value)}
+                                        min={format(new Date("2025-09-24"), "yyyy-MM-dd")} // Prevent past dates
                                         className="bg-transparent border-border/50 focus-visible:ring-2 focus-visible:ring-primary/30"
                                     />
                                 </div>
