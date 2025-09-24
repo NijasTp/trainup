@@ -1,7 +1,8 @@
+import { GymResponseDto } from "../../../dtos/gym.dto";
 import { IGym } from "../../../models/gym.model";
 
 export interface PaginatedGyms {
-  gyms: Partial<IGym>[];
+  gyms: Partial<GymResponseDto>[];
   total: number;
   page: number;
   totalPages: number;
@@ -12,7 +13,7 @@ export interface IGymRepository {
   createGym(data: Partial<IGym>): Promise<IGym>;
   updateGym(id: string, data: Partial<IGym>): Promise<IGym | null>;
   findById(id: string): Promise<IGym | null>;
-  getGymById(gymId: string): Promise<IGym | null>;
+  getGymById(gymId: string): Promise<GymResponseDto | null> 
   getGymTrainers(gymId: string): Promise<any[]>;
   getGymMembers(gymId: string): Promise<any[]>;
   findApplicationById(id: string): Promise<any | null>;

@@ -3,22 +3,23 @@ import TrainerModel, { ITrainer } from '../models/trainer.model'
 import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepository'
 import { Types } from 'mongoose'
 import { IUser, UserModel } from '../models/user.model'
+import { TrainerResponseDto, ClientDto } from '../dtos/trainer.dto'
 
 @injectable()
 export class TrainerRepository implements ITrainerRepository {
-  async findByEmail (email: string) {
+  async findByEmail(email: string): Promise<ITrainer | null> {
     return await TrainerModel.findOne({ email })
   }
 
-  async findById (id: string) {
+  async findById(id: string): Promise<ITrainer | null> {
     return await TrainerModel.findById(id).select('-password')
   }
 
-  async create (trainerData: Partial<ITrainer>) {
+  async create(trainerData: Partial<ITrainer>): Promise<ITrainer> {
     return await TrainerModel.create(trainerData)
   }
 
-  async findAll (
+  async findAll(
     skip: number,
     limit: number,
     search: string,
@@ -31,7 +32,7 @@ export class TrainerRepository implements ITrainerRepository {
     minRating?: string,
     minPrice?: string,
     maxPrice?: string
-  ) {
+  ): Promise<TrainerResponseDto[]> {
     const query: any = {}
 
     if (isVerified === 'verified') query.profileStatus = 'approved'
@@ -88,9 +89,9 @@ export class TrainerRepository implements ITrainerRepository {
       const experienceMap: { [key: string]: { $gte?: number; $lte?: number } } =
         {
           'Less than 1 year': { $lte: 1 },
-          '1–3 years': { $gte: 1, $lte: 3 },
-          '3–5 years': { $gte: 3, $lte: 5 },
-          '5–10 years': { $gte: 5, $lte: 10 },
+          '1â€"3 years': { $gte: 1, $lte: 3 },
+          '3â€"5 years': { $gte: 3, $lte: 5 },
+          '5â€"10 years': { $gte: 5, $lte: 10 },
           '10+ years': { $gte: 10 }
         }
       const expYears = experienceMap[experience]
@@ -123,10 +124,11 @@ export class TrainerRepository implements ITrainerRepository {
       if (endDate) query.createdAt.$lte = new Date(endDate)
     }
 
-    return await TrainerModel.find(query).skip(skip).limit(limit).lean().exec()
+    const trainers = await TrainerModel.find(query).skip(skip).limit(limit).lean().exec()
+    return trainers.map(trainer => this.mapToResponseDto(trainer as ITrainer))
   }
 
-  async count (
+  async count(
     search: string,
     isBanned?: string,
     isVerified?: string,
@@ -177,9 +179,9 @@ export class TrainerRepository implements ITrainerRepository {
       const experienceMap: { [key: string]: { $gte?: number; $lte?: number } } =
         {
           'Less than 1 year': { $lte: 1 },
-          '1–3 years': { $gte: 1, $lte: 3 },
-          '3–5 years': { $gte: 3, $lte: 5 },
-          '5–10 years': { $gte: 5, $lte: 10 },
+          '1â€"3 years': { $gte: 1, $lte: 3 },
+          '3â€"5 years': { $gte: 3, $lte: 5 },
+          '5â€"10 years': { $gte: 5, $lte: 10 },
           '10+ years': { $gte: 10 }
         }
       const expYears = experienceMap[experience]
@@ -206,19 +208,20 @@ export class TrainerRepository implements ITrainerRepository {
     return await TrainerModel.countDocuments(query).exec()
   }
 
-  async findApplicationByTrainerId (id: string) {
-    return await TrainerModel.findById(id).select(
+  async findApplicationByTrainerId(id: string): Promise<TrainerResponseDto | null> {
+    const trainer = await TrainerModel.findById(id).select(
       'name email phone bio location specialization experience badges rating certificate profileImage profileStatus createdAt'
     )
+    return trainer ? this.mapToResponseDto(trainer) : null
   }
 
-  async updateStatus (_id: string, updateData: Partial<ITrainer>) {
+  async updateStatus(_id: string, updateData: Partial<ITrainer>): Promise<ITrainer | null> {
     return await TrainerModel.findOneAndUpdate({ _id }, updateData, {
       new: true
     })
   }
 
-  async addClient (trainerId: string, userId: string): Promise<void> {
+  async addClient(trainerId: string, userId: string): Promise<void> {
     await TrainerModel.findByIdAndUpdate(
       trainerId,
       { $push: { clients: new Types.ObjectId(userId) } },
@@ -226,7 +229,7 @@ export class TrainerRepository implements ITrainerRepository {
     ).exec()
   }
 
-  async removeClient (trainerId: string, userId: string): Promise<void> {
+  async removeClient(trainerId: string, userId: string): Promise<void> {
     await TrainerModel.findByIdAndUpdate(
       trainerId,
       { $pull: { clients: new Types.ObjectId(userId) } },
@@ -234,12 +237,12 @@ export class TrainerRepository implements ITrainerRepository {
     ).exec()
   }
 
-  async findClients (
+  async findClients(
     trainerId: string,
     skip: number,
     limit: number,
     search: string
-  ): Promise<{ clients: IUser[]; total: number }> {
+  ): Promise<{ clients: ClientDto[]; total: number }> {
     const trainer = await TrainerModel.findById(trainerId)
       .select('clients')
       .exec()
@@ -267,6 +270,44 @@ export class TrainerRepository implements ITrainerRepository {
 
     const total = await UserModel.countDocuments(query).exec()
 
-    return { clients, total }
+    return { 
+      clients: clients.map(client => this.mapToClientDto(client as IUser)), 
+      total 
+    }
+  }
+
+  mapToResponseDto(trainer: ITrainer): TrainerResponseDto {
+    return {
+      _id: trainer._id.toString(),
+      name: trainer.name,
+      email: trainer.email,
+      phone: trainer.phone,
+      price: trainer.price,
+      isBanned: trainer.isBanned,
+      role: trainer.role,
+      gymId: trainer.gymId?.toString(),
+      clients: trainer.clients.map(c => c.toString()),
+      bio: trainer.bio,
+      location: trainer.location,
+      specialization: trainer.specialization,
+      experience: trainer.experience,
+      rating: trainer.rating,
+      certificate: trainer.certificate,
+      profileImage: trainer.profileImage,
+      profileStatus: trainer.profileStatus,
+      rejectReason: trainer.rejectReason,
+      createdAt: trainer.createdAt,
+      updatedAt: trainer.updatedAt
+    }
+  }
+
+  mapToClientDto(client: IUser): ClientDto {
+    return {
+      _id: client._id.toString(),
+      name: client.name,
+      email: client.email,
+      phone: client.phone,
+      subscriptionStartDate: client.subscriptionStartDate
+    }
   }
 }

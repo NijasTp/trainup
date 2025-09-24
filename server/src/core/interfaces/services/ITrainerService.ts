@@ -56,7 +56,7 @@ export interface ITrainerService {
     minPrice?: string,
     maxPrice?: string
   ): Promise<PaginatedTrainers>;
-  getTrainerApplication(id: string): Promise<Partial<ITrainer> | null>
+  getTrainerApplication(id: string): Promise<Partial<TrainerResponseDto> | null>
   updateTrainerStatus(id: string, updateData: Partial<ITrainer>): Promise<ITrainer | null>;
   addClientToTrainer(trainerId: string, userId: string): Promise<void>;
   removeClientFromTrainer(trainerId: string, userId: string): Promise<void>;

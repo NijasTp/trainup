@@ -1,3 +1,4 @@
+import { ITransactionDTO } from "../../../dtos/transaction.dto";
 import { ITransaction } from "../../../models/transaction.model"
 
 export interface ITransactionService {
@@ -16,5 +17,5 @@ export interface ITransactionService {
     search: string,
     status: string,
     sort: string
-  ): Promise<{ transactions: ITransaction[]; totalPages: number }>;
+  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }>;
 }

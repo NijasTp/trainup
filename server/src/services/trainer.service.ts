@@ -289,12 +289,13 @@ export class TrainerService implements ITrainerService {
     )
 
     return {
-      trainers: trainers.map(trainer => this.mapToResponseDto(trainer)),
+      trainers,
       total,
       page,
       totalPages: Math.ceil(total / limit) || 1
     }
   }
+  
   async getTrainerApplication (id: string) {
     const application = await this._trainerRepo.findApplicationByTrainerId(id)
     if (!application) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND)
@@ -337,7 +338,7 @@ export class TrainerService implements ITrainerService {
     )
 
     return {
-      clients: clients.map(client => this.mapToClientDto(client as any)),
+      clients,
       total,
       page,
       totalPages: Math.ceil(total / limit)
@@ -366,16 +367,6 @@ export class TrainerService implements ITrainerService {
       rejectReason: trainer.rejectReason,
       createdAt: trainer.createdAt,
       updatedAt: trainer.updatedAt
-    }
-  }
-
-  private mapToClientDto (client: any): ClientDto {
-    return {
-      _id: client._id.toString(),
-      name: client.name,
-      email: client.email,
-      phone: client.phone,
-      subscriptionStartDate: client.subscriptionStartDate
     }
   }
 }

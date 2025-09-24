@@ -3,6 +3,7 @@ import { ITransactionService } from '../core/interfaces/services/ITransactionSer
 import { ITransactionRepository } from '../core/interfaces/repositories/ITransactionRepository';
 import { ITransaction } from '../models/transaction.model';
 import TYPES from '../core/types/types';
+import { ITransactionDTO } from '../dtos/transaction.dto';
 
 @injectable()
 export class TransactionService implements ITransactionService {
@@ -32,13 +33,13 @@ export class TransactionService implements ITransactionService {
   }
 
   async getUserTransactions(
-    userId: string,
-    page: number,
-    limit: number,
-    search: string,
-    status: string,
-    sort: string
-  ): Promise<{ transactions: ITransaction[]; totalPages: number }> {
+  userId: string,
+  page: number,
+  limit: number,
+  search: string,
+  status: string,
+  sort: string
+): Promise<{ transactions: ITransactionDTO[]; totalPages: number }> {
     return this.transactionRepository.getUserTransactions(userId, page, limit, search, status, sort);
   }
 

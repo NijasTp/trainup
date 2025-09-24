@@ -1,6 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 
 export interface ITransaction extends Document {
+  _id: string | Schema.Types.ObjectId;
   userId: string;
   trainerId: string;
   sessionId?: string;
@@ -10,6 +11,7 @@ export interface ITransaction extends Document {
   razorpayPaymentId?: string;
   status: 'pending' | 'completed' | 'failed';
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export const TransactionSchema = new Schema<ITransaction>({

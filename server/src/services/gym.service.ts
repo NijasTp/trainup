@@ -119,18 +119,14 @@ export class GymService implements IGymService {
     const announcements = await this._gymRepo.getGymAnnouncements(gymId);
 
     return {
-      gymDetails: this.mapToResponseDto(gymDetails),
+      gymDetails,
       trainers,
       members,
-      announcements: announcements.map((ann) => ({
-        title: ann.title,
-        message: ann.message,
-        date: ann.date,
-      })),
+      announcements,
     };
   }
 
-  async getGymApplication(id: string): Promise<IGym | null> {
+  async getGymApplication(id: string): Promise<GymResponseDto | null> {
     return await this._gymRepo.findApplicationById(id);
   }
 
@@ -166,7 +162,7 @@ export class GymService implements IGymService {
       name: gym.name!,
       email: gym.email!,
       location: gym.location!,
-      certificate: gym.certificate,
+      certificate: gym.certificate!,
       verifyStatus: gym.verifyStatus,
       rejectReason: gym.rejectReason || undefined,
       isBanned: gym.isBanned,
@@ -174,11 +170,11 @@ export class GymService implements IGymService {
       images: gym.images || undefined,
       trainers: gym.trainers?.map((t) => t.toString()) || undefined,
       members: gym.members?.map((m) => m.toString()) || undefined,
-      announcements: gym.announcements.map((ann) => ({
+      announcements: gym.announcements?.map((ann) => ({
         title: ann.title,
         message: ann.message,
         date: ann.date,
-      })),
+      })) || [],
       createdAt: gym.createdAt!,
       updatedAt: gym.updatedAt!,
     };

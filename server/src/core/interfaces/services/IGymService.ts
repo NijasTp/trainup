@@ -1,6 +1,6 @@
 import { IGym } from "../../../models/gym.model";
 import { UploadedFile } from "express-fileupload";
-import { GymLoginResponseDto, GymDataResponseDto } from '../../../dtos/gym.dto'
+import { GymLoginResponseDto, GymDataResponseDto, GymResponseDto } from '../../../dtos/gym.dto'
 
 export interface GymRegisterData {
   name: string;
@@ -23,7 +23,7 @@ export interface IGymService {
   updateGymStatus(id: string, updateData: Partial<IGym>): Promise<IGym | null>;
   getGymById(id: string): Promise<IGym | null>;
   getGymData(gymId: string): Promise<GymDataResponseDto>;
-  getGymApplication(id: string): Promise<IGym | null>;
+  getGymApplication(id: string): Promise<GymResponseDto | null>
   loginGym(email: string, password: string): Promise<GymLoginResponseDto>;
   getProfile(id: string): Promise<IGym | null>;
   updateProfile(id: string, data: Partial<IGym>): Promise<IGym | null>;

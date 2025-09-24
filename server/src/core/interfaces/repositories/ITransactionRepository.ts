@@ -1,14 +1,15 @@
-import { ITransaction } from "../../../models/transaction.model"
+import { ITransactionDTO } from '../../../dtos/transaction.dto'
+import { ITransaction } from '../../../models/transaction.model'
 
 export interface ITransactionRepository {
-  createTransaction(data: Partial<ITransaction>): Promise<ITransaction>;
+  createTransaction(data: Partial<ITransaction>): Promise<ITransaction>
   updateTransactionStatusByOrderId(
     orderId: string,
-    status: "completed" | "failed",
+    status: 'completed' | 'failed',
     paymentId?: string
-  ): Promise<ITransaction | null>;
-  getTransactionById(id: string): Promise<ITransaction | null>;
-  findByOrderId(orderId: string): Promise<ITransaction | null>;
+  ): Promise<ITransaction | null>
+  getTransactionById(id: string): Promise<ITransaction | null>
+  findByOrderId(orderId: string): Promise<ITransaction | null>
   getUserTransactions(
     userId: string,
     page: number,
@@ -16,5 +17,5 @@ export interface ITransactionRepository {
     search: string,
     status: string,
     sort: string
-  ): Promise<{ transactions: ITransaction[]; totalPages: number }>;
+  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }>
 }

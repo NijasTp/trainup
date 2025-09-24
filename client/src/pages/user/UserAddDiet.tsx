@@ -12,6 +12,7 @@ import { InfoModal } from "@/components/user/general/InfoModal";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import api from "@/lib/axios";
 import { deleteMeal, getMealsByDate } from "@/services/dietServices";
+import { z } from "zod";
 
 export interface Meal {
   _id?: string;
@@ -59,6 +60,16 @@ export interface AddMealResponse {
   __v: number;
 }
 
+const mealSchema = z.object({
+  name: z.string().min(1, "Meal name is required"),
+  calories: z.number().min(0, "Calories must be non-negative"),
+  protein: z.number().min(0, "Protein must be non-negative"),
+  carbs: z.number().min(0, "Carbs must be non-negative"),
+  fats: z.number().min(0, "Fats must be non-negative"),
+  time: z.string().min(1, "Time is required"),
+  description: z.string().optional(),
+});
+
 export default function UserAddDiet() {
   const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -80,6 +91,7 @@ export default function UserAddDiet() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [showCustomModal, setShowCustomModal] = useState<boolean>(false);
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -129,12 +141,20 @@ export default function UserAddDiet() {
     }));
   };
 
-  // Add manual meal to list
-  const addManualMeal = () => {
-    if (!newMeal.name || !newMeal.time) {
-      toast.error("Meal name and time are required");
+  // Validate and open modal for custom meal
+  const previewCustomMeal = () => {
+    const result = mealSchema.safeParse(newMeal);
+    if (!result.success) {
+      result.error.issues.forEach((issue) => {
+        toast.error(issue.message);
+      });
       return;
     }
+    setShowCustomModal(true);
+  };
+
+  // Add custom meal from modal
+  const addCustomMeal = () => {
     setMeals((prev) => [
       ...prev,
       {
@@ -153,6 +173,7 @@ export default function UserAddDiet() {
       source: "user",
       description: "",
     });
+    setShowCustomModal(false);
   };
 
   // Add USDA meal to list
@@ -261,7 +282,7 @@ export default function UserAddDiet() {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="max-w-xs rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+              className="w-full max-w-xs rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
             />
           </CardContent>
         </Card>
@@ -327,7 +348,7 @@ export default function UserAddDiet() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for foods (e.g., chicken)"
-                className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                className="w-full rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
               />
               <Button
                 onClick={() => fetchUsdaFoods(searchQuery, 1)}
@@ -428,7 +449,7 @@ export default function UserAddDiet() {
                   value={newMeal.name}
                   onChange={handleInputChange}
                   placeholder="e.g., Chicken Salad"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="w-full rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
                 />
               </div>
               <div>
@@ -439,7 +460,7 @@ export default function UserAddDiet() {
                   type="time"
                   value={newMeal.time}
                   onChange={handleInputChange}
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="w-full rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
                 />
               </div>
               <div>
@@ -451,7 +472,7 @@ export default function UserAddDiet() {
                   value={newMeal.calories || ""}
                   onChange={handleInputChange}
                   placeholder="e.g., 400"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="w-full rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
                 />
               </div>
               <div>
@@ -463,7 +484,7 @@ export default function UserAddDiet() {
                   value={newMeal.protein || ""}
                   onChange={handleInputChange}
                   placeholder="e.g., 25"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="w-full rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
                 />
               </div>
               <div>
@@ -475,7 +496,7 @@ export default function UserAddDiet() {
                   value={newMeal.carbs || ""}
                   onChange={handleInputChange}
                   placeholder="e.g., 50"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="w-full rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
                 />
               </div>
               <div>
@@ -487,7 +508,7 @@ export default function UserAddDiet() {
                   value={newMeal.fats || ""}
                   onChange={handleInputChange}
                   placeholder="e.g., 10"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="w-full rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
                 />
               </div>
               <div className="md:col-span-2">
@@ -498,23 +519,91 @@ export default function UserAddDiet() {
                   value={newMeal.description || ""}
                   onChange={handleInputChange}
                   placeholder="e.g., A delicious homemade meal"
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="w-full rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
                 />
               </div>
             </div>
             <Button
-              onClick={addManualMeal}
+              onClick={previewCustomMeal}
               disabled={loading}
               className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-black font-semibold py-4 shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              Add Meal
+              Preview & Add Meal
             </Button>
           </CardContent>
         </Card>
       </main>
       <SiteFooter />
 
-      {/* Meal Details Modal */}
+      {/* Custom Meal Preview Modal */}
+      <Dialog open={showCustomModal} onOpenChange={setShowCustomModal}>
+        <DialogContent className="max-w-sm bg-card/95 backdrop-blur-md border-primary/30 shadow-2xl p-4">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold bg-gradient-to-r from-primary to-primary/90 bg-clip-text text-transparent">
+              {newMeal.name || "Custom Meal"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1 p-2 bg-primary/10 rounded-lg">
+                <p className="text-xs font-medium text-muted-foreground">Calories</p>
+                <p className="text-sm font-bold text-primary">
+                  {newMeal.calories || 0} kcal
+                </p>
+              </div>
+              <div className="space-y-1 p-2 bg-primary/10 rounded-lg">
+                <p className="text-xs font-medium text-muted-foreground">Protein</p>
+                <p className="text-sm font-bold text-primary">
+                  {newMeal.protein || 0}g
+                </p>
+              </div>
+              <div className="space-y-1 p-2 bg-primary/10 rounded-lg">
+                <p className="text-xs font-medium text-muted-foreground">Carbs</p>
+                <p className="text-sm font-bold text-primary">
+                  {newMeal.carbs || 0}g
+                </p>
+              </div>
+              <div className="space-y-1 p-2 bg-primary/10 rounded-lg">
+                <p className="text-xs font-medium text-muted-foreground">Fat</p>
+                <p className="text-sm font-bold text-primary">
+                  {newMeal.fats || 0}g
+                </p>
+              </div>
+            </div>
+            {newMeal.description && (
+              <div className="space-y-1 p-2 bg-primary/10 rounded-lg">
+                <p className="text-xs font-medium text-muted-foreground">Description</p>
+                <p className="text-xs text-foreground">{newMeal.description}</p>
+              </div>
+            )}
+            <div className="space-y-1">
+              <Label htmlFor="customMealTime">Meal Time</Label>
+              <Input
+                id="customMealTime"
+                type="time"
+                value={newMeal.time || ""}
+                onChange={handleInputChange}
+                className="w-full rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+              />
+            </div>
+            <Button
+              onClick={addCustomMeal}
+              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-black font-semibold py-4 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              Add to Diet
+            </Button>
+            <Button
+              onClick={() => setShowCustomModal(false)}
+              variant="outline"
+              className="w-full hover:bg-primary/10 border-primary/30 text-black"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* USDA Meal Details Modal */}
       {selectedFood && (
         <Dialog open={!!selectedFood} onOpenChange={() => setSelectedFood(null)}>
           <DialogContent className="max-w-sm bg-card/95 backdrop-blur-md border-primary/30 shadow-2xl p-4">
@@ -570,7 +659,7 @@ export default function UserAddDiet() {
                   type="time"
                   value={usdaMealTime}
                   onChange={(e) => setUsdaMealTime(e.target.value)}
-                  className="max-w-md rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
+                  className="w-full rounded-md border border-primary/30 bg-card/40 px-3 py-2 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-all duration-300"
                 />
               </div>
               <Button
