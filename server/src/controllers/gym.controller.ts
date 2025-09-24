@@ -7,7 +7,7 @@ import { UploadedFile } from 'express-fileupload';
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService';
 import { STATUS_CODE } from '../constants/status';
 import { MESSAGES } from '../constants/messages';
-import { ROLE } from '../constants/role';
+import { Role } from '../constants/role';
 import {
   GymRequestOtpDto,
   GymVerifyOtpDto,
@@ -29,7 +29,7 @@ export class GymController {
   async requestOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: GymRequestOtpDto = req.body;
-      await this._otpService.requestOtp(dto.email, ROLE.GYM);
+      await this._otpService.requestOtp(dto.email, Role.GYM);
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_SENT });
     } catch (err) {
       next(err);

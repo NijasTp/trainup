@@ -7,7 +7,7 @@ import { IStreakService } from '../core/interfaces/services/IStreakService';
 import { CreateOrGetDayResponseDto, MealDto } from '../dtos/diet.dto';
 import { IDietService } from '../core/interfaces/services/IDietService';
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
-import { ROLE } from '../constants/role';
+import { Role } from '../constants/role';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
 
@@ -34,21 +34,21 @@ export class DietService implements IDietService {
     date: string,
     mealPayload: Partial<MealDto>
   ): Promise<CreateOrGetDayResponseDto> {
-    if (mealPayload.source === ROLE.ADMIN) {
+    if (mealPayload.source === Role.ADMIN) {
       throw new AppError(MESSAGES.ADMIN_MEALS_NOT_ALLOWED, STATUS_CODE.FORBIDDEN);
     }
 
-    if (actor.role === ROLE.USER) {
-      mealPayload.source = ROLE.USER;
+    if (actor.role === Role.USER) {
+      mealPayload.source = Role.USER;
       mealPayload.sourceId = actor.id;
     }
 
-    if (actor.role === ROLE.TRAINER) {
-      mealPayload.source = ROLE.TRAINER;
+    if (actor.role === Role.TRAINER) {
+      mealPayload.source = Role.TRAINER;
       mealPayload.sourceId = actor.id;
     }
 
-    if (actor.role !== ROLE.USER && actor.role !== ROLE.TRAINER) {
+    if (actor.role !== Role.USER && actor.role !== Role.TRAINER) {
       throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
     }
 
@@ -73,14 +73,14 @@ export class DietService implements IDietService {
     if (!meal) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND);
 
     const creatorId = meal.sourceId?.toString();
-    if (actor.role === ROLE.ADMIN) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
+    if (actor.role === Role.ADMIN) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
 
-    if (actor.role === ROLE.TRAINER) {
+    if (actor.role === Role.TRAINER) {
       if (creatorId !== actor.id) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
     }
 
-    if (actor.role === ROLE.USER) {
-      if (meal.source !== ROLE.USER || actor.id !== creatorId) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
+    if (actor.role === Role.USER) {
+      if (meal.source !== Role.USER || actor.id !== creatorId) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
     }
 
     const updated = await this._dietRepo.updateMeal(userId, date, mealId, update as Partial<IMeal>);
@@ -94,8 +94,8 @@ export class DietService implements IDietService {
     mealId: string,
     isEaten: boolean
   ): Promise<CreateOrGetDayResponseDto | null> {
-    if (actor.role === ROLE.USER && actor.id !== userId) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
-    if (actor.role !== ROLE.USER && actor.role !== ROLE.TRAINER) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
+    if (actor.role === Role.USER && actor.id !== userId) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
+    if (actor.role !== Role.USER && actor.role !== Role.TRAINER) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
 
     await this._streakService.updateUserStreak(userId);
 
@@ -116,14 +116,14 @@ export class DietService implements IDietService {
 
     const creatorId = meal.sourceId?.toString();
 
-    if (actor.role === ROLE.ADMIN) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
+    if (actor.role === Role.ADMIN) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
 
-    if (actor.role === ROLE.TRAINER) {
+    if (actor.role === Role.TRAINER) {
       if (creatorId !== actor.id) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
     }
 
-    if (actor.role === ROLE.USER) {
-      if (meal.source !== ROLE.USER || creatorId !== actor.id) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
+    if (actor.role === Role.USER) {
+      if (meal.source !== Role.USER || creatorId !== actor.id) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
     }
 
     const updated = await this._dietRepo.removeMeal(userId, date, mealId);

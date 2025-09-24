@@ -5,7 +5,7 @@ import TYPES from '../core/types/types';
 import { IWorkoutService } from '../core/interfaces/services/IWorkoutService';
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import { MESSAGES } from '../constants/messages';
-import { ROLE } from '../constants/role';
+import { Role } from '../constants/role';
 import {
   CreateSessionRequestDto,
   WorkoutSessionResponseDto,
@@ -41,8 +41,8 @@ export class WorkoutController {
       const dto: CreateSessionRequestDto = req.body;
       const payload = {
         ...dto,
-        userId: jwtUser?.role === ROLE.USER ? jwtUser.id : undefined,
-        trainerId: jwtUser?.role === ROLE.TRAINER ? jwtUser.id : undefined,
+        userId: jwtUser?.role === Role.USER ? jwtUser.id : undefined,
+        trainerId: jwtUser?.role === Role.TRAINER ? jwtUser.id : undefined,
         givenBy: dto.givenBy || jwtUser?.role
       };
 
