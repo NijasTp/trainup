@@ -72,6 +72,18 @@ export class TransactionRepository implements ITransactionRepository {
     return await TransactionModel.findOne({ razorpayOrderId: orderId })
   }
 
+  async getUserPendingTransaction(userId: string): Promise<ITransaction | null> {
+    return await TransactionModel.findOne({ userId, status: 'pending' }).sort({ createdAt: -1 });
+  }
+
+  async markUserPendingTransactionsAsFailed(userId: string): Promise<number> {
+    const result = await TransactionModel.updateMany(
+      { userId, status: 'pending' },
+      { status: 'failed' }
+    );
+    return result.modifiedCount;
+  }
+
   private mapToTransactionDto (transaction: ITransaction): ITransactionDTO {
     return {
       _id: transaction._id.toString(),

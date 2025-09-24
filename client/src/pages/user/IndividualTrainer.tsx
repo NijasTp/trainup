@@ -20,7 +20,8 @@ import {
     Check,
     Crown,
     Target,
-    Trophy
+    Trophy,
+    Loader2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getIndividualTrainer } from "@/services/userService";
@@ -102,6 +103,8 @@ export default function TrainerPage() {
     const [imageLoaded, setImageLoaded] = useState(false);
     const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const [checkingPendingTransaction, setCheckingPendingTransaction] = useState(false);
+
     useEffect(() => {
         document.title = "TrainUp - Trainer Profile";
         fetchTrainer();
@@ -130,6 +133,16 @@ export default function TrainerPage() {
         } catch (err: any) {
             console.error("Failed to fetch user:", err);
             toast.error("Failed to load user data");
+        }
+    };
+
+    const checkPendingTransaction = async (): Promise<boolean> => {
+        try {
+            const response = await API.get("/payment/check-pending");
+            return response.data.hasPending;
+        } catch (error) {
+            console.error("Failed to check pending transactions:", error);
+            return false;
         }
     };
 
@@ -192,15 +205,35 @@ export default function TrainerPage() {
                     theme: {
                         color: "#3b82f6",
                     },
+                    modal: {
+                        ondismiss: async () => {
+                            // Handle Razorpay modal dismiss
+                            try {
+                                await API.post("/payment/cleanup-pending");
+                                toast.info("Payment cancelled");
+                            } catch (error) {
+                                console.error("Failed to cleanup on dismiss:", error);
+                            }
+                        }
+                    }
                 };
                 const rzp = new (window as any).Razorpay(options);
-                rzp.on("payment.failed", () => {
-                    toast.error("Payment failed. Please try again.");
+                rzp.on("payment.failed", async () => {
+                    try {
+                        await API.post("/payment/cleanup-pending");
+                        toast.error("Payment failed. Please try again.");
+                    } catch (error) {
+                        console.error("Failed to cleanup on failure:", error);
+                    }
                 });
                 rzp.open();
             } catch (err: any) {
                 console.error("Failed to create order:", err);
-                toast.error("Failed to initiate payment");
+                if (err.response?.data?.message) {
+                    toast.error(err.response.data.message);
+                } else {
+                    toast.error("Failed to initiate payment");
+                }
             } finally {
                 document.body.removeChild(script);
             }
@@ -220,11 +253,34 @@ export default function TrainerPage() {
         }
     };
 
-    const openSubscriptionModal = () => {
+    const openSubscriptionModal = async () => {
         if (hasTrainer && !isSameTrainer) {
             toast.error("You already have a trainer assigned. Please cancel your current subscription first.");
             return;
         }
+
+        // Check for pending transactions before opening modal
+        setCheckingPendingTransaction(true);
+        const hasPending = await checkPendingTransaction();
+        setCheckingPendingTransaction(false);
+
+        if (hasPending) {
+            toast.error("You have a pending transaction. Please complete or cancel it first.", {
+                action: {
+                    label: "Cancel Pending",
+                    onClick: async () => {
+                        try {
+                            await API.post("/payment/cleanup-pending");
+                            toast.success("Pending transaction cancelled");
+                        } catch (error) {
+                            toast.error("Failed to cancel pending transaction");
+                        }
+                    }
+                }
+            });
+            return;
+        }
+
         setShowSubscriptionModal(true);
     };
 
@@ -397,11 +453,20 @@ export default function TrainerPage() {
                                     <Button
                                         onClick={openSubscriptionModal}
                                         size="lg"
-                                        disabled={hasTrainer}
+                                        disabled={hasTrainer || checkingPendingTransaction}
                                         className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-2xl transition-all duration-300 font-semibold px-8 text-base"
                                     >
-                                        <Calendar className="h-5 w-5 mr-2" />
-                                        Start Your Journey
+                                        {checkingPendingTransaction ? (
+                                            <>
+                                                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                                Checking...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Calendar className="h-5 w-5 mr-2" />
+                                                Start Your Journey
+                                            </>
+                                        )}
                                     </Button>
                                 )}
                                 <Button
@@ -547,12 +612,21 @@ export default function TrainerPage() {
                                 ) : (
                                     <Button
                                         onClick={openSubscriptionModal}
-                                        disabled={hasTrainer}
+                                        disabled={hasTrainer || checkingPendingTransaction}
                                         className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
                                         size="lg"
                                     >
-                                        <Calendar className="h-5 w-5 mr-2" />
-                                        Choose Your Plan
+                                        {checkingPendingTransaction ? (
+                                            <>
+                                                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                                Checking...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Calendar className="h-5 w-5 mr-2" />
+                                                Choose Your Plan
+                                            </>
+                                        )}
                                     </Button>
                                 )}
                             </div>

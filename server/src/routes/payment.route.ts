@@ -8,8 +8,10 @@ const router = express.Router();
 
 const paymentController = container.get<PaymentController>(TYPES.PaymentController);
 
-
 router.post("/create-order", authMiddleware, paymentController.createOrder.bind(paymentController));
 router.post("/verify-payment", authMiddleware, paymentController.verifyPayment.bind(paymentController));
 router.get("/transactions", authMiddleware, paymentController.getTransactions.bind(paymentController));
+router.get("/check-pending", authMiddleware, paymentController.checkPendingTransaction.bind(paymentController));
+router.post("/cleanup-pending", authMiddleware, paymentController.cleanupPendingTransactions.bind(paymentController));
+
 export default router;

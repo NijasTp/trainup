@@ -32,6 +32,18 @@ export class PaymentController {
       if (!userId) throw new AppError(MESSAGES.INVALID_USER_ID, STATUS_CODE.BAD_REQUEST);
       if (!months) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
 
+      // Check if user already has pending transactions
+      const existingPendingTransaction = await this._transactionService.getUserPendingTransaction(userId);
+      if (existingPendingTransaction) {
+        throw new AppError('You have a pending transaction. Please complete or cancel it first.', STATUS_CODE.BAD_REQUEST);
+      }
+
+  
+      const user = await this._userService.getUserById(userId);
+      if (user?.assignedTrainer) {
+        throw new AppError('You already have a trainer assigned.', STATUS_CODE.BAD_REQUEST);
+      }
+
       const order: CreateOrderResponseDto = await this._paymentService.createOrder(dto.amount, dto.currency, dto.receipt);
 
       const transactionData: Partial<ITransaction> = {
@@ -151,6 +163,39 @@ export class PaymentController {
       res.status(STATUS_CODE.OK).json(transactions);
     } catch (err) {
       logger.error('Get Transactions Error', err);
+      next(err);
+    }
+  }
+
+  async checkPendingTransaction(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id;
+      
+      const pendingTransaction = await this._transactionService.getUserPendingTransaction(userId);
+      
+      res.status(STATUS_CODE.OK).json({
+        hasPending: !!pendingTransaction,
+        transaction: pendingTransaction
+      });
+    } catch (err) {
+      logger.error('Check Pending Transaction Error', err);
+      next(err);
+    }
+  }
+
+  async cleanupPendingTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id;
+      
+      const updatedCount = await this._transactionService.markUserPendingTransactionsAsFailed(userId);
+      
+      res.status(STATUS_CODE.OK).json({
+        success: true,
+        message: `${updatedCount} pending transactions cancelled`,
+        updatedCount
+      });
+    } catch (err) {
+      logger.error('Cleanup Pending Transactions Error', err);
       next(err);
     }
   }

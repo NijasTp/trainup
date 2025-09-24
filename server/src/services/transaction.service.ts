@@ -46,4 +46,12 @@ export class TransactionService implements ITransactionService {
   async findByOrderId(orderId: string): Promise<ITransaction | null> {
     return await this.transactionRepository.findByOrderId(orderId);
   }
+
+  async getUserPendingTransaction(userId: string): Promise<ITransaction | null> {
+    return await this.transactionRepository.getUserPendingTransaction(userId);
+  }
+
+  async markUserPendingTransactionsAsFailed(userId: string): Promise<number> {
+    return await this.transactionRepository.markUserPendingTransactionsAsFailed(userId);
+  }
 }
