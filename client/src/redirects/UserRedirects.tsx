@@ -27,7 +27,6 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
             dispatch(logout());
              navigate('/user/login');
             } else if (error.response?.status === 401) {
-              toast.error('Session expired',);
               dispatch(logout());
               navigate('/user/login');
           }

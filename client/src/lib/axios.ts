@@ -1,6 +1,5 @@
 import { store } from "../redux/store";
 import { logout as userLogout } from "../redux/slices/userAuthSlice";
-import { toast } from "react-toastify";
 import axios from "axios";
 import { logout as adminLogout } from "@/redux/slices/adminAuthSlice";
 import { logoutTrainer } from "@/redux/slices/trainerAuthSlice";
@@ -17,10 +16,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const status = error.response?.status;
-    const message = error.response?.data?.error || "Access forbidden";
 
     if (status === 403) {
-      toast.error(message);
 
       const state = store.getState();
       let role: string | null = null;

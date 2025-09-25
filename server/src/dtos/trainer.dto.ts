@@ -96,7 +96,7 @@ export class ClientDto {
   name: string;
   email: string;
   phone?: string;
-  subscriptionStartDate?: Date | null;
+  subscriptionStartDate?: Date|null;
 }
 
 export class GetClientParamsDto {

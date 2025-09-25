@@ -12,36 +12,7 @@ import api from "@/lib/axios";
 import { Link } from "react-router-dom";
 import { markEaten } from "@/services/dietServices";
 import { toast } from "react-toastify";
-
-interface Meal {
-  _id: string;
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-  time: string;
-  isEaten: boolean;
-  source: "trainer" | "user";
-  usedBy: string;
-  sourceId: string;
-  createdAt: string;
-  updatedAt: string;
-  nutritions: any[];
-  eatenTime?: string;
-  image?: string;
-  description?: string;
-}
-
-interface ApiResponse {
-  _id: string;
-  user: string;
-  date: string;
-  meals: Meal[];
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
+import type { ApiResponse, Meal } from "@/interfaces/user/iDietPage";
 
 export default function Diets() {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
@@ -51,7 +22,7 @@ export default function Diets() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Function to check if a meal is missed
+
   const isMealMissed = (meal: Meal) => {
     if (meal.isEaten) return false;
     const now = new Date();

@@ -13,6 +13,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import api from "@/lib/axios";
 import { deleteMeal, getMealsByDate } from "@/services/dietServices";
 import { z } from "zod";
+import { useNavigate } from "react-router-dom";
 
 export interface Meal {
   _id?: string;
@@ -92,6 +93,7 @@ export default function UserAddDiet() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [showCustomModal, setShowCustomModal] = useState<boolean>(false);
+  const navigate = useNavigate();
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -200,10 +202,10 @@ export default function UserAddDiet() {
     };
     setMeals((prev) => [...prev, meal]);
     setSelectedFood(null);
-    setUsdaMealTime("12:00"); // Reset time after adding
+    setUsdaMealTime("12:00"); 
   };
 
-  // Remove meal (local or server)
+
   const removeMeal = async (index: number, meal: Meal) => {
     if (meal._id) {
       try {
@@ -243,6 +245,7 @@ export default function UserAddDiet() {
       toast.success("Diet day updated successfully");
       const updatedResponse = await getMealsByDate(date);
       setMeals(updatedResponse.meals || []);
+      navigate('/diets');
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to update diet day");
       toast.error(err.response?.data?.error || "Failed to update diet day");

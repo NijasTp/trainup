@@ -25,13 +25,18 @@ export class StreakService implements IStreakService {
     const today = new Date();
     const lastAction = new Date(streak.lastActionDate);
 
+    const isSameDay =
+      today.getFullYear() === lastAction.getFullYear() &&
+      today.getMonth() === lastAction.getMonth() &&
+      today.getDate() === lastAction.getDate();
+
     const diffDays = Math.floor((today.getTime() - lastAction.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) {
+    if (isSameDay) {
       return streak;
     }
 
-    if (diffDays === 1) {
+    if (diffDays <= 1) {
       streak.currentStreak += 1;
       if (streak.currentStreak > streak.longestStreak) {
         streak.longestStreak = streak.currentStreak;

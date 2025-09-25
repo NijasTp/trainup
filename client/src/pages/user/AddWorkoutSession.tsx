@@ -134,26 +134,6 @@ function AddedExerciseCard({
     );
 }
 
-const baseExerciseSchema = z.object({
-    sets: z.number().int().min(1, { message: "Sets must be at least 1" }),
-});
-
-const cardioExerciseSchema = baseExerciseSchema.extend({
-    time: z.string().min(1, { message: "Time is required for cardio exercises" }).regex(/^\d+\s*(min|sec|s|m)$/, {
-        message: "Time must be a number followed by 'min', 'sec', 's', or 'm' (e.g., '30 min')",
-    }),
-});
-
-const nonCardioExerciseSchema = baseExerciseSchema.extend({
-    reps: z.string().min(1, { message: "Reps are required for non-cardio exercises" }).regex(/^\d+-\d+$|^\d+$/, {
-        message: "Reps must be a number or range (e.g., '10' or '10-12')",
-    }),
-});
-
-const weightedExerciseSchema = z.object({
-    weight: z.number().nonnegative({ message: "Weight must be non-negative" }).optional(),
-});
-
 const exerciseSchema = z.object({
     id: z.string().min(1, { message: "Exercise ID is required" }),
     name: z.string().min(1, { message: "Exercise name is required" }).max(100, { message: "Exercise name must be 100 characters or less" }),

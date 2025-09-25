@@ -50,16 +50,14 @@ export default function HomePage() {
   const checkProfileCompletion = () => {
     if (!user) return;
 
-    // Check if user has skipped profile completion recently (within 7 days)
     const skipped = localStorage.getItem("profileCompletionSkipped");
     const skipDate = localStorage.getItem("profileCompletionSkipDate");
     
     if (skipped && skipDate) {
       const daysSinceSkip = Math.floor((Date.now() - parseInt(skipDate)) / (1000 * 60 * 60 * 24));
-      if (daysSinceSkip < 7) return; // Don't show again for 7 days
+      if (daysSinceSkip < 7) return;
     }
 
-    // Check profile completion
     const requiredFields = [
       user.phone,
       user.age,
@@ -67,19 +65,16 @@ export default function HomePage() {
       user.height,
       user.weight,
       user.goals?.length > 0,
-      user.activityLevel
+      user.activityLevel,
     ];
 
-    const completedFields = requiredFields.filter(field => field && field !== "").length;
+    const completedFields = requiredFields.filter((field) => field && field !== "").length;
     const completionPercentage = (completedFields / requiredFields.length) * 100;
 
-    // Show modal if profile is less than 70% complete
     if (completionPercentage < 70) {
       setShowProfileModal(true);
     }
   };
-
-
 
   const fetchHomeData = async () => {
     setIsLoading(true);
@@ -138,17 +133,17 @@ export default function HomePage() {
   const workoutProgress = calculateWorkoutProgress();
 
   return (
-    <div className="container min-h-screen bg-gradient-to-br from-background absolute inset-0 via-background/95 to-secondary/20">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+    <div className="relative min-h-screen w-full bg-gradient-to-br from-background via-background/95 to-secondary/20">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent z-0"></div>
 
       <SiteHeader />
-      
+
       <ProfileCompletionModal 
         open={showProfileModal} 
         onOpenChange={setShowProfileModal}
       />
 
-      <main className="relative container mx-auto px-4 py-8 space-y-8">
+      <main className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 z-10">
         <div className="text-center space-y-4 mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
             <Flame className="h-4 w-4 text-primary" />
