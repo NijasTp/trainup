@@ -1,0 +1,287 @@
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+    Calendar, 
+    Clock, 
+    Video, 
+    ArrowLeft,
+    RefreshCw,
+    Send,
+    CheckCircle
+} from "lucide-react";
+import API from "@/lib/axios";
+import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
+import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+
+interface Slot {
+    _id: string;
+    trainerId: {
+        _id: string;
+        name: string;
+        profileImage?: string;
+    };
+    date: string;
+    startTime: string;
+    endTime: string;
+    isBooked: boolean;
+    status: 'pending' | 'approved' | 'rejected';
+}
+
+export default function TrainerAvailability() {
+    const [slots, setSlots] = useState<Slot[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
+
+    useEffect(() => {
+        document.title = "TrainUp - Trainer Availability";
+        fetchAvailability();
+    }, []);
+
+    const fetchAvailability = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await API.get("/user/trainer-availability");
+            setSlots(response.data.slots);
+            console.log("Fetched slots:", response.data.slots);
+            setIsLoading(false);
+        } catch (err: any) {
+            console.error("Failed to fetch availability:", err);
+            setError("Failed to load availability");
+            toast.error("Failed to load availability");
+            setIsLoading(false);
+        }
+    };
+
+    const handleBookSlot = async (slotId: string) => {
+        setBookingSlotId(slotId);
+        try {
+            await API.post("/user/book-session", { slotId });
+            toast.success("Session request sent successfully!");
+            fetchAvailability(); // Refresh the list
+        } catch (err: any) {
+            console.error("Failed to book slot:", err);
+            toast.error(err.response?.data?.error || "Failed to book session");
+        } finally {
+            setBookingSlotId(null);
+        }
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const formatTime = (time: string) => {
+        return new Date(`1970-01-01T${time}`).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+
+    const isSlotInPast = (date: string, time: string) => {
+        const slotDateTime = new Date(`${date}T${time}`);
+        return slotDateTime < new Date();
+    };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+                <SiteHeader />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+                <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6">
+                    <div className="relative">
+                        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 w-16 h-16 border-2 border-transparent border-t-accent rounded-full animate-pulse"></div>
+                    </div>
+                    <p className="text-muted-foreground font-medium text-lg">Loading availability...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+                <SiteHeader />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+                <div className="relative container mx-auto px-4 py-16 text-center space-y-6">
+                    <h3 className="text-2xl font-bold text-foreground">Error</h3>
+                    <p className="text-muted-foreground text-lg">{error}</p>
+                    <Button
+                        className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
+                        onClick={fetchAvailability}
+                    >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Retry
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+            <SiteHeader />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+
+            <div className="relative border-b border-border/50 bg-card/20 backdrop-blur-sm">
+                <div className="container mx-auto px-4 py-6">
+                    <Link to="/my-trainer/profile">
+                        <Button variant="ghost" className="group hover:bg-primary/5 transition-all duration-300">
+                            <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                            Back to Trainer Profile
+                        </Button>
+                    </Link>
+                </div>
+            </div>
+
+            <main className="relative container mx-auto px-4 py-12 space-y-8">
+                <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
+                    <CardHeader className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                                <Calendar className="h-8 w-8 text-primary" />
+                                Trainer Availability
+                            </h1>
+                            <Badge variant="secondary" className="text-sm">
+                                {slots.filter(slot => !slot.isBooked && !isSlotInPast(slot.date, slot.startTime)).length} Available Slots
+                            </Badge>
+                        </div>
+                        <p className="text-muted-foreground">
+                            Book a video call session with your trainer. Each session is 1 hour long.
+                        </p>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {slots.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <Calendar className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
+                                    <p className="text-muted-foreground text-lg">No availability slots found</p>
+                                    <p className="text-sm text-muted-foreground mt-2">
+                                        Your trainer hasn't set any availability slots yet. Please contact them directly.
+                                    </p>
+                                </div>
+                            ) : (
+                                slots.map((slot) => {
+                                    const isPastSlot = isSlotInPast(slot.date, slot.startTime);
+                                    const canBook = !slot.isBooked && !isPastSlot;
+                                    
+                                    return (
+                                        <Card
+                                            key={slot._id}
+                                            className={`bg-background/50 border-border/50 hover:shadow-md transition-all duration-200 ${
+                                                isPastSlot ? 'opacity-50' : ''
+                                            }`}
+                                        >
+                                            <CardContent className="p-6">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center space-x-4">
+                                                        <Avatar className="h-12 w-12">
+                                                            <AvatarImage 
+                                                                src={slot.trainerId.profileImage || "/placeholder.svg"} 
+                                                                alt={slot.trainerId.name} 
+                                                            />
+                                                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                                                {slot.trainerId.name.charAt(0)}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        
+                                                        <div className="space-y-3">
+                                                            <div>
+                                                                <h3 className="font-semibold text-foreground">
+                                                                    Session with {slot.trainerId.name}
+                                                                </h3>
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    1-hour video call session
+                                                                </p>
+                                                            </div>
+                                                            
+                                                            <div className="flex items-center space-x-6">
+                                                                <div className="flex items-center space-x-2 text-sm">
+                                                                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                                                                    <span className="text-foreground font-medium">
+                                                                        {formatDate(slot.date)}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center space-x-2 text-sm">
+                                                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                                                    <span className="text-foreground font-medium">
+                                                                        {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center space-x-2 text-sm">
+                                                                    <Video className="h-4 w-4 text-muted-foreground" />
+                                                                    <span className="text-foreground font-medium">
+                                                                        Video Call
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center space-x-3">
+                                                        {slot.isBooked ? (
+                                                            <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+                                                                <CheckCircle className="h-4 w-4 mr-1" />
+                                                                Booked
+                                                            </Badge>
+                                                        ) : isPastSlot ? (
+                                                            <Badge className="bg-gray-500/10 text-gray-600 border-gray-500/20">
+                                                                Expired
+                                                            </Badge>
+                                                        ) : (
+                                                            <Button
+                                                                onClick={() => handleBookSlot(slot._id)}
+                                                                disabled={bookingSlotId === slot._id}
+                                                                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
+                                                            >
+                                                                {bookingSlotId === slot._id ? (
+                                                                    <>
+                                                                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                                                        Booking...
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <Send className="h-4 w-4 mr-2" />
+                                                                        Request Session
+                                                                    </>
+                                                                )}
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })
+                            )}
+                        </div>
+                        
+                        {slots.length > 0 && (
+                            <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/10">
+                                <h4 className="font-medium text-foreground mb-2">How it works:</h4>
+                                <ul className="text-sm text-muted-foreground space-y-1">
+                                    <li>• Choose an available time slot from your trainer's calendar</li>
+                                    <li>• Click "Request Session" to send a booking request</li>
+                                    <li>• Your trainer will approve or reject the request with a reason</li>
+                                    <li>• Once approved, you'll receive a video call link before the session</li>
+                                </ul>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </main>
+        </div>
+    );
+}

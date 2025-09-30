@@ -3,6 +3,7 @@ import { Response } from "express";
 export interface JwtPayload {
   id: string;
   role: string;
+  tokenVersion: number;
   iat?: number;
   exp?: number;
 }

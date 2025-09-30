@@ -21,6 +21,7 @@
     "cloudinary": "^2.7.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "dotenv": "^17.1.0",
     "express": "^5.1.0",
@@ -33,6 +34,8 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "razorpay": "^2.9.6",
+    "socket.io": "^4.8.1",
+    "uuid": "^13.0.0",
     "winston": "^3.17.0",
     "zod": "^4.1.4"
   },

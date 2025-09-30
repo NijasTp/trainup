@@ -33,8 +33,6 @@ import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import type { Position, SpotlightCardProps, Trainer, User } from "@/interfaces/user/iIndividualTrainer";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
-
-
 const SpotlightCard: React.FC<SpotlightCardProps> = ({
     children,
     className = '',
@@ -146,7 +144,7 @@ export default function TrainerPage() {
         }
     };
 
-    const handleSubscribe = async (months: number) => {
+    const handleSubscribe = async (planType: string) => {
         if (!trainer) return;
 
         setShowSubscriptionModal(false);
@@ -158,13 +156,21 @@ export default function TrainerPage() {
         script.onload = async () => {
             try {
                 const monthlyPrice = trainer?.price ? parseFloat(trainer.price) : 5000;
-                const amount = monthlyPrice * months;
+                let amount = monthlyPrice;
+                
+                // Calculate amount based on plan
+                if (planType === 'premium') {
+                    amount = Math.round(monthlyPrice * 1.25);
+                } else if (planType === 'pro') {
+                    amount = Math.round(monthlyPrice * 1.5);
+                }
+
                 const response = await API.post("/payment/create-order", {
                     amount,
                     currency: "INR",
                     receipt: `booking_${Date.now()}`,
                     trainerId: trainer._id,
-                    months
+                    planType
                 });
                 const order = response.data;
 
@@ -173,7 +179,7 @@ export default function TrainerPage() {
                     amount: order.amount,
                     currency: order.currency,
                     name: "TrainUp",
-                    description: `Subscription for ${trainer?.name} (${months} months)`,
+                    description: `${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan - ${trainer?.name}`,
                     image: import.meta.env.VITE_LOGO_URL || "/logo.png",
                     order_id: order.id,
                     handler: async (response: any) => {
@@ -183,7 +189,7 @@ export default function TrainerPage() {
                                 paymentId: response.razorpay_payment_id,
                                 signature: response.razorpay_signature,
                                 trainerId: id,
-                                months: months,
+                                planType: planType,
                                 amount: amount
                             });
                             if (verifyResponse.data.success) {
@@ -207,7 +213,6 @@ export default function TrainerPage() {
                     },
                     modal: {
                         ondismiss: async () => {
-                            // Handle Razorpay modal dismiss
                             try {
                                 await API.post("/payment/cleanup-pending");
                                 toast.info("Payment cancelled");
@@ -246,6 +251,16 @@ export default function TrainerPage() {
     };
 
     const handleChat = () => {
+        if (!user?.trainerPlan) {
+            toast.error("Please subscribe to a plan to start chatting with your trainer");
+            return;
+        }
+        
+        if (user.trainerPlan === 'basic') {
+            toast.error("Chat is not available with Basic plan. Please upgrade to Premium or Pro");
+            return;
+        }
+
         if (trainer) {
             navigate(`/chat/${trainer._id}`);
         } else {
@@ -524,28 +539,20 @@ export default function TrainerPage() {
 
                                 {trainer.certificate && (
                                     <div className="pt-4">
-                                        <Dialog>
-                                            <Button variant="outline" className="flex items-center gap-2 hover:bg-primary/5">
-                                                <FileText className="h-4 w-4" />
-                                                View Certifications
-                                            </Button>
-                                            <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
-                                                <DialogHeader>
-                                                    <DialogTitle>{trainer.name}'s Professional Certificate</DialogTitle>
-                                                </DialogHeader>
-                                                <img
-                                                    src={trainer.certificate}
-                                                    alt="Trainer Certificate"
-                                                    className="w-full h-auto rounded-lg"
-                                                />
-                                            </DialogContent>
-                                        </Dialog>
+                                        <Button 
+                                            variant="outline" 
+                                            className="flex items-center gap-2 hover:bg-primary/5"
+                                            onClick={() => setIsOpen(true)}
+                                        >
+                                            <FileText className="h-4 w-4" />
+                                            View Certifications
+                                        </Button>
                                     </div>
                                 )}
                             </div>
                         </SpotlightCard>
 
-                          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                        <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
                             <CardHeader>
                                 <h2 className="text-2xl font-bold text-foreground">Certifications</h2>
                             </CardHeader>
@@ -570,12 +577,6 @@ export default function TrainerPage() {
                                 <DialogHeader>
                                     <DialogTitle className="flex items-center justify-between">
                                         Professional Certificate
-                                        <button
-                                            onClick={() => setIsOpen(false)}
-                                            className="text-foreground hover:text-primary transition-colors"
-                                        >
-                                         
-                                        </button>
                                     </DialogTitle>
                                 </DialogHeader>
                                 <img
@@ -593,7 +594,7 @@ export default function TrainerPage() {
                             <div className="space-y-6">
                                 <h3 className="text-2xl font-bold text-foreground flex items-center gap-2">
                                     <Crown className="h-6 w-6 text-primary" />
-                                    Investment
+                                    Plans Starting From
                                 </h3>
                                 <div className="text-center p-6 bg-gradient-to-br from-primary/5 via-primary/3 to-accent/5 rounded-xl border border-primary/10">
                                     <div className="text-4xl font-bold text-primary mb-2">₹{monthlyPrice.toLocaleString()}</div>

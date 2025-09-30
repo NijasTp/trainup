@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+
 
 export class RequestOtpDto {
   email: string;
@@ -74,6 +74,7 @@ export class UserResponseDto {
   weightHistory: WeightLogDto[];
   height?: number;
   age?: number;
+  trainerPlan: 'basic' | 'premium' | 'pro';
   gender?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -92,6 +93,21 @@ export class WeightLogDto {
 
 export class ResendOtpDto {
   email: string;
+}
+
+export class UserUpdateProfileDto {
+  name?: string;
+  email?: string;
+  phone?: string;
+  goals?: string[];
+  activityLevel?: string;
+  equipment?: boolean;
+  isPrivate?: boolean;
+  currentWeight?: number;
+  goalWeight?: number;
+  height?: number;
+  age?: number;
+  gender?: string;
 }
 
 export class GetTrainersQueryDto {

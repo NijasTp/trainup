@@ -3,7 +3,6 @@ import container from '../core/di/inversify.config'
 import { UserController } from '../controllers/user.controller'
 import TYPES from '../core/types/types'
 import { authMiddleware, roleMiddleware } from '../middlewares/auth.middleware'
-import { checkSubscriptionExpiry } from '../middlewares/checkSubscription.middleware'
 
 const router = express.Router()
 
@@ -37,7 +36,6 @@ router.post(
 )
 
 router.use(authMiddleware)
-router.use(checkSubscriptionExpiry)
 
 router.post(
   '/logout',
@@ -86,5 +84,13 @@ router.post(
   '/cancel-subscription',
   userController.cancelSubscription.bind(userController)
 )
+
+router.get('/trainer-availability', roleMiddleware(['user']), userController.getTrainerAvailability.bind(userController))
+router.post('/book-session', roleMiddleware(['user']), userController.bookSession.bind(userController))
+router.get('/sessions', roleMiddleware(['user']), userController.getUserSessions.bind(userController))
+router.get('/plan', roleMiddleware(['user']), userController.getUserPlan.bind(userController))
+router.get('/trainer/:trainerId', roleMiddleware(['user']), userController.getTrainer.bind(userController))
+router.get('/chat/messages/:trainerId', roleMiddleware(['user']), userController.getChatMessages.bind(userController))
+router.get('/me', roleMiddleware(['user']), userController.getProfile.bind(userController))
 
 export default router

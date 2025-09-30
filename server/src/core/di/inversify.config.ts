@@ -25,6 +25,20 @@ import { IPaymentRepository } from "../interfaces/repositories/IPaymentRepositor
 import { IPaymentService } from "../interfaces/services/IPaymentService";
 import { IStreakService } from "../interfaces/services/IStreakService";
 import { IStreakRepository } from "../interfaces/repositories/IStreakRepository";
+import { IDietDayRepository } from "../interfaces/repositories/IDietRepository";
+import { IDietService } from "../interfaces/services/IDietService";
+import { IDietTemplateService } from "../interfaces/services/IDietTemplateService";
+import { ITransactionRepository } from "../interfaces/repositories/ITransactionRepository";
+import { TransactionService } from "../../services/transaction.service";
+import { ITransactionService } from "../interfaces/services/ITransactionService";
+import { IUserPlanRepository } from "../interfaces/repositories/IUserPlanRepository";
+import { IUserPlanService } from "../interfaces/services/IUserPlanService";
+import { ISlotRepository } from "../interfaces/repositories/ISlotRepository";
+import { ISlotService } from "../interfaces/services/ISlotService";
+import { IMessageRepository } from "../interfaces/repositories/IMessageRepository";
+import { IMessageService } from "../interfaces/services/IMessageService";
+import { IVideoCallService } from "../interfaces/services/IVideoCallService";
+import { IVideoCallRepository } from "../interfaces/repositories/IVideoCallRepository";
 
 // Implementations
 
@@ -54,18 +68,21 @@ import { DietService } from "../../services/diet.service";
 import { TemplateRepository } from "../../repositories/dietTemplate.repository";
 import { DietTemplateService } from "../../services/dietTemplate.service";
 import { DietController } from "../../controllers/diet.controller";
-import { IDietDayRepository } from "../interfaces/repositories/IDietRepository";
-import { IDietService } from "../interfaces/services/IDietService";
-import { IDietTemplateService } from "../interfaces/services/IDietTemplateService";
 import { PaymentRepository } from "../../repositories/payment.repository";
 import { PaymentService } from "../../services/payment.service";
 import { PaymentController } from "../../controllers/payment.controller";
 import { StreakService } from "../../services/streak.service";
 import { StreakRepository } from "../../repositories/streak.repository";
-import { ITransactionRepository } from "../interfaces/repositories/ITransactionRepository";
 import { TransactionRepository } from "../../repositories/transaction.repository";
-import { TransactionService } from "../../services/transaction.service";
-import { ITransactionService } from "../interfaces/services/ITransactionService";
+import { UserPlanRepository } from "../../repositories/userPlan.repository";
+import { UserPlanService } from "../../services/userPlan.service";
+import { SlotRepository } from "../../repositories/slot.repository";
+import { SlotService } from "../../services/slot.service";
+import { MessageRepository } from "../../repositories/message.repository";
+import { MessageService } from "../../services/message.service";
+import { VideoCallController } from "../../controllers/videoCall.controller";
+import { VideoCallRepository } from "../../repositories/videoCall.repository";
+import { VideoCallService } from "../../services/videoCall.service";
 
 
 // Create container 
@@ -75,6 +92,20 @@ const container = new Container();
 container.bind<UserController>(TYPES.UserController).to(UserController);
 container.bind<IUserService>(TYPES.IUserService).to(UserService);
 container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepository);
+
+container.bind<IUserPlanRepository>(TYPES.IUserPlanRepository).to(UserPlanRepository);
+container.bind<IUserPlanService>(TYPES.IUserPlanService).to(UserPlanService);
+
+container.bind<ISlotRepository>(TYPES.ISlotRepository).to(SlotRepository)
+container.bind<ISlotService>(TYPES.ISlotService).to(SlotService)
+
+container.bind<IMessageRepository>(TYPES.IMessageRepository).to(MessageRepository)
+container.bind<IMessageService>(TYPES.IMessageService).to(MessageService)
+
+container.bind<IVideoCallRepository>(TYPES.IVideoCallRepository).to(VideoCallRepository)
+container.bind<IVideoCallService>(TYPES.IVideoCallService).to(VideoCallService)
+container.bind<VideoCallController>(TYPES.VideoCallController).to(VideoCallController)
+
 container.bind<OAuthClient>(TYPES.OAuthClient).to(OAuthClient);
 container.bind<PassportConfig>(TYPES.PassportConfig).to(PassportConfig).inSingletonScope();
 

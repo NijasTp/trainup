@@ -7,7 +7,8 @@ const BASE_ROUTE = {
     GYM: '/api/gym',
     WORKOUT: '/api/workout',
     DIET: '/api/diet',
-    PAYMENT: '/api/payment'
+    PAYMENT: '/api/payment',
+    VIDEO_CALL: '/api/video-call',
 }
 
 export default BASE_ROUTE;

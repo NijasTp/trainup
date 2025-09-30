@@ -1,10 +1,14 @@
-export class CreateOrderRequestDto {
+import { ObjectId } from "mongoose";
+
+export interface CreateOrderRequestDto {
   amount: number;
   currency: string;
   receipt?: string;
+  trainerId: string;
+  planType: 'basic' | 'premium' | 'pro';
 }
 
-export class CreateOrderResponseDto {
+export interface CreateOrderResponseDto {
   id: string;
   entity: string;
   amount: number;
@@ -21,12 +25,12 @@ export interface VerifyPaymentRequestDto {
   paymentId: string;
   signature: string;
   trainerId: string;
-  months: number;
+  planType: 'basic' | 'premium' | 'pro';
   amount: number;
 }
 
-export class VerifyPaymentResponseDto {
+export interface VerifyPaymentResponseDto {
   success: boolean;
   message: string;
-  transactionId?: string | unknown;
+  transactionId?:ObjectId| string ;
 }

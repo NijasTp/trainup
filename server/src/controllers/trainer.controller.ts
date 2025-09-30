@@ -7,6 +7,9 @@ import { IOTPService } from '../core/interfaces/services/IOtpService';
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService';
 import { STATUS_CODE } from '../constants/status';
 import { IUserService } from '../core/interfaces/services/IUserService';
+import { ISlotService } from '../core/interfaces/services/ISlotService';
+import { IMessageService } from '../core/interfaces/services/IMessageService';
+import { IUserPlanService } from '../core/interfaces/services/IUserPlanService';
 import { logger } from '../utils/logger.util';
 import {
   TrainerLoginDto,
@@ -33,7 +36,10 @@ export class TrainerController {
     @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
     @inject(TYPES.IJwtService) private _JwtService: IJwtService,
     @inject(TYPES.IOtpService) private otpService: IOTPService,
-    @inject(TYPES.IUserService) private userService: IUserService
+    @inject(TYPES.IUserService) private _userService: IUserService,
+    @inject(TYPES.ISlotService) private _slotService: ISlotService,
+    @inject(TYPES.IMessageService) private _messageService: IMessageService,
+    @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService
   ) {}
 
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -214,7 +220,7 @@ export class TrainerController {
   async getClient(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: GetClientParamsDto = { id: req.params.id };
-      const client = await this.userService.getUserById(dto.id);
+      const client = await this._userService.getUserById(dto.id);
       if (!client) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
       const response: GetClientResponseDto = { user: client };
       res.status(STATUS_CODE.OK).json(response);
@@ -229,6 +235,136 @@ export class TrainerController {
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.DELETED });
     } catch (err) {
       logger.error('Logout error:', err);
+      next(err);
+    }
+  }
+
+  // New methods for slots, sessions, and chat
+  async getSlots(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id;
+      const slots = await this._slotService.getTrainerSlots(trainerId);
+      res.status(STATUS_CODE.OK).json({ slots });
+    } catch (err) {
+      logger.error('Error fetching trainer slots:', err);
+      next(err);
+    }
+  }
+
+  async createSlot(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id;
+      const { date, startTime, endTime } = req.body;
+      
+      if (!date || !startTime || !endTime) {
+        throw new AppError('Date, startTime, and endTime are required', STATUS_CODE.BAD_REQUEST);
+      }
+
+      const slot = await this._slotService.createSlot(trainerId, new Date(date), startTime, endTime);
+      res.status(STATUS_CODE.CREATED).json({ slot, message: 'Slot created successfully' });
+    } catch (err) {
+      logger.error('Error creating slot:', err);
+      next(err);
+    }
+  }
+
+  async deleteSlot(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id;
+      const { slotId } = req.params;
+      
+      await this._slotService.deleteSlot(slotId, trainerId);
+      res.status(STATUS_CODE.OK).json({ message: 'Slot deleted successfully' });
+    } catch (err) {
+      logger.error('Error deleting slot:', err);
+      next(err);
+    }
+  }
+
+  async getSessionRequests(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id;
+      const requests = await this._slotService.getTrainerSessionRequests(trainerId);
+      res.status(STATUS_CODE.OK).json({ requests });
+    } catch (err) {
+      logger.error('Error fetching session requests:', err);
+      next(err);
+    }
+  }
+
+    async approveSessionRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id;
+      const { requestId, userId } = req.params;
+      
+      if (!userId) {
+        throw new AppError('User ID is required for approval', STATUS_CODE.BAD_REQUEST);
+      }
+      
+      await this._slotService.approveSessionRequest(requestId, userId, trainerId);
+      res.status(STATUS_CODE.OK).json({ message: 'Session request approved successfully' });
+    } catch (err) {
+      logger.error('Error approving session request:', err);
+      next(err);
+    }
+  }
+
+  async rejectSessionRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id;
+      const { requestId, userId } = req.params;
+      const { rejectionReason } = req.body;
+      
+      if (!userId) {
+        throw new AppError('User ID is required for rejection', STATUS_CODE.BAD_REQUEST);
+      }
+      if (!rejectionReason) {
+        throw new AppError('Rejection reason is required', STATUS_CODE.BAD_REQUEST);
+      }
+
+      await this._slotService.rejectSessionRequest(requestId, userId, trainerId, rejectionReason);
+      res.status(STATUS_CODE.OK).json({ message: 'Session request rejected successfully' });
+    } catch (err) {
+      logger.error('Error rejecting session request:', err);
+      next(err);
+    }
+  }
+
+
+  async getClientDetails(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { clientId } = req.params;
+      const client = await this._userService.getUserById(clientId);
+      if (!client) throw new AppError('Client not found', STATUS_CODE.NOT_FOUND);
+      res.status(STATUS_CODE.OK).json({ client });
+    } catch (err) {
+      logger.error('Error fetching client details:', err);
+      next(err);
+    }
+  }
+
+  async getChatMessages(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id;
+      const { clientId } = req.params;
+      
+      const messages = await this._messageService.getMessages(trainerId, clientId);
+      res.status(STATUS_CODE.OK).json({ messages });
+    } catch (err) {
+      logger.error('Error fetching chat messages:', err);
+      next(err);
+    }
+  }
+
+  async getUserPlan(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id;
+      const { id: userId } = req.params;
+      
+      const plan = await this._userPlanService.getUserPlan(userId, trainerId);
+      res.status(STATUS_CODE.OK).json({ plan });
+    } catch (err) {
+      logger.error('Error fetching user plan:', err);
       next(err);
     }
   }

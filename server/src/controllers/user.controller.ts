@@ -6,6 +6,9 @@ import { IOTPService } from '../core/interfaces/services/IOtpService';
 import { ITrainerService } from '../core/interfaces/services/ITrainerService';
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService';
 import { IStreakService } from '../core/interfaces/services/IStreakService';
+import { ISlotService } from '../core/interfaces/services/ISlotService';
+import { IMessageService } from '../core/interfaces/services/IMessageService';
+import { IUserPlanService } from '../core/interfaces/services/IUserPlanService';
 import { IUserController } from '../core/interfaces/controllers/IUserController';
 import { STATUS_CODE } from '../constants/status';
 import { logger } from '../utils/logger.util';
@@ -41,7 +44,10 @@ export class UserController implements IUserController {
     @inject(TYPES.IOtpService) private _otpService: IOTPService,
     @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
     @inject(TYPES.IJwtService) private _jwtService: IJwtService,
-    @inject(TYPES.IStreakService) private _streakService: IStreakService
+    @inject(TYPES.IStreakService) private _streakService: IStreakService,
+    @inject(TYPES.ISlotService) private _slotService: ISlotService,
+    @inject(TYPES.IMessageService) private _messageService: IMessageService,
+    @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService
   ) {}
 
   async requestOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -233,6 +239,7 @@ export class UserController implements IUserController {
       }
       await this._userService.cancelSubscription(userId, user.assignedTrainer);
       await this._trainerService.removeClientFromTrainer(user.assignedTrainer, userId);
+      await this._userPlanService.deleteUserPlan(userId, user.assignedTrainer);
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.DELETED });
     } catch (err) {
       logger.error('Error cancelling subscription:', err);
@@ -309,6 +316,86 @@ export class UserController implements IUserController {
       this._jwtService.clearTokens(res);
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.DELETED });
     } catch (err) {
+      next(err);
+    }
+  }
+
+  async getTrainerAvailability(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id;
+      const slots = await this._slotService.getAvailableSlots(userId);
+      res.status(STATUS_CODE.OK).json({ slots });
+    } catch (err) {
+      logger.error('Error fetching trainer availability:', err);
+      next(err);
+    }
+  }
+
+  async bookSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id;
+      const { slotId } = req.body;
+      
+      if (!slotId) {
+        throw new AppError('Slot ID is required', STATUS_CODE.BAD_REQUEST);
+      }
+
+      await this._slotService.bookSession(slotId, userId);
+      res.status(STATUS_CODE.OK).json({ message: 'Session request sent successfully' });
+    } catch (err) {
+      logger.error('Error booking session:', err);
+      next(err);
+    }
+  }
+
+  async getUserSessions(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id;
+      const sessions = await this._slotService.getUserSessions(userId);
+      res.status(STATUS_CODE.OK).json({ sessions });
+    } catch (err) {
+      logger.error('Error fetching user sessions:', err);
+      next(err);
+    }
+  }
+
+  async getUserPlan(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id;
+      const user = await this._userService.getUserById(userId);
+      
+      if (!user || !user.assignedTrainer) {
+        throw new AppError('No trainer assigned', STATUS_CODE.NOT_FOUND);
+      }
+
+      const plan = await this._userPlanService.getUserPlan(userId, user.assignedTrainer);
+      res.status(STATUS_CODE.OK).json({ plan });
+    } catch (err) {
+      logger.error('Error fetching user plan:', err);
+      next(err);
+    }
+  }
+
+  async getTrainer(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { trainerId } = req.params;
+      const trainer = await this._trainerService.getTrainerById(trainerId);
+      if (!trainer) throw new AppError('Trainer not found', STATUS_CODE.NOT_FOUND);
+      res.status(STATUS_CODE.OK).json({ trainer });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getChatMessages(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id;
+      const { trainerId } = req.params;
+      
+      const messages = await this._messageService.getMessages(userId, trainerId);
+      res.status(STATUS_CODE.OK).json({ messages });
+    } catch (err) {
+      logger.error('Error fetching chat messages:', err);
       next(err);
     }
   }

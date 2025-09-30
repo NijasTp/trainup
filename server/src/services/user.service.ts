@@ -1,23 +1,31 @@
 import { injectable, inject } from 'inversify';
 import bcrypt from 'bcrypt';
+import { OAuth2Client } from 'google-auth-library';
 import { IUserService } from '../core/interfaces/services/IUserService';
 import { IUserRepository } from '../core/interfaces/repositories/IUserRepository';
+import { IOTPService } from '../core/interfaces/services/IOtpService';
 import TYPES from '../core/types/types';
 import { IJwtService } from '../core/interfaces/services/IJwtService';
 import { IUser } from '../models/user.model';
-import { OAuth2Client } from 'google-auth-library';
-import { MESSAGES } from '../constants/messages';
-import { GetWeightHistoryResponseDto, LoginResponseDto, UserResponseDto } from '../dtos/user.dto';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
+import { MESSAGES } from '../constants/messages';
+import { 
+  LoginDto, 
+  LoginResponseDto, 
+  GetWeightHistoryResponseDto,
+  UserResponseDto
+} from '../dtos/user.dto';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
 @injectable()
 export class UserService implements IUserService {
   private googleClient: OAuth2Client;
+
   constructor(
     @inject(TYPES.IUserRepository) private _userRepo: IUserRepository,
+    @inject(TYPES.IOtpService) private otpService: IOTPService,
     @inject(TYPES.IJwtService) private _jwtService: IJwtService
   ) {
     this.googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
@@ -54,6 +62,7 @@ export class UserService implements IUserService {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this._userRepo.updateUser(user._id.toString(), { password: hashedPassword });
+    await this.otpService.clearOtp(email);
   }
 
   public async loginUser(email: string, password: string): Promise<LoginResponseDto> {
@@ -143,7 +152,7 @@ export class UserService implements IUserService {
     if (!updatedUser) throw new AppError(MESSAGES.FAILED_TO_UPDATE_USER_BAN, STATUS_CODE.INTERNAL_SERVER_ERROR);
   }
 
-  async updateUserTrainerId(userId: string, trainerId: string){
+  async updateUserTrainerId(userId: string, trainerId: string) {
     const user = await this._userRepo.findById(userId);
     if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     await this._userRepo.updateUser(userId, {
@@ -167,7 +176,8 @@ export class UserService implements IUserService {
     if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     return this.mapToResponseDto(user);
   }
-    async getWeightHistory(userId: string): Promise<GetWeightHistoryResponseDto> {
+
+  async getWeightHistory(userId: string): Promise<GetWeightHistoryResponseDto> {
     const user = await this._userRepo.findById(userId);
     if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     const weightHistory = await this._userRepo.getWeightHistory(userId);
@@ -177,6 +187,23 @@ export class UserService implements IUserService {
         date: entry.date.toISOString(),
       })),
     };
+  }
+
+  // Methods added from the first UserService
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this._userRepo.findByEmail(email);
+    if (!user) {
+      throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+    await this.otpService.requestForgotPasswordOtp(email, 'user');
+  }
+
+  async updateUserPlan(userId: string, planType: 'basic' | 'premium' | 'pro'): Promise<void> {
+    await this._userRepo.updatePlan(userId, planType);
+  }
+
+  async removeUserTrainer(userId: string): Promise<void> {
+    await this._userRepo.removeTrainer(userId);
   }
 
   private mapToResponseDto(user: IUser): UserResponseDto {
@@ -196,6 +223,7 @@ export class UserService implements IUserService {
       isPrivate: user.isPrivate,
       isBanned: user.isBanned,
       streak: user.streak,
+      trainerPlan: user.trainerPlan || 'basic',
       lastActiveDate: user.lastActiveDate,
       xp: user.xp,
       xpLogs: user.xpLogs.map((log) => ({

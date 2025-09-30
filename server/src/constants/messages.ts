@@ -15,11 +15,12 @@ export const MESSAGES = {
   USER_UPDATED:" User updated successfully",
   INVALID_PASSWORD: "Invalid password",
 
+  SLOT_OVERLAP: "This time slot overlaps with an existing session",
+
   PAYMENT_CONFIG_INCOMPLETE: "Payment configuration is incomplete",
   PAYMENT_CREATION_FAILED: "Failed to create payment order",
 
   FAILED_TO_UPDATE_STREAK: "Failed to update streak",
-
 
   NO_OTP_REQUESTED: "No OTP requested for this email",
   OTP_EXPIRED: "OTP has expired",
@@ -60,4 +61,18 @@ export const MESSAGES = {
   INVALID_DAY: "Invalid day",
   SESSION_NOT_FOUND: "Session not found",
   INVALID_USER_ID: "Missing user",
+  
+  // Video Call Messages
+  VIDEO_CALL_NOT_FOUND: "Video call session not found",
+  VIDEO_CALL_NOT_ACTIVE: "Video call session is not active",
+  VIDEO_CALL_ACCESS_DENIED: "Access denied to video call session",
+  VIDEO_CALL_SESSION_ENDED: "Video call session has ended",
+  VIDEO_CALL_SESSION_NOT_STARTED: "Video call session has not started yet",
+  VIDEO_CALL_ROOM_FULL: "Video call room is full",
+  VIDEO_CALL_CREATED: "Video call session created successfully",
+  VIDEO_CALL_JOINED: "Joined video call session",
+  VIDEO_CALL_LEFT: "Left video call session",
+  VIDEO_CALL_ENDED: "Video call session ended",
+  INVALID_SESSION_TIME: "Cannot join session outside of scheduled time",
+  SESSION_JOIN_EARLY: "You can only join the session 10 minutes before the scheduled time",
 };

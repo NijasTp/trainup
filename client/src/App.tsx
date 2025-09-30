@@ -63,6 +63,13 @@ import TrainerReapply from './pages/trainer/TrainerReapply';
 import Transactions from './pages/user/UserTransactions';
 import EditTemplate from './pages/admin/EditAdminTemplate';
 import EditProfile from './pages/user/UserEditProfile';
+import UserSessions from './pages/user/UserSessions';
+import TrainerSlots from './pages/trainer/TrainerSlots';
+import TrainerAvailability from './pages/user/TrainerAvailability';
+import TrainerSessionRequests from './pages/trainer/TrainerSessionRequests';
+import ChatPage from './pages/user/UserChatPage';
+import TrainerChatPage from './pages/trainer/TrainerChatPage';
+import VideoCallPage from './pages/general/VideoCallPage';
 
 function App() {
   return (
@@ -85,6 +92,10 @@ function App() {
         <Route path={ROUTES.USER_TRAINER_PAGE} element={<ProtectedRoute><Trainers /></ProtectedRoute>} />
         <Route path={ROUTES.USER_INDIVIDUAL_TRAINER} element={<ProtectedRoute><TrainerPage /></ProtectedRoute>} />
         <Route path={ROUTES.MY_TRAINER_PROFILE} element={<ProtectedRoute><MyTrainerProfile /></ProtectedRoute>} />
+        <Route path={ROUTES.MY_TRAINER_SESSIONS} element={<ProtectedRoute><UserSessions /></ProtectedRoute>} />
+        <Route path={ROUTES.MY_TRAINER_CHAT} element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+        <Route path={ROUTES.MY_TRAINER_AVAILABILITY} element={<ProtectedRoute><TrainerAvailability /></ProtectedRoute>} />
+        <Route path={ROUTES.VIDEO_CALL} element={<ProtectedRoute><VideoCallPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WORKOUTS_PAGE} element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADMIN_WORKOUT_TEMPLATES} element={<ProtectedRoute><WorkoutTemplates /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_WORKOUT} element={<ProtectedRoute><AddWorkoutPage /></ProtectedRoute>} />
@@ -106,7 +117,11 @@ function App() {
         <Route path={ROUTES.TRAINER_WAITLIST} element={<TrainerProtectedRoute><TrainerWaitlist /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_REJECTED} element={<TrainerProtectedRoute><TrainerReapply /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_DASHBOARD} element={<TrainerProtectedRoute><TrainerClients /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_SLOTS} element={<TrainerProtectedRoute><TrainerSlots /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_SESSION_REQUESTS} element={<TrainerProtectedRoute><TrainerSessionRequests /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_INDIVIDUAL_CLIENT} element={<TrainerProtectedRoute><TrainerUserDetails /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_CLIENT_CHAT} element={<TrainerProtectedRoute><TrainerChatPage /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_CLIENT_VIDEO_CALL} element={<TrainerProtectedRoute><VideoCallPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_WORKOUT} element={<TrainerProtectedRoute><TrainerAddWorkoutPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_SESSION} element={<TrainerProtectedRoute><TrainerAddSessionPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_DIET} element={<TrainerProtectedRoute><TrainerUserDietPage /></TrainerProtectedRoute>} />

@@ -35,5 +35,6 @@ export interface Trainer {
 
 export interface User {
     _id: string;
+    trainerPlan?: 'basic' | 'premium' | 'pro';
     assignedTrainer?: string;
 }

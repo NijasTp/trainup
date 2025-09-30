@@ -4,9 +4,9 @@ import TYPES from "../core/types/types";
 import { TrainerController } from "../controllers/trainer.controller";
 import { authMiddleware, roleMiddleware } from "../middlewares/auth.middleware";
 
-
 const router = Router();
 const trainerController = container.get<TrainerController>(TYPES.TrainerController);
+
 //auth
 router.post('/login', trainerController.login.bind(trainerController));
 router.post('/request-otp', trainerController.requestOtp.bind(trainerController));
@@ -23,4 +23,18 @@ router.post('/logout', trainerController.logout.bind(trainerController));
 router.get('/get-details',authMiddleware,roleMiddleware(['trainer']), trainerController.getData.bind(trainerController));
 router.get('/get-clients', authMiddleware, roleMiddleware(['trainer']), trainerController.getClients.bind(trainerController));
 router.get('/get-client/:id', authMiddleware, roleMiddleware(['trainer']), trainerController.getClient.bind(trainerController));
+
+router.get('/slots', authMiddleware, roleMiddleware(['trainer']), trainerController.getSlots.bind(trainerController));
+router.post('/slots', authMiddleware, roleMiddleware(['trainer']), trainerController.createSlot.bind(trainerController));
+router.delete('/slots/:slotId', authMiddleware, roleMiddleware(['trainer']), trainerController.deleteSlot.bind(trainerController));
+
+router.get('/session-requests', authMiddleware, roleMiddleware(['trainer']), trainerController.getSessionRequests.bind(trainerController));
+router.post('/session-requests/:requestId/approve/:userId', authMiddleware, roleMiddleware(['trainer']), trainerController.approveSessionRequest.bind(trainerController));
+router.post('/session-requests/:requestId/reject/:userId', authMiddleware, roleMiddleware(['trainer']), trainerController.rejectSessionRequest.bind(trainerController));
+
+
+router.get('/client/:clientId', authMiddleware, roleMiddleware(['trainer']), trainerController.getClientDetails.bind(trainerController));
+router.get('/chat/messages/:clientId', authMiddleware, roleMiddleware(['trainer']), trainerController.getChatMessages.bind(trainerController));
+router.get('/user-plan/:id', authMiddleware, roleMiddleware(['trainer']), trainerController.getUserPlan.bind(trainerController));
+
 export default router;

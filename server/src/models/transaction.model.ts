@@ -6,7 +6,7 @@ export interface ITransaction extends Document {
   trainerId: string;
   sessionId?: string;
   amount: number;
-  months: number;
+  planType: 'basic' | 'premium' | 'pro';
   razorpayOrderId: string;
   razorpayPaymentId?: string;
   status: 'pending' | 'completed' | 'failed';
@@ -19,11 +19,11 @@ export const TransactionSchema = new Schema<ITransaction>({
   trainerId: { type: String, required: true },
   sessionId: { type: String },
   amount: { type: Number, required: true },
-  months: { type: Number, required: true, enum: [1, 3, 5] },
+  planType: { type: String, required: true, enum: ['basic', 'premium', 'pro'] },
   razorpayOrderId: { type: String, required: true },
   razorpayPaymentId: { type: String},
   status: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
   createdAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
 
 export const TransactionModel = model<ITransaction>('Transaction', TransactionSchema);

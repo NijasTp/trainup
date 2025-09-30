@@ -6,12 +6,14 @@ import { IPaymentService } from '../core/interfaces/services/IPaymentService';
 import { IUserService } from '../core/interfaces/services/IUserService';
 import { ITrainerService } from '../core/interfaces/services/ITrainerService';
 import { ITransactionService } from '../core/interfaces/services/ITransactionService';
+import { IUserPlanService } from '../core/interfaces/services/IUserPlanService';
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import { CreateOrderRequestDto, CreateOrderResponseDto, VerifyPaymentRequestDto, VerifyPaymentResponseDto } from '../dtos/payment.dto';
 import { MESSAGES } from '../constants/messages';
 import { logger } from '../utils/logger.util';
 import { ITransaction } from '../models/transaction.model';
 import { AppError } from '../utils/appError.util';
+import { addMonths } from 'date-fns';
 
 @injectable()
 export class PaymentController {
@@ -19,18 +21,24 @@ export class PaymentController {
     @inject(TYPES.IPaymentService) private _paymentService: IPaymentService,
     @inject(TYPES.IUserService) private _userService: IUserService,
     @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
-    @inject(TYPES.ITransactionService) private _transactionService: ITransactionService
+    @inject(TYPES.ITransactionService) private _transactionService: ITransactionService,
+    @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService
   ) {}
 
   async createOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: CreateOrderRequestDto = req.body;
       const userId = (req.user as JwtPayload).id;
-      const { trainerId, months } = req.body;
+      const { trainerId, planType } = req.body;
 
       if (!trainerId) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
       if (!userId) throw new AppError(MESSAGES.INVALID_USER_ID, STATUS_CODE.BAD_REQUEST);
-      if (!months) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
+      if (!planType) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
+
+      // Validate plan type
+      if (!['basic', 'premium', 'pro'].includes(planType)) {
+        throw new AppError('Invalid plan type', STATUS_CODE.BAD_REQUEST);
+      }
 
       // Check if user already has pending transactions
       const existingPendingTransaction = await this._transactionService.getUserPendingTransaction(userId);
@@ -38,7 +46,6 @@ export class PaymentController {
         throw new AppError('You have a pending transaction. Please complete or cancel it first.', STATUS_CODE.BAD_REQUEST);
       }
 
-  
       const user = await this._userService.getUserById(userId);
       if (user?.assignedTrainer) {
         throw new AppError('You already have a trainer assigned.', STATUS_CODE.BAD_REQUEST);
@@ -50,7 +57,7 @@ export class PaymentController {
         userId,
         trainerId,
         amount: dto.amount,
-        months,
+        planType,
         razorpayOrderId: order.id,
         razorpayPaymentId: '',
         status: 'pending',
@@ -70,8 +77,12 @@ export class PaymentController {
       const dto: VerifyPaymentRequestDto = req.body;
       const userId = (req.user as JwtPayload).id;
 
-      if (!dto.trainerId || !userId || !dto.months) {
+      if (!dto.trainerId || !userId || !dto.planType) {
         throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
+      }
+
+      if (!['basic', 'premium', 'pro'].includes(dto.planType)) {
+        throw new AppError('Invalid plan type', STATUS_CODE.BAD_REQUEST);
       }
 
       const isValid = await this._paymentService.verifyPayment(
@@ -80,7 +91,7 @@ export class PaymentController {
         dto.signature,
         userId,
         dto.trainerId,
-        dto.months,
+        dto.planType,
         dto.amount
       );
 
@@ -125,7 +136,31 @@ export class PaymentController {
       );
 
       await this._userService.updateUserTrainerId(userId, dto.trainerId);
+      await this._userService.updateUserPlan(userId, dto.planType);
       await this._trainerService.addClientToTrainer(dto.trainerId, userId);
+
+      const expiryDate = addMonths(new Date(), 1);
+      let messagesLeft = 0;
+      let videoCallsLeft = 0;
+
+      switch (dto.planType) {
+        case 'premium':
+          messagesLeft = 200;
+          break;
+        case 'pro':
+          messagesLeft = -1;
+          videoCallsLeft = 5;
+          break;
+      }
+
+      await this._userPlanService.createUserPlan({
+        userId,
+        trainerId: dto.trainerId,
+        planType: dto.planType,
+        messagesLeft,
+        videoCallsLeft,
+        expiryDate
+      });
 
       const response: VerifyPaymentResponseDto = {
         success: true,

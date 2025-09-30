@@ -6,7 +6,7 @@ export interface ITransactionDTO {
   razorpayPaymentId?: string;
   amount: number;
   status: "pending" | "completed" | "failed";
-  months: number;
+  planType: 'basic' | 'premium' | 'pro';
   createdAt: Date;
   updatedAt: Date;
 }

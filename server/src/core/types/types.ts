@@ -7,6 +7,19 @@ const TYPES = {
   IUserRepository: Symbol.for("IUserRepository"),
   UserController:Symbol.for("UserController"),
 
+  IUserPlanRepository: Symbol.for("IUserPlanRepository"),
+  IUserPlanService: Symbol.for("IUserPlanService"),
+
+  ISlotRepository: Symbol.for("ISlotRepository"),
+  ISlotService: Symbol.for("ISlotService"),
+
+  IMessageRepository: Symbol.for("IMessageRepository"),
+  IMessageService: Symbol.for("IMessageService"),
+
+  IVideoCallRepository: Symbol.for("IVideoCallRepository"),
+  IVideoCallService: Symbol.for("IVideoCallService"),
+  VideoCallController: Symbol.for("VideoCallController"),
+
   IStreakRepository: Symbol.for("IStreakRepository"),
   IStreakService: Symbol.for("IStreakService"),
   StreakController: Symbol.for("StreakController"),

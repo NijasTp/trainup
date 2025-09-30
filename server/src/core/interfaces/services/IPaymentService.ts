@@ -13,7 +13,7 @@ export interface IPaymentService {
     signature: string,
     userId: string,
     trainerId: string,
-    months: number,
+    planType: 'basic' | 'premium' | 'pro',
     amount: number
   ): Promise<boolean>;
 }

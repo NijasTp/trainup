@@ -16,7 +16,9 @@ import {
     ArrowLeft,
     Shield,
     AlertTriangle,
-  
+    Video,
+    Calendar,
+    Crown
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import API from "@/lib/axios";
@@ -55,6 +57,7 @@ interface User {
     _id: string;
     assignedTrainer?: string;
     subscriptionStartDate?: string;
+    trainerPlan?: 'basic' | 'premium' | 'pro';
 }
 
 export default function MyTrainerProfile() {
@@ -97,12 +100,20 @@ export default function MyTrainerProfile() {
         }
     };
 
-    const handleChat = () => {
-        if (trainer) {
-            navigate(`/chat/${trainer._id}`);
-        } else {
-            toast.error("No trainer found to chat with");
+
+
+    const handleVideoCall = () => {
+        if (!user?.trainerPlan) {
+            toast.error("Please subscribe to a plan first");
+            return;
         }
+        
+        if (user.trainerPlan !== 'pro') {
+            toast.error("Video calls are only available with Pro plan");
+            return;
+        }
+
+        navigate(`/my-trainer/availability`);
     };
 
     const handleCancelSubscription = async () => {
@@ -122,6 +133,32 @@ export default function MyTrainerProfile() {
         const startDate = new Date(user.subscriptionStartDate);
         const endDate = addMonths(startDate, 1);
         return formatDistanceToNow(endDate, { addSuffix: true });
+    };
+
+    const getPlanColor = (plan: string) => {
+        switch (plan) {
+            case 'basic':
+                return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+            case 'premium':
+                return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+            case 'pro':
+                return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
+            default:
+                return 'bg-gray-500/10 text-gray-600 border-gray-500/20';
+        }
+    };
+
+    const getPlanIcon = (plan: string) => {
+        switch (plan) {
+            case 'basic':
+                return <Star className="h-4 w-4" />;
+            case 'premium':
+                return <MessageSquare className="h-4 w-4" />;
+            case 'pro':
+                return <Crown className="h-4 w-4" />;
+            default:
+                return <Star className="h-4 w-4" />;
+        }
     };
 
     if (isLoading) {
@@ -213,9 +250,17 @@ export default function MyTrainerProfile() {
 
                                 <div className="flex-1 space-y-6">
                                     <div className="space-y-4">
-                                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
-                                            <Award className="h-4 w-4 text-primary" />
-                                            <span className="text-sm font-medium text-primary">Your Trainer</span>
+                                        <div className="flex items-center gap-4 flex-wrap">
+                                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
+                                                <Award className="h-4 w-4 text-primary" />
+                                                <span className="text-sm font-medium text-primary">Your Trainer</span>
+                                            </div>
+                                            {user?.trainerPlan && (
+                                                <Badge className={`${getPlanColor(user.trainerPlan)} font-medium px-4 py-2`}>
+                                                    {getPlanIcon(user.trainerPlan)}
+                                                    <span className="ml-2">{user.trainerPlan.charAt(0).toUpperCase() + user.trainerPlan.slice(1)} Plan</span>
+                                                </Badge>
+                                            )}
                                         </div>
 
                                         <div className="space-y-3">
@@ -257,15 +302,45 @@ export default function MyTrainerProfile() {
                                     </div>
 
                                     <div className="flex flex-wrap gap-4 pt-4">
-                                        <Button
-                                            variant="outline"
-                                            size="lg"
-                                            className="border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300 font-medium px-8 bg-transparent"
-                                            onClick={handleChat}
-                                        >
-                                            <MessageSquare className="h-5 w-5 mr-2" />
-                                            Chat with Trainer
-                                        </Button>
+                                        {/* Chat Button */}
+                                        {user?.trainerPlan !== 'basic' && (
+                                            <Link to={`/my-trainer/chat/${trainer._id}`}>
+                                            <Button
+                                                variant="outline"
+                                                size="lg"
+                                                className="border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300 font-medium px-8 bg-transparent"
+                                            >
+                                                <MessageSquare className="h-5 w-5 mr-2" />
+                                                Chat with Trainer
+                                            </Button>
+                                            </Link>
+                                        )}
+
+                                        {/* Video Call Button - Only for Pro */}
+                                        {user?.trainerPlan === 'pro' && (
+                                            <Button
+                                                variant="outline"
+                                                size="lg"
+                                                className="border-purple-500/50 text-purple-600 hover:bg-purple-500/5 hover:border-purple-500/30 transition-all duration-300 font-medium px-8 bg-transparent"
+                                                onClick={handleVideoCall}
+                                            >
+                                                <Video className="h-5 w-5 mr-2" />
+                                                Book Session
+                                            </Button>
+                                        )}
+
+                                        {/* Sessions/Availability */}
+                                        <Link to="/my-trainer/sessions">
+                                            <Button
+                                                variant="outline"
+                                                size="lg"
+                                                className="border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300 font-medium px-8 bg-transparent"
+                                            >
+                                                <Calendar className="h-5 w-5 mr-2" />
+                                                My Sessions
+                                            </Button>
+                                        </Link>
+
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
                                                 <Button
@@ -356,12 +431,6 @@ export default function MyTrainerProfile() {
                                 <DialogHeader>
                                     <DialogTitle className="flex items-center justify-between">
                                         Professional Certificate
-                                        <button
-                                            onClick={() => setIsOpen(false)}
-                                            className="text-foreground hover:text-primary transition-colors"
-                                        >
-                                         
-                                        </button>
                                     </DialogTitle>
                                 </DialogHeader>
                                 <img
@@ -374,6 +443,49 @@ export default function MyTrainerProfile() {
                     </div>
 
                     <div className="space-y-6">
+                        {/* Current Plan Card */}
+                        {user?.trainerPlan && (
+                            <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                                <CardHeader>
+                                    <h3 className="text-xl font-bold text-foreground">Current Plan</h3>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="text-center p-6 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10">
+                                        <div className="flex items-center justify-center gap-2 mb-2">
+                                            {getPlanIcon(user.trainerPlan)}
+                                            <div className="text-2xl font-bold text-primary">
+                                                {user.trainerPlan.charAt(0).toUpperCase() + user.trainerPlan.slice(1)} Plan
+                                            </div>
+                                        </div>
+                                        <p className="text-muted-foreground text-sm">Active subscription</p>
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                            Expires {getRemainingTime()}
+                                        </p>
+                                    </div>
+                                    
+                                    {/* Plan Features */}
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex items-center gap-2 text-green-600">
+                                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                            Personalized workouts & diet
+                                        </div>
+                                        {user.trainerPlan !== 'basic' && (
+                                            <div className="flex items-center gap-2 text-green-600">
+                                                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                                Chat with trainer {user.trainerPlan === 'premium' ? '(200 msgs/month)' : '(unlimited)'}
+                                            </div>
+                                        )}
+                                        {user.trainerPlan === 'pro' && (
+                                            <div className="flex items-center gap-2 text-green-600">
+                                                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                                Video calls (5 per month)
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
                             <CardHeader>
                                 <h3 className="text-xl font-bold text-foreground">Pricing</h3>

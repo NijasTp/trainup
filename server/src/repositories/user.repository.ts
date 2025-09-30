@@ -1,25 +1,27 @@
-import { UserModel, IUser } from '../models/user.model'
-import { IUserRepository } from '../core/interfaces/repositories/IUserRepository'
-import { Types } from 'mongoose'
-import { MESSAGES } from '../constants/messages'
-import { UserResponseDto, WeightLogDto } from '../dtos/user.dto'
+import { injectable } from 'inversify';
+import { UserModel, IUser } from '../models/user.model';
+import { IUserRepository } from '../core/interfaces/repositories/IUserRepository';
+import { Types } from 'mongoose';
+import { MESSAGES } from '../constants/messages';
+import { UserResponseDto, WeightLogDto, UserUpdateProfileDto } from '../dtos/user.dto';
 
+@injectable()
 export class UserRepository implements IUserRepository {
   async createUser(data: Partial<IUser>): Promise<IUser> {
-    return await UserModel.create(data)
+    return await UserModel.create(data);
   }
 
   async findByEmail(email: string): Promise<IUser | null> {
-    return await UserModel.findOne({ email }).exec()
+    return await UserModel.findOne({ email }).exec();
   }
 
   async checkUsername(username: string): Promise<IUser | null> {
-    const regex = new RegExp(`^${username}$`, 'i')
-    return await UserModel.findOne({ name: regex }).exec()
+    const regex = new RegExp(`^${username}$`, 'i');
+    return await UserModel.findOne({ name: regex }).exec();
   }
 
   async findByGoogleId(googleId: string): Promise<IUser | null> {
-    return UserModel.findOne({ googleId }).exec()
+    return UserModel.findOne({ googleId }).exec();
   }
 
   async findAll(skip: number, limit: number): Promise<UserResponseDto[]> {
@@ -28,8 +30,8 @@ export class UserRepository implements IUserRepository {
       .limit(limit)
       .select(
         'name email phone isVerified isBanned role goals motivationLevel equipment assignedTrainer gymId isPrivate streak xp achievements createdAt'
-      )
-    return users.map(user => this.mapToResponseDto(user))
+      );
+    return users.map(user => this.mapToResponseDto(user));
   }
 
   async findUsers(
@@ -41,24 +43,24 @@ export class UserRepository implements IUserRepository {
     startDate?: string,
     endDate?: string
   ) {
-    const query: any = {}
+    const query: any = {};
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } }
-      ]
+      ];
     }
-    if (isBanned === 'active') query.isBanned = false
-    if (isBanned === 'banned') query.isBanned = true
-    if (isVerified === 'verified') query.isVerified = true
-    if (isVerified === 'unverified') query.isVerified = false
+    if (isBanned === 'active') query.isBanned = false;
+    if (isBanned === 'banned') query.isBanned = true;
+    if (isVerified === 'verified') query.isVerified = true;
+    if (isVerified === 'unverified') query.isVerified = false;
     if (startDate || endDate) {
-      query.createdAt = {}
-      if (startDate) query.createdAt.$gte = new Date(startDate)
-      if (endDate) query.createdAt.$lte = new Date(endDate)
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = new Date(startDate);
+      if (endDate) query.createdAt.$lte = new Date(endDate);
     }
 
-    const skip = (page - 1) * limit
+    const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([
       UserModel.find(query)
         .skip(skip)
@@ -66,29 +68,29 @@ export class UserRepository implements IUserRepository {
         .select('name email phone role isVerified isBanned createdAt')
         .lean(),
       UserModel.countDocuments(query)
-    ])
+    ]);
 
     return {
       users: users.map(user => this.mapToResponseDto(user as IUser)),
       total,
       page,
       totalPages: Math.ceil(total / limit)
-    }
+    };
   }
 
   async count(): Promise<number> {
-    return await UserModel.countDocuments()
+    return await UserModel.countDocuments();
   }
 
   async updateUser(id: string, data: Partial<IUser>): Promise<IUser | null> {
     if (data.assignedTrainer) {
-      data.assignedTrainer = new Types.ObjectId(data.assignedTrainer)
+      data.assignedTrainer = new Types.ObjectId(data.assignedTrainer);
     }
     return await UserModel.findByIdAndUpdate(
       id,
       { $set: data },
       { new: true }
-    ).exec()
+    ).exec();
   }
 
   async updateStatusAndIncrementVersion(
@@ -99,30 +101,30 @@ export class UserRepository implements IUserRepository {
       id,
       { $set: updateData, $inc: { tokenVersion: 1 } },
       { new: true }
-    )
+    );
   }
 
   async updateStatus(
     id: string,
     updateData: Partial<IUser>
   ): Promise<IUser | null> {
-    return await UserModel.findByIdAndUpdate(id, updateData, { new: true })
+    return await UserModel.findByIdAndUpdate(id, updateData, { new: true });
   }
 
   async findById(id: string): Promise<IUser | null> {
-    return UserModel.findById(id).select('-password')
+    return UserModel.findById(id).select('-password');
   }
 
   async getWeightHistory(
     userId: string
   ): Promise<{ weight: number; date: Date }[]> {
-    const user = await UserModel.findById(userId).select('weightHistory').lean()
+    const user = await UserModel.findById(userId).select('weightHistory').lean();
     if (!user || !user.weightHistory?.length) {
-      return []
+      return [];
     }
     return user.weightHistory.sort(
       (a, b) => b.date.getTime() - a.date.getTime()
-    )
+    );
   }
 
   async addWeight(
@@ -137,12 +139,39 @@ export class UserRepository implements IUserRepository {
         $push: { weightHistory: { weight, date } }
       },
       { new: true }
-    ).select('-password')
-    if (!user) throw new Error(MESSAGES.USER_NOT_FOUND)
-    return user
+    ).select('-password');
+    if (!user) throw new Error(MESSAGES.USER_NOT_FOUND);
+    return user;
   }
 
-  // Mapping function to convert IUser to response DTO
+  // New methods from the first UserRepository
+  async updateProfile(userId: string, updates: UserUpdateProfileDto): Promise<IUser | null> {
+    return await UserModel.findByIdAndUpdate(userId, updates, { new: true }).lean();
+  }
+
+  async updateTrainer(userId: string, trainerId: string): Promise<void> {
+    await UserModel.findByIdAndUpdate(userId, {
+      assignedTrainer: trainerId,
+      subscriptionStartDate: new Date()
+    });
+  }
+
+  async updatePlan(userId: string, planType: 'basic' | 'premium' | 'pro'): Promise<void> {
+    await UserModel.findByIdAndUpdate(userId, { trainerPlan: planType });
+  }
+
+  async removeTrainer(userId: string): Promise<void> {
+    await UserModel.findByIdAndUpdate(userId, {
+      assignedTrainer: null,
+      subscriptionStartDate: null,
+      trainerPlan: null
+    });
+  }
+
+  async updatePassword(email: string, hashedPassword: string): Promise<void> {
+    await UserModel.findOneAndUpdate({ email }, { password: hashedPassword });
+  }
+
   mapToResponseDto(user: IUser): UserResponseDto {
     return {
       _id: user._id.toString(),
@@ -179,6 +208,6 @@ export class UserRepository implements IUserRepository {
       gender: user.gender,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-    }
+    };
   }
 }
