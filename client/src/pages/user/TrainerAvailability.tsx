@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
     Calendar, 
     Clock, 
@@ -10,32 +11,43 @@ import {
     ArrowLeft,
     RefreshCw,
     Send,
-    CheckCircle
+    CheckCircle,
+    Filter
 } from "lucide-react";
 import API from "@/lib/axios";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 
-interface Slot {
+interface WeeklySlot {
     _id: string;
     trainerId: {
         _id: string;
         name: string;
         profileImage?: string;
     };
+    day: string;
     date: string;
     startTime: string;
     endTime: string;
     isBooked: boolean;
-    status: 'pending' | 'approved' | 'rejected';
+    isRequested: boolean;
 }
 
+const DAYS_OF_WEEK = [
+    'Monday',
+    'Tuesday', 
+    'Wednesday',
+    'Thursday',
+    'Friday'
+];
+
 export default function TrainerAvailability() {
-    const [slots, setSlots] = useState<Slot[]>([]);
+    const [slots, setSlots] = useState<WeeklySlot[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
+    const [selectedDay, setSelectedDay] = useState<string>("all");
 
     useEffect(() => {
         document.title = "TrainUp - Trainer Availability";
@@ -74,9 +86,7 @@ export default function TrainerAvailability() {
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
+            month: 'short',
             day: 'numeric'
         });
     };
@@ -93,6 +103,19 @@ export default function TrainerAvailability() {
         const slotDateTime = new Date(`${date}T${time}`);
         return slotDateTime < new Date();
     };
+
+    const filteredSlots = selectedDay === "all" 
+        ? slots 
+        : slots.filter(slot => slot.day === selectedDay);
+
+    // Group slots by day for better organization
+    const slotsByDay = filteredSlots.reduce((acc, slot) => {
+        if (!acc[slot.day]) {
+            acc[slot.day] = [];
+        }
+        acc[slot.day].push(slot);
+        return acc;
+    }, {} as Record<string, WeeklySlot[]>);
 
     if (isLoading) {
         return (
@@ -154,16 +177,30 @@ export default function TrainerAvailability() {
                                 <Calendar className="h-8 w-8 text-primary" />
                                 Trainer Availability
                             </h1>
-                            <Badge variant="secondary" className="text-sm">
-                                {slots.filter(slot => !slot.isBooked && !isSlotInPast(slot.date, slot.startTime)).length} Available Slots
-                            </Badge>
+                            <div className="flex items-center space-x-4">
+                                <Select value={selectedDay} onValueChange={setSelectedDay}>
+                                    <SelectTrigger className="w-48 bg-background/50 border-border/50">
+                                        <Filter className="h-4 w-4 mr-2" />
+                                        <SelectValue placeholder="Filter by day" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Days</SelectItem>
+                                        {DAYS_OF_WEEK.map(day => (
+                                            <SelectItem key={day} value={day}>{day}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Badge variant="secondary" className="text-sm">
+                                    {filteredSlots.filter(slot => !slot.isBooked && !slot.isRequested && !isSlotInPast(slot.date, slot.startTime)).length} Available
+                                </Badge>
+                            </div>
                         </div>
                         <p className="text-muted-foreground">
                             Book a video call session with your trainer. Each session is 1 hour long.
                         </p>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             {slots.length === 0 ? (
                                 <div className="text-center py-12">
                                     <Calendar className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
@@ -172,110 +209,137 @@ export default function TrainerAvailability() {
                                         Your trainer hasn't set any availability slots yet. Please contact them directly.
                                     </p>
                                 </div>
+                            ) : Object.keys(slotsByDay).length === 0 ? (
+                                <div className="text-center py-12">
+                                    <Filter className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
+                                    <p className="text-muted-foreground text-lg">No slots found for selected day</p>
+                                    <p className="text-sm text-muted-foreground mt-2">
+                                        Try selecting a different day or "All Days"
+                                    </p>
+                                </div>
                             ) : (
-                                slots.map((slot) => {
-                                    const isPastSlot = isSlotInPast(slot.date, slot.startTime);
-                                    const canBook = !slot.isBooked && !isPastSlot;
-                                    
-                                    return (
-                                        <Card
-                                            key={slot._id}
-                                            className={`bg-background/50 border-border/50 hover:shadow-md transition-all duration-200 ${
-                                                isPastSlot ? 'opacity-50' : ''
-                                            }`}
-                                        >
-                                            <CardContent className="p-6">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center space-x-4">
-                                                        <Avatar className="h-12 w-12">
-                                                            <AvatarImage 
-                                                                src={slot.trainerId.profileImage || "/placeholder.svg"} 
-                                                                alt={slot.trainerId.name} 
-                                                            />
-                                                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                                                                {slot.trainerId.name.charAt(0)}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        
-                                                        <div className="space-y-3">
-                                                            <div>
-                                                                <h3 className="font-semibold text-foreground">
-                                                                    Session with {slot.trainerId.name}
-                                                                </h3>
-                                                                <p className="text-sm text-muted-foreground">
-                                                                    1-hour video call session
-                                                                </p>
+                                DAYS_OF_WEEK.filter(day => slotsByDay[day]?.length > 0).map((day) => (
+                                    <div key={day}>
+                                        <div className="flex items-center space-x-3 mb-4">
+                                            <h3 className="text-xl font-semibold text-foreground">{day}</h3>
+                                            <Badge variant="outline" className="text-xs">
+                                                {slotsByDay[day].length} session{slotsByDay[day].length !== 1 ? 's' : ''}
+                                            </Badge>
+                                        </div>
+                                        
+                                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                            {slotsByDay[day].map((slot) => {
+                                                const isPastSlot = isSlotInPast(slot.date, slot.startTime);
+                                                const canBook = !slot.isBooked && !slot.isRequested && !isPastSlot;
+                                                
+                                                return (
+                                                    <Card
+                                                        key={slot._id}
+                                                        className={`bg-background/50 border-border/50 hover:shadow-md transition-all duration-200 ${
+                                                            isPastSlot ? 'opacity-50' : ''
+                                                        }`}
+                                                    >
+                                                        <CardContent className="p-6">
+                                                            <div className="space-y-4">
+                                                                <div className="flex items-center space-x-3">
+                                                                    <Avatar className="h-10 w-10">
+                                                                        <AvatarImage 
+                                                                            src={slot.trainerId.profileImage || "/placeholder.svg"} 
+                                                                            alt={slot.trainerId.name} 
+                                                                        />
+                                                                        <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                                                                            {slot.trainerId.name.charAt(0)}
+                                                                        </AvatarFallback>
+                                                                    </Avatar>
+                                                                    
+                                                                    <div>
+                                                                        <h4 className="font-medium text-foreground">
+                                                                            {slot.trainerId.name}
+                                                                        </h4>
+                                                                        <p className="text-sm text-muted-foreground">
+                                                                            1-hour session
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div className="space-y-2">
+                                                                    <div className="flex items-center space-x-2 text-sm">
+                                                                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                                                                        <span className="text-foreground font-medium">
+                                                                            {formatDate(slot.date)}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex items-center space-x-2 text-sm">
+                                                                        <Clock className="h-4 w-4 text-muted-foreground" />
+                                                                        <span className="text-foreground font-medium">
+                                                                            {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex items-center space-x-2 text-sm">
+                                                                        <Video className="h-4 w-4 text-muted-foreground" />
+                                                                        <span className="text-foreground font-medium">
+                                                                            Video Call
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div className="pt-2">
+                                                                    {slot.isBooked ? (
+                                                                        <Badge className="w-full justify-center bg-green-500/10 text-green-600 border-green-500/20">
+                                                                            <CheckCircle className="h-4 w-4 mr-1" />
+                                                                            Booked
+                                                                        </Badge>
+                                                                    ) : slot.isRequested ? (
+                                                                        <Badge className="w-full justify-center bg-amber-500/10 text-amber-600 border-amber-500/20">
+                                                                            <Clock className="h-4 w-4 mr-1" />
+                                                                            Requested
+                                                                        </Badge>
+                                                                    ) : isPastSlot ? (
+                                                                        <Badge className="w-full justify-center bg-gray-500/10 text-gray-600 border-gray-500/20">
+                                                                            Expired
+                                                                        </Badge>
+                                                                    ) : (
+                                                                        <Button
+                                                                            onClick={() => handleBookSlot(slot._id)}
+                                                                            disabled={bookingSlotId === slot._id}
+                                                                            className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
+                                                                            size="sm"
+                                                                        >
+                                                                            {bookingSlotId === slot._id ? (
+                                                                                <>
+                                                                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                                                                    Booking...
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <Send className="h-4 w-4 mr-2" />
+                                                                                    Request Session
+                                                                                </>
+                                                                            )}
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                            
-                                                            <div className="flex items-center space-x-6">
-                                                                <div className="flex items-center space-x-2 text-sm">
-                                                                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                                                                    <span className="text-foreground font-medium">
-                                                                        {formatDate(slot.date)}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="flex items-center space-x-2 text-sm">
-                                                                    <Clock className="h-4 w-4 text-muted-foreground" />
-                                                                    <span className="text-foreground font-medium">
-                                                                        {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="flex items-center space-x-2 text-sm">
-                                                                    <Video className="h-4 w-4 text-muted-foreground" />
-                                                                    <span className="text-foreground font-medium">
-                                                                        Video Call
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="flex items-center space-x-3">
-                                                        {slot.isBooked ? (
-                                                            <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
-                                                                <CheckCircle className="h-4 w-4 mr-1" />
-                                                                Booked
-                                                            </Badge>
-                                                        ) : isPastSlot ? (
-                                                            <Badge className="bg-gray-500/10 text-gray-600 border-gray-500/20">
-                                                                Expired
-                                                            </Badge>
-                                                        ) : (
-                                                            <Button
-                                                                onClick={() => handleBookSlot(slot._id)}
-                                                                disabled={bookingSlotId === slot._id}
-                                                                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
-                                                            >
-                                                                {bookingSlotId === slot._id ? (
-                                                                    <>
-                                                                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                                                        Booking...
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <Send className="h-4 w-4 mr-2" />
-                                                                        Request Session
-                                                                    </>
-                                                                )}
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    );
-                                })
+                                                        </CardContent>
+                                                    </Card>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))
                             )}
                         </div>
                         
                         {slots.length > 0 && (
-                            <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/10">
+                            <div className="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/10">
                                 <h4 className="font-medium text-foreground mb-2">How it works:</h4>
                                 <ul className="text-sm text-muted-foreground space-y-1">
-                                    <li>• Choose an available time slot from your trainer's calendar</li>
+                                    <li>• Your trainer sets their weekly availability from Monday to Friday</li>
+                                    <li>• Choose an available time slot that fits your schedule</li>
                                     <li>• Click "Request Session" to send a booking request</li>
                                     <li>• Your trainer will approve or reject the request with a reason</li>
                                     <li>• Once approved, you'll receive a video call link before the session</li>
+                                    <li>• Use the filter to view availability for specific days</li>
                                 </ul>
                             </div>
                         )}

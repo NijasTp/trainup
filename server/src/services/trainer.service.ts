@@ -2,9 +2,11 @@ import { inject, injectable } from 'inversify'
 import TYPES from '../core/types/types'
 import {
   ITrainerService,
-  TrainerApplyData
+  TrainerApplyData,
+  DashboardStats
 } from '../core/interfaces/services/ITrainerService'
 import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepository'
+import { ITransactionRepository } from '../core/interfaces/repositories/ITransactionRepository'
 import { v2 as cloudinary } from 'cloudinary'
 import { ITrainer } from '../models/trainer.model'
 import bcrypt from 'bcryptjs'
@@ -20,13 +22,16 @@ import {
 import { AppError } from '../utils/appError.util'
 import { STATUS_CODE } from '../constants/status'
 import { MESSAGES } from '../constants/messages'
+import mongoose from 'mongoose'
 
 @injectable()
 export class TrainerService implements ITrainerService {
   constructor (
     @inject(TYPES.ITrainerRepository) private _trainerRepo: ITrainerRepository,
     @inject(TYPES.IOtpService) private _otpService: IOTPService,
-    @inject(TYPES.IJwtService) private _jwtService: IJwtService
+    @inject(TYPES.IJwtService) private _jwtService: IJwtService,
+    @inject(TYPES.ITransactionRepository)
+    private _transactionRepo: ITransactionRepository
   ) {}
 
   async loginTrainer (
@@ -73,7 +78,8 @@ export class TrainerService implements ITrainerService {
 
   async verifyOtp (email: string, otp: string) {
     const isValid = await this._otpService.verifyOtp(email, otp)
-    if (!isValid) throw new AppError('Invalid or expired OTP', STATUS_CODE.BAD_REQUEST)
+    if (!isValid)
+      throw new AppError('Invalid or expired OTP', STATUS_CODE.BAD_REQUEST)
   }
 
   async resetPassword (email: string, password: string) {
@@ -183,7 +189,10 @@ export class TrainerService implements ITrainerService {
     }
   }
 
-  async reapplyAsTrainer (trainerId: string, trainerData: TrainerApplyData) {
+  async reapplyAsTrainer (
+    trainerId: string,
+    trainerData: TrainerApplyData
+  ): Promise<ITrainer | null> {
     const existingTrainer = await this._trainerRepo.findById(trainerId)
     if (!existingTrainer) {
       throw new AppError('Trainer not found', STATUS_CODE.NOT_FOUND)
@@ -251,7 +260,7 @@ export class TrainerService implements ITrainerService {
     limit: number,
     search: string,
     isBanned?: string,
-    isVerified: string = 'verified',
+    isVerified?: string,
     startDate?: string,
     endDate?: string,
     specialization?: string,
@@ -295,22 +304,25 @@ export class TrainerService implements ITrainerService {
       totalPages: Math.ceil(total / limit) || 1
     }
   }
-  
+
   async getTrainerApplication (id: string) {
     const application = await this._trainerRepo.findApplicationByTrainerId(id)
-    if (!application) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    if (!application)
+      throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND)
     return application
   }
 
   async updateTrainerStatus (id: string, updateData: Partial<ITrainer>) {
     const trainer = await this._trainerRepo.updateStatus(id, updateData)
-    if (!trainer) throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    if (!trainer)
+      throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
     return trainer
   }
 
   async addClientToTrainer (trainerId: string, userId: string): Promise<void> {
     const trainer = await this._trainerRepo.findById(trainerId)
-    if (!trainer) throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    if (!trainer)
+      throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
     await this._trainerRepo.addClient(trainerId, userId)
   }
 
@@ -319,7 +331,8 @@ export class TrainerService implements ITrainerService {
     userId: string
   ): Promise<void> {
     const trainer = await this._trainerRepo.findById(trainerId)
-    if (!trainer) throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    if (!trainer)
+      throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
     await this._trainerRepo.removeClient(trainerId, userId)
   }
 
@@ -343,6 +356,76 @@ export class TrainerService implements ITrainerService {
       page,
       totalPages: Math.ceil(total / limit)
     }
+  }
+
+  async getDashboardStats (trainerId: string): Promise<DashboardStats> {
+    const trainer = await this._trainerRepo.findById(trainerId)
+    if (!trainer) {
+      throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    }
+
+    const now = new Date()
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0)
+
+    const totalClients = trainer.clients.length
+
+    const newClientsThisMonth = await this._trainerRepo.countNewClients(
+      trainerId,
+      thisMonthStart,
+      new Date()
+    )
+
+    const {
+      totalEarningsThisMonth,
+      totalEarningsLastMonth,
+      monthlyEarnings,
+      planDistribution
+    } = await this._transactionRepo.getTrainerEarningsStats(
+      trainerId,
+      thisMonthStart,
+      lastMonthStart,
+      lastMonthEnd
+    )
+
+    const totalSessions = await this._trainerRepo.countCompletedSessions(
+      trainerId
+    )
+
+    const recentActivity = await this._transactionRepo.getRecentActivity(
+      trainerId
+    )
+
+    return {
+      totalClients,
+      newClientsThisMonth,
+      totalEarningsThisMonth,
+      totalEarningsLastMonth,
+      averageRating: trainer.rating || 0,
+      totalSessions,
+      monthlyEarnings,
+      planDistribution,
+      recentActivity
+    }
+  }
+
+  async updateAvailability (
+    trainerId: string,
+    isAvailable: boolean,
+    unavailableReason?: string
+  ): Promise<void> {
+    const trainer = await this._trainerRepo.findById(trainerId)
+    if (!trainer) {
+      throw new AppError('Trainer not found', STATUS_CODE.NOT_FOUND)
+    }
+
+    const updateData: Partial<ITrainer> = {
+      isAvailable,
+      unavailableReason: isAvailable ? undefined : unavailableReason
+    }
+
+    await this._trainerRepo.updateStatus(trainerId, updateData)
   }
 
   private mapToResponseDto (trainer: ITrainer): TrainerResponseDto {

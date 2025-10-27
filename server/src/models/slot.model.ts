@@ -10,6 +10,7 @@ export interface IRequestedBy {
 export interface ISlot extends Document {
   _id: string | Schema.Types.ObjectId;
   trainerId: Types.ObjectId | string;
+  day?: string;
   date: Date;
   startTime: string;
   endTime: string;
@@ -17,12 +18,15 @@ export interface ISlot extends Document {
   bookedBy?: Types.ObjectId;
   requestedBy: IRequestedBy[];
   videoCallLink?: string;
+  weekStart?: Date; 
+  scheduleSlotId?: string; 
   createdAt: Date;
   updatedAt: Date;
 }
 
 export const SlotSchema = new Schema<ISlot>({
   trainerId: { type: Schema.Types.ObjectId, ref: 'Trainer', required: true },
+  day: { type: String },
   date: { type: Date, required: true },
   startTime: { type: String, required: true },
   endTime: { type: String, required: true },
@@ -39,10 +43,9 @@ export const SlotSchema = new Schema<ISlot>({
     rejectionReason: { type: String }
   }],
   videoCallLink: { type: String },
+  weekStart: { type: Date },
+  scheduleSlotId: { type: String }
 }, { timestamps: true });
 
-SlotSchema.index({ trainerId: 1, date: 1 });
-SlotSchema.index({ bookedBy: 1 });
-SlotSchema.index({ 'requestedBy.userId': 1 });
 
 export const SlotModel = model<ISlot>('Slot', SlotSchema);

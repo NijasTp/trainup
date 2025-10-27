@@ -14,7 +14,6 @@ import {
     XCircle,
     RefreshCw,
     Video,
-    Users
 } from "lucide-react";
 import API from "@/lib/axios";
 import { toast } from "sonner";
@@ -130,16 +129,16 @@ export default function TrainerSlots() {
         }
     };
 
-    const canJoinSession = (slot: Slot) => {
-        if (!slot.isBooked) return false;
-        
-        const sessionDateTime = new Date(`${slot.date}T${slot.startTime}`);
-        const now = new Date();
-        const tenMinutesBefore = new Date(sessionDateTime.getTime() - 10 * 60 * 1000);
-        const sessionEnd = new Date(`${slot.date}T${slot.endTime}`);
-        
-        return true
-    };
+const canJoinSession = (slot: Slot) => {
+    if (!slot.isBooked) return false;
+    
+    const sessionDateTime = new Date(`${slot.date.split('T')[0]}T${slot.startTime}:00`);
+    const now = new Date();
+    const tenMinutesBefore = new Date(sessionDateTime.getTime() - 10 * 60 * 1000);
+    const sessionEnd = new Date(`${slot.date.split('T')[0]}T${slot.endTime}:00`);
+    
+    return now >= tenMinutesBefore && now <= sessionEnd;
+};
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {

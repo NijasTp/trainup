@@ -4,22 +4,23 @@ import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepo
 import { Types } from 'mongoose'
 import { IUser, UserModel } from '../models/user.model'
 import { TrainerResponseDto, ClientDto } from '../dtos/trainer.dto'
+import { SlotModel } from '../models/slot.model'
 
 @injectable()
 export class TrainerRepository implements ITrainerRepository {
-  async findByEmail(email: string): Promise<ITrainer | null> {
+  async findByEmail (email: string): Promise<ITrainer | null> {
     return await TrainerModel.findOne({ email })
   }
 
-  async findById(id: string): Promise<ITrainer | null> {
+  async findById (id: string): Promise<ITrainer | null> {
     return await TrainerModel.findById(id).select('-password')
   }
 
-  async create(trainerData: Partial<ITrainer>): Promise<ITrainer> {
+  async create (trainerData: Partial<ITrainer>): Promise<ITrainer> {
     return await TrainerModel.create(trainerData)
   }
 
-  async findAll(
+  async findAll (
     skip: number,
     limit: number,
     search: string,
@@ -35,9 +36,11 @@ export class TrainerRepository implements ITrainerRepository {
   ): Promise<TrainerResponseDto[]> {
     const query: any = {}
 
-    if (isVerified === 'verified') query.profileStatus = 'approved'
-    if (isVerified === 'unverified') query.profileStatus = 'pending'
-    if (isVerified === 'rejected') query.profileStatus = 'rejected'
+    if (isVerified && isVerified !== 'all') {
+      if (isVerified === 'verified') query.profileStatus = 'approved'
+      if (isVerified === 'unverified') query.profileStatus = 'pending'
+      if (isVerified === 'rejected') query.profileStatus = 'rejected'
+    }
 
     if (search) {
       query.$or = [
@@ -89,9 +92,9 @@ export class TrainerRepository implements ITrainerRepository {
       const experienceMap: { [key: string]: { $gte?: number; $lte?: number } } =
         {
           'Less than 1 year': { $lte: 1 },
-          '1â€"3 years': { $gte: 1, $lte: 3 },
-          '3â€"5 years': { $gte: 3, $lte: 5 },
-          '5â€"10 years': { $gte: 5, $lte: 10 },
+          '1–3 years': { $gte: 1, $lte: 3 },
+          '3–5 years': { $gte: 3, $lte: 5 },
+          '5–10 years': { $gte: 5, $lte: 10 },
           '10+ years': { $gte: 10 }
         }
       const expYears = experienceMap[experience]
@@ -124,11 +127,15 @@ export class TrainerRepository implements ITrainerRepository {
       if (endDate) query.createdAt.$lte = new Date(endDate)
     }
 
-    const trainers = await TrainerModel.find(query).skip(skip).limit(limit).lean().exec()
+    const trainers = await TrainerModel.find(query)
+      .skip(skip)
+      .limit(limit)
+      .lean()
+      .exec()
     return trainers.map(trainer => this.mapToResponseDto(trainer as ITrainer))
   }
 
-  async count(
+  async count (
     search: string,
     isBanned?: string,
     isVerified?: string,
@@ -142,9 +149,11 @@ export class TrainerRepository implements ITrainerRepository {
   ) {
     const query: any = {}
 
-    if (isVerified === 'verified') query.profileStatus = 'approved'
-    if (isVerified === 'unverified') query.profileStatus = 'pending'
-    if (isVerified === 'rejected') query.profileStatus = 'rejected'
+    if (isVerified && isVerified !== 'all') {
+      if (isVerified === 'verified') query.profileStatus = 'approved'
+      if (isVerified === 'unverified') query.profileStatus = 'pending'
+      if (isVerified === 'rejected') query.profileStatus = 'rejected'
+    }
 
     if (search) {
       query.$or = [
@@ -168,20 +177,37 @@ export class TrainerRepository implements ITrainerRepository {
             ]
           }
         })
+      } else if (specialization) {
+        query.$or.push({
+          specialization: { $regex: `^${specialization}$`, $options: 'i' }
+        })
+      }
+    } else if (specialization && specialization !== 'Other') {
+      query.specialization = { $regex: `^${specialization}$`, $options: 'i' }
+    } else if (specialization === 'Other') {
+      query.specialization = {
+        $nin: [
+          'Weight Training',
+          'Yoga',
+          'Pilates',
+          'Cardio',
+          'CrossFit',
+          'Martial Arts',
+          'Zumba'
+        ]
       }
     }
 
     if (isBanned === 'active') query.isBanned = false
     if (isBanned === 'banned') query.isBanned = true
-    if (specialization && specialization !== 'Other')
-      query.specialization = specialization
+
     if (experience) {
       const experienceMap: { [key: string]: { $gte?: number; $lte?: number } } =
         {
           'Less than 1 year': { $lte: 1 },
-          '1â€"3 years': { $gte: 1, $lte: 3 },
-          '3â€"5 years': { $gte: 3, $lte: 5 },
-          '5â€"10 years': { $gte: 5, $lte: 10 },
+          '1–3 years': { $gte: 1, $lte: 3 },
+          '3–5 years': { $gte: 3, $lte: 5 },
+          '5–10 years': { $gte: 5, $lte: 10 },
           '10+ years': { $gte: 10 }
         }
       const expYears = experienceMap[experience]
@@ -193,12 +219,15 @@ export class TrainerRepository implements ITrainerRepository {
         }
       }
     }
+
     if (minRating) query.rating = { $gte: parseFloat(minRating) }
+
     if (minPrice || maxPrice) {
       query.price = {}
       if (minPrice) query.price.$gte = parseFloat(minPrice)
       if (maxPrice) query.price.$lte = parseFloat(maxPrice)
     }
+
     if (startDate || endDate) {
       query.createdAt = {}
       if (startDate) query.createdAt.$gte = new Date(startDate)
@@ -208,20 +237,29 @@ export class TrainerRepository implements ITrainerRepository {
     return await TrainerModel.countDocuments(query).exec()
   }
 
-  async findApplicationByTrainerId(id: string): Promise<TrainerResponseDto | null> {
+
+  async findApplicationByTrainerId (
+    id: string
+  ): Promise<TrainerResponseDto | null> {
     const trainer = await TrainerModel.findById(id).select(
       'name email phone bio location specialization experience badges rating certificate profileImage profileStatus createdAt'
     )
     return trainer ? this.mapToResponseDto(trainer) : null
   }
 
-  async updateStatus(_id: string, updateData: Partial<ITrainer>): Promise<ITrainer | null> {
-    return await TrainerModel.findOneAndUpdate({ _id }, updateData, {
+  async updateStatus (
+    identifier: string,
+    updateData: Partial<ITrainer>
+  ): Promise<ITrainer | null> {
+    const query = Types.ObjectId.isValid(identifier)
+      ? { _id: identifier }
+      : { email: identifier }
+    return await TrainerModel.findOneAndUpdate(query, updateData, {
       new: true
     })
   }
 
-  async addClient(trainerId: string, userId: string): Promise<void> {
+  async addClient (trainerId: string, userId: string): Promise<void> {
     await TrainerModel.findByIdAndUpdate(
       trainerId,
       { $push: { clients: new Types.ObjectId(userId) } },
@@ -229,7 +267,7 @@ export class TrainerRepository implements ITrainerRepository {
     ).exec()
   }
 
-  async removeClient(trainerId: string, userId: string): Promise<void> {
+  async removeClient (trainerId: string, userId: string): Promise<void> {
     await TrainerModel.findByIdAndUpdate(
       trainerId,
       { $pull: { clients: new Types.ObjectId(userId) } },
@@ -237,7 +275,7 @@ export class TrainerRepository implements ITrainerRepository {
     ).exec()
   }
 
-  async findClients(
+  async findClients (
     trainerId: string,
     skip: number,
     limit: number,
@@ -270,13 +308,40 @@ export class TrainerRepository implements ITrainerRepository {
 
     const total = await UserModel.countDocuments(query).exec()
 
-    return { 
-      clients: clients.map(client => this.mapToClientDto(client as IUser)), 
-      total 
+    return {
+      clients: clients.map(client => this.mapToClientDto(client as IUser)),
+      total
     }
   }
 
-  mapToResponseDto(trainer: ITrainer): TrainerResponseDto {
+  async countNewClients (
+    trainerId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<number> {
+    const trainer = await TrainerModel.findById(trainerId)
+      .select('clients')
+      .exec()
+    if (!trainer) {
+      throw new Error('Trainer not found')
+    }
+
+    const query: any = {
+      _id: { $in: trainer.clients },
+      subscriptionStartDate: { $gte: startDate, $lte: endDate }
+    }
+
+    return await UserModel.countDocuments(query).exec()
+  }
+
+  async countCompletedSessions (trainerId: string): Promise<number> {
+    return await SlotModel.countDocuments({
+      trainerId,
+      status: 'completed'
+    }).exec()
+  }
+
+  mapToResponseDto (trainer: ITrainer): TrainerResponseDto {
     return {
       _id: trainer._id.toString(),
       name: trainer.name,
@@ -301,7 +366,7 @@ export class TrainerRepository implements ITrainerRepository {
     }
   }
 
-  mapToClientDto(client: IUser): ClientDto {
+  mapToClientDto (client: IUser): ClientDto {
     return {
       _id: client._id.toString(),
       name: client.name,

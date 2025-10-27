@@ -3,6 +3,7 @@ import API from '@/lib/axios'
 
 export const getGymDetails= async ()=>{
     const res = await API.get('/gym/get-details')
+    console.log(res.data)
     return res.data
 }
 

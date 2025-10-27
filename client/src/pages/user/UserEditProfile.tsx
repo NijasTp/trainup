@@ -97,7 +97,7 @@ export default function EditProfile() {
     todaysWeight: "",
     goalWeight: ""
   });
-  const [profileImage, setProfileImage] = useState<File | null>(null);
+
   const [profileImagePreview, setProfileImagePreview] = useState<string>("");
   const [newGoal, setNewGoal] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -154,7 +154,6 @@ export default function EditProfile() {
         return;
       }
 
-      setProfileImage(file);
       
       // Create preview URL
       const reader = new FileReader();
@@ -191,9 +190,6 @@ export default function EditProfile() {
       if (validatedData.goalWeight) submitData.append('goalWeight', validatedData.goalWeight);
       
 
-      if (profileImage) {
-        submitData.append('profileImage', profileImage);
-      }
 
       const response = await updateProfile(submitData);
       dispatch(updateUser({
@@ -311,7 +307,7 @@ export default function EditProfile() {
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
-          {/* Profile Image Upload */}
+          {/* Profile Image Upload 
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -361,7 +357,7 @@ export default function EditProfile() {
                 JPG, PNG or GIF (max. 5MB)
               </p>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Personal Information */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">

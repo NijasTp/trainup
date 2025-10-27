@@ -1,11 +1,14 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import  { useDispatch, useSelector} from "react-redux"; 
+import { useDispatch, useSelector } from "react-redux"; 
 import { useEffect, useState } from "react";
 import type { RootState } from "../redux/store";
 import { toast } from "react-toastify";
 import { logout } from "@/redux/slices/userAuthSlice";
 import { checkUserSession } from "@/services/authService";
+import LoadingSpinner from "@/components/ui/LoadSpinner";
+
+
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = useSelector((state: RootState) => state.userAuth);
@@ -25,10 +28,10 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           if (error.response?.status === 403 && error.response.data?.error === 'Banned') {
             toast.error('You are banned');
             dispatch(logout());
-             navigate('/user/login');
-            } else if (error.response?.status === 401) {
-              dispatch(logout());
-              navigate('/user/login');
+            navigate('/user/login');
+          } else if (error.response?.status === 401) {
+            dispatch(logout());
+            navigate('/user/login');
           }
         }
       }
@@ -38,7 +41,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     checkSession();
   }, [user, location.pathname, dispatch]);
 
-  if (checking) return <div>loading...</div>;
+  if (checking) return <LoadingSpinner />;
 
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location }} />;

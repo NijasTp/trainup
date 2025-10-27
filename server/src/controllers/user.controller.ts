@@ -133,7 +133,7 @@ export class UserController implements IUserController {
       const result: LoginResponseDto = await this._userService.loginUser(dto.email, dto.password);
       this._jwtService.setTokens(res, result.accessToken, result.refreshToken);
       const streak = await this._streakService.checkAndResetUserStreak(result.user._id);
-      const response: LoginResponseDto = { ...result, streak };
+      const response = { ...result.user, streak };
       res.status(STATUS_CODE.OK).json(response);
     } catch (err) {
       logger.error('Login error:', err);

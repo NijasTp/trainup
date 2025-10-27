@@ -263,7 +263,7 @@ const GymDashboard: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
         <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-2xl p-8 text-center border border-gray-700 max-w-md w-full">
           <div className="mb-5 flex justify-center">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-full flex items-center justify-center">
               <span className="text-2xl">🔒</span>
             </div>
           </div>

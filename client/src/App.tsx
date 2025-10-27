@@ -51,7 +51,6 @@ import UserProfile from './pages/user/UserProfile';
 import UserDashboard from './pages/user/UserDashboard';
 import TrainerPage from './pages/user/IndividualTrainer';
 import MyTrainerProfile from './pages/user/MyTrainer';
-import TrainerClients from './pages/trainer/TrainerDashboard';
 import TrainerUserDetails from './pages/trainer/TrainerUserDetails';
 import TrainerAddWorkoutPage from './pages/trainer/TrainerAddWorkoutPage';
 import TrainerAddSessionPage from './pages/trainer/TrainerAddSessionPage';
@@ -70,19 +69,24 @@ import TrainerSessionRequests from './pages/trainer/TrainerSessionRequests';
 import ChatPage from './pages/user/UserChatPage';
 import TrainerChatPage from './pages/trainer/TrainerChatPage';
 import VideoCallPage from './pages/general/VideoCallPage';
+import TrainerTransactions from './pages/trainer/TrainerTransactions';
+import TrainerProfile from './pages/trainer/TrainerProfile';
+import TrainerDashboard from './pages/trainer/TrainerDashboard';
+import WeeklySchedule from './pages/trainer/WeeklySchedule';
+import TrainerClients from './pages/trainer/TrainerClientListing';
 
 function App() {
   return (
     <>
       <ToastContainer />
       <Routes>
-        <Route path={ROUTES.CHOOSE_LOGIN} element={<PreventLoggedIn><RoleSelectionPage /></PreventLoggedIn>} />
+        <Route path={ROUTES.CHOOSE_LOGIN} element={<RoleSelectionPage />} />
+        <Route path={ROUTES.GLOBAL_LOGIN} element={<RoleSelectionPage />} />
         <Route path={ROUTES.USER_LOGIN} element={<PreventLoggedIn><Login /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_FORGOT_PASSWORD} element={<PreventLoggedIn><ForgotPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_NEW_PASSWORD} element={<PreventLoggedIn><NewPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_SIGNUP} element={<PreventLoggedIn><Signup /></PreventLoggedIn>} />
         <Route path={ROUTES.CALLBACK} element={<Callback />} />
-        <Route path={ROUTES.USER_HOME} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_HOME_ALT} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_PROFILE} element={<ProtectedRoute><UserProfile/></ProtectedRoute>} />
         <Route path={ROUTES.USER_EDIT_PROFILE} element={<ProtectedRoute><EditProfile/></ProtectedRoute>} />
@@ -116,8 +120,12 @@ function App() {
         <Route path={ROUTES.TRAINER_VERIFY_OTP} element={<TrainerPreventLoggedIn><TrainerVerifyOtp /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_WAITLIST} element={<TrainerProtectedRoute><TrainerWaitlist /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_REJECTED} element={<TrainerProtectedRoute><TrainerReapply /></TrainerProtectedRoute>} />
-        <Route path={ROUTES.TRAINER_DASHBOARD} element={<TrainerProtectedRoute><TrainerClients /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_DASHBOARD} element={<TrainerProtectedRoute><TrainerDashboard /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_CLIENTS} element={<TrainerProtectedRoute><TrainerClients /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_TRANSACTIONS} element={<TrainerProtectedRoute><TrainerTransactions /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_PROFILE} element={<TrainerProtectedRoute><TrainerProfile /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_SLOTS} element={<TrainerProtectedRoute><TrainerSlots /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_WEEKLY_SCHEDULE} element={<TrainerProtectedRoute><WeeklySchedule /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_SESSION_REQUESTS} element={<TrainerProtectedRoute><TrainerSessionRequests /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_INDIVIDUAL_CLIENT} element={<TrainerProtectedRoute><TrainerUserDetails /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_CHAT} element={<TrainerProtectedRoute><TrainerChatPage /></TrainerProtectedRoute>} />

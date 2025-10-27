@@ -1,10 +1,11 @@
-import { ClientDto, TrainerResponseDto } from '../../../dtos/trainer.dto'
-import { ITrainer } from '../../../models/trainer.model'
-import { IUser } from '../../../models/user.model'
+import { ITrainer } from '../../../models/trainer.model';
+import { TrainerResponseDto, ClientDto } from '../../../dtos/trainer.dto';
 
 export interface ITrainerRepository {
-  findByEmail(email: string): Promise<ITrainer | null>
- findAll(
+  findByEmail(email: string): Promise<ITrainer | null>;
+  findById(id: string): Promise<ITrainer | null>;
+  create(trainerData: Partial<ITrainer>): Promise<ITrainer>;
+  findAll(
     skip: number,
     limit: number,
     search: string,
@@ -17,7 +18,7 @@ export interface ITrainerRepository {
     minRating?: string,
     minPrice?: string,
     maxPrice?: string
-  ): Promise<TrainerResponseDto[]>
+  ): Promise<TrainerResponseDto[]>;
   count(
     search: string,
     isBanned?: string,
@@ -29,20 +30,17 @@ export interface ITrainerRepository {
     minRating?: string,
     minPrice?: string,
     maxPrice?: string
-  ): Promise<number>
-  findById(id: string): Promise<ITrainer | null>
-  updateStatus(
-    id: string,
-    updateData: Partial<ITrainer>
-  ): Promise<ITrainer | null>
-  findApplicationByTrainerId(id: string): Promise<TrainerResponseDto | null>
-  create(trainerData: Partial<ITrainer>): Promise<ITrainer>
-  addClient(trainerId: string, userId: string): Promise<void>
-  removeClient(trainerId: string, userId: string): Promise<void>
+  ): Promise<number>;
+  findApplicationByTrainerId(id: string): Promise<TrainerResponseDto | null>;
+  updateStatus(identifier: string, updateData: Partial<ITrainer>): Promise<ITrainer | null>;
+  addClient(trainerId: string, userId: string): Promise<void>;
+  removeClient(trainerId: string, userId: string): Promise<void>;
   findClients(
-      trainerId: string,
-      skip: number,
-      limit: number,
-      search: string
-    ): Promise<{ clients: ClientDto[]; total: number }> 
+    trainerId: string,
+    skip: number,
+    limit: number,
+    search: string
+  ): Promise<{ clients: ClientDto[]; total: number }>;
+  countNewClients(trainerId: string, startDate: Date, endDate: Date): Promise<number>;
+  countCompletedSessions(trainerId: string): Promise<number>;
 }

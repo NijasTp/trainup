@@ -10,9 +10,9 @@ import {
     Users,
     Clock,
     AlertCircle,
+    Settings
 } from "lucide-react";
 import io, { Socket } from 'socket.io-client';
-import { toast } from "sonner";
 import API from "@/lib/axios";
 
 interface VideoCallProps {
@@ -43,7 +43,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const [participants, setParticipants] = useState<string[]>([]);
     const [callDuration, setCallDuration] = useState(0);
     const [retryCount, setRetryCount] = useState(0);
-    const [isInitializing, setIsInitializing] = useState(false);
+    const [hasPermissions, setHasPermissions] = useState(false);
     
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -56,15 +56,13 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const rtcConfiguration = {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
         ]
     };
 
     useEffect(() => {
-        if (!isInitializing) {
-            setIsInitializing(true);
-            initializeVideoCall();
-        }
+        checkMediaPermissions();
         return () => {
             cleanup();
         };
@@ -83,6 +81,60 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             if (interval) clearInterval(interval);
         };
     }, [callStartTimeRef.current]);
+
+    const checkMediaPermissions = async () => {
+        try {
+            // Check if permissions are already granted
+            const permissions = await Promise.all([
+                navigator.permissions.query({ name: 'camera' as PermissionName }),
+                navigator.permissions.query({ name: 'microphone' as PermissionName })
+            ]);
+
+            const cameraGranted = permissions[0].state === 'granted';
+            const micGranted = permissions[1].state === 'granted';
+
+            if (cameraGranted && micGranted) {
+                setHasPermissions(true);
+                if (!initializationRef.current) {
+                    initializeVideoCall();
+                }
+            } else {
+                // Try to request permissions
+                await requestMediaPermissions();
+            }
+        } catch (error) {
+            console.error('Error checking permissions:', error);
+            await requestMediaPermissions();
+        }
+    };
+
+    const requestMediaPermissions = async () => {
+        try {
+            // Request permissions by trying to get media
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: true
+            });
+            
+            // Stop the temporary stream
+            stream.getTracks().forEach(track => track.stop());
+            
+            setHasPermissions(true);
+            if (!initializationRef.current) {
+                initializeVideoCall();
+            }
+        } catch (error: any) {
+            console.error('Media permission denied:', error);
+            if (error.name === 'NotAllowedError') {
+                setError('Camera and microphone permissions are required for video calls. Please allow access and refresh the page.');
+            } else if (error.name === 'NotFoundError') {
+                setError('No camera or microphone found. Please check your devices.');
+            } else {
+                setError('Failed to access camera and microphone. Please check your permissions.');
+            }
+            setIsLoading(false);
+        }
+    };
 
     const joinCallWithRetry = async (attempt = 1): Promise<void> => {
         try {
@@ -108,24 +160,41 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 localStreamRef.current = null;
             }
 
-            // Get user media with error handling
+            // Get user media with proper constraints
             let stream: MediaStream;
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
-                    audio: true
+                    video: {
+                        width: { ideal: 1280, max: 1920 },
+                        height: { ideal: 720, max: 1080 },
+                        frameRate: { ideal: 30, max: 60 }
+                    },
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
                 });
             } catch (mediaError: any) {
                 console.error('Media access error:', mediaError);
                 if (mediaError.name === 'NotReadableError') {
-                    throw new Error('Camera or microphone is already in use by another application');
+                    throw new Error('Camera or microphone is being used by another application');
+                } else if (mediaError.name === 'NotAllowedError') {
+                    throw new Error('Please allow camera and microphone access');
                 }
                 throw new Error('Failed to access camera/microphone');
             }
 
             localStreamRef.current = stream;
+            
+            // Set video element source with error handling
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
+                localVideoRef.current.onloadedmetadata = () => {
+                    localVideoRef.current?.play().catch(e => {
+                        console.error('Failed to play local video:', e);
+                    });
+                };
             }
 
             // Clean up existing peer connection
@@ -149,6 +218,11 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 console.log('Received remote stream');
                 if (remoteVideoRef.current && event.streams[0]) {
                     remoteVideoRef.current.srcObject = event.streams[0];
+                    remoteVideoRef.current.onloadedmetadata = () => {
+                        remoteVideoRef.current?.play().catch(e => {
+                            console.error('Failed to play remote video:', e);
+                        });
+                    };
                 }
             };
 
@@ -167,6 +241,18 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             peerConnectionRef.current.onconnectionstatechange = () => {
                 if (peerConnectionRef.current) {
                     console.log('Connection state:', peerConnectionRef.current.connectionState);
+                    
+                    if (peerConnectionRef.current.connectionState === 'failed') {
+                        console.log('Connection failed, attempting to restart ICE');
+                        peerConnectionRef.current.restartIce();
+                    }
+                }
+            };
+
+            // Handle ICE connection state changes
+            peerConnectionRef.current.oniceconnectionstatechange = () => {
+                if (peerConnectionRef.current) {
+                    console.log('ICE connection state:', peerConnectionRef.current.iceConnectionState);
                 }
             };
 
@@ -187,7 +273,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         try {
             console.log('Handling offer, current state:', peerConnectionRef.current.signalingState);
             
-            // Only set remote description if we're in the right state
             if (peerConnectionRef.current.signalingState === 'stable') {
                 await peerConnectionRef.current.setRemoteDescription(offer);
                 
@@ -217,7 +302,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         try {
             console.log('Handling answer, current state:', peerConnectionRef.current.signalingState);
             
-            // Only set remote description if we're in the right state
             if (peerConnectionRef.current.signalingState === 'have-local-offer') {
                 await peerConnectionRef.current.setRemoteDescription(answer);
             } else {
@@ -244,6 +328,24 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         }
     };
 
+    const createOffer = async () => {
+        if (!peerConnectionRef.current) return;
+
+        try {
+            const offer = await peerConnectionRef.current.createOffer();
+            await peerConnectionRef.current.setLocalDescription(offer);
+
+            if (socketRef.current) {
+                socketRef.current.emit('webrtc_offer', {
+                    roomId,
+                    offer
+                });
+            }
+        } catch (error) {
+            console.error('Error creating offer:', error);
+        }
+    };
+
     const initializeVideoCall = async () => {
         if (initializationRef.current) return;
         initializationRef.current = true;
@@ -261,7 +363,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             
             await joinCallWithRetry();
             
-            // Initialize socket connection with proper error handling
+            // Initialize socket connection
             await initializeSocket();
             
             // Get user media and set up peer connection
@@ -284,16 +386,13 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 socketRef.current = null;
             }
 
-            // Initialize socket connection with authentication
+            // Initialize socket connection
             socketRef.current = io(import.meta.env.VITE_API_URL, {
                 withCredentials: true,
                 transports: ['websocket', 'polling'],
                 autoConnect: true,
                 forceNew: true,
-                timeout: 10000,
-                auth: {
-                    // This will send cookies automatically
-                }
+                timeout: 10000
             });
 
             // Handle connection success
@@ -323,6 +422,8 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         socketRef.current.on('user_joined', ({ userId }) => {
             console.log('User joined:', userId);
             setParticipants(prev => [...prev, userId]);
+            // Create offer when another user joins
+            setTimeout(createOffer, 1000);
         });
 
         socketRef.current.on('webrtc_offer', async ({ offer, fromUserId }) => {
@@ -386,10 +487,11 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const retryConnection = () => {
         cleanup();
         setRetryCount(0);
-        setIsInitializing(false);
+        setIsLoading(false);
         initializationRef.current = false;
+        setHasPermissions(false);
         setTimeout(() => {
-            initializeVideoCall();
+            checkMediaPermissions();
         }, 1000);
     };
 
@@ -419,6 +521,9 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         if (remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = null;
         }
+
+        setIsConnected(false);
+        setParticipants([]);
     };
 
     const formatDuration = (seconds: number) => {
@@ -433,7 +538,12 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 <div className="text-center space-y-4">
                     <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto"></div>
                     <p className="text-white text-lg">
-                        {retryCount > 0 ? `Retrying connection... (${retryCount}/3)` : 'Connecting to video call...'}
+                        {!hasPermissions 
+                            ? 'Requesting camera and microphone access...'
+                            : retryCount > 0 
+                                ? `Retrying connection... (${retryCount}/3)` 
+                                : 'Connecting to video call...'
+                        }
                     </p>
                 </div>
             </div>
@@ -449,6 +559,22 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                     <p className="text-white/80 text-lg">{error}</p>
                     
                     <div className="space-y-3">
+                        {error.includes('permission') && (
+                            <div className="p-4 bg-amber-500/20 border border-amber-500/40 rounded-lg">
+                                <div className="flex items-start space-x-2">
+                                    <Settings className="h-5 w-5 text-amber-400 mt-0.5" />
+                                    <div className="text-left">
+                                        <p className="text-amber-400 font-medium text-sm">To fix this:</p>
+                                        <ul className="text-amber-300 text-xs mt-1 space-y-1">
+                                            <li>• Click the camera icon in your address bar</li>
+                                            <li>• Allow camera and microphone access</li>
+                                            <li>• Refresh the page</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
                         {retryCount < 3 && (
                             <Button 
                                 onClick={retryConnection}
@@ -477,7 +603,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 <div className="flex items-center justify-between text-white">
                     <div className="flex items-center space-x-4">
                         <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/50">
-                            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                            <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
                             Live
                         </Badge>
                         <div className="flex items-center space-x-2">
@@ -519,7 +645,8 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                         autoPlay
                         playsInline
                         muted
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover mirror"
+                        style={{ transform: 'scaleX(-1)' }}
                     />
                     {!isVideoEnabled && (
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-800">

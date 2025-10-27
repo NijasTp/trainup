@@ -13,6 +13,9 @@ const TYPES = {
   ISlotRepository: Symbol.for("ISlotRepository"),
   ISlotService: Symbol.for("ISlotService"),
 
+  IWeeklyScheduleRepository: Symbol.for("IWeeklyScheduleRepository"),
+  IWeeklyScheduleService: Symbol.for("IWeeklyScheduleService"),
+
   IMessageRepository: Symbol.for("IMessageRepository"),
   IMessageService: Symbol.for("IMessageService"),
 

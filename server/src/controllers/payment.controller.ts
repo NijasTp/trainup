@@ -35,12 +35,10 @@ export class PaymentController {
       if (!userId) throw new AppError(MESSAGES.INVALID_USER_ID, STATUS_CODE.BAD_REQUEST);
       if (!planType) throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
 
-      // Validate plan type
       if (!['basic', 'premium', 'pro'].includes(planType)) {
         throw new AppError('Invalid plan type', STATUS_CODE.BAD_REQUEST);
       }
 
-      // Check if user already has pending transactions
       const existingPendingTransaction = await this._transactionService.getUserPendingTransaction(userId);
       if (existingPendingTransaction) {
         throw new AppError('You have a pending transaction. Please complete or cancel it first.', STATUS_CODE.BAD_REQUEST);

@@ -6,6 +6,7 @@ interface GymType {
   email: string;
   profileImage?: string;
   location?: string; 
+  verifyStatus?: 'pending' | 'approved' | 'rejected';
   isVerified?: boolean;
 }
 
@@ -38,6 +39,7 @@ export const gymAuthSlice = createSlice({
         email: payload.email,
         profileImage: payload.profileImage,
         location: payload.location,
+        verifyStatus: payload.verifyStatus,
         isVerified: payload.isVerified || false,
       };
       state.isAuthenticated = true;

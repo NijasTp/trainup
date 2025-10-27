@@ -22,6 +22,7 @@ export interface ITrainer extends Document {
   profileImage: string
   profileStatus: 'pending' | 'approved' | 'rejected' | 'suspended'
   rejectReason: string
+  unavailableReason?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -51,7 +52,8 @@ const TrainerSchema: Schema<ITrainer> = new Schema(
       enum: ['pending', 'approved', 'rejected', 'active', 'suspended'],
       default: 'pending'
     },
-    rejectReason: { type: String }
+    rejectReason: { type: String },
+    unavailableReason: { type: String },
   },
   {
     timestamps: true

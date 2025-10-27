@@ -29,7 +29,7 @@ export class AdminController {
     @inject(TYPES.IAdminService) private _adminService: IAdminService,
     @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
     @inject(TYPES.IUserService) private _userService: IUserService,
-    @inject(TYPES.IJwtService) private _JwtService: IJwtService,
+    @inject(TYPES.IJwtService) private _jwtService: IJwtService,
     @inject(TYPES.IGymService) private _gymService: IGymService
   ) {}
 
@@ -37,7 +37,7 @@ export class AdminController {
     try {
       const dto: AdminLoginRequestDto = req.body;
       const result: AdminLoginResponseDto = await this._adminService.login(dto);
-      this._JwtService.setTokens(res, result.accessToken, result.refreshToken);
+      this._jwtService.setTokens(res, result.accessToken, result.refreshToken);
       res.status(STATUS_CODE.OK).json({ admin: result.admin });
     } catch (err) {
       next(err);
@@ -222,7 +222,7 @@ export class AdminController {
     try {
       const jwtUser = req.user as JwtPayload;
       await this._adminService.updateTokenVersion(jwtUser.id);
-      this._JwtService.clearTokens(res);
+      this._jwtService.clearTokens(res);
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.DELETED });
     } catch (err) {
       logger.error('Logout error:', err);

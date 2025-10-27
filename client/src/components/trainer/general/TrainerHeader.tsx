@@ -86,7 +86,7 @@ export default function TrainerSiteHeader() {
           <Button
             variant="ghost"
             className="text-foreground hover:bg-primary/5 hover:text-primary transition-all"
-            onClick={() => navigate("/trainer/dashboard")}
+            onClick={() => navigate("/trainer/clients")}
           >
             <Users className="h-4 w-4 mr-2" />
             Clients
@@ -94,7 +94,7 @@ export default function TrainerSiteHeader() {
           <Button
             variant="ghost"
             className="text-foreground hover:bg-primary/5 hover:text-primary transition-all"
-            onClick={() => navigate("/trainer/chat/:clientId")} // Placeholder clientId
+            onClick={() => navigate("/trainer/chats")} 
           >
             <MessageSquare className="h-4 w-4 mr-2" />
             Chat

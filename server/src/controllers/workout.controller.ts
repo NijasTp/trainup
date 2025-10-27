@@ -208,7 +208,7 @@ export class WorkoutController {
   async createAdminTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const jwtUser = req.user as JwtPayload;
-      if (jwtUser?.role !== 'admin') {
+      if (jwtUser?.role !== Role.ADMIN) {
         throw new AppError(MESSAGES.ADMIN_REQUIRED, STATUS_CODE.UNAUTHORIZED);
       }
       const dto: CreateAdminTemplateRequestDto = req.body;
@@ -235,7 +235,7 @@ export class WorkoutController {
   async updateAdminTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const jwtUser = req.user as JwtPayload;
-      if (jwtUser?.role !== 'admin') {
+      if (jwtUser?.role !== Role.ADMIN) {
         throw new AppError(MESSAGES.ADMIN_REQUIRED, STATUS_CODE.UNAUTHORIZED);
       }
       const paramsDto: UpdateAdminTemplateParamsDto = { id: req.params.id };
@@ -253,7 +253,7 @@ export class WorkoutController {
   async deleteAdminTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const jwtUser = req.user as JwtPayload;
-      if (jwtUser?.role !== 'admin') {
+      if (jwtUser?.role !== Role.ADMIN) {
         throw new AppError(MESSAGES.ADMIN_REQUIRED, STATUS_CODE.UNAUTHORIZED);
       }
       const dto: DeleteAdminTemplateParamsDto = { id: req.params.id };

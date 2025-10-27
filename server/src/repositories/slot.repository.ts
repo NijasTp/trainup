@@ -125,4 +125,11 @@ export class SlotRepository implements ISlotRepository {
 
     return !!existingSlot
   }
+  async deleteUnbookedSlotsByWeek(trainerId: string, weekStart: Date): Promise<void> {
+  await SlotModel.deleteMany({
+    trainerId,
+    weekStart,
+    isBooked: false
+  });
+}
 }

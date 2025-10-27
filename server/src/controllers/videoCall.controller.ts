@@ -11,8 +11,7 @@ import { AppError } from '../utils/appError.util';
 @injectable()
 export class VideoCallController {
   constructor(
-    @inject(TYPES.IVideoCallService) private _videoCallService: IVideoCallService,
-    @inject(TYPES.IJwtService) private _jwtService: IJwtService
+    @inject(TYPES.IVideoCallService) private _videoCallService: IVideoCallService
   ) {}
 
   async joinCall(req: Request, res: Response, next: NextFunction): Promise<void> {

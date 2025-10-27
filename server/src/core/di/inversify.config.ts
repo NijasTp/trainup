@@ -83,6 +83,10 @@ import { MessageService } from "../../services/message.service";
 import { VideoCallController } from "../../controllers/videoCall.controller";
 import { VideoCallRepository } from "../../repositories/videoCall.repository";
 import { VideoCallService } from "../../services/videoCall.service";
+import { WeeklyScheduleRepository } from "../../repositories/weeklySchedule.repository";
+import { IWeeklyScheduleRepository } from "../interfaces/repositories/IWeeklyScheduleRepository";
+import { WeeklyScheduleService } from "../../services/weeklySchedule.service";
+import { IWeeklyScheduleService } from "../interfaces/services/IWeeklyScheduleService";
 
 
 // Create container 
@@ -98,6 +102,9 @@ container.bind<IUserPlanService>(TYPES.IUserPlanService).to(UserPlanService);
 
 container.bind<ISlotRepository>(TYPES.ISlotRepository).to(SlotRepository)
 container.bind<ISlotService>(TYPES.ISlotService).to(SlotService)
+
+container.bind<IWeeklyScheduleRepository>(TYPES.IWeeklyScheduleRepository).to(WeeklyScheduleRepository)
+container.bind<IWeeklyScheduleService>(TYPES.IWeeklyScheduleService).to(WeeklyScheduleService)
 
 container.bind<IMessageRepository>(TYPES.IMessageRepository).to(MessageRepository)
 container.bind<IMessageService>(TYPES.IMessageService).to(MessageService)

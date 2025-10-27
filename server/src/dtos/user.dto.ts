@@ -74,7 +74,7 @@ export class UserResponseDto {
   weightHistory: WeightLogDto[];
   height?: number;
   age?: number;
-  trainerPlan: 'basic' | 'premium' | 'pro';
+  trainerPlan?: 'basic' | 'premium' | 'pro';
   gender?: string;
   createdAt: Date;
   updatedAt: Date;

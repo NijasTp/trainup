@@ -1,274 +1,377 @@
-import type React from "react"
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Users, 
+  DollarSign, 
+  TrendingUp, 
+  Calendar,
+  Star,
+  Target,
+  Activity
+} from "lucide-react";
+import API from "@/lib/axios";
+import { toast } from "sonner";
+import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar
+} from "recharts";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, Mail, Phone, Calendar, Filter } from "lucide-react"
-import API from "@/lib/axios"
-import { toast } from "sonner"
-import { Link, useNavigate } from "react-router-dom"
-import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader"
-import type { PaginatedClients } from "@/interfaces/trainer/iTrainerDashboard"
-
-interface Client {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  subscriptionStartDate?: string;
-  profileImage?: string;
-  trainerPlan?: 'basic' | 'premium' | 'pro';
+interface DashboardStats {
+  totalClients: number;
+  newClientsThisMonth: number;
+  totalEarningsThisMonth: number;
+  totalEarningsLastMonth: number;
+  averageRating: number;
+  totalSessions: number;
+  monthlyEarnings: Array<{
+    month: string;
+    earnings: number;
+    clients: number;
+  }>;
+  planDistribution: Array<{
+    plan: string;
+    count: number;
+  }>;
+  recentActivity: Array<{
+    type: string;
+    message: string;
+    date: string;
+  }>;
 }
 
-export default function TrainerClients() {
-  const navigate = useNavigate()
-  const [clients, setClients] = useState<PaginatedClients>({ clients: [], total: 0, page: 1, totalPages: 1 })
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState("")
-  const [planFilter, setPlanFilter] = useState("all")
-  const [page, setPage] = useState(1)
-  const limit = 10
+export default function TrainerDashboard() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "TrainUp - My Clients"
-    fetchClients()
-  }, [page, search, planFilter])
+    document.title = "TrainUp - Dashboard";
+    fetchDashboardStats();
+  }, []);
 
-  const fetchClients = async () => {
-    setIsLoading(true)
-    setError(null)
+  const fetchDashboardStats = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await API.get("/trainer/get-clients", {
-        params: { page, limit, search, planFilter: planFilter !== 'all' ? planFilter : undefined },
-      })
-      setClients(response.data)
-      setIsLoading(false)
+      const response = await API.get("/trainer/dashboard");
+      setStats(response.data);
+      setIsLoading(false);
     } catch (err: any) {
-      console.error("Failed to fetch clients:", err)
-      setError("Failed to load clients")
-      toast.error("Failed to load clients")
-      setIsLoading(false)
+      console.error("Failed to fetch dashboard stats:", err);
+      setError("Failed to load dashboard data");
+      toast.error("Failed to load dashboard data");
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value)
-    setPage(1)
-  }
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+    }).format(amount);
+  };
 
-  const handlePlanFilterChange = (value: string) => {
-    setPlanFilter(value)
-    setPage(1)
-  }
-
-  const handleViewClient = (clientId: string) => {
-    navigate(`/trainer/user/${clientId}`)
-  }
-
-  const getClientInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word.charAt(0))
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
-  }
-
-  const getPlanColor = (plan?: string) => {
-    switch (plan) {
-      case 'basic':
-        return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
-      case 'premium':
-        return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
-      case 'pro':
-        return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
-      default:
-        return 'bg-gray-500/10 text-gray-600 border-gray-500/20';
-    }
-  }
+  const calculateGrowthPercentage = (current: number, previous: number) => {
+    if (previous === 0) return 0;
+    return ((current - previous) / previous * 100).toFixed(1);
+  };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+        <TrainerSiteHeader />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
         <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
             <div className="absolute inset-0 w-16 h-16 border-2 border-transparent border-t-accent rounded-full animate-pulse"></div>
           </div>
-          <p className="text-muted-foreground font-medium text-lg">Loading clients...</p>
+          <p className="text-muted-foreground font-medium text-lg">Loading dashboard...</p>
         </div>
       </div>
-    )
+    );
   }
 
-  if (error) {
+  if (error || !stats) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+        <TrainerSiteHeader />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
         <div className="relative container mx-auto px-4 py-16 text-center space-y-6">
           <h3 className="text-2xl font-bold text-foreground">Error</h3>
           <p className="text-muted-foreground text-lg">{error}</p>
-          <Button
-            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
-            onClick={fetchClients}
+          <button
+            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-2 rounded-lg text-white"
+            onClick={fetchDashboardStats}
           >
             Retry
-          </Button>
+          </button>
         </div>
       </div>
-    )
+    );
   }
+
+  const growthPercentage = calculateGrowthPercentage(stats.totalEarningsThisMonth, stats.totalEarningsLastMonth);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <TrainerSiteHeader/>
+      <TrainerSiteHeader />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+      
       <main className="relative container mx-auto px-4 py-12 space-y-8">
-        <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
-          <CardHeader className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-foreground">My Clients</h1>
-              <Badge variant="secondary" className="text-sm">
-                {clients.total} Total Clients
-              </Badge>
-            </div>
-            <div className="flex gap-4 max-w-2xl">
-              <Input
-                placeholder="Search by name or email..."
-                value={search}
-                onChange={handleSearchChange}
-                className="bg-background/50 border-border/50"
-              />
-              <Select value={planFilter} onValueChange={handlePlanFilterChange}>
-                <SelectTrigger className="w-48 bg-background/50 border-border/50">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by plan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Plans</SelectItem>
-                  <SelectItem value="basic">Basic Plan</SelectItem>
-                  <SelectItem value="premium">Premium Plan</SelectItem>
-                  <SelectItem value="pro">Pro Plan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {clients.clients.map((client) => (
-               <Link key={client._id} to={`/trainer/user/${client._id}`}>
-                <Card
-                  className="bg-background/50 border-border/50 hover:shadow-md transition-all duration-200 cursor-pointer"
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={client.profileImage || "/placeholder.svg"} alt={client.name} />
-                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                            {getClientInitials(client.name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-foreground">{client.name}</h3>
-                          <p className="text-sm text-muted-foreground">Client</p>
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewClient(client._id);
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground text-lg">
+            Welcome back! Here's your training business overview.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-blue-500/10 rounded-full">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Clients</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.totalClients}</p>
+                  <p className="text-xs text-green-600">+{stats.newClientsThisMonth} this month</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-green-500/10 rounded-full">
+                  <DollarSign className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">This Month Earnings</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {formatAmount(stats.totalEarningsThisMonth)}
+                  </p>
+                  <p className={`text-xs ${Number(growthPercentage) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {Number(growthPercentage) >= 0 ? '+' : ''}{growthPercentage}% vs last month
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-amber-500/10 rounded-full">
+                  <Star className="h-6 w-6 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Average Rating</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {stats.averageRating.toFixed(1)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Out of 5.0</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-purple-500/10 rounded-full">
+                  <Activity className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Sessions</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.totalSessions}</p>
+                  <p className="text-xs text-muted-foreground">Completed</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Section */}
+        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> */}
+          {/* Monthly Earnings Chart */}
+          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Monthly Earnings Trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={stats.monthlyEarnings}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value) => [formatAmount(Number(value)), 'Earnings']}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="earnings" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2}
+                      dot={{ fill: 'hsl(var(--primary))' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Client Growth Chart */}
+          {/* <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Client Growth
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                {stats.monthlyEarnings.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stats.monthlyEarnings}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis dataKey="month" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip 
+                        formatter={(value) => [value, 'New Clients']}
+                        labelStyle={{ color: 'hsl(var(--foreground))' }}
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--background))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
                         }}
-                        className="h-8 w-8 p-0 border-border/50 hover:bg-primary/5"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </div>
+                      />
+                      <Bar 
+                        dataKey="clients" 
+                        fill="hsl(var(--primary))" 
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center">
+                    <p className="text-muted-foreground text-lg">No client growth data available</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card> */}
+        {/* </div> */}
 
-                    <div className="space-y-3">
-                      {/* Plan Badge */}
-                      {(client as any).trainerPlan && (
-                        <div className="mb-3">
-                          <Badge className={`${getPlanColor((client as any).trainerPlan)} font-medium`}>
-                            {(client as any).trainerPlan.charAt(0).toUpperCase() + (client as any).trainerPlan.slice(1)} Plan
-                          </Badge>
-                        </div>
-                      )}
+        {/* Plan Distribution and Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Plan Distribution */}
+          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-primary" />
+                Plan Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {stats.planDistribution.map((plan) => {
+                  const percentage = stats.totalClients > 0 
+                    ? ((plan.count / stats.totalClients) * 100).toFixed(1)
+                    : '0';
+                  
+                  const planColor = {
+                    basic: 'bg-blue-500',
+                    premium: 'bg-amber-500',
+                    pro: 'bg-purple-500'
+                  }[plan.plan] || 'bg-gray-500';
 
-                      <div className="flex items-center space-x-2 text-sm">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground truncate">{client.email}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-2 text-sm">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{client.phone}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-2 text-sm">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                  return (
+                    <div key={plan.plan} className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium capitalize">{plan.plan} Plan</span>
                         <span className="text-muted-foreground">
-                          Started:{" "}
-                          {client.subscriptionStartDate
-                            ? new Date(client.subscriptionStartDate).toLocaleDateString()
-                            : "N/A"}
+                          {plan.count} ({percentage}%)
                         </span>
                       </div>
+                      <div className="w-full bg-secondary/20 rounded-full h-2">
+                        <div
+                          className={`${planColor} h-2 rounded-full transition-all duration-300`}
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-                </Link>
-              ))}
-            </div>
-
-            {clients.clients.length === 0 && !isLoading && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg">No clients found</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {search || planFilter !== 'all' ? "Try adjusting your search terms or filters" : "Your clients will appear here once they subscribe"}
-                </p>
+                  );
+                })}
               </div>
-            )}
+            </CardContent>
+          </Card>
 
-            {clients.totalPages > 1 && (
-              <div className="flex justify-between items-center mt-8 pt-6 border-t border-border/50">
-                <Button
-                  variant="outline"
-                  disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
-                  className="border-border/50 hover:bg-primary/5"
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-muted-foreground">
-                    Page {clients.page} of {clients.totalPages}
-                  </span>
-                  <Badge variant="outline" className="text-xs">
-                    {clients.total} total
-                  </Badge>
-                </div>
-                <Button
-                  variant="outline"
-                  disabled={page === clients.totalPages}
-                  onClick={() => setPage(page + 1)}
-                  className="border-border/50 hover:bg-primary/5"
-                >
-                  Next
-                </Button>
+          {/* Recent Activity */}
+          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Recent Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {stats.recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-background/30">
+                    <div className={`p-2 rounded-full ${
+                      activity.type === 'subscription' ? 'bg-green-500/10' :
+                      activity.type === 'session' ? 'bg-blue-500/10' :
+                      activity.type === 'rating' ? 'bg-amber-500/10' :
+                      'bg-gray-500/10'
+                    }`}>
+                      {activity.type === 'subscription' && <DollarSign className="h-4 w-4 text-green-600" />}
+                      {activity.type === 'session' && <Calendar className="h-4 w-4 text-blue-600" />}
+                      {activity.type === 'rating' && <Star className="h-4 w-4 text-amber-600" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-foreground">{activity.message}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(activity.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {stats.recentActivity.length === 0 && (
+                  <p className="text-center text-muted-foreground py-8">
+                    No recent activity to display
+                  </p>
+                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
-  )
+  );
 }

@@ -20,12 +20,6 @@ import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 
-interface User {
-    _id: string;
-    name: string;
-    profileImage?: string;
-}
-
 interface RequestedBy {
     userId: string;
     requestedAt: string;
@@ -80,16 +74,16 @@ export default function UserSessions() {
 
     const canJoinSession = (session: Session) => {
         if (!currentUserId) return false;
-        console.log('Evaluating canJoinSession for session:', session);
 
         const userRequest = session.requestedBy.find(req => req.userId === currentUserId);
         if (!userRequest || userRequest.status !== 'approved' || !session.isBooked) return false;
-        
-        const sessionDateTime = new Date(`${session.date}T${session.startTime}`);
+
+        const sessionDateTime = new Date(`${session.date.split('T')[0]}T${session.startTime}:00`);
         const now = new Date();
         const tenMinutesBefore = new Date(sessionDateTime.getTime() - 10 * 60 * 1000);
-        const sessionEnd = new Date(`${session.date}T${session.endTime}`);
-        return true
+        const sessionEnd = new Date(`${session.date.split('T')[0]}T${session.endTime}:00`);
+
+        return now >= tenMinutesBefore && now <= sessionEnd;
     };
 
     const joinVideoCall = async (slotId: string) => {
@@ -97,7 +91,7 @@ export default function UserSessions() {
             console.log('Attempting to join video call for slotId:', slotId);
             const response = await API.get(`/video-call/slot/${slotId}`);
             const roomId = response.data.videoCall.roomId;
-            console.log('Navigating to video call with roomId:', roomId,'With slotId:', slotId); ;
+            console.log('Navigating to video call with roomId:', roomId, 'With slotId:', slotId);
             navigate(`/video-call/${roomId}`);
         } catch (error: any) {
             console.error('Error joining video call:', error);
@@ -344,8 +338,8 @@ export default function UserSessions() {
                                                             <div className="flex-1">
                                                                 <p className="font-medium text-green-700">Session Approved</p>
                                                                 <p className="text-sm text-green-600 mt-1">
-                                                                    {canJoin 
-                                                                        ? "You can now join the video call session!" 
+                                                                    {canJoin
+                                                                        ? "You can now join the video call session!"
                                                                         : "You can join the session 10 minutes before the scheduled time."
                                                                     }
                                                                 </p>

@@ -247,7 +247,7 @@ const GymWaitlist: React.FC = () => {
 
     useEffect(() => {
         const fetchApplicationDetails = async () => {
-            if (gym?._id && !gym.isVerified) {
+            if (gym?._id && gym?.verifyStatus !== 'approved') {
                 try {
                     setLoading(true);
                     const response = await getGymDetails();
@@ -288,7 +288,7 @@ const GymWaitlist: React.FC = () => {
         );
     }
 
-    if (gym.isVerified) {
+    if (gym.verifyStatus === 'approved') {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
                 <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 text-center">
