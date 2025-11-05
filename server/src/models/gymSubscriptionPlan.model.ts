@@ -4,8 +4,8 @@ export interface ISubscriptionPlan extends Document {
   _id: Types.ObjectId;
   gymId: Types.ObjectId;
   name: string;
-  duration: number; // in days
-  durationUnit: 'days' | 'months';
+  duration: number; 
+  durationUnit: 'day' | 'month' | 'year';
   price: number;
   description?: string;
   features: string[];
@@ -19,7 +19,7 @@ const subscriptionPlanSchema: Schema<ISubscriptionPlan> = new Schema(
     gymId: { type: Schema.Types.ObjectId, ref: 'Gym', required: true },
     name: { type: String, required: true },
     duration: { type: Number, required: true },
-    durationUnit: { type: String, enum: ['days', 'months'], default: 'days' },
+    durationUnit: { type: String, enum: ['day', 'month', 'year'], default: 'month' },
     price: { type: Number, required: true },
     description: { type: String },
     features: [{ type: String }],

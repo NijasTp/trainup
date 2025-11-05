@@ -1,17 +1,15 @@
+// src/pages/GymApply.tsx
 import React, { useState, type FormEvent, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dumbbell, ArrowRight } from "lucide-react";
 import BasicInfoForm from "@/components/gym/apply/BasicInfoForm";
 import LocationForm from "@/components/gym/apply/LocationForm";
 import FileUploadForm from "@/components/gym/apply/FileUpload";
-import { requestGymOtp } from "@/services/authService"; 
+import { requestGymOtp } from "@/services/authService";
 
-interface Location {
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
+interface GeoLocation {
+  type: "Point";
+  coordinates: [number, number];
 }
 
 interface FormData {
@@ -19,7 +17,7 @@ interface FormData {
   email: string;
   password: string;
   confirmPassword: string;
-  location: Location;
+  geoLocation: GeoLocation;
   certificate: File | null;
   profileImage: File | null;
   images: File[];
@@ -31,12 +29,13 @@ interface Errors {
 
 const GymApply: React.FC = () => {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    location: { address: "", city: "", state: "", zipCode: "", country: "" },
+    geoLocation: { type: "Point", coordinates: [0, 0] },
     certificate: null,
     profileImage: null,
     images: [],
@@ -44,28 +43,6 @@ const GymApply: React.FC = () => {
 
   const [errors, setErrors] = useState<Errors>({});
   const [loading, setLoading] = useState<boolean>(false);
-
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name.includes(".")) {
-      const [parent, child] = name.split(".");
-      setFormData((prev) => ({
-        ...prev,
-        [parent]: {
-          ...(prev[parent as keyof FormData] as Location),
-          [child]: value,
-        },
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]:
-          name === "trainers" || name === "members"
-            ? parseInt(value) || 0
-            : value,
-      }));
-    }
-  };
 
   const handleFileChange = (
     e: ChangeEvent<HTMLInputElement>,
@@ -95,17 +72,27 @@ const GymApply: React.FC = () => {
     }));
   };
 
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Errors = {};
 
     if (!formData.name) newErrors.name = "Gym name is required";
     if (!formData.email) newErrors.email = "Email is required";
     if (!formData.password) newErrors.password = "Password is required";
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match";
+
+    if (!formData.geoLocation.coordinates[0] || !formData.geoLocation.coordinates[1]) {
+      newErrors.geoLocation = "Please use current location to set coordinates";
     }
-    if (!formData.location.address) newErrors.address = "Address is required";
-    if (!formData.location.city) newErrors.city = "City is required";
+
     if (!formData.certificate) newErrors.certificate = "Certificate is required";
     if (!formData.profileImage) newErrors.profileImage = "Profile image is required";
 
@@ -114,7 +101,6 @@ const GymApply: React.FC = () => {
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    console.log('handling submit')
     e.preventDefault();
     if (!validateForm()) return;
 
@@ -123,27 +109,28 @@ const GymApply: React.FC = () => {
       await requestGymOtp(formData.email);
       navigate("/gym/verify-otp", { state: { formData } });
     } catch (err: any) {
-      setErrors({ submit: err.response?.data?.error || "Failed to send OTP" });
+      setErrors({
+        submit: err.response?.data?.error || "Failed to send OTP",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-2">
               <Dumbbell className="w-10 h-10 text-blue-500" />
               TrainUp Gym Application
             </h1>
-            <p className="text-gray-400">Join our network of premium fitness facilities</p>
+            <p className="text-gray-400">
+              Join our network of premium fitness facilities
+            </p>
           </div>
 
-          {/* Progress Bar */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-400">Step 1 of 2</span>
@@ -154,39 +141,34 @@ const GymApply: React.FC = () => {
             </div>
           </div>
 
-          {/* Form Card */}
           <div className="bg-gray-800 rounded-2xl shadow-2xl p-8">
             <form onSubmit={handleSubmit} className="space-y-8">
-              <BasicInfoForm 
-                formData={formData} 
-                handleInputChange={handleInputChange} 
-                errors={errors} 
+              <BasicInfoForm
+                formData={formData}
+                handleInputChange={handleInputChange}
+                errors={errors}
               />
-              
+
               <LocationForm
-                formData={formData} 
-                handleInputChange={handleInputChange} 
-                errors={errors} 
+                formData={formData}
+                errors={errors}
+                setFormData={setFormData}
               />
-              
-              
-              
-              <FileUploadForm 
-                formData={formData} 
+
+              <FileUploadForm
+                formData={formData}
                 handleFileChange={handleFileChange}
                 handleMultipleImages={handleMultipleImages}
                 removeImage={removeImage}
-                errors={errors} 
+                errors={errors}
               />
 
-              {/* Error Message */}
               {errors.submit && (
                 <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded-lg">
                   {errors.submit}
                 </div>
               )}
 
-              {/* Submit Button */}
               <div className="flex justify-end">
                 <button
                   type="submit"

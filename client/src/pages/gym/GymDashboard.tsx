@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { type RootState } from '@/redux/store'; 
 import { getGymDetails } from '@/services/gymService'; 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 
 interface GymData {
   gymDetails: {
@@ -24,13 +25,19 @@ interface GymData {
 }
 
 // Enhanced Dashboard Header
-const DashboardHeader: React.FC<{ gymName: string }> = ({ gymName }) => (
-  <header className="mb-8 relative">
-    <div className="absolute inset-0 bg-gradient-to-r from-blue-900 to-indigo-800 rounded-2xl opacity-90"></div>
-    <div className="relative z-10 p-6">
-      <h1 className="text-4xl font-bold text-white">Welcome to Your Gym Dashboard</h1>
-      <p className="text-blue-300 mt-2 font-medium text-lg">{gymName}</p>
-      <div className="mt-4 h-1 w-24 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"></div>
+const DashboardHeader: React.FC<{ gymName: string; onManagePlans: () => void }> = ({ gymName, onManagePlans }) => (
+  <header className="mb-8 relative overflow-hidden rounded-2xl">
+    <div className="absolute inset-0 bg-gradient-to-r from-blue-900 via-indigo-800 to-violet-800"></div>
+    <div className="relative z-10 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 className="text-3xl md:text-4xl font-bold text-white">Your Gym Dashboard</h1>
+        <p className="text-blue-200 mt-2 font-medium text-lg">{gymName}</p>
+        <div className="mt-3 h-1 w-24 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"></div>
+      </div>
+      <div className="flex items-center gap-3">
+        <Link to={ROUTES.GYM_SUBSCRIPTIONS} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg border border-white/20">View Plans</Link>
+        <button onClick={onManagePlans} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Create Plan</button>
+      </div>
     </div>
   </header>
 );
@@ -232,6 +239,7 @@ const GymDashboard: React.FC = () => {
   const { gym, isAuthenticated } = useSelector((state: RootState) => state.gymAuth);
   const [gymData, setGymData] = useState<GymData | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchGymData = async () => {
@@ -315,7 +323,7 @@ const GymDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
-        <DashboardHeader gymName={gymData.gymDetails.name} />
+        <DashboardHeader gymName={gymData.gymDetails.name} onManagePlans={() => navigate(ROUTES.GYM_SUBSCRIPTIONS_NEW)} />
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar: Profile */}

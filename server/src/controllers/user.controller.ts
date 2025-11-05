@@ -36,6 +36,7 @@ import {
 } from '../dtos/user.dto';
 import { MESSAGES } from '../constants/messages';
 import { AppError } from '../utils/appError.util';
+import { IGymService } from '../core/interfaces/services/IGymService';
 
 @injectable()
 export class UserController implements IUserController {
@@ -47,7 +48,8 @@ export class UserController implements IUserController {
     @inject(TYPES.IStreakService) private _streakService: IStreakService,
     @inject(TYPES.ISlotService) private _slotService: ISlotService,
     @inject(TYPES.IMessageService) private _messageService: IMessageService,
-    @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService
+    @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
+    @inject(TYPES.IGymService) private _gymService: IGymService
   ) {}
 
   async requestOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -133,7 +135,7 @@ export class UserController implements IUserController {
       const result: LoginResponseDto = await this._userService.loginUser(dto.email, dto.password);
       this._jwtService.setTokens(res, result.accessToken, result.refreshToken);
       const streak = await this._streakService.checkAndResetUserStreak(result.user._id);
-      const response = { ...result.user, streak };
+      const response = { ...result, streak };
       res.status(STATUS_CODE.OK).json(response);
     } catch (err) {
       logger.error('Login error:', err);
@@ -396,6 +398,103 @@ export class UserController implements IUserController {
       res.status(STATUS_CODE.OK).json({ messages });
     } catch (err) {
       logger.error('Error fetching chat messages:', err);
+      next(err);
+    }
+  }
+
+
+  async getGyms(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { page = '1', limit = '10', search = '', lat, lng } = req.query as {
+        page?: string;
+        limit?: string;
+        search?: string;
+        lat?: string;
+        lng?: string;
+      };
+
+      const userLocation = lat && lng ? { lat: parseFloat(lat), lng: parseFloat(lng) } : undefined;
+
+      const result = await this._gymService.getGymsForUser(
+        parseInt(page, 10),
+        parseInt(limit, 10),
+        search,
+        userLocation
+      );
+
+
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getGymById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const gym = await this._gymService.getGymForUser(id);
+      
+      if (!gym) {
+        throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+      }
+
+      res.status(STATUS_CODE.OK).json({ gym });
+    } catch (err) {
+      console.log('Error getting gym by ID:', err);
+      next(err);
+    }
+  }
+
+  async getGymSubscriptionPlans(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { gymId } = req.params;
+      const plans = await this._gymService.getActiveSubscriptionPlans(gymId);
+      res.status(STATUS_CODE.OK).json({ plans });
+    } catch (err) {
+      next(err); 
+    }
+  }
+
+  async getMyGym(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id;
+      const user = await this._userService.getUserById(userId);
+      
+      if (!user?.gymId) {
+        throw new AppError('No gym membership found', STATUS_CODE.NOT_FOUND);
+      }
+
+      const gymData = await this._gymService.getMyGymDetails(user.gymId.toString(), userId);
+      res.status(STATUS_CODE.OK).json(gymData);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getGymAnnouncements(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id;
+      const { page = '1', limit = '10', search = '' } = req.query as {
+        page?: string;
+        limit?: string;
+        search?: string;
+      };
+
+      const user = await this._userService.getUserById(userId);
+      
+      if (!user?.gymId) {
+        throw new AppError('No gym membership found', STATUS_CODE.NOT_FOUND);
+      }
+
+      const announcements = await this._gymService.getGymAnnouncementsForUser(
+        user.gymId.toString(),
+        parseInt(page, 10),
+        parseInt(limit, 10),
+        search
+      );
+
+      res.status(STATUS_CODE.OK).json(announcements);
+    } catch (err) {
       next(err);
     }
   }

@@ -93,4 +93,10 @@ router.get('/trainer/:trainerId', roleMiddleware(['user']), userController.getTr
 router.get('/chat/messages/:trainerId', roleMiddleware(['user']), userController.getChatMessages.bind(userController))
 router.get('/me', roleMiddleware(['user']), userController.getProfile.bind(userController))
 
+router.get("/gyms", authMiddleware, userController.getGyms.bind(userController));
+router.get("/gyms/:id", authMiddleware, userController.getGymById.bind(userController));
+router.get("/gyms/:gymId/subscription-plans", authMiddleware, userController.getGymSubscriptionPlans.bind(userController));
+router.get("/my-gym", authMiddleware, userController.getMyGym.bind(userController));
+router.get("/gym-announcements", authMiddleware, userController.getGymAnnouncements.bind(userController));
+
 export default router

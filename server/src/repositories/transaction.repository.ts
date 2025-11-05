@@ -139,7 +139,8 @@ export class TransactionRepository implements ITransactionRepository {
     monthlyEarnings: Array<{ month: string; earnings: number; clients: number }>;
     planDistribution: Array<{ plan: string; count: number }>;
   }> {
-    // Total earnings this month
+
+
     const thisMonthEarnings = await TransactionModel.aggregate([
       {
         $match: {
@@ -156,7 +157,6 @@ export class TransactionRepository implements ITransactionRepository {
       }
     ]);
 
-    // Total earnings last month
     const lastMonthEarnings = await TransactionModel.aggregate([
       {
         $match: {
@@ -173,7 +173,6 @@ export class TransactionRepository implements ITransactionRepository {
       }
     ]);
 
-    // Monthly earnings trend (last 12 months)
     const monthlyEarnings = await TransactionModel.aggregate([
       {
         $match: {

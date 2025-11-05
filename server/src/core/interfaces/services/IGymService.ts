@@ -1,15 +1,13 @@
-import { UploadedFile } from 'express-fileupload';
 import { IGym } from '../../../models/gym.model';
 import { ITrainer } from '../../../models/trainer.model';
+import { ISubscriptionPlan } from '../../../models/gymSubscriptionPlan.model';
 import { IUserGymMembership } from '../../../models/userGymMembership.model';
-import { IGymQRCode } from '../../../models/gymQRCode.model';
 import { IGymPayment } from '../../../models/gymPayment.model';
-import { IGymAttendance } from '../../../models/gymAttendence.model';
 import { IGymAnnouncement } from '../../../models/gymAnnouncement.model';
-import { ISubscriptionPlan } from '../../../models/gymSubacriptionPlan.model';
-import { 
-  GymLoginResponseDto, 
-  GymResponseDto, 
+import { UploadedFile } from 'express-fileupload';
+import {
+  GymLoginResponseDto,
+  GymResponseDto,
   GymDataResponseDto,
   CreateSubscriptionPlanDto,
   UpdateSubscriptionPlanDto,
@@ -19,9 +17,9 @@ import {
   UpdateMemberDto,
   CreateAnnouncementDto,
   UpdateAnnouncementDto,
-  CreatePaymentDto
+  CreatePaymentDto,
+  GymListingDto
 } from '../../../dtos/gym.dto';
-import Stripe from 'stripe';
 
 export interface IGymService {
   registerGym(
@@ -35,63 +33,124 @@ export interface IGymService {
 
   loginGym(email: string, password: string): Promise<GymLoginResponseDto>;
 
+  reapplyGym(
+    gymId: string,
+    data: Partial<IGym>,
+    files: { certificate?: UploadedFile; profileImage?: UploadedFile; images?: UploadedFile | UploadedFile[] }
+  ): Promise<GymLoginResponseDto>;
+
   getAllGyms(page: number, limit: number, searchQuery: string): Promise<any>;
 
   updateGymStatus(id: string, updateData: Partial<IGym>): Promise<IGym | null>;
+
+  getGymApplication(id: string): Promise<GymResponseDto | null>;
 
   getGymById(id: string): Promise<IGym | null>;
 
   getGymData(gymId: string): Promise<GymDataResponseDto>;
 
-  getGymApplication(id: string): Promise<GymResponseDto | null>;
+  addTrainer(dto: AddTrainerDto, gymId: string): Promise<ITrainer>;
 
-  updateProfile(gymId: string, data: Partial<IGym>, profileImage?: UploadedFile): Promise<IGym | null>;
+  updateTrainer(dto: UpdateTrainerDto, trainerId: string, gymId: string): Promise<ITrainer | null>;
 
-  createSubscriptionPlan(gymId: string, dto: CreateSubscriptionPlanDto): Promise<ISubscriptionPlan>;
+  createSubscriptionPlan(
+    gymId: string,
+    dto: CreateSubscriptionPlanDto
+  ): Promise<{
+    _id: string;
+    gymId: string;
+    name: string;
+    duration: number;
+    durationUnit: 'day' | 'month' | 'year';
+    price: number;
+    description?: string;
+    features: string[];
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
 
-  getSubscriptionPlans(gymId: string, page: number, limit: number, search: string): Promise<any>;
+  listSubscriptionPlans(
+    gymId: string,
+    page: number,
+    limit: number,
+    search?: string,
+    active?: string
+  ): Promise<{ items: any[]; total: number; page: number; totalPages: number }>;
 
-  updateSubscriptionPlan(gymId: string, planId: string, dto: UpdateSubscriptionPlanDto): Promise<ISubscriptionPlan | null>;
+  getSubscriptionPlan(planId: string): Promise<{
+    _id: string;
+    gymId: string;
+    name: string;
+    duration: number;
+    durationUnit: any;
+    price: number;
+    description?: string;
+    features: string[];
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
 
-  deleteSubscriptionPlan(gymId: string, planId: string): Promise<void>;
+  updateSubscriptionPlan(
+    planId: string,
+    dto: Partial<UpdateSubscriptionPlanDto & { isActive: boolean }>
+  ): Promise<{
+    _id: string;
+    gymId: string;
+    name: string;
+    duration: number;
+    durationUnit: any;
+    price: number;
+    description?: string;
+    features: string[];
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
 
-  addTrainer(gymId: string, dto: AddTrainerDto): Promise<ITrainer>;
+  deleteSubscriptionPlan(planId: string): Promise<void>;
 
-  getTrainers(gymId: string, page: number, limit: number, search: string): Promise<any>;
+  getGymsForUser(
+    page: number,
+    limit: number,
+    search: string,
+    userLocation?: { lat: number; lng: number }
+  ): Promise<{ gyms: GymListingDto[]; totalPages: number; total: number }>;
 
-  updateTrainer(gymId: string, trainerId: string, dto: UpdateTrainerDto): Promise<ITrainer | null>;
+  getGymForUser(gymId: string): Promise<any>;
 
-  removeTrainer(gymId: string, trainerId: string): Promise<void>;
+  getActiveSubscriptionPlans(gymId: string): Promise<ISubscriptionPlan[]>;
 
-  addMember(gymId: string, dto: AddMemberDto): Promise<IUserGymMembership>;
+  getMyGymDetails(gymId: string, userId: string): Promise<any>;
 
-  getMembers(gymId: string, page: number, limit: number, search: string, status: string, paymentStatus: string): Promise<any>;
+  createAnnouncement(
+    gymId: string,
+    dto: CreateAnnouncementDto,
+    imageFile?: UploadedFile
+  ): Promise<IGymAnnouncement>;
 
-  updateMember(gymId: string, memberId: string, dto: UpdateMemberDto): Promise<IUserGymMembership | null>;
+  getGymAnnouncements(
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ announcements: IGymAnnouncement[]; totalPages: number; total: number }>;
 
-  getMemberAttendance(gymId: string, memberId: string, startDate?: Date, endDate?: Date): Promise<IGymAttendance[]>;
+  updateAnnouncement(
+    announcementId: string,
+    gymId: string,
+    dto: UpdateAnnouncementDto,
+    imageFile?: UploadedFile
+  ): Promise<IGymAnnouncement | null>;
 
-  generateDailyQRCode(gymId: string): Promise<string>;
+  deleteAnnouncement(announcementId: string, gymId: string): Promise<void>;
 
-  getQRCodeForDate(gymId: string, date: Date): Promise<string | null>;
 
-  markAttendance(gymId: string, userId: string, qrCodeId: string, markedBy: 'user' | 'trainer' | 'gym', markedById: string): Promise<IGymAttendance>;
-
-  getAttendanceReport(gymId: string, page: number, limit: number, startDate?: Date, endDate?: Date, userId?: string): Promise<any>;
-
-  createAnnouncement(gymId: string, dto: CreateAnnouncementDto, createdBy: string): Promise<IGymAnnouncement>;
-
-  getAnnouncements(gymId: string, page: number, limit: number, type: string): Promise<any>;
-
-  updateAnnouncement(gymId: string, announcementId: string, dto: UpdateAnnouncementDto): Promise<IGymAnnouncement | null>;
-
-  deleteAnnouncement(gymId: string, announcementId: string): Promise<void>;
-
-  createPayment(gymId: string, dto: CreatePaymentDto, createdBy: string): Promise<IGymPayment>;
-
-  getPayments(gymId: string, page: number, limit: number, search: string, paymentMethod: string, status: string): Promise<any>;
-
-  createStripeSession(gymId: string, planId: string, userId: string): Promise<Stripe.Checkout.Session>;
-
-  generateReport(gymId: string, type: string, format: string, startDate?: Date, endDate?: Date): Promise<Buffer>;
+  getGymAnnouncementsForUser(
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ announcements: any[]; totalPages: number; total: number }>;
 }

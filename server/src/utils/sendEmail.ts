@@ -1,8 +1,3 @@
-export const MAIL_CONSTANTS = {
-    FROM_EMAIL: 'no-reply@yourdomain.com',
-    OTP_SUBJECT: 'Your OTP Code',
-    REMINDER_SUBJECT: 'Reminder Notification',
-};
 
 export function sendOtpHtml(otp: string): string {
     return `
@@ -205,3 +200,82 @@ export function getReminderHtml(message: string): string {
         </div>
     `;
 }
+
+export function gymSubscriptionHtml(
+  userName: string,
+  gymName: string,
+  planName: string,
+  preferredTime: string
+): string {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #4F46E5; text-align: center;">Congratulations, ${userName}! 🎉</h1>
+      
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  padding: 30px; border-radius: 10px; color: white; text-align: center; margin: 20px 0;">
+        <h2>Welcome to ${gymName}!</h2>
+        <p style="font-size: 18px;">Your ${planName} subscription is now active!</p>
+      </div>
+
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #333;">Subscription Details:</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><strong>Gym:</strong> ${gymName}</li>
+          <li><strong>Plan:</strong> ${planName}</li>
+          <li><strong>Preferred Time:</strong> ${preferredTime}</li>
+          <li><strong>Status:</strong> Active</li>
+        </ul>
+      </div>
+
+      <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px;">
+        <h3 style="color: #333;">What's Next? 💪</h3>
+        <p>You'll receive daily workout reminders at your preferred time: <strong>${preferredTime}</strong></p>
+        <p>Access your gym dashboard to view announcements, member list, and track your progress!</p>
+      </div>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${process.env.FRONTEND_URL}/gyms/my-gym"
+          style="background-color: #4F46E5; color: white; padding: 12px 30px;
+                 text-decoration: none; border-radius: 5px; display: inline-block;">
+          Access Your Gym Dashboard
+        </a>
+      </div>
+
+      <div style="text-align: center; color: #666; font-size: 14px; margin-top: 40px;">
+        <p>Thank you for choosing TrainUp!</p>
+        <p>If you have any questions, feel free to contact us.</p>
+      </div>
+    </div>
+  `;
+}
+
+export function dailyWorkoutReminderHtml(
+  userName: string,
+  gymName: string
+): string {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #4F46E5; text-align: center;">Good Morning, ${userName}! 🌅</h1>
+      
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  padding: 30px; border-radius: 10px; color: white; text-align: center; margin: 20px 0;">
+        <h2>It's Workout Time! 💪</h2>
+        <p style="font-size: 18px;">Your daily fitness journey awaits at ${gymName}</p>
+      </div>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${process.env.FRONTEND_URL}/gyms/my-gym"
+          style="background-color: #4F46E5; color: white; padding: 12px 30px;
+                 text-decoration: none; border-radius: 5px; display: inline-block;">
+          Check Today's Plan
+        </a>
+      </div>
+
+      <div style="text-align: center; color: #666; font-size: 14px; margin-top: 40px;">
+        <p>Stay consistent, stay strong! 💪</p>
+        <p>TrainUp Team</p>
+      </div>
+    </div>
+  `;
+}
+

@@ -1,5 +1,6 @@
 import { UserResponseDto, UserUpdateProfileDto } from '../../../dtos/user.dto'
 import { IUser } from '../../../models/user.model'
+import { IUserGymMembership } from '../../../models/userGymMembership.model'
 
 export interface PaginatedUsers {
   users: Partial<UserResponseDto>[]
@@ -34,6 +35,13 @@ export interface IUserRepository {
   updateProfile(userId: string, updates: UserUpdateProfileDto): Promise<IUser | null>;
   updateTrainer(userId: string, trainerId: string): Promise<void>;
   updatePlan(userId: string, planType: 'basic' | 'premium' | 'pro'): Promise<void>;
+    updateUserGymMembership(
+    userId: string,
+    gymId: string,
+    planId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<IUserGymMembership>;
   removeTrainer(userId: string): Promise<void>;
   updatePassword(email: string, hashedPassword: string): Promise<void>;
 }

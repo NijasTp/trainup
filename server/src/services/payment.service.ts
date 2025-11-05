@@ -7,6 +7,7 @@ import { CreateOrderResponseDto } from '../dtos/payment.dto';
 import { MESSAGES } from '../constants/messages';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
+import { IGymTransaction, GymTransactionModel } from '../models/gymTransaction.model';
 
 dotenv.config();
 
@@ -61,5 +62,51 @@ export class PaymentService implements IPaymentService {
     }
 
     return true;
+  }
+
+  async createGymTransaction(data: Partial<IGymTransaction>): Promise<IGymTransaction> {
+    return await GymTransactionModel.create(data);
+  }
+
+  async updateGymTransactionStatus(
+    orderId: string,
+    status: 'completed' | 'failed',
+    paymentId?: string,
+    signature?: string
+  ): Promise<IGymTransaction | null> {
+    return await GymTransactionModel.findOneAndUpdate(
+      { razorpayOrderId: orderId },
+      { 
+        status, 
+        razorpayPaymentId: paymentId,
+        razorpaySignature: signature 
+      },
+      { new: true }
+    );
+  }
+
+  async findGymTransactionByOrderId(orderId: string): Promise<IGymTransaction | null> {
+    return await GymTransactionModel.findOne({ razorpayOrderId: orderId });
+  }
+
+  async getGymTransactions(
+    gymId: string,
+    page: number,
+    limit: number
+  ): Promise<{ transactions: IGymTransaction[]; totalPages: number }> {
+    const query = { gymId };
+    
+    const transactions = await GymTransactionModel.find(query)
+      .populate('userId', 'name email')
+      .populate('subscriptionPlanId', 'name price duration')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    const total = await GymTransactionModel.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
+
+    return { transactions: transactions as IGymTransaction[], totalPages };
   }
 }

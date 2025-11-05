@@ -7,13 +7,16 @@ import { IUserService } from '../core/interfaces/services/IUserService';
 import { ITrainerService } from '../core/interfaces/services/ITrainerService';
 import { ITransactionService } from '../core/interfaces/services/ITransactionService';
 import { IUserPlanService } from '../core/interfaces/services/IUserPlanService';
+import { IGymService } from '../core/interfaces/services/IGymService';
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import { CreateOrderRequestDto, CreateOrderResponseDto, VerifyPaymentRequestDto, VerifyPaymentResponseDto } from '../dtos/payment.dto';
+import { CreateGymTransactionDto, VerifyGymPaymentDto } from '../dtos/gym.dto';
 import { MESSAGES } from '../constants/messages';
 import { logger } from '../utils/logger.util';
 import { ITransaction } from '../models/transaction.model';
 import { AppError } from '../utils/appError.util';
 import { addMonths } from 'date-fns';
+import { IMailService } from '../core/interfaces/services/IMailService';
 
 @injectable()
 export class PaymentController {
@@ -22,7 +25,9 @@ export class PaymentController {
     @inject(TYPES.IUserService) private _userService: IUserService,
     @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
     @inject(TYPES.ITransactionService) private _transactionService: ITransactionService,
-    @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService
+    @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
+    @inject(TYPES.IGymService) private _gymService: IGymService,
+    @inject(TYPES.IMailService) private _emailService: IMailService
   ) {}
 
   async createOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -169,6 +174,122 @@ export class PaymentController {
       res.status(STATUS_CODE.OK).json(response);
     } catch (err) {
       logger.error('Verify Payment Error', err);
+      next(err);
+    }
+  }
+
+  // New gym payment methods
+  async createGymOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const dto: CreateGymTransactionDto = req.body;
+      const userId = (req.user as JwtPayload).id;
+
+      if (!dto.gymId || !dto.subscriptionPlanId || !dto.amount || !dto.preferredTime) {
+        throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
+      }
+
+      const user = await this._userService.getUserById(userId);
+      if (user?.gymId) {
+        throw new AppError('You already have a gym membership', STATUS_CODE.BAD_REQUEST);
+      }
+
+      const order: CreateOrderResponseDto = await this._paymentService.createOrder(
+        dto.amount, 
+        dto.currency || 'INR', 
+        `gym_${Date.now()}`
+      );
+
+      await this._paymentService.createGymTransaction({
+        userId,
+        gymId: dto.gymId,
+        subscriptionPlanId: dto.subscriptionPlanId,
+        razorpayOrderId: order.id,
+        amount: dto.amount,
+        status: 'pending',
+        preferredTime: dto.preferredTime
+      });
+
+      res.status(STATUS_CODE.OK).json(order);
+    } catch (err) {
+      logger.error('Create Gym Order Error', err);
+      next(err);
+    }
+  }
+
+  async verifyGymPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const dto: VerifyGymPaymentDto = req.body;
+      const userId = (req.user as JwtPayload).id;
+
+      if (!dto.gymId || !dto.subscriptionPlanId || !userId || !dto.preferredTime) {
+        throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
+      }
+
+      const isValid = await this._paymentService.verifyPayment(
+        dto.orderId,
+        dto.paymentId,
+        dto.signature
+      );
+
+      let transaction = await this._paymentService.findGymTransactionByOrderId(dto.orderId);
+      if (!transaction) {
+        throw new AppError('Transaction not found', STATUS_CODE.BAD_REQUEST);
+      }
+
+      if (!isValid) {
+        await this._paymentService.updateGymTransactionStatus(
+          dto.orderId,
+          'failed',
+          dto.paymentId,
+          dto.signature
+        );
+        throw new AppError(MESSAGES.INVALID_SIGNATURE, STATUS_CODE.BAD_REQUEST);
+      }
+
+      const user = await this._userService.getUserById(userId);
+      if (user?.gymId) {
+        await this._paymentService.updateGymTransactionStatus(
+          dto.orderId,
+          'failed',
+          dto.paymentId,
+          dto.signature
+        );
+        throw new AppError('User already has a gym membership', STATUS_CODE.BAD_REQUEST);
+      }
+
+      transaction = await this._paymentService.updateGymTransactionStatus(
+        dto.orderId,
+        'completed',
+        dto.paymentId,
+        dto.signature
+      );
+
+      await this._userService.updateUserGymMembership(userId, dto.gymId, dto.preferredTime);
+
+      await this._gymService.addMemberToGym(dto.gymId, userId);
+
+      const gymDetails = await this._gymService.getGymById(dto.gymId);
+      const subscriptionPlan = await this._gymService.getSubscriptionPlan(dto.subscriptionPlanId);
+      
+      if (user && gymDetails && subscriptionPlan) {
+        await this._emailService.sendGymSubscriptionEmail(
+          user.email,
+          user.name,
+          gymDetails.name!,
+          subscriptionPlan.name,
+          dto.preferredTime
+        );
+      }
+
+      const response = {
+        success: true,
+        message: 'Payment verified and gym membership confirmed!',
+        transactionId: transaction?._id,
+      };
+
+      res.status(STATUS_CODE.OK).json(response);
+    } catch (err) {
+      logger.error('Verify Gym Payment Error', err);
       next(err);
     }
   }

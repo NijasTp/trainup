@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { type RootState } from '@/redux/store';
 import { getGymDetails } from '@/services/gymService';
-import { gymLogout } from '@/services/authService';
-import { logoutGym } from '@/redux/slices/gymAuthSlice';
+import { logoutGymThunk } from '@/redux/slices/gymAuthSlice';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
@@ -267,15 +266,13 @@ const GymWaitlist: React.FC = () => {
 
     const handleLogout = async () => {
         try {
-            await gymLogout()
-            dispatch(logoutGym())
+            // @ts-ignore
+            await dispatch<any>(logoutGymThunk())
             toast.success('Successfully Logged out')
             navigate('/gym/login')
         } catch (error: any) {
-            toast.error(error.response.data.error)
-            console.log('Logout error:', error)
+            toast.error(error?.response?.data?.error || 'Logout failed')
         }
-
     }
 
     if (!isAuthenticated || !gym) {

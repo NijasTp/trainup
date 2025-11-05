@@ -13,6 +13,14 @@ export interface IUserService {
   updateProfile(id: string, updateData: Partial<IUser>): Promise<UserResponseDto>;
   updateUserStatus(id: string, updateData: Partial<IUser>): Promise<void>;
   updateUserTrainerId(userId: string, trainerId: string): Promise<void>;
+  updateUserGymMembership(
+  userId: string,
+  gymId: string,
+  planId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<void>;
+
   cancelSubscription(userId: string, trainerId: string): Promise<void>;
   addWeight(userId: string, weight: number): Promise<UserResponseDto>;
   getWeightHistory(userId: string): Promise<GetWeightHistoryResponseDto>;

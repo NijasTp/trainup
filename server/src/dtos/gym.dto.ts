@@ -9,7 +9,7 @@ export interface GymVerifyOtpDto {
   otp: string;
   name: string;
   password: string;
-  location: string;
+  geoLocation: { type: "Point"; coordinates: [number, number] };
 }
 
 export interface GymLoginDto {
@@ -17,21 +17,36 @@ export interface GymLoginDto {
   password: string;
 }
 
+
+export interface AnnouncementDto {
+  title: string;
+  message: string;
+  date: Date;
+}
+
+export interface GeoLocationDto {
+  type: "Point";
+  coordinates: [number, number];
+}
+
 export interface GymResponseDto {
   _id: string;
-  role: 'gym';
+  role: string;
   name: string;
   email: string;
-  location: string;
+  geoLocation: {
+    type: "Point";
+    coordinates: [number, number];
+  };
   certificate: string;
-  verifyStatus: 'pending' | 'approved' | 'rejected';
+  verifyStatus: "pending" | "approved" | "rejected";
   rejectReason?: string;
   isBanned: boolean;
   profileImage?: string;
   images?: string[];
   trainers?: string[];
   members?: string[];
-  announcements: AnnouncementDto[];
+  announcements: { title: string; message: string; date: Date }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,29 +64,25 @@ export interface AnnouncementDto {
 }
 
 export interface GymDataResponseDto {
-  gymDetails: GymResponseDto;
+  gymDetails: any;
   trainers: any[];
   members: any[];
-  announcements: AnnouncementDto[];
+  announcements: any[];
+  totalRevenue: number;
+  memberCount: number;
+  recentMembers: any[];
 }
 
-// Subscription Plan DTOs
 export interface CreateSubscriptionPlanDto {
   name: string;
   duration: number;
-  durationUnit: 'days' | 'months';
+  durationUnit: 'day' | 'month' | 'year';
   price: number;
   description?: string;
   features: string[];
 }
 
-export interface UpdateSubscriptionPlanDto {
-  name?: string;
-  duration?: number;
-  durationUnit?: 'days' | 'months';
-  price?: number;
-  description?: string;
-  features?: string[];
+export interface UpdateSubscriptionPlanDto extends Partial<CreateSubscriptionPlanDto> {
   isActive?: boolean;
 }
 
@@ -80,7 +91,7 @@ export interface SubscriptionPlanResponseDto {
   gymId: string;
   name: string;
   duration: number;
-  durationUnit: 'days' | 'months';
+  durationUnit: 'day' | 'month' | 'year';
   price: number;
   description?: string;
   features: string[];
@@ -89,7 +100,6 @@ export interface SubscriptionPlanResponseDto {
   updatedAt: Date;
 }
 
-// Trainer Management DTOs
 export interface AddTrainerDto {
   name: string;
   email: string;
@@ -100,16 +110,8 @@ export interface AddTrainerDto {
   bio?: string;
 }
 
-export interface UpdateTrainerDto {
-  name?: string;
-  phone?: string;
-  specialization?: string;
-  experience?: string;
-  bio?: string;
-  isActive?: boolean;
-}
+export interface UpdateTrainerDto extends Partial<AddTrainerDto> {}
 
-// Member Management DTOs
 export interface AddMemberDto {
   userId: string;
   name: string;
@@ -121,13 +123,7 @@ export interface AddMemberDto {
   subscriptionEndDate: Date;
 }
 
-export interface UpdateMemberDto {
-  name?: string;
-  phone?: string;
-  planId?: string | Types.ObjectId;
-  subscriptionEndDate?: Date;
-  status?: 'active' | 'expired' | 'cancelled';
-}
+export interface UpdateMemberDto extends Partial<AddMemberDto> {}
 
 export interface MemberResponseDto {
   _id: string;
@@ -167,16 +163,12 @@ export interface QRCodeResponseDto {
 // Announcement DTOs
 export interface CreateAnnouncementDto {
   title: string;
-  content: string;
-  type: 'trainer' | 'user' | 'general';
-  targetAudience?: string[];
+  description: string;
+  image?: string;
 }
 
-export interface UpdateAnnouncementDto {
-  title?: string;
-  content?: string;
-  type?: 'trainer' | 'user' | 'general';
-  targetAudience?: string[];
+
+export interface UpdateAnnouncementDto extends Partial<CreateAnnouncementDto> {
   isActive?: boolean;
 }
 
@@ -194,13 +186,9 @@ export interface AnnouncementResponseDto {
 
 // Payment DTOs
 export interface CreatePaymentDto {
-  userId: string;
-  planId: string;
-  paymentMethod: 'stripe' | 'manual';
   amount: number;
-  subscriptionStartDate: Date;
-  subscriptionEndDate: Date;
-  transactionId?: string;
+  currency: string;
+  receipt?: string;
 }
 
 export interface PaymentResponseDto {
@@ -215,4 +203,38 @@ export interface PaymentResponseDto {
   subscriptionStartDate: Date;
   subscriptionEndDate: Date;
   transactionId?: string;
+}
+
+export interface GymListingDto {
+  _id: string;
+  name: string;
+  profileImage?: string;
+  images?: string[];
+  geoLocation: {
+    type: "Point";
+    coordinates: [number, number];
+  };
+  memberCount: number;
+  planCount: number;
+  minPrice: number;
+  rating: number;
+  distance?: number;
+}
+
+export interface CreateGymTransactionDto {
+  gymId: string;
+  subscriptionPlanId: string;
+  amount: number;
+  currency?: string;
+  preferredTime: string;
+}
+
+export interface VerifyGymPaymentDto {
+  orderId: string;
+  paymentId: string;
+  signature: string;
+  gymId: string;
+  subscriptionPlanId: string;
+  amount: number;
+  preferredTime: string;
 }

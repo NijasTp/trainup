@@ -3,7 +3,9 @@ import { UserModel, IUser } from '../models/user.model';
 import { IUserRepository } from '../core/interfaces/repositories/IUserRepository';
 import { Types } from 'mongoose';
 import { MESSAGES } from '../constants/messages';
-import { UserResponseDto, WeightLogDto, UserUpdateProfileDto } from '../dtos/user.dto';
+import { UserResponseDto, UserUpdateProfileDto } from '../dtos/user.dto';
+import { IUserGymMembership, UserGymMembershipModel } from '../models/userGymMembership.model';
+import { GymModel } from '../models/gym.model';
 
 @injectable()
 export class UserRepository implements IUserRepository {
@@ -158,6 +160,37 @@ export class UserRepository implements IUserRepository {
 
   async updatePlan(userId: string, planType: 'basic' | 'premium' | 'pro'): Promise<void> {
     await UserModel.findByIdAndUpdate(userId, { trainerPlan: planType });
+  }
+
+    async updateUserGymMembership(
+    userId: string,
+    gymId: string,
+    planId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<IUserGymMembership> {
+    const membership = await UserGymMembershipModel.findOneAndUpdate(
+      { userId: new Types.ObjectId(userId), gymId: new Types.ObjectId(gymId) },
+      {
+        $set: {
+          subscriptionPlanId: new Types.ObjectId(planId),
+          startDate,
+          endDate,
+          status: 'active',
+        },
+      },
+      { new: true, upsert: true }
+    );
+
+    await GymModel.findByIdAndUpdate(gymId, {
+      $addToSet: { members: new Types.ObjectId(userId) },
+    });
+
+    if (!membership) {
+      throw new Error('Failed to update user gym membership');
+    }
+
+    return membership;
   }
 
   async removeTrainer(userId: string): Promise<void> {

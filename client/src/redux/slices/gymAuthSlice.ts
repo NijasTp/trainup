@@ -1,4 +1,5 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
+import { gymLogout } from "@/services/authService";
 
 interface GymType {
   _id: string;
@@ -8,6 +9,8 @@ interface GymType {
   location?: string; 
   verifyStatus?: 'pending' | 'approved' | 'rejected';
   isVerified?: boolean;
+  isBanned?: boolean;
+  rejectReason?: string;
 }
 
 interface GymAuthState {
@@ -41,6 +44,7 @@ export const gymAuthSlice = createSlice({
         location: payload.location,
         verifyStatus: payload.verifyStatus,
         isVerified: payload.isVerified || false,
+        isBanned: payload.isBanned || false,
       };
       state.isAuthenticated = true;
       state.isVerified = payload.isVerified || false;
@@ -60,3 +64,15 @@ export const gymAuthSlice = createSlice({
 export const { loginGym, logoutGym, setGymLoading } = gymAuthSlice.actions;
 
 export default gymAuthSlice.reducer;
+
+// Async thunk to clear cookies on server and then reset state
+export const logoutGymThunk = createAsyncThunk(
+  "gymAuth/logoutGymThunk",
+  async (_, { dispatch }) => {
+    try {
+      await gymLogout();
+    } finally {
+      dispatch(logoutGym());
+    }
+  }
+);

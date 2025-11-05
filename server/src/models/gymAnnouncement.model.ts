@@ -4,11 +4,9 @@ export interface IGymAnnouncement extends Document {
   _id: Types.ObjectId;
   gymId: Types.ObjectId;
   title: string;
-  content: string;
-  type: 'trainer' | 'user' | 'general';
-  targetAudience: Types.ObjectId[];
+  description: string;
+  image?: string;
   isActive: boolean;
-  createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -16,12 +14,10 @@ export interface IGymAnnouncement extends Document {
 const gymAnnouncementSchema: Schema<IGymAnnouncement> = new Schema(
   {
     gymId: { type: Schema.Types.ObjectId, ref: 'Gym', required: true },
-    title: { type: String, required: true },
-    content: { type: String, required: true },
-    type: { type: String, enum: ['trainer', 'user', 'general'], required: true },
-    targetAudience: [{ type: Schema.Types.ObjectId }],
+    title: { type: String, required: true, trim: true },
+    description: { type: String, required: true },
+    image: { type: String },
     isActive: { type: Boolean, default: true },
-    createdBy: { type: Schema.Types.ObjectId, required: true },
   },
   { timestamps: true }
 );

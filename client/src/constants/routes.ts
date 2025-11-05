@@ -19,6 +19,13 @@ export const ROUTES = {
   MY_TRAINER_CHAT:'/my-trainer/chat/:id',
   MY_TRAINER_AVAILABILITY:'/my-trainer/availability',
   VIDEO_CALL:'/video-call/:roomId',
+
+  
+  USER_GYMS: '/gyms',
+  USER_INDIVIDUAL_GYM: '/gyms/:id',
+  USER_MY_GYM: '/gyms/my-gym',
+  USER_GYM_ANNOUNCEMENTS: '/gyms/announcements',
+
   USER_WORKOUTS_PAGE:'/workouts',
   USER_ADMIN_WORKOUT_TEMPLATES:'/workouts/browse',
   USER_ADD_WORKOUT:'/workouts/add',
@@ -29,7 +36,6 @@ export const ROUTES = {
 
   USER_DIET:'/diets',
   USER_ADD_DIET:'/diets/add',
-
 
   CALLBACK:"/callback",
   USER_NOT_FOUND:"*",
@@ -55,7 +61,6 @@ export const ROUTES = {
   TRAINER_SESSION_REQUESTS: "/trainer/session-requests",
   TRAINER_CLIENT_WORKOUT: "/trainer/workout/:clientId",
   TRAINER_CLIENT_SESSION: "/trainer/workout/add-session/:clientId",
-
   TRAINER_CLIENT_DIET: "/trainer/diet/:clientId",
 
   // Gym Routes
@@ -64,6 +69,13 @@ export const ROUTES = {
   GYM_VERIFY_OTP: "/gym/verify-otp",
   GYM_WAITLIST: "/gym/waitlist",
   GYM_DASHBOARD: "/gym/dashboard",
+  GYM_REAPPLY: "/gym/reapply",
+  GYM_SUBSCRIPTIONS: "/gym/subscriptions",
+  GYM_SUBSCRIPTIONS_NEW: "/gym/subscriptions/new",
+  GYM_SUBSCRIPTIONS_EDIT: "/gym/subscriptions/edit/:id",
+  GYM_ANNOUNCEMENTS: "/gym/announcements",
+  GYM_ANNOUNCEMENTS_NEW: "/gym/announcements/new",
+  GYM_ANNOUNCEMENTS_EDIT: "/gym/announcements/edit/:id",
 
   // Admin Routes
   ADMIN_LOGIN: "/admin/login",

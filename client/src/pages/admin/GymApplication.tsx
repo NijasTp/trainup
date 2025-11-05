@@ -16,11 +16,15 @@ interface Application {
   password: string;
   confirmPassword: string;
   location: string;
+  geoLocation?: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
   certificate: string | null;
   profileImage: string | null;
   images: string[];
-  verifyStatus: "pending" | "approved" | "rejected"; // Added to track status
-  rejectReason?: string | null; // Added for rejection reason
+  verifyStatus: "pending" | "approved" | "rejected"; 
+  rejectReason?: string | null; 
 }
 
 const GymApplication = () => {
@@ -155,7 +159,11 @@ const GymApplication = () => {
                   <MapPin className="h-5 w-5 text-[#4B8B9B]" />
                   <div>
                     <p className="text-sm text-gray-400">Address</p>
-                    <p className="text-white">{application.location || "N/A"}</p>
+                    <p className="text-white">
+                      {application.location || (application.geoLocation?.coordinates
+                        ? `${application.geoLocation.coordinates[1]}, ${application.geoLocation.coordinates[0]}`
+                        : "N/A")}
+                    </p>
                   </div>
                 </div>
               </CardContent>

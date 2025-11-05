@@ -18,6 +18,9 @@ import {
   Award,
   Activity,
   TrendingDown,
+  Building,
+  CreditCard,
+  Calendar
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers } from "@/services/userService";
@@ -28,11 +31,29 @@ import { getMealsByDate as getDiet } from "@/services/dietServices";
 import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/homeInterface";
 import { useSelector } from "react-redux";
 import ProfileCompletionModal from "@/components/user/general/ProfileCompletionModal";
+import API from "@/lib/axios";
+
+interface Gym {
+  _id: string;
+  name: string;
+  profileImage?: string;
+  images?: string[];
+  geoLocation: {
+    type: "Point";
+    coordinates: [number, number];
+  };
+  memberCount: number;
+  planCount: number;
+  minPrice: number;
+  rating: number;
+  distance?: number;
+}
 
 export default function HomePage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
+  const [gyms, setGyms] = useState<Gym[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const navigate = useNavigate();
@@ -79,6 +100,7 @@ export default function HomePage() {
   const fetchHomeData = async () => {
     setIsLoading(true);
     try {
+      // Fetch trainers
       try {
         const trainerResponse = await getTrainers(1, 5, "");
         setTrainers(trainerResponse.trainers.trainers || []);
@@ -87,6 +109,7 @@ export default function HomePage() {
         toast.error("Failed to fetch trainers");
       }
 
+      // Fetch workouts
       try {
         const workoutResponse = await getWorkoutDays(today);
         setWorkouts(workoutResponse.sessions);
@@ -95,12 +118,22 @@ export default function HomePage() {
         toast.error("Failed to fetch workouts");
       }
 
+      // Fetch diet
       try {
         const dietResponse = await getDiet(today);
         setDiet(dietResponse);
       } catch (err: any) {
         console.error("Failed to fetch diet:", err);
         toast.error("Failed to fetch diet");
+      }
+
+      // Fetch gyms
+      try {
+        const gymResponse = await API.get("/user/gyms?limit=3");
+        setGyms(gymResponse.data.gyms || []);
+      } catch (err: any) {
+        console.error("Failed to fetch gyms:", err);
+        toast.error("Failed to fetch gyms");
       }
     } catch (error) {
       console.error("Error fetching home data:", error);
@@ -208,6 +241,86 @@ export default function HomePage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Featured Gyms Section */}
+        <Card className="bg-card/40 backdrop-blur-sm border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Building className="h-5 w-5 text-primary" />
+              <CardTitle>Featured Gyms</CardTitle>
+            </div>
+            <Link to="/gyms">
+              <Button variant="ghost" size="sm">
+                View All <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+              </div>
+            ) : gyms.length === 0 ? (
+              <div className="text-center py-8 space-y-2">
+                <Building className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                <p className="text-muted-foreground">No gyms available at the moment</p>
+                <Button variant="outline" size="sm" onClick={() => navigate("/gyms")}>
+                  <Building className="h-4 w-4 mr-2" />
+                  Browse Gyms
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {gyms.map((gym) => (
+                  <div
+                    key={gym._id}
+                    className="group relative overflow-hidden bg-secondary/30 rounded-lg border border-border/30 hover:border-border transition-all duration-300 hover:shadow-lg cursor-pointer"
+                    onClick={() => navigate(`/gyms/${gym._id}`)}
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={gym.profileImage || gym.images?.[0] || "/placeholder.svg"}
+                        alt={gym.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute top-3 right-3">
+                        <div className="flex items-center gap-1 px-2 py-1 bg-black/40 backdrop-blur-sm rounded-full">
+                          <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+                          <span className="text-white text-xs font-medium">{gym.rating}</span>
+                        </div>
+                      </div>
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <h4 className="font-semibold text-white mb-1">{gym.name}</h4>
+                        <div className="flex items-center gap-2 text-white/80 text-sm">
+                          <Users className="h-3 w-3" />
+                          <span>{gym.memberCount} members</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {gym.planCount} plans available
+                        </Badge>
+                        <span className="font-bold text-primary">₹{gym.minPrice}/month</span>
+                      </div>
+                      {gym.distance && (
+                        <div className="flex items-center text-sm text-muted-foreground mb-2">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          <span>{gym.distance.toFixed(1)} km away</span>
+                        </div>
+                      )}
+                      <Button className="w-full mt-3" size="sm">
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Today's Workouts */}
         <Card className="bg-card/40 backdrop-blur-sm border-border/50">
@@ -410,8 +523,11 @@ export default function HomePage() {
         </Card>
 
         {/* Quick Actions */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-all duration-300 cursor-pointer">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Card 
+            className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
+            onClick={() => navigate("/workouts")}
+          >
             <CardContent className="flex items-center gap-3 p-6">
               <div className="p-2 bg-primary/20 rounded-lg">
                 <Dumbbell className="h-5 w-5 text-primary" />
@@ -423,7 +539,10 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer">
+          <Card 
+            className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
+            onClick={() => navigate("/diets")}
+          >
             <CardContent className="flex items-center gap-3 p-6">
               <div className="p-2 bg-green-500/20 rounded-lg">
                 <Apple className="h-5 w-5 text-green-600" />
@@ -435,7 +554,10 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer">
+          <Card 
+            className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
+            onClick={() => navigate("/trainers")}
+          >
             <CardContent className="flex items-center gap-3 p-6">
               <div className="p-2 bg-blue-500/20 rounded-lg">
                 <Users className="h-5 w-5 text-blue-600" />
@@ -447,7 +569,25 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer">
+          <Card 
+            className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
+            onClick={() => navigate("/gyms")}
+          >
+            <CardContent className="flex items-center gap-3 p-6">
+              <div className="p-2 bg-orange-500/20 rounded-lg">
+                <Building className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <h4 className="font-medium">Join Gym</h4>
+                <p className="text-sm text-muted-foreground">Find local gyms</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
+            onClick={() => navigate("/dashboard")}
+          >
             <CardContent className="flex items-center gap-3 p-6">
               <div className="p-2 bg-purple-500/20 rounded-lg">
                 <Award className="h-5 w-5 text-purple-600" />

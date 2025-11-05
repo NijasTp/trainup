@@ -1,87 +1,96 @@
+import React, { useState } from "react";
+import { toast } from "react-toastify";
 
-import { MapPin } from 'lucide-react';
+interface GeoLocation {
+  type: "Point";
+  coordinates: [number, number];
+}
 
-const LocationForm = ({ formData, handleInputChange, errors }:any) => {
+interface LocationFormProps {
+  formData: { geoLocation: GeoLocation };
+  errors: { [key: string]: string };
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
+}
+
+const LocationForm: React.FC<LocationFormProps> = ({
+  formData,
+  errors,
+  setFormData,
+}) => {
+  const [showPreview, setShowPreview] = useState(false);
+  const [address, setAddress] = useState("");
+
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation not supported");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+          );
+          const data = await res.json();
+
+          const a = data.address;
+          const fullAddress = [
+            a.house_number,
+            a.road,
+            a.suburb || a.neighbourhood,
+            a.village || a.town || a.city_district,
+            a.city || a.town || a.county,
+            a.state_district || a.state,
+            a.postcode,
+            a.country,
+          ]
+            .filter(Boolean)
+            .join(", ");
+
+          setAddress(fullAddress || "Address not available");
+
+          const geoLocation: GeoLocation = {
+            type: "Point",
+            coordinates: [longitude, latitude],
+          };
+
+          setFormData((prev: any) => ({ ...prev, geoLocation }));
+          setShowPreview(true);
+        } catch {
+          toast.error("Failed to fetch address");
+        }
+      },
+      () => {
+        toast.error("Location access denied");
+      }
+    );
+  };
+
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
-        <MapPin className="w-6 h-6 text-blue-500" />
-        Location Details
-      </h2>
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Street Address
-        </label>
-        <input
-          type="text"
-          name="location.address"
-          value={formData.location.address}
-          onChange={handleInputChange}
-          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
-          placeholder="123 Fitness Street"
-        />
-        {errors.address && <p className="text-red-400 text-sm mt-1">{errors.address}</p>}
-      </div>
-      
-      <div className="grid md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            City
-          </label>
-          <input
-            type="text"
-            name="location.city"
-            value={formData.location.city}
-            onChange={handleInputChange}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
-            placeholder="New York"
-          />
-          {errors.city && <p className="text-red-400 text-sm mt-1">{errors.city}</p>}
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white">Gym Location</h2>
+
+      <button
+        type="button"
+        onClick={getCurrentLocation}
+        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition"
+      >
+        Use My Current Location
+      </button>
+
+      {errors.geoLocation && (
+        <p className="text-red-400">{errors.geoLocation}</p>
+      )}
+
+      {showPreview && (
+        <div className="bg-gray-700 p-4 rounded-lg text-sm text-gray-300 space-y-2">
+          <p><strong>Address:</strong> {address}</p>
+          <p><strong>Coordinates:</strong> {formData.geoLocation.coordinates[1].toFixed(6)}, {formData.geoLocation.coordinates[0].toFixed(6)}</p>
         </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            State
-          </label>
-          <input
-            type="text"
-            name="location.state"
-            value={formData.location.state}
-            onChange={handleInputChange}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
-            placeholder="NY"
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            ZIP Code
-          </label>
-          <input
-            type="text"
-            name="location.zipCode"
-            value={formData.location.zipCode}
-            onChange={handleInputChange}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
-            placeholder="10001"
-          />
-        </div>
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Country
-        </label>
-        <input
-          type="text"
-          name="location.country"
-          value={formData.location.country}
-          onChange={handleInputChange}
-          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition"
-          placeholder="United States"
-        />
-      </div>
+      )}
     </div>
   );
 };

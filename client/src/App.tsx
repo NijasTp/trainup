@@ -1,4 +1,3 @@
-
 import { BrowserRouter as _, Routes, Route } from 'react-router-dom';
 import { ROUTES } from './constants/routes';
 import Login from './pages/user/Login';
@@ -74,6 +73,15 @@ import TrainerProfile from './pages/trainer/TrainerProfile';
 import TrainerDashboard from './pages/trainer/TrainerDashboard';
 import WeeklySchedule from './pages/trainer/WeeklySchedule';
 import TrainerClients from './pages/trainer/TrainerClientListing';
+import GymReapply from './pages/gym/GymReapply';
+import GymCreateSubscriptionPlan from './pages/gym/GymCreateSubscriptionPlan';
+import GymSubscriptionList from './pages/gym/GymSubscriptionList';
+import GymEditSubscriptionPlan from './pages/gym/GymEditSubscriptionPlan';
+import GymAnnouncementManagement from './pages/gym/GymAnnouncementManagement';
+import GymsListing from './pages/user/GymListing';
+import IndividualGym from './pages/user/IndividualGym';
+import MyGym from './pages/user/MyGym';
+import GymAnnouncements from './pages/user/GymAnnouncements';
 
 function App() {
   return (
@@ -100,6 +108,13 @@ function App() {
         <Route path={ROUTES.MY_TRAINER_CHAT} element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
         <Route path={ROUTES.MY_TRAINER_AVAILABILITY} element={<ProtectedRoute><TrainerAvailability /></ProtectedRoute>} />
         <Route path={ROUTES.VIDEO_CALL} element={<ProtectedRoute><VideoCallPage /></ProtectedRoute>} />
+
+        {/* New gym routes for users */}
+        <Route path={ROUTES.USER_GYMS} element={<ProtectedRoute><GymsListing /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_INDIVIDUAL_GYM} element={<ProtectedRoute><IndividualGym /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_MY_GYM} element={<ProtectedRoute><MyGym /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_GYM_ANNOUNCEMENTS} element={<ProtectedRoute><GymAnnouncements /></ProtectedRoute>} />
+
         <Route path={ROUTES.USER_WORKOUTS_PAGE} element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADMIN_WORKOUT_TEMPLATES} element={<ProtectedRoute><WorkoutTemplates /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_WORKOUT} element={<ProtectedRoute><AddWorkoutPage /></ProtectedRoute>} />
@@ -140,6 +155,11 @@ function App() {
         <Route path={ROUTES.GYM_VERIFY_OTP} element={<GymAuthRedirect><GymVerifyOtp /></GymAuthRedirect>} />
         <Route path={ROUTES.GYM_WAITLIST} element={<GymProtectedRoute><GymWaitlist /></GymProtectedRoute>} />
         <Route path={ROUTES.GYM_DASHBOARD} element={<GymProtectedRoute><GymDashboard /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_REAPPLY} element={<GymProtectedRoute><GymReapply /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_SUBSCRIPTIONS} element={<GymProtectedRoute><GymSubscriptionList /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_SUBSCRIPTIONS_NEW} element={<GymProtectedRoute><GymCreateSubscriptionPlan /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_SUBSCRIPTIONS_EDIT} element={<GymProtectedRoute><GymEditSubscriptionPlan /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_ANNOUNCEMENTS} element={<GymProtectedRoute><GymAnnouncementManagement /></GymProtectedRoute>} />
 
         {/* Admin Routes */}
         <Route path={ROUTES.ADMIN_LOGIN} element={<AdminPreventLoggedIn><AdminLogin /></AdminPreventLoggedIn>} />

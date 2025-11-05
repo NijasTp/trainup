@@ -49,6 +49,7 @@ export default function UserSessions() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const user = useSelector((state: RootState) => state.userAuth.user);
+    console.log('', user);
     const currentUserId = user?._id;
     const navigate = useNavigate();
 

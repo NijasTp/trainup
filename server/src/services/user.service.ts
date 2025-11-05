@@ -161,6 +161,8 @@ export class UserService implements IUserService {
     });
   }
 
+  
+
   async cancelSubscription(userId: string, trainerId: string) {
     if (!trainerId) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND);
     const user = await this._userRepo.findById(userId);
@@ -169,6 +171,22 @@ export class UserService implements IUserService {
       assignedTrainer: null,
       subscriptionStartDate: null,
     });
+  }
+
+    async updateUserGymMembership(
+    userId: string,
+    gymId: string,
+    planId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<void> {
+    await this._userRepo.updateUserGymMembership(
+      userId,
+      gymId,
+      planId,
+      startDate,
+      endDate
+    );
   }
 
   async addWeight(userId: string, weight: number): Promise<UserResponseDto> {
