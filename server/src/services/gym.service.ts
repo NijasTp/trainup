@@ -21,7 +21,8 @@ import {
   UpdateTrainerDto,
   CreateAnnouncementDto,
   UpdateAnnouncementDto,
-  GymListingDto
+  GymListingDto,
+  MyGymResponseDto
 } from '../dtos/gym.dto'
 import { MESSAGES } from '../constants/messages'
 import { AppError } from '../utils/appError.util'
@@ -54,7 +55,7 @@ export class GymService implements IGymService {
     }
     const hashedPassword = await bcrypt.hash(data.password, 10)
 
-    let geoLocationObj: any
+    let geoLocationObj: { type: 'Point'; coordinates: [number, number] }
 
     if (typeof data.geoLocation === 'string') {
       try {
@@ -193,7 +194,7 @@ export class GymService implements IGymService {
     page: number,
     limit: number,
     searchQuery: string
-  ): Promise<any> {
+  ): Promise<{ gyms: GymResponseDto[]; total: number; page: number; totalPages: number }> {
     return await this._gymRepo.findGyms(page, limit, searchQuery)
   }
 
@@ -259,7 +260,7 @@ export class GymService implements IGymService {
     return await this._gymRepo.getGymsForUser(page, limit, search, userLocation)
   }
 
-  async getGymForUser(gymId: string): Promise<any> {
+  async getGymForUser(gymId: string): Promise<IGym | null> {
     return await this._gymRepo.getGymForUser(gymId)
   }
 
@@ -267,20 +268,26 @@ export class GymService implements IGymService {
     return await this._gymRepo.getActiveSubscriptionPlans(gymId)
   }
 
-  async getMyGymDetails(gymId: string, userId: string): Promise<any> {
-    return await this._gymRepo.getMyGymDetails(gymId, userId)
-  }
+async getMyGymDetails(
+  gymId: string,
+  userId: string
+): Promise<MyGymResponseDto | null> {
+  return await this._gymRepo.getMyGymDetails(gymId, userId);
+}
 
   async getGymAnnouncementsForUser(
     gymId: string,
     page: number,
     limit: number,
     search: string
-  ): Promise<{ announcements: any[]; totalPages: number; total: number }> {
+  ): Promise<{ announcements: IGymAnnouncement[]; totalPages: number; total: number }> {
     return await this._gymRepo.getGymAnnouncementsForUser(gymId, page, limit, search)
   }
 
-  // Announcement management methods
+  async addMemberToGym(gymId: string, userId: string): Promise<void> {
+    await this._gymRepo.addMemberToGym(gymId, userId);
+  }
+
   async createAnnouncement(
     gymId: string,
     dto: CreateAnnouncementDto,
@@ -364,20 +371,32 @@ export class GymService implements IGymService {
   async createSubscriptionPlan(
     gymId: string,
     dto: CreateSubscriptionPlanDto
-  ) {
+  ): Promise<{
+    _id: string;
+    gymId: string;
+    name: string;
+    duration: number;
+    durationUnit: 'day' | 'month' | 'year';
+    price: number;
+    description?: string;
+    features: string[];
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }> {
     if (!dto.name || !dto.duration || !dto.price) {
       throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST)
     }
-    const rawCreateUnit = ((dto as any).durationUnit as string) || 'month'
+    const rawCreateUnit = ((dto as { durationUnit?: string }).durationUnit as string) || 'month'
     const normalizedUnit = (rawCreateUnit === 'days'
       ? 'day'
       : rawCreateUnit === 'months'
       ? 'month'
-      : (rawCreateUnit as any)) as 'day' | 'month' | 'year'
+      : (rawCreateUnit as 'day' | 'month' | 'year')) as 'day' | 'month' | 'year'
     const plan = await this._gymRepo.createSubscriptionPlan(gymId, {
       name: dto.name,
       duration: dto.duration,
-      durationUnit: normalizedUnit as any,
+      durationUnit: normalizedUnit,
       price: dto.price,
       description: dto.description,
       features: dto.features
@@ -403,7 +422,12 @@ export class GymService implements IGymService {
     limit: number,
     search?: string,
     active?: string
-  ) {
+  ): Promise<{
+    items: ISubscriptionPlan[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
     return await this._gymRepo.listSubscriptionPlans(gymId, page, limit, search, active)
   }
 
@@ -414,16 +438,28 @@ export class GymService implements IGymService {
   async updateSubscriptionPlan(
     planId: string,
     dto: Partial<UpdateSubscriptionPlanDto & { isActive: boolean }>
-  ) {
-    const rawUpdateUnit = ((dto as any).durationUnit as string | undefined)
+  ): Promise<{
+    _id: string;
+    gymId: string;
+    name: string;
+    duration: number;
+    durationUnit: 'day' | 'month' | 'year';
+    price: number;
+    description?: string;
+    features: string[];
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }> {
+    const rawUpdateUnit = ((dto as { durationUnit?: string }).durationUnit as string | undefined)
     const normalizedUnit = rawUpdateUnit
       ? ((rawUpdateUnit === 'days'
           ? 'day'
           : rawUpdateUnit === 'months'
           ? 'month'
-          : (rawUpdateUnit as any)) as 'day' | 'month' | 'year')
+          : (rawUpdateUnit as 'day' | 'month' | 'year')) as 'day' | 'month' | 'year')
       : undefined
-    const plan = await this._gymRepo.updateSubscriptionPlan(planId, { ...dto, durationUnit: normalizedUnit as any } as any)
+    const plan = await this._gymRepo.updateSubscriptionPlan(planId, { ...dto, durationUnit: normalizedUnit } as Partial<ISubscriptionPlan>)
     if (!plan) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND)
     return {
       _id: plan._id.toString(),
@@ -450,7 +486,7 @@ export class GymService implements IGymService {
     const imageUrls: string[] = []
 
     // geoLocation parsing
-    let geoLocationObj: any
+    let geoLocationObj: { type: 'Point'; coordinates: [number, number] } | undefined
     if (typeof data.geoLocation === 'string') {
       try {
         geoLocationObj = JSON.parse(data.geoLocation)
@@ -458,7 +494,7 @@ export class GymService implements IGymService {
         throw new AppError('Invalid geoLocation JSON format', STATUS_CODE.BAD_REQUEST)
       }
     } else if (data.geoLocation && typeof data.geoLocation === 'object') {
-      geoLocationObj = data.geoLocation
+      geoLocationObj = data.geoLocation as { type: 'Point'; coordinates: [number, number] }
     }
 
     const update: Partial<IGym> = {}
@@ -475,18 +511,18 @@ export class GymService implements IGymService {
       update.geoLocation = {
         type: 'Point',
         coordinates: [geoLocationObj.coordinates[0], geoLocationObj.coordinates[1]]
-      } as any
+      }
     }
 
     if (files?.certificate) {
       const certUpload = await cloudinary.uploader.upload(files.certificate.tempFilePath, { folder: 'trainup/gyms/certificate' })
       certificateUrl = certUpload.secure_url
-      update.certificate = certificateUrl as any
+      update.certificate = certificateUrl
     }
     if (files?.profileImage) {
       const profileUpload = await cloudinary.uploader.upload(files.profileImage.tempFilePath, { folder: 'trainup/gyms/profiles' })
       profileImageUrl = profileUpload.secure_url
-      update.profileImage = profileImageUrl as any
+      update.profileImage = profileImageUrl
     }
     if (files?.images) {
       const uploadPromises = Array.isArray(files.images)
@@ -494,10 +530,10 @@ export class GymService implements IGymService {
         : [cloudinary.uploader.upload(files.images.tempFilePath, { folder: 'trainup/gyms/gallery' })]
       const results = await Promise.all(uploadPromises)
       results.forEach(res => imageUrls.push(res.secure_url))
-      update.images = imageUrls as any
+      update.images = imageUrls
     }
 
-    update.verifyStatus = 'pending' as any
+    update.verifyStatus = 'pending'
     update.rejectReason = null
 
     const gym = await this._gymRepo.updateGym(gymId, update)
@@ -521,12 +557,24 @@ export class GymService implements IGymService {
     }
   }
 
-  async getSubscriptionPlan(planId: string) {
+  async getSubscriptionPlan(planId: string): Promise<{
+    _id: string;
+    gymId: string;
+    name: string;
+    duration: number;
+    durationUnit: 'day' | 'month' | 'year';
+    price: number;
+    description?: string;
+    features: string[];
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  } | null> {
     const plan = await this._gymRepo.getSubscriptionPlanById(planId)
-    if (!plan) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    if (!plan) return null
     return {
       _id: plan._id.toString(),
-      gymId: (plan as any).gymId.toString(),
+      gymId: (plan as ISubscriptionPlan & { gymId: unknown }).gymId.toString(),
       name: plan.name,
       duration: plan.duration,
       durationUnit: plan.durationUnit,
@@ -534,8 +582,8 @@ export class GymService implements IGymService {
       description: plan.description,
       features: plan.features,
       isActive: plan.isActive,
-      createdAt: plan.createdAt as any,
-      updatedAt: plan.updatedAt as any
+      createdAt: plan.createdAt as Date,
+      updatedAt: plan.updatedAt as Date
     }
   }
 }

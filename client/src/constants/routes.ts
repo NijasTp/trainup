@@ -24,6 +24,7 @@ export const ROUTES = {
   USER_GYMS: '/gyms',
   USER_INDIVIDUAL_GYM: '/gyms/:id',
   USER_MY_GYM: '/gyms/my-gym',
+  USER_GYM_DASHBOARD: '/gyms/dashboard',
   USER_GYM_ANNOUNCEMENTS: '/gyms/announcements',
 
   USER_WORKOUTS_PAGE:'/workouts',
@@ -76,6 +77,7 @@ export const ROUTES = {
   GYM_ANNOUNCEMENTS: "/gym/announcements",
   GYM_ANNOUNCEMENTS_NEW: "/gym/announcements/new",
   GYM_ANNOUNCEMENTS_EDIT: "/gym/announcements/edit/:id",
+  GYM_ATTENDANCE: "/gym/attendance",
 
   // Admin Routes
   ADMIN_LOGIN: "/admin/login",

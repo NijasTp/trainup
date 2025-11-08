@@ -238,3 +238,38 @@ export interface VerifyGymPaymentDto {
   amount: number;
   preferredTime: string;
 }
+
+export interface MemberSummary {
+  _id: string;
+  name: string;
+  email: string;
+  profileImage?: string;
+  createdAt?: Date;
+}
+
+export interface UserSubscription {
+  planName: string;
+  planPrice: number;
+  planDuration: number;
+  planDurationUnit: string;
+  subscribedAt: Date;
+  preferredTime: string;
+}
+
+export interface GymSummary {
+  _id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  profileImage?: string | null;
+  images?: string[] | null;
+  certificate?: string | null;
+  memberCount: number;
+  rating: number;
+}
+
+export interface MyGymResponseDto {
+  gym: GymSummary;
+  members: MemberSummary[];
+  userSubscription: UserSubscription;
+}

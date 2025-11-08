@@ -18,6 +18,7 @@ router.post('/apply', trainerController.apply.bind(trainerController));
 router.post('/reapply',authMiddleware,roleMiddleware(['trainer']), trainerController.reapply.bind(trainerController));
 router.post('/logout', trainerController.logout.bind(trainerController));
 
+router.get('/application/:id', authMiddleware, roleMiddleware(['admin']), trainerController.getTrainerApplication.bind(trainerController));
 router.get('/get-details',authMiddleware,roleMiddleware(['trainer']), trainerController.getData.bind(trainerController));
 router.get('/get-clients', authMiddleware, roleMiddleware(['trainer']), trainerController.getClients.bind(trainerController));
 router.get('/get-client/:id', authMiddleware, roleMiddleware(['trainer']), trainerController.getClient.bind(trainerController));
@@ -30,9 +31,9 @@ router.put('/availability', authMiddleware, roleMiddleware(['trainer']), trainer
 router.get('/weekly-schedule', authMiddleware, roleMiddleware(['trainer']), trainerController.getWeeklySchedule.bind(trainerController))
 .post('/weekly-schedule', authMiddleware, roleMiddleware(['trainer']), trainerController.saveWeeklySchedule.bind(trainerController));
 
-router.get('/slots', authMiddleware, roleMiddleware(['trainer']), trainerController.getSlots.bind(trainerController));
-router.post('/slots', authMiddleware, roleMiddleware(['trainer']), trainerController.createSlot.bind(trainerController));
-router.delete('/slots/:slotId', authMiddleware, roleMiddleware(['trainer']), trainerController.deleteSlot.bind(trainerController));
+router.get('/slots', authMiddleware, roleMiddleware(['trainer']), trainerController.getSlots.bind(trainerController))
+.post('/slots', authMiddleware, roleMiddleware(['trainer']), trainerController.createSlot.bind(trainerController))
+.delete('/slots/:slotId', authMiddleware, roleMiddleware(['trainer']), trainerController.deleteSlot.bind(trainerController));
 
 router.get('/session-requests', authMiddleware, roleMiddleware(['trainer']), trainerController.getSessionRequests.bind(trainerController));
 router.post('/session-requests/:requestId/approve/:userId', authMiddleware, roleMiddleware(['trainer']), trainerController.approveSessionRequest.bind(trainerController));

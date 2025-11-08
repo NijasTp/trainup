@@ -39,6 +39,13 @@ const TYPES = {
   IGymRepository:Symbol.for('IGymRepository'),
   IGymService:Symbol.for("IGymService"),
   GymController:Symbol.for("GymController"),
+
+  IGymReminderService:Symbol.for("IGymReminderService"),
+  IGymReminderRepository:Symbol.for("IGymReminderRepository"),
+
+  IAttendanceRepository:Symbol.for("IAttendanceRepository"),
+  IAttendanceService:Symbol.for("IAttendanceService"),
+  AttendanceController:Symbol.for("AttendanceController"),
   
 
   WorkoutSessionRepository: Symbol.for("WorkoutSessionRepository"),

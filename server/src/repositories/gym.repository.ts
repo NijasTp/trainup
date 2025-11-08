@@ -1,92 +1,100 @@
-import { injectable } from 'inversify';
-import mongoose, { Types } from 'mongoose';
-import { IGymRepository } from '../core/interfaces/repositories/IGymRepository';
-import { IGym, GymModel } from '../models/gym.model';
+import { injectable } from 'inversify'
+import mongoose, { Types, PipelineStage } from 'mongoose'
+import { IGymRepository } from '../core/interfaces/repositories/IGymRepository'
+import { IGym, GymModel } from '../models/gym.model'
 import {
   ISubscriptionPlan,
-  SubscriptionPlanModel,
-} from '../models/gymSubscriptionPlan.model';
-import TrainerModel, { ITrainer } from '../models/trainer.model';
+  SubscriptionPlanModel
+} from '../models/gymSubscriptionPlan.model'
+import TrainerModel, { ITrainer } from '../models/trainer.model'
 import {
   IUserGymMembership,
-  UserGymMembershipModel,
-} from '../models/userGymMembership.model';
+  UserGymMembershipModel
+} from '../models/userGymMembership.model'
 import {
   IGymAnnouncement,
-  GymAnnouncementModel,
-} from '../models/gymAnnouncement.model';
-import {
-  GymResponseDto,
-  AnnouncementDto,
-  GymListingDto,
-} from '../dtos/gym.dto';
-import { GymTransactionModel } from '../models/gymTransaction.model';
+  GymAnnouncementModel
+} from '../models/gymAnnouncement.model'
+import { GymResponseDto, AnnouncementDto, GymListingDto, MyGymResponseDto, UserSubscription, GymSummary, MemberSummary } from '../dtos/gym.dto'
+import { GymTransactionModel } from '../models/gymTransaction.model'
 
 @injectable()
 export class GymRepository implements IGymRepository {
-  async findByEmail(email: string): Promise<IGym | null> {
-    return GymModel.findOne({ email });
+  async findByEmail (email: string): Promise<IGym | null> {
+    return GymModel.findOne({ email })
   }
 
-  async createGym(data: Partial<IGym>): Promise<IGym> {
-    return GymModel.create(data);
+  async createGym (data: Partial<IGym>): Promise<IGym> {
+    return GymModel.create(data)
   }
 
-  async updateGym(_id: string, data: Partial<IGym>): Promise<IGym | null> {
-    return GymModel.findByIdAndUpdate(_id, data, { new: true });
+  async updateGym (_id: string, data: Partial<IGym>): Promise<IGym | null> {
+    return GymModel.findByIdAndUpdate(_id, data, { new: true })
   }
 
-  async findGyms(page: number, limit: number, searchQuery: string) {
-    const query: any = {};
+  async findGyms (
+    page: number,
+    limit: number,
+    searchQuery: string
+  ): Promise<{
+    gyms: GymResponseDto[]
+    total: number
+    page: number
+    totalPages: number
+  }> {
+    const query: { name?: { $regex: string; $options: string } } = {}
     if (searchQuery) {
-      query.name = { $regex: searchQuery, $options: 'i' };
+      query.name = { $regex: searchQuery, $options: 'i' }
     }
 
-    const total = await GymModel.countDocuments(query);
+    const total = await GymModel.countDocuments(query)
     const gyms = await GymModel.find(query)
       .skip((page - 1) * limit)
       .limit(limit)
       .select(
         'name email geoLocation isBanned verifyStatus profileImage createdAt'
       )
-      .lean();
+      .lean()
 
     return {
       gyms: (gyms as IGym[]).map(g => this.mapToResponseDto(g)),
       total,
       page,
-      totalPages: Math.ceil(total / limit),
-    };
+      totalPages: Math.ceil(total / limit)
+    }
   }
 
-  async findApplicationById(id: string) {
+  async findApplicationById (id: string): Promise<GymResponseDto | null> {
     const gym = await GymModel.findById(id)
       .select('name email password geoLocation certificate profileImage images')
-      .lean();
-    return gym ? this.mapToResponseDto(gym as IGym) : null;
+      .lean()
+    return gym ? this.mapToResponseDto(gym as IGym) : null
   }
 
-  async updateStatus(id: string, updateData: Partial<IGym>): Promise<IGym | null> {
+  async updateStatus (
+    id: string,
+    updateData: Partial<IGym>
+  ): Promise<IGym | null> {
     if (updateData.verifyStatus === 'rejected') {
       return GymModel.findByIdAndUpdate(
         id,
         { $set: updateData, $inc: { rejectionCount: 1 } },
         { new: true }
-      );
+      )
     }
-    return GymModel.findByIdAndUpdate(id, updateData, { new: true });
+    return GymModel.findByIdAndUpdate(id, updateData, { new: true })
   }
 
-  async findById(_id: string): Promise<IGym | null> {
-    return GymModel.findById(_id);
+  async findById (_id: string): Promise<IGym | null> {
+    return GymModel.findById(_id)
   }
 
-  async getGymById(gymId: string): Promise<GymResponseDto | null> {
-    const gym = await GymModel.findById(gymId).select('-password');
-    return gym ? this.mapToResponseDto(gym) : null;
+  async getGymById (gymId: string): Promise<GymResponseDto | null> {
+    const gym = await GymModel.findById(gymId).select('-password')
+    return gym ? this.mapToResponseDto(gym) : null
   }
 
-  async getGymTrainers(gymId: string) {
+  async getGymTrainers (gymId: string): Promise<ITrainer[]> {
     const result = await GymModel.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(gymId) } },
       {
@@ -94,15 +102,15 @@ export class GymRepository implements IGymRepository {
           from: 'trainers',
           localField: 'trainers',
           foreignField: '_id',
-          as: 'trainers',
-        },
+          as: 'trainers'
+        }
       },
-      { $project: { trainers: 1 } },
-    ]);
-    return result[0]?.trainers || [];
+      { $project: { trainers: 1 } }
+    ])
+    return result[0]?.trainers || []
   }
 
-  async getGymMembers(gymId: string) {
+  async getGymMembers (gymId: string): Promise<unknown[]> {
     const result = await GymModel.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(gymId) } },
       {
@@ -110,147 +118,174 @@ export class GymRepository implements IGymRepository {
           from: 'users',
           localField: 'members',
           foreignField: '_id',
-          as: 'members',
-        },
+          as: 'members'
+        }
       },
-      { $project: { members: 1 } },
-    ]);
-    return result[0]?.members || [];
+      { $project: { members: 1 } }
+    ])
+    return result[0]?.members || []
   }
 
-  async getGymAnnouncements(gymId: string): Promise<AnnouncementDto[]> {
-    const gym = await GymModel.findById(gymId).select('announcements');
+  async getGymAnnouncements (gymId: string): Promise<AnnouncementDto[]> {
+    const gym = await GymModel.findById(gymId).select('announcements')
     return gym
       ? gym.announcements.map(a => ({
           title: a.title,
           message: a.message,
-          date: a.date,
+          date: a.date
         }))
-      : [];
+      : []
   }
 
-  async createSubscriptionPlan(
+  async createSubscriptionPlan (
     gymId: string,
     data: Partial<ISubscriptionPlan>
   ): Promise<ISubscriptionPlan> {
     return SubscriptionPlanModel.create({
       ...data,
-      gymId: new mongoose.Types.ObjectId(gymId),
-    });
+      gymId: new mongoose.Types.ObjectId(gymId)
+    })
   }
 
-  async listSubscriptionPlans(
+  async listSubscriptionPlans (
     gymId: string,
     page: number,
     limit: number,
     search?: string,
     active?: string
-  ) {
-    const query: any = { gymId: new mongoose.Types.ObjectId(gymId) };
-    if (search) query.name = { $regex: search, $options: 'i' };
-    if (active === 'true') query.isActive = true;
-    if (active === 'false') query.isActive = false;
+  ): Promise<{
+    items: ISubscriptionPlan[]
+    total: number
+    page: number
+    totalPages: number
+  }> {
+    const query: {
+      gymId: mongoose.Types.ObjectId
+      name?: { $regex: string; $options: string }
+      isActive?: boolean
+    } = { gymId: new mongoose.Types.ObjectId(gymId) }
+    if (search) query.name = { $regex: search, $options: 'i' }
+    if (active === 'true') query.isActive = true
+    if (active === 'false') query.isActive = false
 
-    const total = await SubscriptionPlanModel.countDocuments(query);
+    const total = await SubscriptionPlanModel.countDocuments(query)
     const items = await SubscriptionPlanModel.find(query)
       .skip((page - 1) * limit)
       .limit(limit)
       .sort({ createdAt: -1 })
-      .lean();
+      .lean()
 
     return {
       items: items as ISubscriptionPlan[],
       total,
       page,
-      totalPages: Math.ceil(total / limit),
-    };
+      totalPages: Math.ceil(total / limit)
+    }
   }
 
-  async getSubscriptionPlanById(planId: string) {
-    return SubscriptionPlanModel.findById(planId).lean();
+  async getSubscriptionPlanById (
+    planId: string
+  ): Promise<ISubscriptionPlan | null> {
+    return SubscriptionPlanModel.findById(planId).lean()
   }
 
-  async updateSubscriptionPlan(
+  async updateSubscriptionPlan (
     planId: string,
     data: Partial<ISubscriptionPlan>
   ): Promise<ISubscriptionPlan | null> {
-    return SubscriptionPlanModel.findByIdAndUpdate(planId, data, { new: true });
+    return SubscriptionPlanModel.findByIdAndUpdate(planId, data, { new: true })
   }
 
-  async deleteSubscriptionPlan(planId: string): Promise<void> {
-    await SubscriptionPlanModel.findByIdAndDelete(planId);
+  async deleteSubscriptionPlan (planId: string): Promise<void> {
+    await SubscriptionPlanModel.findByIdAndDelete(planId)
   }
 
-  async addTrainer(gymId: string, data: Partial<ITrainer>): Promise<ITrainer> {
+  async addTrainer (gymId: string, data: Partial<ITrainer>): Promise<ITrainer> {
     const trainer = await TrainerModel.create({
       ...data,
-      gym: new Types.ObjectId(gymId),
-    });
-    await GymModel.findByIdAndUpdate(gymId, { $push: { trainers: trainer._id } });
-    return trainer;
+      gym: new Types.ObjectId(gymId)
+    })
+    await GymModel.findByIdAndUpdate(gymId, {
+      $push: { trainers: trainer._id }
+    })
+    return trainer
   }
 
-  async updateTrainer(
+  async updateTrainer (
     trainerId: string,
     data: Partial<ITrainer>
   ): Promise<ITrainer | null> {
-    return TrainerModel.findByIdAndUpdate(trainerId, data, { new: true });
+    return TrainerModel.findByIdAndUpdate(trainerId, data, { new: true })
   }
 
-  async updateMember(
+  async updateMember (
     membershipId: string,
     data: Partial<IUserGymMembership>
   ): Promise<IUserGymMembership | null> {
     return UserGymMembershipModel.findByIdAndUpdate(membershipId, data, {
-      new: true,
-    });
+      new: true
+    })
   }
 
+  async addMemberToGym (gymId: string, userId: string): Promise<void> {
+    await GymModel.findByIdAndUpdate(gymId, {
+      $addToSet: { members: new Types.ObjectId(userId) }
+    })
+  }
 
-
-  async createAnnouncement(
+  async createAnnouncement (
     gymId: string,
     data: Partial<IGymAnnouncement>
   ): Promise<IGymAnnouncement> {
     const announcement = await GymAnnouncementModel.create({
       ...data,
-      gymId: new Types.ObjectId(gymId),
-    });
+      gymId: new Types.ObjectId(gymId)
+    })
     await GymModel.findByIdAndUpdate(gymId, {
-      $push: { announcements: announcement._id },
-    });
-    return announcement;
+      $push: { announcements: announcement._id }
+    })
+    return announcement
   }
 
-  async getAnnouncementsByGym(
+  async getAnnouncementsByGym (
     gymId: string,
     page: number,
     limit: number,
     search: string
-  ) {
-    const query: any = { gymId: new mongoose.Types.ObjectId(gymId) };
+  ): Promise<{
+    announcements: IGymAnnouncement[]
+    total: number
+    totalPages: number
+  }> {
+    const query: {
+      gymId: mongoose.Types.ObjectId
+      $or?: Array<{
+        title?: { $regex: string; $options: string }
+        description?: { $regex: string; $options: string }
+      }>
+    } = { gymId: new mongoose.Types.ObjectId(gymId) }
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { message: { $regex: search, $options: 'i' } },
-      ];
+        { description: { $regex: search, $options: 'i' } }
+      ]
     }
 
-    const total = await GymAnnouncementModel.countDocuments(query);
+    const total = await GymAnnouncementModel.countDocuments(query)
     const announcements = await GymAnnouncementModel.find(query)
-      .sort({ date: -1 })
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .lean();
+      .lean()
 
     return {
       announcements: announcements as IGymAnnouncement[],
       total,
-      totalPages: Math.ceil(total / limit),
-    };
+      totalPages: Math.ceil(total / limit)
+    }
   }
 
-  async updateAnnouncement(
+  async updateAnnouncement (
     announcementId: string,
     gymId: string,
     data: Partial<IGymAnnouncement>
@@ -259,198 +294,282 @@ export class GymRepository implements IGymRepository {
       { _id: announcementId, gymId: new Types.ObjectId(gymId) },
       data,
       { new: true }
-    );
+    )
   }
 
-  async deleteAnnouncement(announcementId: string, gymId: string): Promise<void> {
+  async deleteAnnouncement (
+    announcementId: string,
+    gymId: string
+  ): Promise<void> {
     await GymAnnouncementModel.findOneAndDelete({
       _id: announcementId,
-      gymId: new Types.ObjectId(gymId),
-    });
+      gymId: new Types.ObjectId(gymId)
+    })
     await GymModel.findByIdAndUpdate(gymId, {
-      $pull: { announcements: announcementId },
-    });
+      $pull: { announcements: announcementId }
+    })
   }
 
-async getGymsForUser(
-  page: number,
-  limit: number,
-  search: string,
-  userLocation?: { lat: number; lng: number }
-) {
-  const skip = (page - 1) * limit;
+  async getGymsForUser (
+    page: number,
+    limit: number,
+    search: string,
+    userLocation?: { lat: number; lng: number }
+  ): Promise<{
+    gyms: GymListingDto[]
+    total: number
+    totalPages: number
+  }> {
+    const skip = (page - 1) * limit
 
-  const match: any = {
-    verifyStatus: 'approved',
-    isBanned: false,
-  };
-  if (search) {
-    match.name = { $regex: search, $options: 'i' };
+    const match: {
+      verifyStatus: string
+      isBanned: boolean
+      name?: { $regex: string; $options: string }
+    } = {
+      verifyStatus: 'approved',
+      isBanned: false
+    }
+    if (search) {
+      match.name = { $regex: search, $options: 'i' }
+    }
+
+    let pipeline: PipelineStage[] = []
+    let total = 0
+
+    if (userLocation) {
+      pipeline = [
+        {
+          $geoNear: {
+            near: {
+              type: 'Point' as const,
+              coordinates: [userLocation.lng, userLocation.lat] as [
+                number,
+                number
+              ]
+            },
+            distanceField: 'distance',
+            spherical: true,
+            query: match
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            profileImage: 1,
+            images: 1,
+            geoLocation: 1,
+            avgRating: { $ifNull: ['$avgRating', 0] },
+            memberCount: { $size: { $ifNull: ['$members', []] } },
+            minPlanPrice: { $min: '$subscriptionPlans.price' },
+            distance: { $divide: ['$distance', 1000] }
+          }
+        },
+        { $sort: { distance: 1 } },
+        { $skip: skip },
+        { $limit: limit }
+      ]
+
+      const gyms = await GymModel.aggregate(pipeline).exec()
+
+      const countPipeline: PipelineStage[] = [
+        {
+          $geoNear: {
+            near: {
+              type: 'Point' as const,
+              coordinates: [userLocation.lng, userLocation.lat] as [
+                number,
+                number
+              ]
+            },
+            distanceField: 'distance',
+            spherical: true,
+            query: match
+          }
+        },
+        { $count: 'total' }
+      ]
+      const countResult = await GymModel.aggregate(countPipeline).exec()
+      total = countResult[0]?.total || 0
+
+      return {
+        gyms: gyms as GymListingDto[],
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    } else {
+      pipeline = [
+        { $match: match },
+        { $sort: { createdAt: -1 } },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            profileImage: 1,
+            images: 1,
+            geoLocation: 1,
+            avgRating: { $ifNull: ['$avgRating', 0] },
+            memberCount: { $size: { $ifNull: ['$members', []] } },
+            minPlanPrice: { $min: '$subscriptionPlans.price' }
+          }
+        },
+        { $skip: skip },
+        { $limit: limit }
+      ]
+
+      const gyms = await GymModel.aggregate(pipeline).exec()
+      total = await GymModel.countDocuments(match)
+
+      return {
+        gyms: gyms as GymListingDto[],
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    }
   }
 
-  let pipeline: any[] = [];
-  let total = 0;
-
-  if (userLocation) {
-    pipeline = [
-      {
-        $geoNear: {
-          near: {
-            type: 'Point',
-            coordinates: [userLocation.lng, userLocation.lat], 
-          },
-          distanceField: 'distance', 
-          spherical: true,
-          query: match, 
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          name: 1,
-          profileImage: 1,
-          images: 1,
-          geoLocation: 1,
-          avgRating: { $ifNull: ['$avgRating', 0] },
-          memberCount: { $size: { $ifNull: ['$members', []] } },
-          minPlanPrice: { $min: '$subscriptionPlans.price' },
-          distance: { $divide: ['$distance', 1000] },
-        },
-      },
-      { $sort: { distance: 1 } },
-      { $skip: skip },
-      { $limit: limit },
-    ];
-
-    const gyms = await GymModel.aggregate(pipeline).exec();
-
-    const countPipeline = [
-      {
-        $geoNear: {
-          near: { type: 'Point', coordinates: [userLocation.lng, userLocation.lat] },
-          distanceField: 'distance',
-          spherical: true,
-          query: match,
-        },
-      },
-      { $count: 'total' },
-    ];
-    const countResult = await GymModel.aggregate(countPipeline).exec();
-    total = countResult[0]?.total || 0;
-    
-    return {
-      gyms: gyms as GymListingDto[],
-      total,
-      totalPages: Math.ceil(total / limit),
-    };
-  } else {
-    pipeline = [
-      { $match: match },
-      { $sort: { createdAt: -1 } },
-      {
-        $project: {
-          _id: 1,
-          name: 1,
-          profileImage: 1,
-          images: 1,
-          geoLocation: 1,
-          avgRating: { $ifNull: ['$avgRating', 0] },
-          memberCount: { $size: { $ifNull: ['$members', []] } },
-          minPlanPrice: { $min: '$subscriptionPlans.price' },
-        },
-      },
-      { $skip: skip },
-      { $limit: limit },
-    ];
-
-    const gyms = await GymModel.aggregate(pipeline).exec();
-    total = await GymModel.countDocuments(match);
-
-    return {
-      gyms: gyms as GymListingDto[],
-      total,
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-}
-
-  async getGymForUser(gymId: string): Promise<any> {
+  async getGymForUser (gymId: string): Promise<IGym | null> {
     return GymModel.findById(gymId)
       .select('-password')
       .populate('trainers')
-      .lean();
+      .lean()
   }
 
-  async getActiveSubscriptionPlans(gymId: string): Promise<ISubscriptionPlan[]> {
+  async getActiveSubscriptionPlans (
+    gymId: string
+  ): Promise<ISubscriptionPlan[]> {
     return SubscriptionPlanModel.find({
       gymId: new Types.ObjectId(gymId),
-      isActive: true,
-    }).lean();
+      isActive: true
+    }).lean()
   }
 
-  async getMyGymDetails(gymId: string, userId: string): Promise<any> {
+  async getMyGymDetails (
+    gymId: string,
+    userId: string
+  ): Promise<MyGymResponseDto | null> {
     const membership = await UserGymMembershipModel.findOne({
       gymId: new Types.ObjectId(gymId),
-      userId: new Types.ObjectId(userId),
+      userId: new Types.ObjectId(userId)
     })
-      .populate('subscriptionPlanId')
-      .lean();
+      .populate<{ planId: ISubscriptionPlan }>('planId')
+      .lean()
 
-    if (!membership) return null;
+    if (!membership) return null
 
     const gym = await GymModel.findById(gymId)
-      .select('name profileImage images')
-      .lean();
+      .select('name email phone profileImage images certificate members')
+      .populate<{
+        members: {
+          _id: string
+          name: string
+          email: string
+          profileImage?: string
+          createdAt?: Date
+        }[]
+      }>('members', 'name email profileImage createdAt')
+      .lean()
 
-    return { gym, membership };
+    if (!gym) return null
+
+    const plan = membership.planId
+
+    const userSubscription: UserSubscription = {
+      planName: plan?.name ?? 'N/A',
+      planPrice: plan?.price ?? 0,
+      planDuration: plan?.duration ?? 0,
+      planDurationUnit: plan?.durationUnit ?? 'month',
+      subscribedAt: membership.subscriptionStartDate ?? membership.createdAt,
+      preferredTime: membership.preferredTime ?? 'Anytime',
+    }
+
+    const gymSummary: GymSummary = {
+      _id: gym._id.toString(),
+      name: gym.name ?? 'Unknown Gym',
+      email: gym.email ?? null,
+      profileImage: gym.profileImage ?? null,
+      images: gym.images ?? null,
+      certificate: gym.certificate ?? null,
+      memberCount: gym.members?.length ?? 0,
+      rating: (gym as any).avgRating ?? 0
+    }
+
+    const members: MemberSummary[] =
+      gym.members?.map(m => ({
+        _id: m._id.toString(),
+        name: m.name,
+        email: m.email,
+        profileImage: m.profileImage,
+        createdAt: m.createdAt
+      })) ?? []
+
+    return {
+      gym: gymSummary,
+      members,
+      userSubscription
+    }
   }
 
-  async getGymAnnouncementsForUser(
+  async getGymAnnouncementsForUser (
     gymId: string,
     page: number,
     limit: number,
     search: string
-  ) {
-    const query: any = { gymId: new Types.ObjectId(gymId) };
+  ): Promise<{
+    announcements: IGymAnnouncement[]
+    total: number
+    totalPages: number
+  }> {
+    const query: {
+      gymId: Types.ObjectId
+      $or?: Array<{
+        title?: { $regex: string; $options: string }
+        description?: { $regex: string; $options: string }
+      }>
+    } = { gymId: new Types.ObjectId(gymId) }
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { message: { $regex: search, $options: 'i' } },
-      ];
+        { description: { $regex: search, $options: 'i' } }
+      ]
     }
 
-    const total = await GymAnnouncementModel.countDocuments(query);
+    const total = await GymAnnouncementModel.countDocuments(query)
     const announcements = await GymAnnouncementModel.find(query)
-      .sort({ date: -1 })
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .select('title message image date')
-      .lean();
+      .select('title description image createdAt isActive')
+      .lean()
 
     return {
-      announcements,
+      announcements: announcements as IGymAnnouncement[],
       total,
-      totalPages: Math.ceil(total / limit),
-    };
+      totalPages: Math.ceil(total / limit)
+    }
   }
 
-  async getGymTotalRevenue(gymId: string): Promise<number> {
+  async getGymTotalRevenue (gymId: string): Promise<number> {
     const result = await GymTransactionModel.aggregate([
       { $match: { gymId: new Types.ObjectId(gymId), status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$amount' } } },
-    ]);
-    return result[0]?.total ?? 0;
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ])
+    return result[0]?.total ?? 0
   }
 
-  async getRecentMembers(gymId: string, limit: number): Promise<any[]> {
+  async getRecentMembers (
+    gymId: string,
+    limit: number
+  ): Promise<IUserGymMembership[]> {
     return UserGymMembershipModel.find({ gymId: new Types.ObjectId(gymId) })
       .sort({ createdAt: -1 })
       .limit(limit)
       .populate('userId', 'name email')
-      .lean();
+      .lean() as Promise<IUserGymMembership[]>
   }
 
-  mapToResponseDto(gym: IGym): GymResponseDto {
+  mapToResponseDto (gym: IGym): GymResponseDto {
     return {
       _id: gym._id.toString(),
       role: gym.role,
@@ -469,10 +588,10 @@ async getGymsForUser(
         gym.announcements?.map(ann => ({
           title: ann.title,
           message: ann.message,
-          date: ann.date,
+          date: ann.date
         })) || [],
       createdAt: gym.createdAt!,
-      updatedAt: gym.updatedAt!,
-    };
+      updatedAt: gym.updatedAt!
+    }
   }
 }

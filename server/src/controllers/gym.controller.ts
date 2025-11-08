@@ -225,6 +225,7 @@ export class GymController {
       const announcement = await this._gymService.createAnnouncement(gymId, dto, imageFile);
       res.status(STATUS_CODE.CREATED).json({ announcement });
     } catch (err) {
+      console.log(err);
       next(err);
     }
   }

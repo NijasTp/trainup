@@ -20,8 +20,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar
 } from "recharts";
 
 interface DashboardStats {

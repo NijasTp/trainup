@@ -1,4 +1,4 @@
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { IPaymentService } from '../core/interfaces/services/IPaymentService';
@@ -8,6 +8,8 @@ import { MESSAGES } from '../constants/messages';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
 import { IGymTransaction, GymTransactionModel } from '../models/gymTransaction.model';
+import TYPES from '../core/types/types';
+import { ITransactionService } from '../core/interfaces/services/ITransactionService';
 
 dotenv.config();
 
@@ -15,7 +17,9 @@ dotenv.config();
 export class PaymentService implements IPaymentService {
   private _razorpay: Razorpay;
 
-  constructor() {
+  constructor(
+    @inject(TYPES.ITransactionService) private _transactionService: ITransactionService
+  ) {
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       throw new AppError(MESSAGES.PAYMENT_CONFIG_INCOMPLETE, STATUS_CODE.INTERNAL_SERVER_ERROR);
     }
@@ -59,6 +63,30 @@ export class PaymentService implements IPaymentService {
 
     if (generatedSignature !== signature) {
       throw new AppError(MESSAGES.INVALID_SIGNATURE, STATUS_CODE.BAD_REQUEST);
+    }
+
+    return true;
+  }
+
+  async verifyTrainerPayment(
+    orderId: string,
+    paymentId: string,
+    signature: string,
+    userId: string,
+    trainerId: string,
+    planType: 'basic' | 'premium' | 'pro',
+    amount: number
+  ): Promise<boolean> {
+    const isValid = await this.verifyPayment(orderId, paymentId, signature);
+    
+    if (!isValid) {
+      return false;
+    }
+
+    
+    const transaction = await this._transactionService.findByOrderId(orderId);
+    if (!transaction || transaction.userId !== userId || transaction.trainerId !== trainerId) {
+      return false;
     }
 
     return true;

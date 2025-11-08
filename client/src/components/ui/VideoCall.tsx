@@ -20,18 +20,7 @@ interface VideoCallProps {
     onLeave: () => void;
 }
 
-interface VideoCallSession {
-    _id: string;
-    roomId: string;
-    status: 'scheduled' | 'active' | 'ended';
-    participants: Array<{
-        userId: string;
-        userType: 'user' | 'trainer';
-        isActive: boolean;
-    }>;
-    scheduledStartTime: string;
-    scheduledEndTime: string;
-}
+
 
 export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const [isVideoEnabled, setIsVideoEnabled] = useState(true);
@@ -39,7 +28,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const [isConnected, setIsConnected] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [callSession, setCallSession] = useState<VideoCallSession | null>(null);
     const [participants, setParticipants] = useState<string[]>([]);
     const [callDuration, setCallDuration] = useState(0);
     const [retryCount, setRetryCount] = useState(0);
@@ -84,7 +72,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
     const checkMediaPermissions = async () => {
         try {
-            // Check if permissions are already granted
             const permissions = await Promise.all([
                 navigator.permissions.query({ name: 'camera' as PermissionName }),
                 navigator.permissions.query({ name: 'microphone' as PermissionName })
@@ -99,7 +86,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                     initializeVideoCall();
                 }
             } else {
-                // Try to request permissions
                 await requestMediaPermissions();
             }
         } catch (error) {
@@ -110,13 +96,11 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
     const requestMediaPermissions = async () => {
         try {
-            // Request permissions by trying to get media
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: true,
                 audio: true
             });
             
-            // Stop the temporary stream
             stream.getTracks().forEach(track => track.stop());
             
             setHasPermissions(true);
@@ -154,13 +138,11 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
     const setupMediaAndPeerConnection = async () => {
         try {
-            // Clean up any existing stream first
             if (localStreamRef.current) {
                 localStreamRef.current.getTracks().forEach(track => track.stop());
                 localStreamRef.current = null;
             }
 
-            // Get user media with proper constraints
             let stream: MediaStream;
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
@@ -187,46 +169,44 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
             localStreamRef.current = stream;
             
-            // Set video element source with error handling
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
-                localVideoRef.current.onloadedmetadata = () => {
-                    localVideoRef.current?.play().catch(e => {
+                localVideoRef.current.muted = true;
+                
+                const playPromise = localVideoRef.current.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {
                         console.error('Failed to play local video:', e);
                     });
-                };
+                }
             }
 
-            // Clean up existing peer connection
             if (peerConnectionRef.current) {
                 peerConnectionRef.current.close();
                 peerConnectionRef.current = null;
             }
 
-            // Create new peer connection
             peerConnectionRef.current = new RTCPeerConnection(rtcConfiguration);
 
-            // Add local stream tracks to peer connection
             stream.getTracks().forEach(track => {
                 if (peerConnectionRef.current && localStreamRef.current) {
                     peerConnectionRef.current.addTrack(track, localStreamRef.current);
                 }
             });
 
-            // Handle remote stream
             peerConnectionRef.current.ontrack = (event) => {
                 console.log('Received remote stream');
                 if (remoteVideoRef.current && event.streams[0]) {
                     remoteVideoRef.current.srcObject = event.streams[0];
-                    remoteVideoRef.current.onloadedmetadata = () => {
-                        remoteVideoRef.current?.play().catch(e => {
+                    const playPromise = remoteVideoRef.current.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(e => {
                             console.error('Failed to play remote video:', e);
                         });
-                    };
+                    }
                 }
             };
 
-            // Handle ICE candidates
             peerConnectionRef.current.onicecandidate = (event) => {
                 if (event.candidate && socketRef.current) {
                     console.log('Sending ICE candidate');
@@ -237,7 +217,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 }
             };
 
-            // Handle connection state changes
             peerConnectionRef.current.onconnectionstatechange = () => {
                 if (peerConnectionRef.current) {
                     console.log('Connection state:', peerConnectionRef.current.connectionState);
@@ -249,7 +228,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 }
             };
 
-            // Handle ICE connection state changes
             peerConnectionRef.current.oniceconnectionstatechange = () => {
                 if (peerConnectionRef.current) {
                     console.log('ICE connection state:', peerConnectionRef.current.iceConnectionState);
@@ -354,19 +332,13 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             setIsLoading(true);
             setError(null);
             
-            // Clean up any existing connections first
             cleanup();
-            
-            // Get call info and join the call
-            const callResponse = await API.get(`/video-call/room/${roomId}`);
-            setCallSession(callResponse.data.videoCall);
+        
             
             await joinCallWithRetry();
             
-            // Initialize socket connection
             await initializeSocket();
             
-            // Get user media and set up peer connection
             await setupMediaAndPeerConnection();
             
             setIsLoading(false);
@@ -380,13 +352,11 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
     const initializeSocket = async (): Promise<void> => {
         return new Promise((resolve, reject) => {
-            // Clean up existing socket
             if (socketRef.current) {
                 socketRef.current.disconnect();
                 socketRef.current = null;
             }
 
-            // Initialize socket connection
             socketRef.current = io(import.meta.env.VITE_API_URL, {
                 withCredentials: true,
                 transports: ['websocket', 'polling'],
@@ -395,13 +365,11 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 timeout: 10000
             });
 
-            // Handle connection success
             socketRef.current.on('connect', () => {
                 console.log('Socket connected successfully');
                 setIsConnected(true);
                 callStartTimeRef.current = new Date();
                 
-                // Join the video room after successful connection
                 socketRef.current!.emit('join_video_room', { roomId });
                 resolve();
             });
@@ -422,7 +390,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         socketRef.current.on('user_joined', ({ userId }) => {
             console.log('User joined:', userId);
             setParticipants(prev => [...prev, userId]);
-            // Create offer when another user joins
             setTimeout(createOffer, 1000);
         });
 
@@ -514,7 +481,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             socketRef.current = null;
         }
         
-        // Clear video elements
         if (localVideoRef.current) {
             localVideoRef.current.srcObject = null;
         }
@@ -598,7 +564,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
-            {/* Header */}
             <div className="absolute top-0 left-0 right-0 z-10 bg-black/50 backdrop-blur-sm p-4">
                 <div className="flex items-center justify-between text-white">
                     <div className="flex items-center space-x-4">
@@ -618,9 +583,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 </div>
             </div>
 
-            {/* Video Grid */}
             <div className="relative w-full h-full flex">
-                {/* Remote Video (Main) */}
                 <div className="flex-1 relative">
                     <video
                         ref={remoteVideoRef}
@@ -638,14 +601,13 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                     )}
                 </div>
 
-                {/* Local Video (Picture-in-picture) */}
                 <div className="absolute top-20 right-4 w-64 h-48 bg-gray-800 rounded-lg overflow-hidden border-2 border-white/20">
                     <video
                         ref={localVideoRef}
                         autoPlay
                         playsInline
                         muted
-                        className="w-full h-full object-cover mirror"
+                        className="w-full h-full object-cover"
                         style={{ transform: 'scaleX(-1)' }}
                     />
                     {!isVideoEnabled && (
@@ -656,7 +618,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 </div>
             </div>
 
-            {/* Controls */}
             <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/50 backdrop-blur-sm p-6">
                 <div className="flex items-center justify-center space-x-4">
                     <Button
@@ -687,7 +648,6 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                     </Button>
                 </div>
 
-                {/* Connection Status */}
                 <div className="text-center mt-4">
                     <Badge 
                         variant={isConnected ? "secondary" : "destructive"}

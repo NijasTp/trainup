@@ -18,7 +18,8 @@ export interface IUserService {
   gymId: string,
   planId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  preferredTime?: string
 ): Promise<void>;
 
   cancelSubscription(userId: string, trainerId: string): Promise<void>;

@@ -178,14 +178,16 @@ export class UserService implements IUserService {
     gymId: string,
     planId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
+    preferredTime?: string
   ): Promise<void> {
     await this._userRepo.updateUserGymMembership(
       userId,
       gymId,
       planId,
       startDate,
-      endDate
+      endDate,
+      preferredTime
     );
   }
 

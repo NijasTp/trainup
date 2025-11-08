@@ -7,6 +7,18 @@ import TYPES from '../core/types/types';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
 
+interface TimeSlot {
+  id: string;
+  startTime: string;
+  endTime: string;
+}
+
+interface DaySchedule {
+  day: string;
+  isActive: boolean;
+  slots: TimeSlot[];
+}
+
 @injectable()
 export class WeeklyScheduleService implements IWeeklyScheduleService {
   constructor(
@@ -21,58 +33,55 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
       throw new AppError('Missing required fields', STATUS_CODE.BAD_REQUEST);
     }
 
-    // Validate schedule data
-    this.validateSchedule(schedule);
+    this.validateSchedule(schedule as DaySchedule[]);
 
     const weekStartDate = new Date(weekStart);
+    const adjustedWeekStart = this.getWeekStart(weekStartDate);
     
-    // Check if schedule exists for this trainer and week
     const existingSchedule = await this._scheduleRepository.findByTrainerAndWeek(
       trainerId.toString(),
-      weekStartDate
+      adjustedWeekStart
     );
 
     let savedSchedule: IWeeklySchedule;
 
     if (existingSchedule) {
-      // Update existing schedule
       savedSchedule = await this._scheduleRepository.update(existingSchedule._id.toString(), {
-        schedule,
+        schedule: schedule as DaySchedule[],
         updatedAt: new Date()
       });
     } else {
-      // Create new schedule
       savedSchedule = await this._scheduleRepository.create({
         trainerId,
-        weekStart: weekStartDate,
-        schedule
+        weekStart: adjustedWeekStart,
+        schedule: schedule as DaySchedule[]
       });
     }
 
-    // Generate actual slots from the schedule
     await this.generateSlotsFromSchedule(savedSchedule);
 
     return savedSchedule;
   }
 
   async getTrainerSchedule(trainerId: string, weekStart?: Date): Promise<IWeeklySchedule | null> {
-    const targetWeek = weekStart || this.getCurrentWeekStart();
+    const targetWeek = weekStart ? this.getWeekStart(weekStart) : this.getCurrentWeekStart();
     return await this._scheduleRepository.findByTrainerAndWeek(trainerId, targetWeek);
   }
 
   async deleteSchedule(trainerId: string, weekStart: Date): Promise<void> {
-    const schedule = await this._scheduleRepository.findByTrainerAndWeek(trainerId, weekStart);
+    const adjustedWeekStart = this.getWeekStart(weekStart);
+    const schedule = await this._scheduleRepository.findByTrainerAndWeek(trainerId, adjustedWeekStart);
     
     if (!schedule) {
       throw new AppError('Schedule not found', STATUS_CODE.NOT_FOUND);
     }
 
-    await this._slotRepository.deleteUnbookedSlotsByWeek(trainerId, weekStart);
+    await this._slotRepository.deleteUnbookedSlotsByWeek(trainerId, adjustedWeekStart);
     
     await this._scheduleRepository.delete(schedule._id.toString());
   }
 
-  private validateSchedule(schedule: any[]): void {
+  private validateSchedule(schedule: DaySchedule[]): void {
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     
     for (const daySchedule of schedule) {
@@ -86,12 +95,10 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
         }
 
         for (const slot of daySchedule.slots) {
-          // Validate time format
           if (!this.isValidTimeFormat(slot.startTime) || !this.isValidTimeFormat(slot.endTime)) {
             throw new AppError('Invalid time format', STATUS_CODE.BAD_REQUEST);
           }
 
-          // Check if session is exactly 1 hour
           const start = new Date(`2000-01-01T${slot.startTime}`);
           const end = new Date(`2000-01-01T${slot.endTime}`);
           const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
@@ -101,13 +108,12 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
           }
         }
 
-        // Check for overlapping slots
         this.checkForOverlappingSlots(daySchedule.slots, daySchedule.day);
       }
     }
   }
 
-  private checkForOverlappingSlots(slots: any[], day: string): void {
+  private checkForOverlappingSlots(slots: TimeSlot[], day: string): void {
     for (let i = 0; i < slots.length; i++) {
       for (let j = i + 1; j < slots.length; j++) {
         const slot1Start = new Date(`2000-01-01T${slots[i].startTime}`);
@@ -128,26 +134,27 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
   }
 
   private async generateSlotsFromSchedule(schedule: IWeeklySchedule): Promise<void> {
-    const weekStart = new Date(schedule.weekStart);
+    const weekStart = this.getWeekStart(new Date(schedule.weekStart));
     
     await this._slotRepository.deleteUnbookedSlotsByWeek(schedule.trainerId.toString(), weekStart);
 
-    const daysMap = {
-      'Monday': 1,
-      'Tuesday': 2,
-      'Wednesday': 3,
-      'Thursday': 4,
-      'Friday': 5,
-      'Saturday': 6,
-      'Sunday': 0
+    const daysMap: Record<string, number> = {
+      'Monday': 0,
+      'Tuesday': 1,
+      'Wednesday': 2,
+      'Thursday': 3,
+      'Friday': 4,
+      'Saturday': 5,
+      'Sunday': 6
     };
 
     for (const daySchedule of schedule.schedule) {
       if (!daySchedule.isActive || !daySchedule.slots.length) continue;
 
-      const dayNumber = daysMap[daySchedule.day as keyof typeof daysMap];
+      const dayOffset = daysMap[daySchedule.day];
       const slotDate = new Date(weekStart);
-      slotDate.setDate(weekStart.getDate() + (dayNumber));
+      slotDate.setDate(weekStart.getDate() + dayOffset);
+      slotDate.setHours(0, 0, 0, 0);
 
       for (const timeSlot of daySchedule.slots) {
         await this._slotRepository.create({
@@ -164,28 +171,29 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
     }
   }
 
-  private getCurrentWeekStart(): Date {
-    const now = new Date();
-    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust when day is Sunday
-    const monday = new Date(now.setDate(diff));
+  private getWeekStart(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(d.setDate(diff));
     monday.setHours(0, 0, 0, 0);
     return monday;
   }
 
-  // Auto-reset schedules every Sunday
+  private getCurrentWeekStart(): Date {
+    return this.getWeekStart(new Date());
+  }
+
   async resetWeeklySchedules(): Promise<void> {
-    // This method can be called by a cron job every Sunday
     const allSchedules = await this._scheduleRepository.findAll();
     
     for (const schedule of allSchedules) {
       const nextWeekStart = new Date(schedule.weekStart);
       nextWeekStart.setDate(nextWeekStart.getDate() + 7);
       
-      // Create new schedule for next week with same pattern
       await this.createOrUpdateSchedule({
         trainerId: schedule.trainerId,
-        weekStart: nextWeekStart,
+        weekStart: nextWeekStart.toISOString(),
         schedule: schedule.schedule
       });
     }

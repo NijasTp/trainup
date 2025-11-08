@@ -15,7 +15,7 @@ export interface IDaySchedule {
 export interface IWeeklySchedule extends Document {
   _id: string | Schema.Types.ObjectId;
   trainerId: Types.ObjectId | string;
-  weekStart: Date;
+  weekStart: Date | string;
   schedule: IDaySchedule[];
   createdAt: Date;
   updatedAt: Date;

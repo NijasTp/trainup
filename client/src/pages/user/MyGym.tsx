@@ -6,7 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Building,
   Users,
-  Clock,
   Calendar,
   Star,
   Phone,
@@ -14,7 +13,8 @@ import {
   Award,
   CreditCard,
   Bell,
-  ChevronRight
+  ChevronRight,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
@@ -26,7 +26,7 @@ interface Member {
   name: string;
   email: string;
   profileImage?: string;
-  joinedAt: string;
+  joinedAt?: string;
 }
 
 interface Gym {
@@ -42,17 +42,19 @@ interface Gym {
   operatingHours?: string;
 }
 
+interface UserSubscription {
+  planName: string;
+  planPrice: number;
+  planDuration: number;
+  planDurationUnit: string;
+  subscribedAt: string;
+  preferredTime: string;
+}
+
 interface MyGymData {
   gym: Gym;
   members: Member[];
-  userSubscription: {
-    planName: string;
-    planPrice: number;
-    planDuration: number;
-    planDurationUnit: string;
-    subscribedAt: string;
-    preferredTime: string;
-  };
+  userSubscription: UserSubscription;
 }
 
 export default function MyGym() {
@@ -101,7 +103,9 @@ export default function MyGym() {
         <div className="container mx-auto px-4 py-16 text-center">
           <Building className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
           <h3 className="text-xl font-semibold mb-2">No Active Membership</h3>
-          <p className="text-muted-foreground mb-6">You don't have an active gym membership</p>
+          <p className="text-muted-foreground mb-6">
+            You don't have an active gym membership
+          </p>
           <Button onClick={() => navigate("/gyms")}>
             <Building className="h-4 w-4 mr-2" />
             Find a Gym
@@ -113,6 +117,16 @@ export default function MyGym() {
 
   const { gym, members, userSubscription } = gymData;
 
+  const safeMembers = Array.isArray(members) ? members : [];
+  const sub = userSubscription || {
+    planName: "No Plan",
+    planPrice: 0,
+    planDuration: 0,
+    planDurationUnit: "month",
+    subscribedAt: new Date().toISOString(),
+    preferredTime: "Anytime",
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
@@ -120,23 +134,21 @@ export default function MyGym() {
       <SiteHeader />
 
       <main className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Header */}
         <div className="text-center space-y-4 mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
             <Building className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-primary">My Gym</span>
           </div>
           <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-            {gym.name}
+            {gym?.name}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Your fitness journey continues here
           </p>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Card 
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card
             className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
             onClick={() => navigate("/gyms/announcements")}
           >
@@ -177,12 +189,26 @@ export default function MyGym() {
               <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
             </CardContent>
           </Card>
+
+          <Card
+            className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
+            onClick={() => navigate("/gyms/dashboard")}
+          >
+            <CardContent className="flex items-center gap-3 p-6">
+              <div className="p-2 bg-purple-500/20 rounded-lg">
+                <BarChart3 className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <h4 className="font-medium">Dashboard</h4>
+                <p className="text-sm text-muted-foreground">View your stats</p>
+              </div>
+              <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-3">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Gym Info */}
             <Card className="bg-card/60 backdrop-blur-sm border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -196,30 +222,26 @@ export default function MyGym() {
                     <div>
                       <h4 className="font-semibold mb-2">About</h4>
                       <p className="text-sm text-muted-foreground">
-                        {gym.description || "Premium fitness facility with state-of-the-art equipment."}
+                        {gym?.description ||
+                          "Premium fitness facility with state-of-the-art equipment."}
                       </p>
                     </div>
                     <div>
                       <h4 className="font-semibold mb-2">Rating</h4>
                       <div className="flex items-center gap-2">
                         <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                        <span className="font-medium">{gym.rating}</span>
-                        <span className="text-sm text-muted-foreground">({gym.memberCount} members)</span>
+                        <span className="font-medium">{gym?.rating || 0}</span>
+                        <span className="text-sm text-muted-foreground">
+                          ({gym?.memberCount || 0} members)
+                        </span>
                       </div>
                     </div>
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-semibold mb-2">Operating Hours</h4>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{gym.operatingHours || "6:00 AM - 10:00 PM"}</span>
-                      </div>
-                    </div>
-                    <div>
                       <h4 className="font-semibold mb-2">Contact</h4>
                       <div className="space-y-2">
-                        {gym.phone && (
+                        {gym?.phone && (
                           <div className="flex items-center gap-2">
                             <Phone className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">{gym.phone}</span>
@@ -227,7 +249,7 @@ export default function MyGym() {
                         )}
                         <div className="flex items-center gap-2">
                           <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{gym.email}</span>
+                          <span className="text-sm">{gym?.email}</span>
                         </div>
                       </div>
                     </div>
@@ -236,8 +258,7 @@ export default function MyGym() {
               </CardContent>
             </Card>
 
-            {/* Gallery */}
-            {gym.images && gym.images.length > 0 && (
+            {Array.isArray(gym?.images) && gym.images.length > 0 && (
               <Card className="bg-card/60 backdrop-blur-sm border-border/50">
                 <CardHeader>
                   <CardTitle>Gallery</CardTitle>
@@ -245,7 +266,10 @@ export default function MyGym() {
                 <CardContent>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {gym.images.slice(0, 6).map((image, index) => (
-                      <div key={index} className="aspect-square rounded-lg overflow-hidden">
+                      <div
+                        key={index}
+                        className="aspect-square rounded-lg overflow-hidden"
+                      >
                         <img
                           src={image}
                           alt={`${gym.name} - ${index + 1}`}
@@ -258,7 +282,6 @@ export default function MyGym() {
               </Card>
             )}
 
-            {/* Members List */}
             <Card className="bg-card/60 backdrop-blur-sm border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -267,37 +290,42 @@ export default function MyGym() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {members.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    No other members to display
-                  </p>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {members.map((member) => (
-                      <div key={member._id} className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={member.profileImage} alt={member.name} />
-                          <AvatarFallback>
-                            {member.name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-sm">{member.name}</h4>
-                          <p className="text-xs text-muted-foreground">
-                            Joined {new Date(member.joinedAt).toLocaleDateString()}
-                          </p>
-                        </div>
+                {safeMembers.length > 0 ? (
+                  safeMembers.map((member) => (
+                    <div
+                      key={member._id}
+                      className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg"
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage
+                          src={member.profileImage}
+                          alt={member.name}
+                        />
+                        <AvatarFallback>
+                          {member.name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm">{member.name}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Joined{" "}
+                          {member.joinedAt
+                            ? new Date(member.joinedAt).toLocaleDateString()
+                            : "Recently"}
+                        </p>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No members found.
+                  </p>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Subscription Info */}
             <Card className="bg-card/60 backdrop-blur-sm border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -307,25 +335,29 @@ export default function MyGym() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg">
-                  <h3 className="font-bold text-lg">{userSubscription.planName}</h3>
+                  <h3 className="font-bold text-lg">{sub.planName}</h3>
                   <p className="text-2xl font-bold text-primary">
-                    ₹{userSubscription.planPrice}
+                    ₹{sub.planPrice}
                     <span className="text-sm text-muted-foreground font-normal">
-                      /{userSubscription.planDuration} {userSubscription.planDurationUnit}(s)
+                      /{sub.planDuration} {sub.planDurationUnit}(s)
                     </span>
                   </p>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Subscribed</span>
+                    <span className="text-sm text-muted-foreground">
+                      Subscribed
+                    </span>
                     <span className="text-sm font-medium">
-                      {new Date(userSubscription.subscribedAt).toLocaleDateString()}
+                      {new Date(sub.subscribedAt).toLocaleDateString()}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Preferred Time</span>
-                    <Badge variant="secondary">{userSubscription.preferredTime}</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      Preferred Time
+                    </span>
+                    <Badge variant="secondary">{sub.preferredTime}</Badge>
                   </div>
                 </div>
 
@@ -336,7 +368,6 @@ export default function MyGym() {
               </CardContent>
             </Card>
 
-            {/* Quick Stats */}
             <Card className="bg-card/60 backdrop-blur-sm border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -346,11 +377,15 @@ export default function MyGym() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Total Members</span>
+                  <span className="text-sm text-muted-foreground">
+                    Total Members
+                  </span>
                   <Badge variant="secondary">{gym.memberCount}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Gym Rating</span>
+                  <span className="text-sm text-muted-foreground">
+                    Gym Rating
+                  </span>
                   <div className="flex items-center gap-1">
                     <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                     <span className="text-sm font-medium">{gym.rating}</span>

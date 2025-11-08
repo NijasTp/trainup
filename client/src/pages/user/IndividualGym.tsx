@@ -176,7 +176,7 @@ export default function IndividualGym() {
         rzp.open();
       } catch (err: any) {
         console.error("Failed to create order:", err);
-        toast.error(err.response?.data?.message || "Failed to initiate payment");
+        toast.error(err.response?.data?.error || "Failed to initiate payment");
       } finally {
         setIsProcessingPayment(false);
         document.body.removeChild(script);

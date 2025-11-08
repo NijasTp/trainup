@@ -1,4 +1,3 @@
-// src/models/gym.model.ts
 import { Schema, model, Document, ObjectId, Types } from "mongoose";
 
 export interface IGym extends Document {

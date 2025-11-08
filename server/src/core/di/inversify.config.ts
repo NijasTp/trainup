@@ -87,6 +87,15 @@ import { WeeklyScheduleRepository } from "../../repositories/weeklySchedule.repo
 import { IWeeklyScheduleRepository } from "../interfaces/repositories/IWeeklyScheduleRepository";
 import { WeeklyScheduleService } from "../../services/weeklySchedule.service";
 import { IWeeklyScheduleService } from "../interfaces/services/IWeeklyScheduleService";
+import { IGymReminderService } from "../interfaces/services/IGymReminderService";
+import { GymReminderService } from "../../services/gymReminder.service";
+import { IGymReminderRepository } from "../interfaces/repositories/IGymReminderRepository";
+import { GymReminderRepository } from "../../repositories/gymReminder.repository";
+import { AttendanceRepository } from "../../repositories/gymAttendance.repository";
+import { IAttendanceRepository } from "../interfaces/repositories/IAttendanceRepository";
+import { AttendanceService } from "../../services/gymAttendence.service";
+import { IAttendanceService } from "../interfaces/services/IAttendanceService";
+import { AttendanceController } from "../../controllers/gymAttendance.controller";
 
 
 // Create container 
@@ -133,6 +142,13 @@ container.bind<ITrainerService>(TYPES.ITrainerService).to(TrainerService);
 container.bind<GymController>(TYPES.GymController).to(GymController)
 container.bind<IGymRepository>(TYPES.IGymRepository).to(GymRepository);
 container.bind<IGymService>(TYPES.IGymService).to(GymService);
+
+container.bind<IGymReminderService>(TYPES.IGymReminderService).to(GymReminderService);
+container.bind<IGymReminderRepository>(TYPES.IGymReminderRepository).to(GymReminderRepository);
+
+container.bind<IAttendanceRepository>(TYPES.IAttendanceRepository).to(AttendanceRepository);
+container.bind<IAttendanceService>(TYPES.IAttendanceService).to(AttendanceService);
+container.bind<AttendanceController>(TYPES.AttendanceController).to(AttendanceController);
 
 container.bind<AdminController>(TYPES.AdminController).to(AdminController);
 container.bind<IAdminService>(TYPES.IAdminService).to(AdminService);

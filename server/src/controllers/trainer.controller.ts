@@ -52,7 +52,6 @@ export class TrainerController {
     @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService
   ) {}
 
-  // Auth methods
   async login (req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: TrainerLoginDto = req.body
@@ -418,7 +417,6 @@ export class TrainerController {
     }
   }
 
-  // Slot management methods
   async getSlots (
     req: Request,
     res: Response,
@@ -616,6 +614,21 @@ export class TrainerController {
       res.status(STATUS_CODE.OK).json({ plan })
     } catch (err) {
       logger.error('Error fetching user plan:', err)
+      next(err)
+    }
+  }
+
+  async getTrainerApplication (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id } = req.params
+      const application = await this._trainerService.getTrainerApplication(id)
+      res.status(STATUS_CODE.OK).json({ application })
+    } catch (err) {
+      logger.error('Error fetching trainer application:', err)
       next(err)
     }
   }

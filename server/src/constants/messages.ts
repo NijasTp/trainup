@@ -53,6 +53,7 @@ export const MESSAGES = {
   APPLICATION_SUBMITTED: "Application submitted successfully",
   INVALID_TRAINER_ID: "Invalid trainer ID",
   CERTIFICATE_REQUIRED: "Certificate file is required",
+  NO_GYM_MEMBERSHIP: "No gym membership",
   APPLICATION_FAILED: "Failed to submit application",
   FAILED_TO_LOGOUT: "Failed to log out",
   INVALID_GYM_ID: "Invalid gym ID",

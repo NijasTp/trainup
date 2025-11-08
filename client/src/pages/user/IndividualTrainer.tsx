@@ -262,7 +262,7 @@ export default function TrainerPage() {
         }
 
         if (trainer) {
-            navigate(`/chat/${trainer._id}`);
+            navigate(`/my-trainer/chat/${trainer._id}`);
         } else {
             toast.error("No trainer found to chat with");
         }

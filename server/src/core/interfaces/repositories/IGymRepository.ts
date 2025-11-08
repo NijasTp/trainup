@@ -26,7 +26,7 @@ export interface IGymRepository {
   getGymById(gymId: string): Promise<GymResponseDto | null>;
 
   getGymTrainers(gymId: string): Promise<ITrainer[]>;
-  getGymMembers(gymId: string): Promise<IUser[]>;
+  getGymMembers(gymId: string): Promise<unknown[]> ;
   getGymAnnouncements(gymId: string): Promise<AnnouncementDto[]>;
 
   createSubscriptionPlan(
@@ -51,7 +51,7 @@ export interface IGymRepository {
     data: Partial<ISubscriptionPlan>
   ): Promise<ISubscriptionPlan | null>;
   deleteSubscriptionPlan(planId: string): Promise<void>;
-
+  addMemberToGym(gymId: string, userId: string): Promise<void>
   addTrainer(gymId: string, data: Partial<ITrainer>): Promise<ITrainer>;
   updateTrainer(
     trainerId: string,

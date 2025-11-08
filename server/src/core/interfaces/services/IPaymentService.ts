@@ -13,7 +13,16 @@ export interface IPaymentService {
     paymentId: string,
     signature: string
   ): Promise<boolean>
-
+  
+  verifyTrainerPayment(
+    orderId: string,
+    paymentId: string,
+    signature: string,
+    userId: string,
+    trainerId: string,
+    planType: 'basic' | 'premium' | 'pro',
+    amount: number
+  ): Promise<boolean> 
   createGymTransaction(data: Partial<IGymTransaction>): Promise<IGymTransaction>
 
   updateGymTransactionStatus(

@@ -1,8 +1,6 @@
 import { IGym } from '../../../models/gym.model';
 import { ITrainer } from '../../../models/trainer.model';
 import { ISubscriptionPlan } from '../../../models/gymSubscriptionPlan.model';
-import { IUserGymMembership } from '../../../models/userGymMembership.model';
-import { IGymPayment } from '../../../models/gymPayment.model';
 import { IGymAnnouncement } from '../../../models/gymAnnouncement.model';
 import { UploadedFile } from 'express-fileupload';
 import {
@@ -51,6 +49,8 @@ export interface IGymService {
 
   addTrainer(dto: AddTrainerDto, gymId: string): Promise<ITrainer>;
 
+  addMemberToGym(gymId: string, userId: string): Promise<void>; 
+
   updateTrainer(dto: UpdateTrainerDto, trainerId: string, gymId: string): Promise<ITrainer | null>;
 
   createSubscriptionPlan(
@@ -78,19 +78,20 @@ export interface IGymService {
     active?: string
   ): Promise<{ items: any[]; total: number; page: number; totalPages: number }>;
 
+
   getSubscriptionPlan(planId: string): Promise<{
     _id: string;
     gymId: string;
     name: string;
     duration: number;
-    durationUnit: any;
+    durationUnit: 'day' | 'month' | 'year';
     price: number;
     description?: string;
     features: string[];
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
-  }>;
+  } | null>
 
   updateSubscriptionPlan(
     planId: string,

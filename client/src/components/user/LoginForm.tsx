@@ -6,12 +6,14 @@ import InputField from './InputField';
 import ActionButton from './ActionButton';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
+import { fi } from 'zod/v4/locales';
 
 const LoginForm = () => {
   const dispatch = useDispatch()
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   async function handleLogin(e: React.FormEvent) {
@@ -19,21 +21,31 @@ const LoginForm = () => {
     setError("");
 
     try {
+      setLoading(true);
       const { user, streak } = await loginApi(email, password);
       console.log(streak)
       dispatch(login({ ...user, streak: streak.currentStreak }));
       toast.success("Login successful");
       navigate("/home");
+       setLoading(false);
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || "Login failed";
       setError(errorMessage);
       console.error("Login error:", err);
+      setLoading(false);
     }
   }
 
   return (
     <form onSubmit={handleLogin} className="space-y-6">
-      <h2 className="text-center text-2xl font-semibold text-white mb-6">Sign In</h2>
+      {loading ? (
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full border-t-2 border-b-2 border-gray-900 h-6 w-6"></div>
+          <span className="ml-2">Signing In...</span>
+        </div>
+      ) : (
+        <h2 className="text-center text-2xl font-semibold text-white mb-6">Sign In</h2>
+      )}
 
       {error && (
         <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-lg text-sm">

@@ -11,7 +11,8 @@ import {
     Trash2,
     Save,
     RefreshCw,
-    AlertCircle
+    AlertCircle,
+    CheckCircle
 } from "lucide-react";
 import API from "@/lib/axios";
 import { toast } from "sonner";
@@ -61,6 +62,7 @@ export default function WeeklySchedule() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isSaved, setIsSaved] = useState(false);
 
     useEffect(() => {
         document.title = "TrainUp - Weekly Schedule";
@@ -74,13 +76,14 @@ export default function WeeklySchedule() {
             const response = await API.get("/trainer/weekly-schedule");
             if (response.data.schedule) {
                 setSchedule(response.data.schedule);
+                setIsSaved(true);
             } else {
-                // Initialize with current week
                 const currentWeek = getCurrentWeekStart();
                 setSchedule(prev => ({
                     ...prev,
                     weekStart: currentWeek
                 }));
+                setIsSaved(false);
             }
             setIsLoading(false);
         } catch (err: any) {
@@ -93,9 +96,10 @@ export default function WeeklySchedule() {
 
     const getCurrentWeekStart = () => {
         const now = new Date();
-        const dayOfWeek = now.getDay(); 
-        const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); 
+        const dayOfWeek = now.getDay();
+        const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
         const monday = new Date(now.setDate(diff));
+        monday.setHours(0, 0, 0, 0);
         return monday.toISOString().split('T')[0];
     };
 
@@ -124,6 +128,7 @@ export default function WeeklySchedule() {
                     : day
             )
         }));
+        setIsSaved(false);
     };
 
     const removeTimeSlot = (dayIndex: number, slotId: string) => {
@@ -135,6 +140,7 @@ export default function WeeklySchedule() {
                     : day
             )
         }));
+        setIsSaved(false);
     };
 
     const updateTimeSlot = (dayIndex: number, slotId: string, field: 'startTime' | 'endTime', value: string) => {
@@ -153,6 +159,7 @@ export default function WeeklySchedule() {
                     : day
             )
         }));
+        setIsSaved(false);
     };
 
     const toggleDay = (dayIndex: number, isActive: boolean) => {
@@ -164,6 +171,7 @@ export default function WeeklySchedule() {
                     : day
             )
         }));
+        setIsSaved(false);
     };
 
     const validateSchedule = (): boolean => {
@@ -171,13 +179,11 @@ export default function WeeklySchedule() {
             if (!day.isActive) continue;
 
             for (const slot of day.slots) {
-                // Check if times are valid
                 if (!slot.startTime || !slot.endTime) {
                     toast.error(`Please set both start and end times for all slots on ${day.day}`);
                     return false;
                 }
 
-                // Check if session is exactly 1 hour
                 const start = new Date(`2000-01-01T${slot.startTime}`);
                 const end = new Date(`2000-01-01T${slot.endTime}`);
                 const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
@@ -187,7 +193,6 @@ export default function WeeklySchedule() {
                     return false;
                 }
 
-                // Check for overlapping slots on the same day
                 const currentSlotStart = start.getTime();
                 const currentSlotEnd = end.getTime();
 
@@ -220,9 +225,11 @@ export default function WeeklySchedule() {
                 weekStart: schedule.weekStart || getCurrentWeekStart()
             };
 
-            await API.post("/trainer/weekly-schedule", scheduleData);
+            const response = await API.post("/trainer/weekly-schedule", scheduleData);
+            setSchedule(response.data.schedule);
+            console.log('weekly schedule data', response.data.schedule);
+            setIsSaved(true);
             toast.success("Weekly schedule saved successfully!");
-            fetchSchedule(); // Refresh to get the saved version
         } catch (err: any) {
             console.error("Failed to save schedule:", err);
             toast.error(err.response?.data?.message || "Failed to save schedule");
@@ -289,23 +296,31 @@ export default function WeeklySchedule() {
                                 <Calendar className="h-8 w-8 text-primary" />
                                 Weekly Schedule
                             </h1>
-                            <Button
-                                onClick={saveSchedule}
-                                disabled={isSaving}
-                                className="bg-gradient-to-r from-primary to-primary/90"
-                            >
-                                {isSaving ? (
-                                    <>
-                                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save className="h-4 w-4 mr-2" />
-                                        Save Schedule
-                                    </>
-                                )}
-                            </Button>
+                            {!isSaved && (
+                                <Button
+                                    onClick={saveSchedule}
+                                    disabled={isSaving}
+                                    className="bg-gradient-to-r from-primary to-primary/90"
+                                >
+                                    {isSaving ? (
+                                        <>
+                                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save className="h-4 w-4 mr-2" />
+                                            Save Schedule
+                                        </>
+                                    )}
+                                </Button>
+                            )}
+                            {isSaved && (
+                                <div className="flex items-center gap-2 text-green-600">
+                                    <CheckCircle className="h-4 w-4" />
+                                    <span className="text-sm font-medium">Saved</span>
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <p className="text-muted-foreground">
@@ -411,7 +426,6 @@ export default function WeeklySchedule() {
                             </Card>
                         ))}
 
-                        {/* Important Notes */}
                         <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
                             <div className="flex items-start space-x-2">
                                 <AlertCircle className="h-5 w-5 text-primary mt-0.5" />

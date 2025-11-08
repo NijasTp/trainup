@@ -77,11 +77,15 @@ import GymReapply from './pages/gym/GymReapply';
 import GymCreateSubscriptionPlan from './pages/gym/GymCreateSubscriptionPlan';
 import GymSubscriptionList from './pages/gym/GymSubscriptionList';
 import GymEditSubscriptionPlan from './pages/gym/GymEditSubscriptionPlan';
-import GymAnnouncementManagement from './pages/gym/GymAnnouncementManagement';
+import GymAnnouncementManagement from './pages/gym/GymCreateAnnouncement';
 import GymsListing from './pages/user/GymListing';
 import IndividualGym from './pages/user/IndividualGym';
 import MyGym from './pages/user/MyGym';
 import GymAnnouncements from './pages/user/GymAnnouncements';
+import UserGymDashboard from './pages/user/UserGymDashboard';
+import GymCreateAnnouncement from './pages/gym/GymCreateAnnouncement';
+import GymEditAnnouncement from './pages/gym/GymEditAnnouncement';
+import GymAttendanceView from './pages/gym/GymAttendanceView';
 
 function App() {
   return (
@@ -113,6 +117,7 @@ function App() {
         <Route path={ROUTES.USER_GYMS} element={<ProtectedRoute><GymsListing /></ProtectedRoute>} />
         <Route path={ROUTES.USER_INDIVIDUAL_GYM} element={<ProtectedRoute><IndividualGym /></ProtectedRoute>} />
         <Route path={ROUTES.USER_MY_GYM} element={<ProtectedRoute><MyGym /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_GYM_DASHBOARD} element={<ProtectedRoute><UserGymDashboard /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYM_ANNOUNCEMENTS} element={<ProtectedRoute><GymAnnouncements /></ProtectedRoute>} />
 
         <Route path={ROUTES.USER_WORKOUTS_PAGE} element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
@@ -160,6 +165,9 @@ function App() {
         <Route path={ROUTES.GYM_SUBSCRIPTIONS_NEW} element={<GymProtectedRoute><GymCreateSubscriptionPlan /></GymProtectedRoute>} />
         <Route path={ROUTES.GYM_SUBSCRIPTIONS_EDIT} element={<GymProtectedRoute><GymEditSubscriptionPlan /></GymProtectedRoute>} />
         <Route path={ROUTES.GYM_ANNOUNCEMENTS} element={<GymProtectedRoute><GymAnnouncementManagement /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_ANNOUNCEMENTS_NEW} element={<GymProtectedRoute><GymCreateAnnouncement /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_ANNOUNCEMENTS_EDIT} element={<GymProtectedRoute><GymEditAnnouncement /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_ATTENDANCE} element={<GymProtectedRoute><GymAttendanceView /></GymProtectedRoute>} />
 
         {/* Admin Routes */}
         <Route path={ROUTES.ADMIN_LOGIN} element={<AdminPreventLoggedIn><AdminLogin /></AdminPreventLoggedIn>} />

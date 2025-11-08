@@ -15,8 +15,9 @@ import { MESSAGES } from '../constants/messages';
 import { logger } from '../utils/logger.util';
 import { ITransaction } from '../models/transaction.model';
 import { AppError } from '../utils/appError.util';
-import { addMonths } from 'date-fns';
+import { addDays, addMonths, addYears } from 'date-fns';
 import { IMailService } from '../core/interfaces/services/IMailService';
+import { IGymReminderService } from '../core/interfaces/services/IGymReminderService';
 
 @injectable()
 export class PaymentController {
@@ -27,7 +28,8 @@ export class PaymentController {
     @inject(TYPES.ITransactionService) private _transactionService: ITransactionService,
     @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
     @inject(TYPES.IGymService) private _gymService: IGymService,
-    @inject(TYPES.IMailService) private _emailService: IMailService
+    @inject(TYPES.IMailService) private _emailService: IMailService,
+    @inject(TYPES.IGymReminderService) private _gymReminderService: IGymReminderService
   ) {}
 
   async createOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -88,7 +90,7 @@ export class PaymentController {
         throw new AppError('Invalid plan type', STATUS_CODE.BAD_REQUEST);
       }
 
-      const isValid = await this._paymentService.verifyPayment(
+      const isValid = await this._paymentService.verifyTrainerPayment(
         dto.orderId,
         dto.paymentId,
         dto.signature,
@@ -178,7 +180,6 @@ export class PaymentController {
     }
   }
 
-  // New gym payment methods
   async createGymOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: CreateGymTransactionDto = req.body;
@@ -257,6 +258,28 @@ export class PaymentController {
         throw new AppError('User already has a gym membership', STATUS_CODE.BAD_REQUEST);
       }
 
+      const subscriptionPlan = await this._gymService.getSubscriptionPlan(dto.subscriptionPlanId);
+      if (!subscriptionPlan) {
+        throw new AppError('Subscription plan not found', STATUS_CODE.NOT_FOUND);
+      }
+
+      const startDate = new Date();
+      let endDate: Date;
+
+      switch (subscriptionPlan.durationUnit) {
+        case 'day':
+          endDate = addDays(startDate, subscriptionPlan.duration);
+          break;
+        case 'month':
+          endDate = addMonths(startDate, subscriptionPlan.duration);
+          break;
+        case 'year':
+          endDate = addYears(startDate, subscriptionPlan.duration);
+          break;
+        default:
+          endDate = addMonths(startDate, subscriptionPlan.duration);
+      }
+
       transaction = await this._paymentService.updateGymTransactionStatus(
         dto.orderId,
         'completed',
@@ -264,12 +287,27 @@ export class PaymentController {
         dto.signature
       );
 
-      await this._userService.updateUserGymMembership(userId, dto.gymId, dto.preferredTime);
+
+      await this._userService.updateUserGymMembership(
+        userId,
+        dto.gymId,
+        dto.subscriptionPlanId,
+        startDate,
+        endDate,
+        dto.preferredTime
+      );
 
       await this._gymService.addMemberToGym(dto.gymId, userId);
 
+      
+      await this._gymReminderService.saveReminderPreference(
+        userId,
+        dto.gymId,
+        dto.preferredTime
+      );
+
+      // Send confirmation email
       const gymDetails = await this._gymService.getGymById(dto.gymId);
-      const subscriptionPlan = await this._gymService.getSubscriptionPlan(dto.subscriptionPlanId);
       
       if (user && gymDetails && subscriptionPlan) {
         await this._emailService.sendGymSubscriptionEmail(

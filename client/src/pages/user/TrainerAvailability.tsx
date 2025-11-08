@@ -75,7 +75,7 @@ export default function TrainerAvailability() {
         try {
             await API.post("/user/book-session", { slotId });
             toast.success("Session request sent successfully!");
-            fetchAvailability(); // Refresh the list
+            fetchAvailability(); 
         } catch (err: any) {
             console.error("Failed to book slot:", err);
             toast.error(err.response?.data?.error || "Failed to book session");
@@ -230,7 +230,6 @@ export default function TrainerAvailability() {
                                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                             {slotsByDay[day].map((slot) => {
                                                 const isPastSlot = isSlotInPast(slot.date, slot.startTime);
-                                                const canBook = !slot.isBooked && !slot.isRequested && !isPastSlot;
                                                 
                                                 return (
                                                     <Card

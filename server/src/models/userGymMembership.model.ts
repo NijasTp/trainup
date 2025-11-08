@@ -10,6 +10,7 @@ export interface IUserGymMembership extends Document {
   subscriptionStartDate: Date;
   subscriptionEndDate: Date;
   paymentStatus: 'paid' | 'pending' | 'overdue';
+  preferredTime?: string; 
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,6 +25,7 @@ const userGymMembershipSchema: Schema<IUserGymMembership> = new Schema(
     subscriptionStartDate: { type: Date, required: true },
     subscriptionEndDate: { type: Date, required: true },
     paymentStatus: { type: String, enum: ['paid', 'pending', 'overdue'], default: 'pending' },
+    preferredTime: { type: String, default: 'Anytime' }, 
   },
   { timestamps: true }
 );

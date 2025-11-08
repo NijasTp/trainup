@@ -1,9 +1,10 @@
 import { store } from "../redux/store";
 import { logout as userLogout } from "../redux/slices/userAuthSlice";
-import axios from "axios";
 import { logout as adminLogout } from "@/redux/slices/adminAuthSlice";
 import { logoutTrainer } from "@/redux/slices/trainerAuthSlice";
 import { logoutGym } from "@/redux/slices/gymAuthSlice";
+import axios from "axios";
+import toast from "react-hot-toast"; 
 
 const api = axios.create({
   baseURL: "/api",
@@ -17,8 +18,13 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response?.status;
 
-    if (status === 403) {
+    if (status === 404) {
+      toast.error("Requested resource not found (404)");
+    } else if (status === 500) {
+      toast.error("Internal server error (500). Please try again later.");
+    }
 
+    if (status === 403) {
       const state = store.getState();
       let role: string | null = null;
 
@@ -60,9 +66,8 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         await api.post("/user/refresh-token", {}, { withCredentials: true });
-        return api(originalRequest);      
+        return api(originalRequest);
       } catch (refreshError) {
-
         const state = store.getState();
         let role: string | null = null;
 

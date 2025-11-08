@@ -35,13 +35,14 @@ export interface IUserRepository {
   updateProfile(userId: string, updates: UserUpdateProfileDto): Promise<IUser | null>;
   updateTrainer(userId: string, trainerId: string): Promise<void>;
   updatePlan(userId: string, planType: 'basic' | 'premium' | 'pro'): Promise<void>;
-    updateUserGymMembership(
-    userId: string,
-    gymId: string,
-    planId: string,
-    startDate: Date,
-    endDate: Date
-  ): Promise<IUserGymMembership>;
+ updateUserGymMembership(
+  userId: string,
+  gymId: string,
+  planId: string,
+  startDate: Date,
+  endDate: Date,
+  preferredTime?: string
+): Promise<IUserGymMembership>;
   removeTrainer(userId: string): Promise<void>;
   updatePassword(email: string, hashedPassword: string): Promise<void>;
 }

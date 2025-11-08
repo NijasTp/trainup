@@ -10,7 +10,6 @@ import {
   Users,
   Search,
   Filter,
-  CreditCard,
   ChevronRight
 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -125,6 +124,8 @@ export default function GymsListing() {
             Discover state-of-the-art facilities and join a community of fitness enthusiasts
           </p>
         </div>
+            <Button onClick={()=> navigate('/gyms/my-gym')}> Go to your gym</Button>
+
 
         {/* Search and Filters */}
         <Card className="bg-card/60 backdrop-blur-sm border-border/50">
@@ -228,10 +229,7 @@ export default function GymsListing() {
                         <Badge variant="secondary" className="text-xs">
                           {gym.planCount} plans available
                         </Badge>
-                        <div className="flex items-center gap-1 text-primary font-bold">
-                          <CreditCard className="h-3 w-3" />
-                          <span>₹{gym.minPrice}/mo</span>
-                        </div>
+                      
                       </div>
 
                       {/* Action Button */}

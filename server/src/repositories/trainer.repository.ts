@@ -5,19 +5,20 @@ import { Types } from 'mongoose'
 import { IUser, UserModel } from '../models/user.model'
 import { TrainerResponseDto, ClientDto } from '../dtos/trainer.dto'
 import { SlotModel } from '../models/slot.model'
+import { BaseRepository } from './base.repository'
 
 @injectable()
-export class TrainerRepository implements ITrainerRepository {
+export class TrainerRepository extends BaseRepository<ITrainer> implements ITrainerRepository {
+  constructor() {
+    super(TrainerModel);
+  }
+
   async findByEmail (email: string): Promise<ITrainer | null> {
-    return await TrainerModel.findOne({ email })
+    return await this.findOne({ email });
   }
 
   async findById (id: string): Promise<ITrainer | null> {
-    return await TrainerModel.findById(id).select('-password')
-  }
-
-  async create (trainerData: Partial<ITrainer>): Promise<ITrainer> {
-    return await TrainerModel.create(trainerData)
+    return await super.findById(id);
   }
 
   async findAll (
@@ -34,7 +35,7 @@ export class TrainerRepository implements ITrainerRepository {
     minPrice?: string,
     maxPrice?: string
   ): Promise<TrainerResponseDto[]> {
-    const query: any = {}
+    const query: Record<string, unknown> = {}
 
     if (isVerified && isVerified !== 'all') {
       if (isVerified === 'verified') query.profileStatus = 'approved'
@@ -49,7 +50,7 @@ export class TrainerRepository implements ITrainerRepository {
         { bio: { $regex: search, $options: 'i' } }
       ]
       if (specialization === 'Other') {
-        query.$or.push({
+        (query.$or as Record<string, unknown>[]).push({
           specialization: {
             $regex: search,
             $options: 'i',
@@ -65,7 +66,7 @@ export class TrainerRepository implements ITrainerRepository {
           }
         })
       } else if (specialization) {
-        query.$or.push({
+        (query.$or as Record<string, unknown>[]).push({
           specialization: { $regex: `^${specialization}$`, $options: 'i' }
         })
       }
@@ -89,14 +90,13 @@ export class TrainerRepository implements ITrainerRepository {
     if (isBanned === 'banned') query.isBanned = true
 
     if (experience) {
-      const experienceMap: { [key: string]: { $gte?: number; $lte?: number } } =
-        {
-          'Less than 1 year': { $lte: 1 },
-          '1–3 years': { $gte: 1, $lte: 3 },
-          '3–5 years': { $gte: 3, $lte: 5 },
-          '5–10 years': { $gte: 5, $lte: 10 },
-          '10+ years': { $gte: 10 }
-        }
+      const experienceMap: Record<string, Record<string, number>> = {
+        'Less than 1 year': { $lte: 1 },
+        '1–3 years': { $gte: 1, $lte: 3 },
+        '3–5 years': { $gte: 3, $lte: 5 },
+        '5–10 years': { $gte: 5, $lte: 10 },
+        '10+ years': { $gte: 10 }
+      }
       const expYears = experienceMap[experience]
       if (expYears) {
         query.experience = {
@@ -112,27 +112,25 @@ export class TrainerRepository implements ITrainerRepository {
     }
 
     if (minPrice || maxPrice) {
-      query.price = {}
+      const priceQuery: Record<string, number> = {}
       if (minPrice && !isNaN(parseFloat(minPrice))) {
-        query.price.$gte = parseFloat(minPrice)
+        priceQuery.$gte = parseFloat(minPrice)
       }
       if (maxPrice && !isNaN(parseFloat(maxPrice))) {
-        query.price.$lte = parseFloat(maxPrice)
+        priceQuery.$lte = parseFloat(maxPrice)
       }
+      query.price = priceQuery
     }
 
     if (startDate || endDate) {
-      query.createdAt = {}
-      if (startDate) query.createdAt.$gte = new Date(startDate)
-      if (endDate) query.createdAt.$lte = new Date(endDate)
+      const dateQuery: Record<string, Date> = {}
+      if (startDate) dateQuery.$gte = new Date(startDate)
+      if (endDate) dateQuery.$lte = new Date(endDate)
+      query.createdAt = dateQuery
     }
 
-    const trainers = await TrainerModel.find(query)
-      .skip(skip)
-      .limit(limit)
-      .lean()
-      .exec()
-    return trainers.map(trainer => this.mapToResponseDto(trainer as ITrainer))
+    const trainers = await this.find(query, { skip, limit });
+    return trainers.map(trainer => this.mapToResponseDto(trainer))
   }
 
   async count (
@@ -147,7 +145,7 @@ export class TrainerRepository implements ITrainerRepository {
     minPrice?: string,
     maxPrice?: string
   ) {
-    const query: any = {}
+    const query: Record<string, unknown> = {}
 
     if (isVerified && isVerified !== 'all') {
       if (isVerified === 'verified') query.profileStatus = 'approved'
@@ -162,7 +160,7 @@ export class TrainerRepository implements ITrainerRepository {
         { bio: { $regex: search, $options: 'i' } }
       ]
       if (specialization === 'Other') {
-        query.$or.push({
+        (query.$or as Record<string, unknown>[]).push({
           specialization: {
             $regex: search,
             $options: 'i',
@@ -178,7 +176,7 @@ export class TrainerRepository implements ITrainerRepository {
           }
         })
       } else if (specialization) {
-        query.$or.push({
+        (query.$or as Record<string, unknown>[]).push({
           specialization: { $regex: `^${specialization}$`, $options: 'i' }
         })
       }
@@ -202,14 +200,13 @@ export class TrainerRepository implements ITrainerRepository {
     if (isBanned === 'banned') query.isBanned = true
 
     if (experience) {
-      const experienceMap: { [key: string]: { $gte?: number; $lte?: number } } =
-        {
-          'Less than 1 year': { $lte: 1 },
-          '1–3 years': { $gte: 1, $lte: 3 },
-          '3–5 years': { $gte: 3, $lte: 5 },
-          '5–10 years': { $gte: 5, $lte: 10 },
-          '10+ years': { $gte: 10 }
-        }
+      const experienceMap: Record<string, Record<string, number>> = {
+        'Less than 1 year': { $lte: 1 },
+        '1–3 years': { $gte: 1, $lte: 3 },
+        '3–5 years': { $gte: 3, $lte: 5 },
+        '5–10 years': { $gte: 5, $lte: 10 },
+        '10+ years': { $gte: 10 }
+      }
       const expYears = experienceMap[experience]
       if (expYears) {
         query.experience = {
@@ -223,18 +220,20 @@ export class TrainerRepository implements ITrainerRepository {
     if (minRating) query.rating = { $gte: parseFloat(minRating) }
 
     if (minPrice || maxPrice) {
-      query.price = {}
-      if (minPrice) query.price.$gte = parseFloat(minPrice)
-      if (maxPrice) query.price.$lte = parseFloat(maxPrice)
+      const priceQuery: Record<string, number> = {}
+      if (minPrice) priceQuery.$gte = parseFloat(minPrice)
+      if (maxPrice) priceQuery.$lte = parseFloat(maxPrice)
+      query.price = priceQuery
     }
 
     if (startDate || endDate) {
-      query.createdAt = {}
-      if (startDate) query.createdAt.$gte = new Date(startDate)
-      if (endDate) query.createdAt.$lte = new Date(endDate)
+      const dateQuery: Record<string, Date> = {}
+      if (startDate) dateQuery.$gte = new Date(startDate)
+      if (endDate) dateQuery.$lte = new Date(endDate)
+      query.createdAt = dateQuery
     }
 
-    return await TrainerModel.countDocuments(query).exec()
+    return await this.countDocuments(query);
   }
 
 
@@ -254,9 +253,7 @@ export class TrainerRepository implements ITrainerRepository {
     const query = Types.ObjectId.isValid(identifier)
       ? { _id: identifier }
       : { email: identifier }
-    return await TrainerModel.findOneAndUpdate(query, updateData, {
-      new: true
-    })
+    return await this.findOneAndUpdate(query, updateData)
   }
 
   async addClient (trainerId: string, userId: string): Promise<void> {
@@ -288,7 +285,7 @@ export class TrainerRepository implements ITrainerRepository {
       throw new Error('Trainer not found')
     }
 
-    const query: any = {
+    const query: Record<string, unknown> = {
       _id: { $in: trainer.clients }
     }
 
@@ -326,7 +323,7 @@ export class TrainerRepository implements ITrainerRepository {
       throw new Error('Trainer not found')
     }
 
-    const query: any = {
+    const query: Record<string, unknown> = {
       _id: { $in: trainer.clients },
       subscriptionStartDate: { $gte: startDate, $lte: endDate }
     }

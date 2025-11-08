@@ -7,7 +7,16 @@ import { logoutTrainer } from "@/redux/slices/trainerAuthSlice";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Bell, LogOut, Users, MessageSquare, User } from "lucide-react";
+import { 
+  Bell, 
+  LogOut, 
+  Users, 
+  User, 
+  DollarSign, 
+  Calendar,
+  Clock,
+  UserCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 import API from "@/lib/axios";
 
@@ -94,10 +103,26 @@ export default function TrainerSiteHeader() {
           <Button
             variant="ghost"
             className="text-foreground hover:bg-primary/5 hover:text-primary transition-all"
-            onClick={() => navigate("/trainer/chats")} 
+            onClick={() => navigate("/trainer/slots")}
           >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Chat
+            <Clock className="h-4 w-4 mr-2" />
+            Slots
+          </Button>
+          <Button
+            variant="ghost"
+            className="text-foreground hover:bg-primary/5 hover:text-primary transition-all"
+            onClick={() => navigate("/trainer/weekly-schedule")}
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Schedule
+          </Button>
+          <Button
+            variant="ghost"
+            className="text-foreground hover:bg-primary/5 hover:text-primary transition-all"
+            onClick={() => navigate("/trainer/session-requests")}
+          >
+            <UserCheck className="h-4 w-4 mr-2" />
+            Requests
           </Button>
           <Button
             variant="ghost"
@@ -169,7 +194,6 @@ export default function TrainerSiteHeader() {
           </DropdownMenu>
         </div>
 
-        {/* Mobile Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="md:hidden">
             <Button
@@ -187,17 +211,38 @@ export default function TrainerSiteHeader() {
           >
             <DropdownMenuItem
               className="text-foreground hover:bg-primary/5 cursor-pointer"
-              onSelect={() => navigate("/trainer/dashboard")}
+              onSelect={() => navigate("/trainer/clients")}
             >
               <Users className="h-4 w-4 mr-2" />
               Clients
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-foreground hover:bg-primary/5 cursor-pointer"
-              onSelect={() => navigate("/trainer/chat/:clientId")}
+              onSelect={() => navigate("/trainer/transactions")}
             >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Chat
+              <DollarSign className="h-4 w-4 mr-2" />
+              Transactions
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-foreground hover:bg-primary/5 cursor-pointer"
+              onSelect={() => navigate("/trainer/slots")}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Slots
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-foreground hover:bg-primary/5 cursor-pointer"
+              onSelect={() => navigate("/trainer/weekly-schedule")}
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Schedule
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-foreground hover:bg-primary/5 cursor-pointer"
+              onSelect={() => navigate("/trainer/session-requests")}
+            >
+              <UserCheck className="h-4 w-4 mr-2" />
+              Requests
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-foreground hover:bg-primary/5 cursor-pointer"
