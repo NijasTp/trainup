@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { IPaymentService } from '../core/interfaces/services/IPaymentService';
 import dotenv from 'dotenv';
 import { CreateOrderResponseDto } from '../dtos/payment.dto';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
 import { IGymTransaction, GymTransactionModel } from '../models/gymTransaction.model';

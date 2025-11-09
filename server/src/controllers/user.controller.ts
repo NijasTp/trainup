@@ -37,7 +37,7 @@ import {
   RefreshTokenResponseDto,
   AddWeightDto
 } from '../dtos/user.dto'
-import { MESSAGES } from '../constants/messages'
+import { MESSAGES } from '../constants/messages.constants'
 import { AppError } from '../utils/appError.util'
 import { IGymService } from '../core/interfaces/services/IGymService'
 

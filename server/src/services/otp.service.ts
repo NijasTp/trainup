@@ -8,7 +8,7 @@ import { sendOtpHtml } from '../utils/sendEmail';
 import { IGymRepository } from '../core/interfaces/repositories/IGymRepository';
 import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepository';
 import { logger } from '../utils/logger.util';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
 

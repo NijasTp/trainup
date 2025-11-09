@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { IDietDayRepository } from '../core/interfaces/repositories/IDietRepository';
 import TYPES from '../core/types/types';
 import { IDietDay, IMeal } from '../models/diet.model';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { IStreakService } from '../core/interfaces/services/IStreakService';
 import { CreateOrGetDayResponseDto, MealDto } from '../dtos/diet.dto';
 import { IDietService } from '../core/interfaces/services/IDietService';

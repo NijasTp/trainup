@@ -6,7 +6,7 @@ import { IWeeklySchedule } from '../models/weeklySchedule.model';
 import TYPES from '../core/types/types';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 
 @injectable()
 export class WeeklyScheduleService implements IWeeklyScheduleService {

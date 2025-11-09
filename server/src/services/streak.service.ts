@@ -4,7 +4,7 @@ import { IStreakService } from '../core/interfaces/services/IStreakService';
 import { IStreakRepository } from '../core/interfaces/repositories/IStreakRepository';
 import TYPES from '../core/types/types';
 import { IStreak } from '../models/streak.model';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
 

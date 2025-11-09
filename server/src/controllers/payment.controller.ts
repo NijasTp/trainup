@@ -11,7 +11,7 @@ import { IGymService } from '../core/interfaces/services/IGymService';
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import { CreateOrderRequestDto, CreateOrderResponseDto, VerifyPaymentRequestDto, VerifyPaymentResponseDto } from '../dtos/payment.dto';
 import { CreateGymTransactionDto, VerifyGymPaymentDto } from '../dtos/gym.dto';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { logger } from '../utils/logger.util';
 import { ITransaction } from '../models/transaction.model';
 import { AppError } from '../utils/appError.util';

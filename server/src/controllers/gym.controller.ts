@@ -7,7 +7,7 @@ import { IOTPService } from '../core/interfaces/services/IOtpService';
 import { UploadedFile } from 'express-fileupload';
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService';
 import { STATUS_CODE } from '../constants/status';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { Role } from '../constants/role';
 import {
   GymRequestOtpDto,

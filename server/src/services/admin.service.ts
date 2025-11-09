@@ -5,7 +5,7 @@ import { IAdminRepository } from '../core/interfaces/repositories/IAdminReposito
 import TYPES from '../core/types/types';
 import { IJwtService } from '../core/interfaces/services/IJwtService';
 import { AdminLoginRequestDto, AdminLoginResponseDto } from '../dtos/admin.dto';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
 

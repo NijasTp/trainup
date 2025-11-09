@@ -8,7 +8,7 @@ import { IStreakService } from '../core/interfaces/services/IStreakService';
 import { WorkoutSessionResponseDto, WorkoutDayResponseDto, GetAdminTemplatesResponseDto } from '../dtos/workout.dto'
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status'
-import { MESSAGES } from '../constants/messages'
+import { MESSAGES } from '../constants/messages.constants'
 
 @injectable()
 export class WorkoutService implements IWorkoutService {

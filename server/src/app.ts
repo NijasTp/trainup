@@ -6,8 +6,8 @@ import { Server as SocketServer } from "socket.io";
 import fileUpload from 'express-fileupload';
 import trainerRoutes from './routes/trainer.route'
 import gymRoutes from './routes/gym.route'
-import workoutRoutes from './routes/workout.routes'
-import dietRoutes from './routes/diet.routes'
+import workoutRoutes from './routes/workout.route'
+import dietRoutes from './routes/diet.route'
 import paymentRoutes from './routes/payment.route'
 import videoCallRoutes from './routes/videoCall.route'
 import gymAttendanceRoutes from './routes/gymAttendance.route'

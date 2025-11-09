@@ -10,6 +10,10 @@ const TYPES = {
   IUserPlanRepository: Symbol.for("IUserPlanRepository"),
   IUserPlanService: Symbol.for("IUserPlanService"),
 
+  INotificationRepository: Symbol.for("INotificationRepository"),
+  INotificationService: Symbol.for("INotificationService"),
+  NotificationController: Symbol.for("NotificationController"),
+
   ISlotRepository: Symbol.for("ISlotRepository"),
   ISlotService: Symbol.for("ISlotService"),
 

@@ -19,7 +19,7 @@ import {
   UpdateGymStatusDto,
   CheckSessionResponseDto,
 } from '../dtos/admin.dto';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { logger } from '../utils/logger.util';
 import { AppError } from '../utils/appError.util';
 
@@ -97,6 +97,7 @@ export class AdminController {
       }
       res.status(STATUS_CODE.OK).json(application);
     } catch (err) {
+      console.log(err)
       next(err);
     }
   }

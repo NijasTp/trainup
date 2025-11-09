@@ -244,24 +244,24 @@ export class TransactionRepository implements ITransactionRepository {
     };
   }
 
-  async getRecentActivity(trainerId: string): Promise<Array<{ type: string; message: string; date: string }>> {
-    const transactions = await TransactionModel.find({
-      trainerId,
-      status: 'completed'
-    })
-      .populate('userId', 'name')
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .lean();
+async getRecentActivity(trainerId: string) {
+  const transactions = await TransactionModel.find({
+    trainerId,
+    status: 'completed',
+  })
+    .populate<{ userId: { name: string } }>('userId', 'name') 
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .lean();
 
-
-
-    return transactions.map(t => ({
-      type: 'subscription',
-      message: `New ${t.planType} subscription from ${typeof t.userId === 'object' && t.userId !== null && 'name' in t.userId ? (t.userId as IUser).name : t.userId}`,
-      date: t.createdAt.toISOString()
-    }));
-  }
+  return transactions.map(t => ({
+    type: 'subscription',
+    message: `New ${t.planType} subscription from ${
+      t.userId?.name ?? 'Unknown User'
+    }`,
+    date: t.createdAt.toISOString(),
+  }));
+}
 
   private mapToTransactionDto(transaction: ITransaction): ITransactionDTO {
     return {

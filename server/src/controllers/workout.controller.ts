@@ -4,7 +4,7 @@ import { STATUS_CODE } from '../constants/status';
 import TYPES from '../core/types/types';
 import { IWorkoutService } from '../core/interfaces/services/IWorkoutService';
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { Role } from '../constants/role';
 import {
   CreateSessionRequestDto,

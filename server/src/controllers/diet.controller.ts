@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../core/types/types';
 import { STATUS_CODE as STATUS } from '../constants/status';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { DietTemplateService } from '../services/dietTemplate.service';
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import {

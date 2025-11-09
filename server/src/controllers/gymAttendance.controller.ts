@@ -5,7 +5,7 @@ import { IAttendanceService } from '../core/interfaces/services/IAttendanceServi
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import { STATUS_CODE } from '../constants/status';
 import { AppError } from '../utils/appError.util';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 
 @injectable()
 export class AttendanceController {

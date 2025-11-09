@@ -348,7 +348,9 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
       isBanned: trainer.isBanned,
       role: trainer.role,
       gymId: trainer.gymId?.toString(),
-      clients: trainer.clients.map(c => c.toString()),
+      clients: Array.isArray(trainer.clients) 
+      ? trainer.clients.map(c => c.toString()) 
+      : [],
       bio: trainer.bio,
       location: trainer.location,
       specialization: trainer.specialization,

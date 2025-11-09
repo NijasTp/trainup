@@ -8,7 +8,7 @@ import { IAdminRepository } from "../core/interfaces/repositories/IAdminReposito
 import { IGymRepository } from "../core/interfaces/repositories/IGymRepository";
 import TYPES from "../core/types/types";
 import { Role } from "../constants/role";
-import { MESSAGES } from "../constants/messages";
+import { MESSAGES } from "../constants/messages.constants";
 
 export const roleMiddleware = (allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {

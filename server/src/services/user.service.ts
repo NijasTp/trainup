@@ -9,7 +9,7 @@ import { IJwtService } from '../core/interfaces/services/IJwtService';
 import { IUser } from '../models/user.model';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { 
   LoginDto, 
   LoginResponseDto, 

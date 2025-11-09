@@ -2,7 +2,7 @@ import { injectable } from 'inversify'
 import { UserModel, IUser } from '../models/user.model'
 import { IUserRepository } from '../core/interfaces/repositories/IUserRepository'
 import { Types } from 'mongoose'
-import { MESSAGES } from '../constants/messages'
+import { MESSAGES } from '../constants/messages.constants'
 import { UserResponseDto, UserUpdateProfileDto } from '../dtos/user.dto'
 import {
   IUserGymMembership,

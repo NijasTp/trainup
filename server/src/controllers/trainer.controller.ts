@@ -32,7 +32,7 @@ import {
   GetClientParamsDto,
   GetClientResponseDto
 } from '../dtos/trainer.dto'
-import { MESSAGES } from '../constants/messages'
+import { MESSAGES } from '../constants/messages.constants'
 import { AppError } from '../utils/appError.util'
 import { Role } from '../constants/role'
 

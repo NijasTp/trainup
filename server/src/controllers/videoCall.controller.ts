@@ -4,7 +4,7 @@ import { IVideoCallService } from '../core/interfaces/services/IVideoCallService
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService';
 import TYPES from '../core/types/types';
 import { STATUS_CODE } from '../constants/status';
-import { MESSAGES } from '../constants/messages';
+import { MESSAGES } from '../constants/messages.constants';
 import { logger } from '../utils/logger.util';
 import { AppError } from '../utils/appError.util';
 

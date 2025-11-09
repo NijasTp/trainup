@@ -24,7 +24,7 @@ import {
   GymListingDto,
   MyGymResponseDto
 } from '../dtos/gym.dto'
-import { MESSAGES } from '../constants/messages'
+import { MESSAGES } from '../constants/messages.constants'
 import { AppError } from '../utils/appError.util'
 import { STATUS_CODE } from '../constants/status'
 

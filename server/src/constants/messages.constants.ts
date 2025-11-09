@@ -12,7 +12,7 @@ export const MESSAGES = {
   MAIL_DELIVERY_FAILED: "Failed to deliver email",
   EMAIL_NOT_FOUND: "Email not found",
   LOGOUT_SUCCESS: "Logged out successfully",
-  USER_UPDATED:" User updated successfully",
+  USER_UPDATED: "User updated successfully",
   INVALID_PASSWORD: "Invalid password",
 
   SLOT_OVERLAP: "This time slot overlaps with an existing session",
@@ -76,4 +76,47 @@ export const MESSAGES = {
   VIDEO_CALL_ENDED: "Video call session ended",
   INVALID_SESSION_TIME: "Cannot join session outside of scheduled time",
   SESSION_JOIN_EARLY: "You can only join the session 10 minutes before the scheduled time",
+
+  // New notification messages
+  NOTIFICATION_CREATED: "Notification created successfully",
+  NOTIFICATION_NOT_FOUND: "Notification not found",
+  NOTIFICATION_MARKED_READ: "Notification marked as read",
+  ALL_NOTIFICATIONS_MARKED_READ: "All notifications marked as read",
+  NOTIFICATION_DELETED: "Notification deleted successfully",
+
+  // Workout Template Messages  
+  WORKOUT_TEMPLATE_CREATED: "Workout template created successfully",
+  WORKOUT_TEMPLATE_UPDATED: "Workout template updated successfully",
+  WORKOUT_TEMPLATE_DELETED: "Workout template deleted successfully",
+  WORKOUT_TEMPLATE_NOT_FOUND: "Workout template not found",
+  WORKOUT_ASSIGNED_SUCCESS: "Workout assigned to user successfully",
+
+  // Diet Template Messages
+  DIET_TEMPLATE_CREATED: "Diet template created successfully", 
+  DIET_TEMPLATE_UPDATED: "Diet template updated successfully",
+  DIET_TEMPLATE_DELETED: "Diet template deleted successfully",
+  DIET_TEMPLATE_NOT_FOUND: "Diet template not found",
+  DIET_ASSIGNED_SUCCESS: "Diet plan assigned to user successfully",
+
+  // Activity Tracking Messages
+  WORKOUT_COMPLETED: "Workout completed successfully",
+  MEAL_LOGGED: "Meal logged successfully",
+  WEIGHT_LOGGED: "Weight logged successfully",
+  ATTENDANCE_MARKED: "Attendance marked successfully",
+
+  // Subscription Messages
+  TRAINER_SUBSCRIPTION_SUCCESS: "Trainer subscription successful",
+  GYM_SUBSCRIPTION_SUCCESS: "Gym subscription successful", 
+  SUBSCRIPTION_CANCELLED: "Subscription cancelled successfully",
+
+  // Session Messages
+  SESSION_REQUEST_SENT: "Session request sent successfully",
+  SESSION_REQUEST_ACCEPTED: "Session request accepted",
+  SESSION_REQUEST_REJECTED: "Session request rejected",
+  SESSION_BOOKED: "Session booked successfully",
+
+  // Admin Messages
+  VERIFICATION_APPROVED: "Verification approved successfully",
+  VERIFICATION_REJECTED: "Verification rejected",
+  USER_STATUS_UPDATED: "User status updated successfully",
 };
