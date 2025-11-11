@@ -19,12 +19,10 @@ import {
   Activity,
   TrendingDown,
   Building,
-  CreditCard,
-  Calendar
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers } from "@/services/userService";
-import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import { SiteHeader }  from "@/components/user/home/UserSiteHeader";
 import { Link, useNavigate } from "react-router-dom";
 import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";

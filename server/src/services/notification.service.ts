@@ -7,7 +7,6 @@ import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepo
 import { IGymRepository } from '../core/interfaces/repositories/IGymRepository';
 import { INotification } from '../models/notification.model';
 import { NOTIFICATION_MESSAGES, NOTIFICATION_TYPES } from '../constants/notification.constants';
-import { MESSAGES } from '../constants/messages.constants';
 import { logger } from '../utils/logger.util';
 
 @injectable()

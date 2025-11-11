@@ -77,4 +77,53 @@ export class NotificationController {
       next(err);
     }
   }
+  async createNotification(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = req.user as JwtPayload;
+      const data = req.body; 
+      const notification = await this._notificationService.createNotification({
+        ...data,
+        senderId: user.id, 
+        senderRole: user.role,
+      });
+      res.status(STATUS_CODE.CREATED).json(notification);
+    } catch (err) {
+      logger.error('Error creating notification:', err);
+      next(err);
+    }
+  }
+
+  async createBulkNotifications(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = req.user as JwtPayload;
+      const notifications = req.body; 
+      const created = await this._notificationService.createBulkNotifications(notifications);
+      res.status(STATUS_CODE.CREATED).json(created);
+    } catch (err) {
+      logger.error('Error creating bulk notifications:', err);
+      next(err);
+    }
+  }
+
+  async sendWeightReminders(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      await this._notificationService.sendWeightReminderNotifications();
+      res.status(STATUS_CODE.OK).json({ message: 'Weight reminders sent' });
+    } catch (err) {
+      logger.error('Error sending weight reminders:', err);
+      next(err);
+    }
+  }
+
+  async sendGymAnnouncement(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { gymId } = req.params;
+      const { title, message } = req.body; 
+      await this._notificationService.sendGymAnnouncementNotification(gymId, title || 'Announcement');
+      res.status(STATUS_CODE.OK).json({ message: 'Announcement sent' });
+    } catch (err) {
+      logger.error('Error sending gym announcement:', err);
+      next(err);
+    }
+  }
 }

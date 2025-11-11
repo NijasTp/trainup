@@ -86,6 +86,8 @@ import UserGymDashboard from './pages/user/UserGymDashboard';
 import GymCreateAnnouncement from './pages/gym/GymCreateAnnouncement';
 import GymEditAnnouncement from './pages/gym/GymEditAnnouncement';
 import GymAttendanceView from './pages/gym/GymAttendanceView';
+import UserNotifications from './pages/user/UserNotifications';
+import TrainerNotifications from './pages/trainer/TrainerNotifications';
 
 function App() {
   return (
@@ -100,6 +102,8 @@ function App() {
         <Route path={ROUTES.USER_SIGNUP} element={<PreventLoggedIn><Signup /></PreventLoggedIn>} />
         <Route path={ROUTES.CALLBACK} element={<Callback />} />
         <Route path={ROUTES.USER_HOME_ALT} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_NOTIFICATIONS} element={<ProtectedRoute><UserNotifications /></ProtectedRoute>} />
+
         <Route path={ROUTES.USER_PROFILE} element={<ProtectedRoute><UserProfile/></ProtectedRoute>} />
         <Route path={ROUTES.USER_EDIT_PROFILE} element={<ProtectedRoute><EditProfile/></ProtectedRoute>} />
         <Route path={ROUTES.USER_TRANSACTIONS} element={<ProtectedRoute><Transactions/></ProtectedRoute>} />
@@ -113,7 +117,6 @@ function App() {
         <Route path={ROUTES.MY_TRAINER_AVAILABILITY} element={<ProtectedRoute><TrainerAvailability /></ProtectedRoute>} />
         <Route path={ROUTES.VIDEO_CALL} element={<ProtectedRoute><VideoCallPage /></ProtectedRoute>} />
 
-        {/* New gym routes for users */}
         <Route path={ROUTES.USER_GYMS} element={<ProtectedRoute><GymsListing /></ProtectedRoute>} />
         <Route path={ROUTES.USER_INDIVIDUAL_GYM} element={<ProtectedRoute><IndividualGym /></ProtectedRoute>} />
         <Route path={ROUTES.USER_MY_GYM} element={<ProtectedRoute><MyGym /></ProtectedRoute>} />
@@ -141,6 +144,7 @@ function App() {
         <Route path={ROUTES.TRAINER_WAITLIST} element={<TrainerProtectedRoute><TrainerWaitlist /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_REJECTED} element={<TrainerProtectedRoute><TrainerReapply /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_DASHBOARD} element={<TrainerProtectedRoute><TrainerDashboard /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_NOTIFICATIONS} element={<TrainerProtectedRoute><TrainerNotifications /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENTS} element={<TrainerProtectedRoute><TrainerClients /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_TRANSACTIONS} element={<TrainerProtectedRoute><TrainerTransactions /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_PROFILE} element={<TrainerProtectedRoute><TrainerProfile /></TrainerProtectedRoute>} />

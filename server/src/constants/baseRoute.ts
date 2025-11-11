@@ -9,7 +9,8 @@ const BASE_ROUTE = {
     DIET: '/api/diet',
     PAYMENT: '/api/payment',
     VIDEO_CALL: '/api/video-call',
-    ATTENDANCE: '/api/attendance'
+    ATTENDANCE: '/api/attendance',
+    NOTIFICATION: '/api/notifications',
 }
 
 export default BASE_ROUTE;

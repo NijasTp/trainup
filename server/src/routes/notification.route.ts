@@ -14,4 +14,11 @@ router.patch('/:id/read', notificationController.markAsRead.bind(notificationCon
 router.patch('/read-all', notificationController.markAllAsRead.bind(notificationController));
 router.delete('/:id', notificationController.deleteNotification.bind(notificationController));
 
+router.post('/', notificationController.createNotification.bind(notificationController));
+
+router.post('/bulk', notificationController.createBulkNotifications.bind(notificationController));
+
+router.post('/reminders/weight', notificationController.sendWeightReminders.bind(notificationController));
+router.post('/announcements/gym/:gymId', notificationController.sendGymAnnouncement.bind(notificationController));
+
 export default router;

@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
       setTimeout(() => setIsCooldown(false), 30 * 1000);
 
     } catch (error: any) {
-      toast.error(error.message)
+      toast.error(error.response.data.error || 'Failed to send OTP')
       console.log(error.message)
     }
   }

@@ -96,6 +96,11 @@ import { IAttendanceRepository } from "../interfaces/repositories/IAttendanceRep
 import { AttendanceService } from "../../services/gymAttendence.service";
 import { IAttendanceService } from "../interfaces/services/IAttendanceService";
 import { AttendanceController } from "../../controllers/gymAttendance.controller";
+import { INotificationRepository } from "../interfaces/repositories/INotificationRepository";
+import { NotificationRepository } from "../../repositories/notification.repository";
+import { INotificationService } from "../interfaces/services/INotificationService";
+import { NotificationService } from "../../services/notification.service";
+import { NotificationController } from "../../controllers/notification.controller";
 
 
 // Create container 
@@ -105,6 +110,11 @@ const container = new Container();
 container.bind<UserController>(TYPES.UserController).to(UserController);
 container.bind<IUserService>(TYPES.IUserService).to(UserService);
 container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepository);
+
+container.bind<INotificationRepository>(TYPES.INotificationRepository).to(NotificationRepository);
+container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService);
+container.bind<NotificationController>(TYPES.NotificationController).to(NotificationController);
+
 
 container.bind<IUserPlanRepository>(TYPES.IUserPlanRepository).to(UserPlanRepository);
 container.bind<IUserPlanService>(TYPES.IUserPlanService).to(UserPlanService);
