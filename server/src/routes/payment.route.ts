@@ -16,5 +16,7 @@ router.post("/cleanup-pending", authMiddleware, paymentController.cleanupPending
 
 router.post("/gym/create-order", authMiddleware, paymentController.createGymOrder.bind(paymentController));
 router.post("/gym/verify-payment", authMiddleware, paymentController.verifyGymPayment.bind(paymentController));
+router.get("/check-pending-gym", authMiddleware, paymentController.checkPendingGymTransaction.bind(paymentController));
+router.post("/cleanup-pending-gym", authMiddleware, paymentController.cleanupPendingGymTransactions.bind(paymentController));
 
 export default router;

@@ -3,7 +3,6 @@ import { ITransactionRepository } from '../core/interfaces/repositories/ITransac
 import { ITransaction, TransactionModel } from '../models/transaction.model';
 import { SortOrder } from 'mongoose';
 import { ITransactionDTO } from '../dtos/transaction.dto';
-import { IUser, UserModel } from '../models/user.model'; // Assuming UserModel exists for client counting
 
 @injectable()
 export class TransactionRepository implements ITransactionRepository {

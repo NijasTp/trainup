@@ -6,29 +6,34 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { 
-  User, 
-  Ruler, 
-  Scale, 
-  Save, 
-  ArrowLeft, 
-  Plus, 
-  X, 
+import {
+  User,
+  Ruler,
+  Scale,
+  Save,
+  ArrowLeft,
+  Plus,
+  X,
   Target,
   Eye,
   EyeOff,
   Key,
   Weight,
   Activity,
-  Loader2
+  Loader2,
+  Upload,
+  Camera
 } from "lucide-react";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { updateUser } from "@/redux/slices/userAuthSlice";
-import { getProfile, updateProfile } from "@/services/userService"; 
+import { getProfile, updateProfile } from "@/services/userService";
 import { z } from "zod";
 import { toast } from "react-toastify";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import API from "@/lib/axios";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").trim(),
@@ -62,10 +67,10 @@ const profileSchema = z.object({
 export type ProfileFormData = z.infer<typeof profileSchema>;
 
 const goalOptions = [
-  "Weight Loss", 
-  "Muscle Gain", 
-  "Strength Training", 
-  "Endurance", 
+  "Weight Loss",
+  "Muscle Gain",
+  "Strength Training",
+  "Endurance",
   "General Fitness",
   "Flexibility",
   "Body Toning",
@@ -102,7 +107,32 @@ export default function EditProfile() {
   const [errors, setErrors] = useState<Partial<Record<keyof ProfileFormData, string>>>({});
   const navigate = useNavigate();
   const dispatch = useDispatch();
+const [open, setOpen] = useState(false)
+const [currentPassword, setCurrentPassword] = useState("")
+const [newPassword, setNewPassword] = useState("")
+const [confirmPassword, setConfirmPassword] = useState("")
+const [loading, setLoading] = useState(false)
 
+const handleChangePassword = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setLoading(true)
+  try {
+    await API.post("/user/change-password", {
+      currentPassword,
+      newPassword,
+      confirmPassword
+    })
+    toast.success("Password changed successfully!")
+    setOpen(false)
+    setCurrentPassword("")
+    setNewPassword("")
+    setConfirmPassword("")
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || "Failed to change password")
+  } finally {
+    setLoading(false)
+  }
+}
   useEffect(() => {
     document.title = "TrainUp - Edit Profile";
     fetchProfile();
@@ -143,13 +173,13 @@ export default function EditProfile() {
         toast.error('Please select a valid image file');
         return;
       }
-      
+
       if (file.size > 5 * 1024 * 1024) {
         toast.error('Image size should be less than 5MB');
         return;
       }
 
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImagePreview(reader.result as string);
@@ -166,11 +196,9 @@ export default function EditProfile() {
       setErrors({});
 
       setIsSaving(true);
-      
-      // Prepare form data for file upload
+
       const submitData = new FormData();
-      
-      // Add text fields
+
       submitData.append('name', validatedData.name);
       if (validatedData.phone) submitData.append('phone', validatedData.phone);
       if (validatedData.height) submitData.append('height', validatedData.height);
@@ -182,7 +210,7 @@ export default function EditProfile() {
       submitData.append('isPrivate', validatedData.isPrivate?.toString() || 'false');
       if (validatedData.todaysWeight) submitData.append('todaysWeight', validatedData.todaysWeight);
       if (validatedData.goalWeight) submitData.append('goalWeight', validatedData.goalWeight);
-      
+
 
 
       const response = await updateProfile(submitData);
@@ -200,7 +228,7 @@ export default function EditProfile() {
         goalWeight: response.user.goalWeight,
         profileImage: response.user.profileImage,
       }));
-      
+
       toast.success("Profile updated successfully!");
       navigate("/profile");
     } catch (err: any) {
@@ -274,11 +302,11 @@ export default function EditProfile() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <SiteHeader />
-      
+
       <main className="relative container mx-auto px-4 py-12 space-y-8">
         <div className="flex items-center gap-4 mb-8">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={() => navigate('/profile')}
             className="hover:bg-primary/5"
           >
@@ -301,7 +329,7 @@ export default function EditProfile() {
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
-          {/* Profile Image Upload 
+          {/* Profile Image Upload */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -316,7 +344,7 @@ export default function EditProfile() {
                   {formData.name ? formData.name[0]?.toUpperCase() : 'U'}
                 </AvatarFallback>
               </Avatar>
-              
+
               <div className="flex items-center gap-4">
                 <Label htmlFor="profileImage" className="cursor-pointer">
                   <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
@@ -331,14 +359,13 @@ export default function EditProfile() {
                     className="sr-only"
                   />
                 </Label>
-                
+
                 {profileImagePreview && (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setProfileImage(null);
                       setProfileImagePreview("");
                     }}
                   >
@@ -346,12 +373,12 @@ export default function EditProfile() {
                   </Button>
                 )}
               </div>
-              
+
               <p className="text-xs text-muted-foreground text-center">
                 JPG, PNG or GIF (max. 5MB)
               </p>
             </CardContent>
-          </Card> */}
+          </Card>
 
           {/* Personal Information */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
@@ -621,15 +648,50 @@ export default function EditProfile() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => toast.info("Change password feature coming soon!")}
-                className="hover:bg-primary/5"
-              >
-                <Key className="h-4 w-4 mr-2" />
-                Change Password
-              </Button>
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="hover:bg-primary/5">
+                    <Key className="h-4 w-4 mr-2" />
+                    Change Password
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Change Password</DialogTitle>
+                    <DialogDescription>
+                      Make sure your new password is strong and unique.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleChangePassword} className="space-y-4">
+                    <Input
+                      type="password"
+                      placeholder="Current password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                    />
+                    <Input
+                      type="password"
+                      placeholder="New password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                    />
+                    <Input
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                    <DialogFooter>
+                      <Button type="submit" disabled={loading}>
+                        {loading ? "Changing..." : "Change Password"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
               <p className="text-sm text-muted-foreground mt-2">
                 Update your account password for better security
               </p>

@@ -159,6 +159,18 @@ export class UserRepository implements IUserRepository {
     }).lean()
   }
 
+async findByIdWithPassword(userId: string): Promise<IUser | null> {
+  return await UserModel.findById(userId).select('+password').exec()
+}
+
+async updatePasswordWithId(userId: string, hashedPassword: string): Promise<void> {
+  await UserModel.findByIdAndUpdate(
+    userId,
+    { password: hashedPassword },
+    { new: true }
+  ).exec()
+}
+
   async updateTrainer (userId: string, trainerId: string): Promise<void> {
     await UserModel.findByIdAndUpdate(userId, {
       assignedTrainer: trainerId,

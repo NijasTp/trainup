@@ -2,7 +2,7 @@ import API from '../lib/axios'
 
 export const getTrainers = async (
   page: number,
-  limit: number = 8,
+  limit: number = 1,
   search: string = '',
   specialization: string = '',
   experience: string = '',
@@ -50,8 +50,22 @@ export const addWeight = async (weight: number) => {
   const response = await API.post("/user/weight", { weight });
   return response.data;
 }
-
 export const getWeightHistory = async () => {
-  const response = await API.get("/user/weight");
-  return response.data;
+  const response = await API.get("/user/weight")
+  return response.data
 }
+
+export const getGymRatings = async (id: string) => {
+  const response = await API.get(`/user/gym/ratings/${id}`)
+  return response.data
+}
+
+export const addTrainerRating = async (trainerId: string, rating: number, comment: string, subscriptionPlan?: string) => {
+  const response = await API.post("/user/rate-trainer", { trainerId, rating, comment, subscriptionPlan });
+  return response.data;
+};
+
+export const addGymRating = async (gymId: string, rating: number, comment: string, subscriptionPlan?: string) => {
+  const response = await API.post("/user/rate-gym", { gymId, rating, comment, subscriptionPlan });
+  return response.data;
+};

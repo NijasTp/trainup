@@ -332,6 +332,32 @@ export class PaymentController {
     }
   }
 
+  async checkPendingGymTransaction(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = (req.user as JwtPayload).id;
+    const pending = await this._paymentService.findPendingGymTransactionByUser(userId);
+    res.status(STATUS_CODE.OK).json({ hasPending: !!pending, transaction: pending });
+  } catch (err) {
+    logger.error('Check Pending Gym Transaction Error', err);
+    next(err);
+  }
+}
+
+async cleanupPendingGymTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = (req.user as JwtPayload).id;
+    const updated = await this._paymentService.markUserPendingGymTransactionsAsFailed(userId);
+    res.status(STATUS_CODE.OK).json({
+      success: true,
+      message: MESSAGES.GYM_PAYMENT_CANCELLED,
+      updatedCount: updated
+    });
+  } catch (err) {
+    logger.error('Cleanup Pending Gym Transactions Error', err);
+    next(err);
+  }
+}
+
   async getTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id;

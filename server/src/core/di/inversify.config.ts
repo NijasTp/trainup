@@ -101,6 +101,10 @@ import { NotificationRepository } from "../../repositories/notification.reposito
 import { INotificationService } from "../interfaces/services/INotificationService";
 import { NotificationService } from "../../services/notification.service";
 import { NotificationController } from "../../controllers/notification.controller";
+import { IRatingRepository } from "../interfaces/repositories/IRatingRepository";
+import { IRatingService } from "../interfaces/services/IRatingService";
+import { RatingRepository } from "../../repositories/rating.repository";
+import { RatingService } from "../../services/rating.service";
 
 
 // Create container 
@@ -171,7 +175,7 @@ container.bind<WorkoutController>(TYPES.WorkoutController).to(WorkoutController)
 
 container.bind<IDietDayRepository>(TYPES.IDietDayRepository).to(DietDayRepository);
 container.bind<IDietService>(TYPES.IDietService).to(DietService);
-container.bind<ITemplateRepository>(TYPES.ITemplateRepository).to(TemplateRepository); 
+container.bind<ITemplateRepository>(TYPES.ITemplateRepository).to(TemplateRepository);
 container.bind<IDietTemplateService>(TYPES.ITemplateService).to(DietTemplateService);
 container.bind<DietController>(TYPES.DietController).to(DietController);
 
@@ -179,6 +183,10 @@ container.bind<IOTPService>(TYPES.IOtpService).to(OtpService);
 container.bind<IOtpRepository>(TYPES.IOtpRepository).to(OtpRepository);
 container.bind<IJwtService>(TYPES.IJwtService).to(JwtService)
 container.bind<IMailService>(TYPES.IMailService).to(MailService);
+
+
+container.bind<IRatingRepository>(TYPES.IRatingRepository).to(RatingRepository);
+container.bind<IRatingService>(TYPES.IRatingService).to(RatingService);
 
 
 

@@ -1,9 +1,14 @@
+import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
+import api from "@/lib/axios";
+import { logoutGym } from "@/redux/slices/gymAuthSlice";
 import { Dumbbell } from "lucide-react";
+import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 
 export const GymNavbar: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const navItems = [
     { label: "Dashboard", route: ROUTES.GYM_DASHBOARD },
@@ -11,6 +16,12 @@ export const GymNavbar: React.FC = () => {
     { label: "Announcements", route: ROUTES.GYM_ANNOUNCEMENTS },
     { label: "Attendance", route: ROUTES.GYM_ATTENDANCE },
   ];
+
+  async function handleLogout() {
+    await api.post("/gym/logout");
+    dispatch(logoutGym())
+    navigate(ROUTES.GYM_LOGIN);
+  }
 
   return (
     <nav className="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between shadow-lg">
@@ -32,12 +43,12 @@ export const GymNavbar: React.FC = () => {
           </Link>
         ))}
       </div>
-      <Link
-        to={ROUTES.GYM_LOGIN}
+      <Button
+        onClick={handleLogout}
         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
       >
         Logout
-      </Link>
+      </Button>
     </nav>
   );
 };

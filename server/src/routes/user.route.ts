@@ -57,6 +57,8 @@ router.put(
   userController.updateProfile.bind(userController)
 )
 
+router.post('/change-password', authMiddleware, userController.changePassword.bind(userController))
+
 router
   .post(
     '/weight',
@@ -98,5 +100,10 @@ router.get("/gyms/:id", authMiddleware, userController.getGymById.bind(userContr
 router.get("/gyms/:gymId/subscription-plans", authMiddleware, userController.getGymSubscriptionPlans.bind(userController));
 router.get("/my-gym", authMiddleware, userController.getMyGym.bind(userController));
 router.get("/gym-announcements", authMiddleware, userController.getGymAnnouncements.bind(userController));
+
+router.post('/trainer/rating/:id', authMiddleware, userController.addTrainerRating.bind(userController))
+router.post('/gym/rating/:id', authMiddleware, userController.addGymRating.bind(userController))
+router.get('/trainer/ratings/:id', authMiddleware, userController.getTrainerRatings.bind(userController))
+router.get('/gym/ratings/:id', authMiddleware, userController.getGymRatings.bind(userController))
 
 export default router

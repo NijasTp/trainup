@@ -6,6 +6,7 @@ export interface IUserController {
   checkUsername(req: Request, res: Response, next: NextFunction): Promise<void>;
   login(req: Request, res: Response, next: NextFunction): Promise<void>;
   forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void>;
+  verifyForgotPasswordOtp(req: Request, res: Response, next: NextFunction): Promise<void>;
   resetPassword(req: Request, res: Response, next: NextFunction): Promise<void>;
   resendOtp(req: Request, res: Response, next: NextFunction): Promise<void>;
   refreshAccessToken(req: Request, res: Response, next: NextFunction): Promise<void>;
@@ -13,4 +14,27 @@ export interface IUserController {
   checkSession(req: Request, res: Response, next: NextFunction): Promise<void>;
   getTrainers(req: Request, res: Response, next: NextFunction): Promise<void>;
   logout(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getIndividualTrainer(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getWeightHistory(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getMyTrainer(req: Request, res: Response, next: NextFunction): Promise<void>;
+  cancelSubscription(req: Request, res: Response, next: NextFunction): Promise<void>;
+  updateProfile(req: Request, res: Response, next: NextFunction): Promise<void>;
+  changePassword(req: Request, res: Response, next: NextFunction): Promise<void>;
+  addWeight(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getTrainerAvailability(req: Request, res: Response, next: NextFunction): Promise<void>;
+  bookSession(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getUserSessions(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getUserPlan(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getChatMessages(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getGyms(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getGymById(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getGymSubscriptionPlans(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getMyGym(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getGymAnnouncements(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getGymRatings(req: Request, res: Response, next: NextFunction): Promise<void>;
+  addTrainerRating(req: Request, res: Response, next: NextFunction): Promise<void>;
+  addGymRating(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getProfile(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getTrainer(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getTrainerRatings(req: Request, res: Response, next: NextFunction): Promise<void>;
 }

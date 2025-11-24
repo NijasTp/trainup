@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
     MapPin,
     Star,
@@ -23,20 +24,53 @@ import {
     Trophy,
     Loader2
 } from "lucide-react";
-import { Link } from "react-router-dom";
-import { getIndividualTrainer } from "@/services/userService";
 import { toast } from "sonner";
 import API from "@/lib/axios";
-import React, { useRef } from 'react';
-import SubscriptionModal from "@/components/ui/SubscriptionModal";
+import { getIndividualTrainer } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import type { Position, SpotlightCardProps, Trainer, User } from "@/interfaces/user/iIndividualTrainer";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import SubscriptionModal from "@/components/ui/SubscriptionModal";
+import TrainerReviews from "@/components/user/reviews/TrainerReviews";
 
-const SpotlightCard: React.FC<SpotlightCardProps> = ({
+interface Position {
+    x: number;
+    y: number;
+}
+
+interface Trainer {
+    _id: string;
+    name: string;
+    email: string;
+    phone: string;
+    specialization: string;
+    experience: string;
+    rating: number;
+    location: string;
+    bio: string;
+    price: string;
+    profileImage: string;
+    certificate: string;
+    isVerified: boolean;
+    clients: any[];
+    reviews?: any[];
+}
+
+interface User {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+    assignedTrainer?: string;
+    trainerPlan?: "basic" | "premium" | "pro";
+}
+
+const SpotlightCard = ({
     children,
-    className = '',
-    spotlightColor = 'rgba(59, 130, 246, 0.15)'
+    className = "",
+    spotlightColor = "rgba(255, 255, 255, 0.25)"
+}: {
+    children: React.ReactNode;
+    className?: string;
+    spotlightColor?: string;
 }) => {
     const divRef = useRef<HTMLDivElement>(null);
     const [isFocused, setIsFocused] = useState<boolean>(false);
@@ -157,7 +191,7 @@ export default function TrainerPage() {
             try {
                 const monthlyPrice = trainer?.price ? parseFloat(trainer.price) : 5000;
                 let amount = monthlyPrice;
-                
+
                 // Calculate amount based on plan
                 if (planType === 'premium') {
                     amount = Math.round(monthlyPrice * 1.25);
@@ -255,7 +289,7 @@ export default function TrainerPage() {
             toast.error("Please subscribe to a plan to start chatting with your trainer");
             return;
         }
-        
+
         if (user.trainerPlan === 'basic') {
             toast.error("Chat is not available with Basic plan. Please upgrade to Premium or Pro");
             return;
@@ -265,6 +299,15 @@ export default function TrainerPage() {
             navigate(`/my-trainer/chat/${trainer._id}`);
         } else {
             toast.error("No trainer found to chat with");
+        }
+    };
+
+    const handleReviewAdded = (newReview: any) => {
+        if (trainer) {
+            setTrainer({
+                ...trainer,
+                reviews: [...(trainer.reviews || []), newReview]
+            });
         }
     };
 
@@ -539,8 +582,8 @@ export default function TrainerPage() {
 
                                 {trainer.certificate && (
                                     <div className="pt-4">
-                                        <Button 
-                                            variant="outline" 
+                                        <Button
+                                            variant="outline"
                                             className="flex items-center gap-2 hover:bg-primary/5"
                                             onClick={() => setIsOpen(true)}
                                         >
@@ -588,78 +631,88 @@ export default function TrainerPage() {
                         </Dialog>
                     </div>
 
-                    <div className="space-y-6">
-                        {/* Pricing Card */}
-                        <SpotlightCard className="p-6">
-                            <div className="space-y-6">
-                                <h3 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                                    <Crown className="h-6 w-6 text-primary" />
-                                    Plans Starting From
-                                </h3>
-                                <div className="text-center p-6 bg-gradient-to-br from-primary/5 via-primary/3 to-accent/5 rounded-xl border border-primary/10">
-                                    <div className="text-4xl font-bold text-primary mb-2">₹{monthlyPrice.toLocaleString()}</div>
-                                    <p className="text-muted-foreground font-medium">per month</p>
-                                    <p className="text-sm text-muted-foreground/70 mt-2">Transform your fitness journey</p>
-                                </div>
-                                {isSameTrainer ? (
-                                    <Button
-                                        disabled
-                                        className="w-full bg-gray-500/50 cursor-not-allowed font-semibold"
-                                        size="lg"
-                                    >
-                                        <Check className="h-5 w-5 mr-2" />
-                                        Your Current Trainer
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        onClick={openSubscriptionModal}
-                                        disabled={hasTrainer || checkingPendingTransaction}
-                                        className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
-                                        size="lg"
-                                    >
-                                        {checkingPendingTransaction ? (
-                                            <>
-                                                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                                                Checking...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Calendar className="h-5 w-5 mr-2" />
-                                                Choose Your Plan
-                                            </>
-                                        )}
-                                    </Button>
-                                )}
-                            </div>
-                        </SpotlightCard>
-
-                        <SpotlightCard className="p-6">
-                            <div className="space-y-6">
-                                <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-                                    <MessageSquare className="h-5 w-5 text-primary" />
-                                    Get In Touch
-                                </h3>
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                                        <Phone className="h-5 w-5 text-primary" />
-                                        <span className="text-sm font-medium">{trainer.phone}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                                        <Mail className="h-5 w-5 text-primary" />
-                                        <span className="text-sm font-medium">{trainer.email}</span>
-                                    </div>
-                                </div>
-                                <Button
-                                    onClick={handleChat}
-                                    variant="outline"
-                                    className="w-full hover:bg-primary/5"
-                                >
-                                    <MessageSquare className="h-4 w-4 mr-2" />
-                                    Start Conversation
-                                </Button>
-                            </div>
-                        </SpotlightCard>
+                    <div className="mt-8">
+                        <TrainerReviews
+                            trainerId={trainer._id}
+                            reviews={trainer.reviews || []}
+                            onReviewAdded={handleReviewAdded}
+                            canReview={hasTrainer && isSameTrainer}
+                            currentUserPlan={user?.trainerPlan}
+                        />
                     </div>
+                </div>
+
+                <div className="space-y-6">
+                    {/* Pricing Card */}
+                    <SpotlightCard className="p-6">
+                        <div className="space-y-6">
+                            <h3 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                                <Crown className="h-6 w-6 text-primary" />
+                                Plans Starting From
+                            </h3>
+                            <div className="text-center p-6 bg-gradient-to-br from-primary/5 via-primary/3 to-accent/5 rounded-xl border border-primary/10">
+                                <div className="text-4xl font-bold text-primary mb-2">₹{monthlyPrice.toLocaleString()}</div>
+                                <p className="text-muted-foreground font-medium">per month</p>
+                                <p className="text-sm text-muted-foreground/70 mt-2">Transform your fitness journey</p>
+                            </div>
+                            {isSameTrainer ? (
+                                <Button
+                                    disabled
+                                    className="w-full bg-gray-500/50 cursor-not-allowed font-semibold"
+                                    size="lg"
+                                >
+                                    <Check className="h-5 w-5 mr-2" />
+                                    Your Current Trainer
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={openSubscriptionModal}
+                                    disabled={hasTrainer || checkingPendingTransaction}
+                                    className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+                                    size="lg"
+                                >
+                                    {checkingPendingTransaction ? (
+                                        <>
+                                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                            Checking...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Calendar className="h-5 w-5 mr-2" />
+                                            Choose Your Plan
+                                        </>
+                                    )}
+                                </Button>
+                            )}
+                        </div>
+                    </SpotlightCard>
+
+                    <SpotlightCard className="p-6">
+                        <div className="space-y-6">
+                            <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                                <MessageSquare className="h-5 w-5 text-primary" />
+                                Get In Touch
+                            </h3>
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg hover:bg-muted/30 transition-all duration-300">
+                                    <Phone className="h-5 w-5 text-primary" />
+                                    <span className="text-sm font-medium">{trainer.phone}</span>
+                                </div>
+                                <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg hover:bg-muted/30 transition-all duration-300">
+                                    <Mail className="h-5 w-5 text-primary" />
+                                    <span className="text-sm font-medium">{trainer.email}</span>
+                                </div>
+                            </div>
+                            <Button
+                                onClick={handleChat}
+                                variant="outline"
+                                className="w-full hover:bg-primary/5"
+                            >
+                                <MessageSquare className="h-4 w-4 mr-2" />
+                                Start Conversation
+                            </Button>
+                        </div>
+                    </SpotlightCard>
                 </div>
             </main>
 

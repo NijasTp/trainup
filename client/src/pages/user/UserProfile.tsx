@@ -62,7 +62,7 @@ export default function Profile() {
       setTransactions(response.data.transactions || []);
     } catch (err: any) {
       console.error("Failed to fetch transactions:", err);
-      
+
     } finally {
       setIsTransactionsLoading(false);
     }
@@ -136,22 +136,44 @@ export default function Profile() {
             <Card className="relative group bg-card/40 backdrop-blur-sm border-border/50 max-w-4xl mx-auto overflow-hidden hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-3xl font-bold text-foreground">{profile.name}</CardTitle>
-                  {profile.isPrivate && (
-                    <div className="flex items-center gap-2 text-muted-foreground mt-2">
-                      <Lock className="h-4 w-4 text-accent" />
-                      <span>Private Profile</span>
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full ring-4 ring-primary/10 overflow-hidden shadow-xl">
+                      {profile.profileImage ? (
+                        <img
+                          src={profile.profileImage}
+                          alt={profile.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                          <User className="h-12 w-12 text-primary/70" />
+                        </div>
+                      )}
                     </div>
-                  )}
+                    <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full border-4 border-card flex items-center justify-center shadow-lg">
+                      <Flame className="h-5 w-5 text-white" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <CardTitle className="text-3xl font-bold text-foreground">{profile.name}</CardTitle>
+                    <p className="text-muted-foreground mt-1">Member since {new Date(profile.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long' })}</p>
+                    {profile.isPrivate && (
+                      <div className="flex items-center gap-2 text-muted-foreground mt-2">
+                        <Lock className="h-4 w-4 text-accent" />
+                        <span className="text-sm">Private Profile</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <Button onClick={() => navigate("/edit-profile")}
-                  className="bg-gradient-to-r cursor-pointer from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+                <Button
+                  onClick={() => navigate("/edit-profile")}
+                  className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
                 >
                   Edit Profile
                 </Button>
-
               </CardHeader>
               <CardContent className="space-y-8">
                 {/* Personal Information */}

@@ -52,8 +52,7 @@ const GymLogin: React.FC = () => {
         name: response.gym.name,
         email: response.gym.email,
         profileImage: response.gym.profileImage,
-        location: response.gym.location,
-        isVerified: response.gym.isVerified || false,
+        geoLocation: response.gym.geoLocation
       }));
       
       navigate('/gym/dashboard');

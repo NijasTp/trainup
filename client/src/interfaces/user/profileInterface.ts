@@ -5,6 +5,7 @@ export interface UserProfile {
   phone?: string;
   role: "user";
   goals?: string[];
+  profileImage?: string;
   activityLevel?: string;
   equipment?: boolean;
   height?: number;

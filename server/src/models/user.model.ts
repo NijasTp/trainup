@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Types, Model } from "mongoose";
 
 export interface IXPLog {
   amount: number;
-  reason: string; 
+  reason: string;
   date: Date;
 }
 
@@ -31,16 +31,17 @@ export interface IUser extends Document {
   tokenVersion?: number;
   isBanned: boolean;
   streak: number;
-  lastActiveDate?: Date; 
+  lastActiveDate?: Date;
   xp: number;
   xpLogs: IXPLog[];
   achievements: string[];
   todaysWeight?: number;
   goalWeight?: number;
   weightHistory: IWeightLog[];
-  height?: number; 
+  height?: number;
   age?: number;
   gender?: string;
+  profileImage?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -64,7 +65,6 @@ const userSchema: Schema<IUser> = new Schema(
     tokenVersion: { type: Number, default: 0 },
     isPrivate: { type: Boolean, default: false },
     isBanned: { type: Boolean, default: false },
-
     streak: { type: Number, default: 0 },
     lastActiveDate: { type: Date },
     xp: { type: Number, default: 0 },
@@ -76,7 +76,6 @@ const userSchema: Schema<IUser> = new Schema(
       },
     ],
     achievements: { type: [String], default: [] },
-
     todaysWeight: { type: Number },
     goalWeight: { type: Number },
     weightHistory: [
@@ -85,10 +84,10 @@ const userSchema: Schema<IUser> = new Schema(
         date: { type: Date, default: Date.now },
       },
     ],
-
     height: { type: Number, default: null },
     age: { type: Number, default: null },
     gender: { type: String, enum: ["male", "female", "other"] },
+    profileImage: { type: String },
   },
   { timestamps: true }
 );

@@ -22,6 +22,8 @@ export interface IGym extends Document {
   updatedAt: Date | null;
   images: string[] | null;
   profileImage: string | null;
+  rating?: number;
+  reviews?: { rating: number; message: string; userId: Types.ObjectId; subscriptionPlan?: string; createdAt: Date }[];
 }
 
 const GymSchema = new Schema<IGym>(
@@ -52,10 +54,18 @@ const GymSchema = new Schema<IGym>(
     certificate: { type: String },
     trainers: [{ type: Schema.Types.ObjectId, ref: "Trainer" }],
     members: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
     images: [{ type: String }],
     profileImage: { type: String, default: null },
+    rating: { type: Number, default: 0 },
+    reviews: [
+      {
+        rating: { type: Number, required: true },
+        message: { type: String, required: true },
+        userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        subscriptionPlan: { type: String },
+        createdAt: { type: Date, default: Date.now }
+      },
+    ],
   },
   { timestamps: true }
 );

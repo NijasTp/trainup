@@ -59,6 +59,7 @@ export class UserResponseDto {
   goals?: string[];
   activityLevel?: string;
   equipment?: boolean;
+  profileImage?: string;
   assignedTrainer?: string;
   subscriptionStartDate?: Date;
   gymId?: string;

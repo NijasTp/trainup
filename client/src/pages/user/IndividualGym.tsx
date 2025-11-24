@@ -25,6 +25,7 @@ import {
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import API from "@/lib/axios";
+import GymReviews from "@/components/user/reviews/GymReviews";
 
 interface SubscriptionPlan {
   _id: string;
@@ -32,32 +33,40 @@ interface SubscriptionPlan {
   duration: number;
   durationUnit: string;
   price: number;
-  description?: string;
   features: string[];
+  description?: string;
 }
 
 interface Gym {
   _id: string;
   name: string;
-  email: string;
-  profileImage?: string;
-  images?: string[];
-  geoLocation: {
-    type: "Point";
-    coordinates: [number, number];
-  };
-  memberCount: number;
+  description: string;
   rating: number;
-  description?: string;
-  phone?: string;
-  operatingHours?: string;
+  memberCount: number;
+  location: string;
+  operatingHours: string;
+  phone: string;
+  email: string;
+  images: string[];
+  profileImage: string;
+  reviews?: any[];
 }
 
-export default function IndividualGym() {
-  const { id } = useParams<{ id: string }>();
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  gymId?: string;
+  gymPlan?: string;
+}
+
+export default function GymPage() {
+  const params = useParams();
+  const id = params?.id as string;
   const navigate = useNavigate();
   const [gym, setGym] = useState<Gym | null>(null);
   const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
@@ -69,6 +78,7 @@ export default function IndividualGym() {
     document.title = "TrainUp - Gym Details";
     fetchGymDetails();
     fetchSubscriptionPlans();
+    fetchUser();
   }, [id]);
 
   const fetchGymDetails = async () => {
@@ -90,6 +100,15 @@ export default function IndividualGym() {
       toast.error("Failed to load subscription plans");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchUser = async () => {
+    try {
+      const response = await API.get("/user/get-profile");
+      setUser(response.data.user);
+    } catch (err: any) {
+      console.error("Failed to fetch user:", err);
     }
   };
 
@@ -120,7 +139,7 @@ export default function IndividualGym() {
           currency: "INR",
           preferredTime
         });
-        
+
         const order = response.data;
 
         const options = {
@@ -344,7 +363,7 @@ export default function IndividualGym() {
                               </span>
                             </div>
                           </div>
-                          
+
                           {plan.description && (
                             <p className="text-sm text-muted-foreground mb-4 text-center">
                               {plan.description}
@@ -360,8 +379,8 @@ export default function IndividualGym() {
                             ))}
                           </div>
 
-                          <Button 
-                            className="w-full" 
+                          <Button
+                            className="w-full"
                             onClick={() => handleJoinGym(plan)}
                           >
                             <Target className="h-4 w-4 mr-2" />
@@ -374,6 +393,20 @@ export default function IndividualGym() {
                 )}
               </CardContent>
             </Card>
+            <div className="mt-8">
+              <GymReviews
+                gymId={gym._id}
+                reviews={gym.reviews || []}
+                onReviewAdded={(newReview) => {
+                  setGym(prev => prev ? {
+                    ...prev,
+                    reviews: [...(prev.reviews || []), newReview]
+                  } : null);
+                }}
+                canReview={user?.gymId === gym._id}
+                currentUserPlan={user?.gymPlan}
+              />
+            </div>
           </div>
 
           {/* Sidebar */}
@@ -416,9 +449,10 @@ export default function IndividualGym() {
                     "Modern Equipment",
                     "Personal Trainers",
                     "Group Classes",
+                    "Cardio Zone",
+                    "Weight Training",
                     "Locker Rooms",
-                    "Parking Available",
-                    "Air Conditioned"
+                    "Premium Location"
                   ].map((feature, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
@@ -432,66 +466,40 @@ export default function IndividualGym() {
         </div>
       </main>
 
-      {/* Subscription Modal */}
       <Dialog open={showSubscriptionModal} onOpenChange={setShowSubscriptionModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Complete Your Subscription</DialogTitle>
+            <DialogTitle>Join {gym.name}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-6 py-4">
-            {selectedPlan && (
-              <div className="bg-muted/30 p-4 rounded-lg">
-                <h3 className="font-semibold">{selectedPlan.name}</h3>
-                <p className="text-2xl font-bold text-primary">
-                  ₹{selectedPlan.price}
-                  <span className="text-sm text-muted-foreground font-normal">
-                    /{selectedPlan.duration} {selectedPlan.durationUnit}(s)
-                  </span>
-                </p>
-              </div>
-            )}
-
+          <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="preferredTime">Preferred Workout Time</Label>
-              <Input
-                id="preferredTime"
-                type="time"
-                value={preferredTime}
-                onChange={(e) => setPreferredTime(e.target.value)}
-                placeholder="e.g., 07:00"
-              />
-              <p className="text-xs text-muted-foreground">
-                This will be used for daily workout reminders via email
+              <h4 className="font-medium">Selected Plan: {selectedPlan?.name}</h4>
+              <p className="text-sm text-muted-foreground">
+                Price: ₹{selectedPlan?.price} for {selectedPlan?.duration} {selectedPlan?.durationUnit}(s)
               </p>
             </div>
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowSubscriptionModal(false)}
-                disabled={isProcessingPayment}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={handleSubscribeWithPayment}
-                disabled={!preferredTime.trim() || isProcessingPayment}
-              >
-                {isProcessingPayment ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Subscribe Now
-                  </>
-                )}
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="time">Preferred Workout Time</Label>
+              <Input
+                id="time"
+                placeholder="e.g., 7:00 AM - 9:00 AM"
+                value={preferredTime}
+                onChange={(e) => setPreferredTime(e.target.value)}
+              />
             </div>
+            <Button onClick={handleSubscribeWithPayment} disabled={isProcessingPayment} className="w-full">
+              {isProcessingPayment ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Pay & Subscribe
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

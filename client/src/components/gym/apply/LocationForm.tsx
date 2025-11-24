@@ -19,14 +19,18 @@ const LocationForm: React.FC<LocationFormProps> = ({
 }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [address, setAddress] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const getCurrentLocation = () => {
+    setLoading(true);
     if (!navigator.geolocation) {
       toast.error("Geolocation not supported");
+      setLoading(false);
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
+
       async (position) => {
         const { latitude, longitude } = position.coords;
 
@@ -58,27 +62,31 @@ const LocationForm: React.FC<LocationFormProps> = ({
           };
 
           setFormData((prev: any) => ({ ...prev, geoLocation }));
+          setLoading(false); 
           setShowPreview(true);
         } catch {
           toast.error("Failed to fetch address");
+          setLoading(false);
         }
       },
       () => {
         toast.error("Location access denied");
+        setLoading(false);
       }
     );
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Gym Location</h2>
 
       <button
         type="button"
         onClick={getCurrentLocation}
         className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition"
       >
-        Use My Current Location
+        <p>{loading ? (
+          <div className="animate-spin border-4 border-t-blue-500 rounded-full h-6 w-6" />
+        ) : "Use My Current Location"}</p>
       </button>
 
       {errors.geoLocation && (

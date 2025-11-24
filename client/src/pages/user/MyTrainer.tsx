@@ -27,6 +27,28 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { formatDistanceToNow, addMonths } from "date-fns";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import TrainerReviews from "@/components/user/reviews/TrainerReviews";
+
+interface User {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+    trainerPlan?: 'basic' | 'premium' | 'pro';
+    subscriptionStartDate?: string;
+    assignedTrainer?: string;
+}
+
+interface Trainer {
+    _id: string;
+    name: string;
+    email: string;
+    phone: string;
+    isVerified: boolean;
+    isBanned: boolean;
+    role: string;
+    clients: string[];
+}
 
 interface Trainer {
     _id: string;
@@ -44,20 +66,12 @@ interface Trainer {
     experience: string;
     badges: string[];
     rating: number;
-    certificate: string;
-    profileImage: string;
-    profileStatus: string;
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
-    price?: string;
-}
-
-interface User {
-    _id: string;
-    assignedTrainer?: string;
     subscriptionStartDate?: string;
     trainerPlan?: 'basic' | 'premium' | 'pro';
+    profileImage?: string;
+    certificate?: string;
+    reviews?: any[];
+    price?: string;
 }
 
 export default function MyTrainerProfile() {
@@ -107,7 +121,7 @@ export default function MyTrainerProfile() {
             toast.error("Please subscribe to a plan first");
             return;
         }
-        
+
         if (user.trainerPlan !== 'pro') {
             toast.error("Video calls are only available with Pro plan");
             return;
@@ -305,14 +319,14 @@ export default function MyTrainerProfile() {
                                         {/* Chat Button */}
                                         {user?.trainerPlan !== 'basic' && (
                                             <Link to={`/my-trainer/chat/${trainer._id}`}>
-                                            <Button
-                                                variant="outline"
-                                                size="lg"
-                                                className="border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300 font-medium px-8 bg-transparent"
-                                            >
-                                                <MessageSquare className="h-5 w-5 mr-2" />
-                                                Chat with Trainer
-                                            </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="lg"
+                                                    className="border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300 font-medium px-8 bg-transparent"
+                                                >
+                                                    <MessageSquare className="h-5 w-5 mr-2" />
+                                                    Chat with Trainer
+                                                </Button>
                                             </Link>
                                         )}
 
@@ -442,82 +456,97 @@ export default function MyTrainerProfile() {
                         </Dialog>
                     </div>
 
-                    <div className="space-y-6">
-                        {/* Current Plan Card */}
-                        {user?.trainerPlan && (
-                            <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                                <CardHeader>
-                                    <h3 className="text-xl font-bold text-foreground">Current Plan</h3>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="text-center p-6 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10">
-                                        <div className="flex items-center justify-center gap-2 mb-2">
-                                            {getPlanIcon(user.trainerPlan)}
-                                            <div className="text-2xl font-bold text-primary">
-                                                {user.trainerPlan.charAt(0).toUpperCase() + user.trainerPlan.slice(1)} Plan
-                                            </div>
-                                        </div>
-                                        <p className="text-muted-foreground text-sm">Active subscription</p>
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                            Expires {getRemainingTime()}
-                                        </p>
-                                    </div>
-                                    
-                                    {/* Plan Features */}
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex items-center gap-2 text-green-600">
-                                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                            Personalized workouts & diet
-                                        </div>
-                                        {user.trainerPlan !== 'basic' && (
-                                            <div className="flex items-center gap-2 text-green-600">
-                                                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                                Chat with trainer {user.trainerPlan === 'premium' ? '(200 msgs/month)' : '(unlimited)'}
-                                            </div>
-                                        )}
-                                        {user.trainerPlan === 'pro' && (
-                                            <div className="flex items-center gap-2 text-green-600">
-                                                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                                Video calls (5 per month)
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                    <div className="mt-8">
+                        <TrainerReviews
+                            trainerId={trainer._id}
+                            reviews={trainer.reviews || []}
+                            onReviewAdded={(newReview) => {
+                                setTrainer(prev => prev ? {
+                                    ...prev,
+                                    reviews: [...(prev.reviews || []), newReview]
+                                } : null);
+                            }}
+                            canReview={true}
+                            currentUserPlan={user?.trainerPlan}
+                        />
+                    </div>
+                </div>
 
+                <div className="space-y-6">
+                    {/* Current Plan Card */}
+                    {user?.trainerPlan && (
                         <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
                             <CardHeader>
-                                <h3 className="text-xl font-bold text-foreground">Pricing</h3>
+                                <h3 className="text-xl font-bold text-foreground">Current Plan</h3>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="text-center p-6 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10">
-                                    <div className="text-3xl font-bold text-primary mb-2">{trainer.price || "₹5,000"}</div>
-                                    <p className="text-muted-foreground">per month</p>
+                                    <div className="flex items-center justify-center gap-2 mb-2">
+                                        {getPlanIcon(user.trainerPlan)}
+                                        <div className="text-2xl font-bold text-primary">
+                                            {user.trainerPlan.charAt(0).toUpperCase() + user.trainerPlan.slice(1)} Plan
+                                        </div>
+                                    </div>
+                                    <p className="text-muted-foreground text-sm">Active subscription</p>
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                        Expires {getRemainingTime()}
+                                    </p>
                                 </div>
-                            </CardContent>
-                        </Card>
 
-                        <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                            <CardHeader>
-                                <h3 className="text-xl font-bold text-foreground">Contact Information</h3>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                                        <Phone className="h-4 w-4 text-primary" />
-                                        <span className="text-sm font-medium">{trainer.phone}</span>
+                                {/* Plan Features */}
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex items-center gap-2 text-green-600">
+                                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                        Personalized workouts & diet
                                     </div>
-                                    <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                                        <Mail className="h-4 w-4 text-primary" />
-                                        <span className="text-sm font-medium">{trainer.email}</span>
-                                    </div>
+                                    {user.trainerPlan !== 'basic' && (
+                                        <div className="flex items-center gap-2 text-green-600">
+                                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                            Chat with trainer {user.trainerPlan === 'premium' ? '(200 msgs/month)' : '(unlimited)'}
+                                        </div>
+                                    )}
+                                    {user.trainerPlan === 'pro' && (
+                                        <div className="flex items-center gap-2 text-green-600">
+                                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                            Video calls (5 per month)
+                                        </div>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
-                    </div>
+                    )}
+
+                    <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                        <CardHeader>
+                            <h3 className="text-xl font-bold text-foreground">Pricing</h3>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="text-center p-6 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10">
+                                <div className="text-3xl font-bold text-primary mb-2">{trainer.price || "₹5,000"}</div>
+                                <p className="text-muted-foreground">per month</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
+                        <CardHeader>
+                            <h3 className="text-xl font-bold text-foreground">Contact Information</h3>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                                    <Phone className="h-4 w-4 text-primary" />
+                                    <span className="text-sm font-medium">{trainer.phone}</span>
+                                </div>
+                                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                                    <Mail className="h-4 w-4 text-primary" />
+                                    <span className="text-sm font-medium">{trainer.email}</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     );
 }

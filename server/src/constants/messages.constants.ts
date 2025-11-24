@@ -14,7 +14,7 @@ export const MESSAGES = {
   LOGOUT_SUCCESS: "Logged out successfully",
   USER_UPDATED: "User updated successfully",
   INVALID_PASSWORD: "Invalid password",
-
+  INVALID_CREDENTIALS: "Invalid credentials",
   SLOT_OVERLAP: "This time slot overlaps with an existing session",
 
   PAYMENT_CONFIG_INCOMPLETE: "Payment configuration is incomplete",
@@ -62,6 +62,12 @@ export const MESSAGES = {
   INVALID_DAY: "Invalid day",
   SESSION_NOT_FOUND: "Session not found",
   INVALID_USER_ID: "Missing user",
+  ALREADY_HAS_GYM: "You already have an active gym membership",
+  PENDING_GYM_TRANSACTION: "You have a pending gym payment. Please complete or cancel it first.",
+  GYM_PAYMENT_CANCELLED: "Gym payment cancelled",
+  GYM_PAYMENT_FAILED: "Gym payment failed",
+  ALREADY_SUBSCRIBED_TO_THIS_GYM: "You are already subscribed to this gym",
+  GO_TO_GYM_DASHBOARD: "Go to My Gym",
   
   // Video Call Messages
   VIDEO_CALL_NOT_FOUND: "Video call session not found",

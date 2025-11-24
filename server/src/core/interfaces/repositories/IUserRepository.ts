@@ -28,11 +28,13 @@ export interface IUserRepository {
   count(): Promise<number>;
   updateUser(id: string, data: Partial<IUser>): Promise<IUser | null>;
   updateStatusAndIncrementVersion(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
+  findByIdWithPassword(userId: string): Promise<IUser | null> 
   updateStatus(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
   findById(id: string): Promise<IUser | null>;
   getWeightHistory(userId: string): Promise<{ weight: number; date: Date }[]>;
   addWeight(userId: string, weight: number, date: Date): Promise<IUser | null>;
   updateProfile(userId: string, updates: UserUpdateProfileDto): Promise<IUser | null>;
+  updatePasswordWithId(userId: string, hashedPassword: string): Promise<void>
   updateTrainer(userId: string, trainerId: string): Promise<void>;
   updatePlan(userId: string, planType: 'basic' | 'premium' | 'pro'): Promise<void>;
  updateUserGymMembership(

@@ -5,7 +5,7 @@ const TYPES = {
   IUserController: Symbol.for("IUserController"),
   IUserService: Symbol.for("IUserService"),
   IUserRepository: Symbol.for("IUserRepository"),
-  UserController:Symbol.for("UserController"),
+  UserController: Symbol.for("UserController"),
 
   IUserPlanRepository: Symbol.for("IUserPlanRepository"),
   IUserPlanService: Symbol.for("IUserPlanService"),
@@ -31,33 +31,33 @@ const TYPES = {
   IStreakService: Symbol.for("IStreakService"),
   StreakController: Symbol.for("StreakController"),
 
-  PaymentController:Symbol.for("PaymentController"),
-  IPaymentRepository:Symbol.for("IPaymentRepository"),
-  IPaymentService:Symbol.for("IPaymentService"),
+  PaymentController: Symbol.for("PaymentController"),
+  IPaymentRepository: Symbol.for("IPaymentRepository"),
+  IPaymentService: Symbol.for("IPaymentService"),
 
-  ITransactionRepository:Symbol.for("ITransactionRepository"),
-  ITransactionService:Symbol.for("ITransactionService"),
-  
-  TrainerController:Symbol.for("TrainerController"),
+  ITransactionRepository: Symbol.for("ITransactionRepository"),
+  ITransactionService: Symbol.for("ITransactionService"),
 
-  IGymRepository:Symbol.for('IGymRepository'),
-  IGymService:Symbol.for("IGymService"),
-  GymController:Symbol.for("GymController"),
+  TrainerController: Symbol.for("TrainerController"),
 
-  IGymReminderService:Symbol.for("IGymReminderService"),
-  IGymReminderRepository:Symbol.for("IGymReminderRepository"),
+  IGymRepository: Symbol.for('IGymRepository'),
+  IGymService: Symbol.for("IGymService"),
+  GymController: Symbol.for("GymController"),
 
-  IAttendanceRepository:Symbol.for("IAttendanceRepository"),
-  IAttendanceService:Symbol.for("IAttendanceService"),
-  AttendanceController:Symbol.for("AttendanceController"),
-  
+  IGymReminderService: Symbol.for("IGymReminderService"),
+  IGymReminderRepository: Symbol.for("IGymReminderRepository"),
+
+  IAttendanceRepository: Symbol.for("IAttendanceRepository"),
+  IAttendanceService: Symbol.for("IAttendanceService"),
+  AttendanceController: Symbol.for("AttendanceController"),
+
 
   WorkoutSessionRepository: Symbol.for("WorkoutSessionRepository"),
   WorkoutDayRepository: Symbol.for("WorkoutDayRepository"),
   WorkoutService: Symbol.for("WorkoutService"),
   WorkoutController: Symbol.for("WorkoutController"),
-  
-  
+
+
   IDietDayRepository: Symbol.for("IDietDayRepository"),
   DietDayRepository: Symbol.for("DietDayRepository"),
   IDietService: Symbol.for("IDietService"),
@@ -67,7 +67,7 @@ const TYPES = {
   TemplateService: Symbol.for("TemplateService"),
   ITemplateService: Symbol.for("ITemplateService"),
   DietController: Symbol.for("DietController"),
-  
+
   IAdminService: Symbol.for("IAdminService"),
   IAdminRepository: Symbol.for("IAdminRepository"),
   IAdminController: Symbol.for("IAdminController"),
@@ -79,6 +79,8 @@ const TYPES = {
   IMailService: Symbol.for("IMailService"),
   ITrainerRepository: Symbol.for("ITrainerRepository"),
   ITrainerService: Symbol.for("ITrainerService"),
+  IRatingRepository: Symbol.for("IRatingRepository"),
+  IRatingService: Symbol.for("IRatingService"),
 };
 
 export default TYPES;

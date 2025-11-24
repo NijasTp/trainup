@@ -23,7 +23,7 @@ export const GymAuthRedirect: React.FC<Props> = ({ children }) => {
         const data = await getGymDetails();
         const details = data.gymDetails;
         if (details) {
-          dispatch(loginGym({ ...details, isVerified: details.verifyStatus === 'approved' }));
+          dispatch(loginGym(details));
           if (details.isBanned) {
             await (dispatch as any)(logoutGymThunk());
             navigate('/gym/login', { replace: true });

@@ -24,7 +24,8 @@ export interface IPaymentService {
     amount: number
   ): Promise<boolean> 
   createGymTransaction(data: Partial<IGymTransaction>): Promise<IGymTransaction>
-
+  findPendingGymTransactionByUser(userId: string): Promise<IGymTransaction | null>
+  markUserPendingGymTransactionsAsFailed(userId: string): Promise<number>
   updateGymTransactionStatus(
     orderId: string,
     status: 'completed' | 'failed',

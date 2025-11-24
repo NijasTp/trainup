@@ -1,4 +1,3 @@
-// src/services/gym.service.ts
 import { injectable, inject } from 'inversify'
 import { IGymService } from '../core/interfaces/services/IGymService'
 import { IGymRepository } from '../core/interfaces/repositories/IGymRepository'

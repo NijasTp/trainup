@@ -11,6 +11,7 @@ const BASE_ROUTE = {
     VIDEO_CALL: '/api/video-call',
     ATTENDANCE: '/api/attendance',
     NOTIFICATION: '/api/notifications',
+    
 }
 
 export default BASE_ROUTE;

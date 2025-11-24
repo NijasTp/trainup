@@ -23,6 +23,7 @@ export interface ITrainer extends Document {
   profileStatus: 'pending' | 'approved' | 'rejected' | 'suspended'
   rejectReason: string
   unavailableReason?: string
+  reviews: { rating: number; message: string; userId: mongoose.Types.ObjectId; subscriptionPlan?: string; createdAt: Date }[]
   createdAt: Date
   updatedAt: Date
 }
@@ -45,7 +46,16 @@ const TrainerSchema: Schema<ITrainer> = new Schema(
     tokenVersion: { type: Number, default: 0 },
     experience: { type: String, default: '' },
     rating: { type: Number, default: 0 },
-    certificate: { type: String, required:true },
+    reviews: [
+      {
+        rating: { type: Number, required: true },
+        message: { type: String, required: true },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        subscriptionPlan: { type: String },
+        createdAt: { type: Date, default: Date.now }
+      }
+    ],
+    certificate: { type: String, required: true },
     profileImage: { type: String },
     profileStatus: {
       type: String,

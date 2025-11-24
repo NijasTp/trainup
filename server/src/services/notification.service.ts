@@ -158,11 +158,10 @@ export class NotificationService implements INotificationService {
 
   async sendWeightReminderNotifications(): Promise<void> {
     try {
-      // Get all users who haven't logged weight today
       const today = new Date();
-      today.setHours(16, 0, 0, 0); // 4 PM
+      today.setHours(16, 0, 0, 0); 
 
-      const users = await this._userRepo.findAll(0, 1000); // Adjust as needed
+      const users = await this._userRepo.findAll(0, 1000); 
       
       for (const user of users) {
         const lastWeightDate = user.weightHistory?.length > 0 

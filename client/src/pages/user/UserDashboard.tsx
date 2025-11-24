@@ -26,7 +26,6 @@ import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { addWeight, getProfile , getWeightHistory } from "@/services/userService";
 
-// Mock static data for workouts and XP
 const getRecentWorkouts = async () => {
   return Promise.resolve([
     { id: "1", name: "Upper Body Strength", date: "2024-02-15", duration: 45, exercises: 8, completed: true, xpEarned: 50 },
@@ -443,17 +442,13 @@ const UserDashboard: React.FC = () => {
           getWeightHistory(),
           getRecentWorkouts(),
         ]);
-        console.log("Weight History Response:", weightHistoryResponse);
 
-        // Extract the weightHistory array from the response object
+
         const weightHistory = weightHistoryResponse.weightHistory || [];
-        console.log("Weight History:", weightHistory);
 
-        // Validate weightHistory
         const validHistory = weightHistory.filter(
           (entry: any) => entry && typeof entry.weight === "number" && entry.date && !isNaN(new Date(entry.date).getTime())
         );
-        console.log("Valid History:", validHistory);
 
         // Aggregate same-day entries
         const aggregatedHistory: { [key: string]: { weight: number; date: string } } = {};

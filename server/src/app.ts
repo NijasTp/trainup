@@ -68,7 +68,7 @@ app.use(BASE_ROUTE.WORKOUT, workoutRoutes)
 app.use(BASE_ROUTE.DIET, dietRoutes);
 app.use(BASE_ROUTE.PAYMENT, paymentRoutes);
 app.use(BASE_ROUTE.VIDEO_CALL, videoCallRoutes);
-app.use(BASE_ROUTE.ATTENDANCE,  gymAttendanceRoutes);
+app.use(BASE_ROUTE.ATTENDANCE, gymAttendanceRoutes);
 app.use(BASE_ROUTE.NOTIFICATION, notificationRoutes)
 
 app.use(errorHandler);

@@ -128,7 +128,6 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
       if (endDate) dateQuery.$lte = new Date(endDate)
       query.createdAt = dateQuery
     }
-
     const trainers = await this.find(query, { skip, limit });
     return trainers.map(trainer => this.mapToResponseDto(trainer))
   }

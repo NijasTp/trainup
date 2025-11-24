@@ -68,6 +68,18 @@ export class PaymentService implements IPaymentService {
     return true;
   }
 
+  async findPendingGymTransactionByUser(userId: string): Promise<IGymTransaction | null> {
+  return await GymTransactionModel.findOne({ userId, status: 'pending' });
+}
+
+async markUserPendingGymTransactionsAsFailed(userId: string): Promise<number> {
+  const result = await GymTransactionModel.updateMany(
+    { userId, status: 'pending' },
+    { status: 'failed' }
+  );
+  return result.modifiedCount;
+}
+
   async verifyTrainerPayment(
     orderId: string,
     paymentId: string,

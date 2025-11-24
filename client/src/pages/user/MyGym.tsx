@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { useNavigate } from "react-router-dom";
 import API from "@/lib/axios";
+import GymReviews from "@/components/user/reviews/GymReviews";
 
 interface Member {
   _id: string;
@@ -29,19 +30,6 @@ interface Member {
   joinedAt?: string;
 }
 
-interface Gym {
-  _id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  profileImage?: string;
-  images?: string[];
-  memberCount: number;
-  rating: number;
-  description?: string;
-  operatingHours?: string;
-}
-
 interface UserSubscription {
   planName: string;
   planPrice: number;
@@ -49,6 +37,22 @@ interface UserSubscription {
   planDurationUnit: string;
   subscribedAt: string;
   preferredTime: string;
+}
+
+interface Gym {
+  _id: string;
+  name: string;
+  email: string;
+  planDuration: number;
+  planDurationUnit: string;
+  subscribedAt: string;
+  preferredTime: string;
+  description?: string;
+  rating?: number;
+  memberCount?: number;
+  phone?: string;
+  images?: string[];
+  reviews?: any[];
 }
 
 interface MyGymData {
@@ -325,6 +329,25 @@ export default function MyGym() {
             </Card>
           </div>
 
+          <div className="mt-8 lg:col-span-2">
+            <GymReviews
+              gymId={gym._id}
+              reviews={gym.reviews || []}
+              onReviewAdded={(newReview) => {
+                setGymData(prev => prev ? {
+                  ...prev,
+                  gym: {
+                    ...prev.gym,
+                    reviews: [...(prev.gym.reviews || []), newReview]
+                  }
+                } : null);
+              }}
+              canReview={true}
+              currentUserPlan={userSubscription?.planName}
+            />
+          </div>
+
+
           <div className="space-y-6">
             <Card className="bg-card/60 backdrop-blur-sm border-border/50">
               <CardHeader>
@@ -395,7 +418,7 @@ export default function MyGym() {
             </Card>
           </div>
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   );
 }
