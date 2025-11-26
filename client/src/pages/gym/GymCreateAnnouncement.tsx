@@ -86,7 +86,7 @@ export default function GymCreateAnnouncement() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-800">
       <div className="flex">
         <main className="flex-1 p-8">
           <div className="max-w-4xl mx-auto">
