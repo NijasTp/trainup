@@ -13,6 +13,7 @@ const TYPES = {
   INotificationRepository: Symbol.for("INotificationRepository"),
   INotificationService: Symbol.for("INotificationService"),
   NotificationController: Symbol.for("NotificationController"),
+  NotificationCron: Symbol.for("NotificationCron"),
 
   ISlotRepository: Symbol.for("ISlotRepository"),
   ISlotService: Symbol.for("ISlotService"),

@@ -30,6 +30,7 @@ export class WorkoutSessionResponseDto {
   goal?: string;
   notes?: string;
   isDone?: boolean;
+  completedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

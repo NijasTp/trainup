@@ -18,6 +18,7 @@ import { AppError } from '../utils/appError.util';
 import { addDays, addMonths, addYears } from 'date-fns';
 import { IMailService } from '../core/interfaces/services/IMailService';
 import { IGymReminderService } from '../core/interfaces/services/IGymReminderService';
+import { INotificationService } from '../core/interfaces/services/INotificationService';
 
 @injectable()
 export class PaymentController {
@@ -29,8 +30,9 @@ export class PaymentController {
     @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
     @inject(TYPES.IGymService) private _gymService: IGymService,
     @inject(TYPES.IMailService) private _emailService: IMailService,
-    @inject(TYPES.IGymReminderService) private _gymReminderService: IGymReminderService
-  ) {}
+    @inject(TYPES.IGymReminderService) private _gymReminderService: IGymReminderService,
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService
+  ) { }
 
   async createOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -167,6 +169,28 @@ export class PaymentController {
         expiryDate
       });
 
+      await this._notificationService.sendTrainerSubscribedNotification(userId, trainer.name);
+
+      await this._notificationService.createNotification({
+        recipientId: dto.trainerId,
+        recipientRole: 'trainer',
+        type: 'trainer_new_subscriber',
+        title: 'New Subscriber!',
+        message: `New user ${user?.name} has subscribed to your training`,
+        priority: 'high',
+        category: 'success'
+      });
+
+      await this._notificationService.createNotification({
+        recipientId: dto.trainerId,
+        recipientRole: 'trainer',
+        type: 'trainer_payment_received',
+        title: 'Payment Received',
+        message: `Payment received from ${user?.name} for ${dto.planType} plan`,
+        priority: 'medium',
+        category: 'success'
+      });
+
       const response: VerifyPaymentResponseDto = {
         success: true,
         message: 'Payment verified and trainer hired successfully!',
@@ -195,8 +219,8 @@ export class PaymentController {
       }
 
       const order: CreateOrderResponseDto = await this._paymentService.createOrder(
-        dto.amount, 
-        dto.currency || 'INR', 
+        dto.amount,
+        dto.currency || 'INR',
         `gym_${Date.now()}`
       );
 
@@ -299,16 +323,42 @@ export class PaymentController {
 
       await this._gymService.addMemberToGym(dto.gymId, userId);
 
-      
+      const gymDetails = await this._gymService.getGymById(dto.gymId);
+
+      if (gymDetails && subscriptionPlan) {
+        await this._notificationService.sendGymSubscribedNotification(
+          userId,
+          gymDetails.name || 'Gym',
+          subscriptionPlan.name
+        );
+
+        await this._notificationService.createNotification({
+          recipientId: dto.gymId,
+          recipientRole: 'gym',
+          type: 'gym_new_member',
+          title: 'New Member!',
+          message: `New member ${user?.name} joined your gym with ${subscriptionPlan.name} plan`,
+          priority: 'high',
+          category: 'success'
+        });
+
+        await this._notificationService.createNotification({
+          recipientId: dto.gymId,
+          recipientRole: 'gym',
+          type: 'gym_payment_received',
+          title: 'Payment Received',
+          message: `Payment received from ${user?.name} for ${subscriptionPlan.name}`,
+          priority: 'medium',
+          category: 'success'
+        });
+      }
+
       await this._gymReminderService.saveReminderPreference(
         userId,
         dto.gymId,
         dto.preferredTime
       );
 
-      // Send confirmation email
-      const gymDetails = await this._gymService.getGymById(dto.gymId);
-      
       if (user && gymDetails && subscriptionPlan) {
         await this._emailService.sendGymSubscriptionEmail(
           user.email,
@@ -333,30 +383,30 @@ export class PaymentController {
   }
 
   async checkPendingGymTransaction(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const userId = (req.user as JwtPayload).id;
-    const pending = await this._paymentService.findPendingGymTransactionByUser(userId);
-    res.status(STATUS_CODE.OK).json({ hasPending: !!pending, transaction: pending });
-  } catch (err) {
-    logger.error('Check Pending Gym Transaction Error', err);
-    next(err);
+    try {
+      const userId = (req.user as JwtPayload).id;
+      const pending = await this._paymentService.findPendingGymTransactionByUser(userId);
+      res.status(STATUS_CODE.OK).json({ hasPending: !!pending, transaction: pending });
+    } catch (err) {
+      logger.error('Check Pending Gym Transaction Error', err);
+      next(err);
+    }
   }
-}
 
-async cleanupPendingGymTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const userId = (req.user as JwtPayload).id;
-    const updated = await this._paymentService.markUserPendingGymTransactionsAsFailed(userId);
-    res.status(STATUS_CODE.OK).json({
-      success: true,
-      message: MESSAGES.GYM_PAYMENT_CANCELLED,
-      updatedCount: updated
-    });
-  } catch (err) {
-    logger.error('Cleanup Pending Gym Transactions Error', err);
-    next(err);
+  async cleanupPendingGymTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id;
+      const updated = await this._paymentService.markUserPendingGymTransactionsAsFailed(userId);
+      res.status(STATUS_CODE.OK).json({
+        success: true,
+        message: MESSAGES.GYM_PAYMENT_CANCELLED,
+        updatedCount: updated
+      });
+    } catch (err) {
+      logger.error('Cleanup Pending Gym Transactions Error', err);
+      next(err);
+    }
   }
-}
 
   async getTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -388,9 +438,9 @@ async cleanupPendingGymTransactions(req: Request, res: Response, next: NextFunct
   async checkPendingTransaction(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id;
-      
+
       const pendingTransaction = await this._transactionService.getUserPendingTransaction(userId);
-      
+
       res.status(STATUS_CODE.OK).json({
         hasPending: !!pendingTransaction,
         transaction: pendingTransaction
@@ -404,9 +454,9 @@ async cleanupPendingGymTransactions(req: Request, res: Response, next: NextFunct
   async cleanupPendingTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id;
-      
+
       const updatedCount = await this._transactionService.markUserPendingTransactionsAsFailed(userId);
-      
+
       res.status(STATUS_CODE.OK).json({
         success: true,
         message: `${updatedCount} pending transactions cancelled`,

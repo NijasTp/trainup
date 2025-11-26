@@ -107,6 +107,8 @@ import { RatingRepository } from "../../repositories/rating.repository";
 import { RatingService } from "../../services/rating.service";
 
 
+import { NotificationCron } from "../../cron/notification.cron";
+
 // Create container 
 const container = new Container();
 
@@ -118,6 +120,7 @@ container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepository);
 container.bind<INotificationRepository>(TYPES.INotificationRepository).to(NotificationRepository);
 container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService);
 container.bind<NotificationController>(TYPES.NotificationController).to(NotificationController);
+container.bind<NotificationCron>(TYPES.NotificationCron).to(NotificationCron);
 
 
 container.bind<IUserPlanRepository>(TYPES.IUserPlanRepository).to(UserPlanRepository);

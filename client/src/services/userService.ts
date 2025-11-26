@@ -55,17 +55,22 @@ export const getWeightHistory = async () => {
   return response.data
 }
 
-export const getGymRatings = async (id: string) => {
-  const response = await API.get(`/user/gym/ratings/${id}`)
+export const getTrainerRatings = async (id: string, page: number = 1, limit: number = 5) => {
+  const response = await API.get(`/user/trainer/ratings/${id}?page=${page}&limit=${limit}`)
   return response.data
 }
 
-export const addTrainerRating = async (trainerId: string, rating: number, comment: string, subscriptionPlan?: string) => {
-  const response = await API.post("/user/rate-trainer", { trainerId, rating, comment, subscriptionPlan });
+export const getGymRatings = async (id: string, page: number = 1, limit: number = 5) => {
+  const response = await API.get(`/user/gym/ratings/${id}?page=${page}&limit=${limit}`)
+  return response.data
+}
+
+export const addTrainerRating = async (trainerId: string, rating: number, message: string, subscriptionPlan?: string) => {
+  const response = await API.post(`/user/trainer/rating/${trainerId}`, { rating, message, subscriptionPlan });
   return response.data;
 };
 
-export const addGymRating = async (gymId: string, rating: number, comment: string, subscriptionPlan?: string) => {
-  const response = await API.post("/user/rate-gym", { gymId, rating, comment, subscriptionPlan });
+export const addGymRating = async (gymId: string, rating: number, message: string, subscriptionPlan?: string) => {
+  const response = await API.post(`/user/gym/rating/${gymId}`, { rating, message, subscriptionPlan });
   return response.data;
 };

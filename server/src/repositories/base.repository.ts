@@ -36,16 +36,22 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
 
   async find(filter: FilterQuery<T> = {}, options?: QueryOptions): Promise<T[]> {
     let query = this.model.find(filter);
+
+    if (options?.skip !== undefined) {
+      query = query.skip(options.skip);
+    }
+    if (options?.limit !== undefined) {
+      query = query.limit(options.limit);
+    }
+
     if (typeof options?.populate === 'string') {
       query = query.populate(options.populate as string);
     } else if (Array.isArray(options?.populate)) {
       query = query.populate(options.populate as PopulateOptions[]);
     } else if (typeof options?.populate === 'object') {
       query = query.populate(options.populate as PopulateOptions);
-    } else if (Array.isArray(options?.populate)) {
-      query = query.populate(options.populate as PopulateOptions[]);
     }
-    
+
     return await query.exec();
   }
 

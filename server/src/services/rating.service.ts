@@ -31,11 +31,11 @@ export class RatingService implements IRatingService {
         return this._ratingRepository.addGymRating(gymId, userId, rating, message, subscriptionPlan)
     }
 
-    async getTrainerRatings(trainerId: string): Promise<any> {
-        return this._ratingRepository.getTrainerRatings(trainerId)
+    async getTrainerRatings(trainerId: string, page?: number, limit?: number): Promise<{ ratings: any[], totalPages: number, totalCount: number }> {
+        return this._ratingRepository.getTrainerRatings(trainerId, page, limit)
     }
 
-    async getGymRatings(gymId: string): Promise<any> {
-        return this._ratingRepository.getGymRatings(gymId)
+    async getGymRatings(gymId: string, page?: number, limit?: number): Promise<{ ratings: any[], totalPages: number, totalCount: number }> {
+        return this._ratingRepository.getGymRatings(gymId, page, limit)
     }
 }

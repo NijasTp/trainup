@@ -10,13 +10,18 @@ import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import { Role } from '../constants/role';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
+import { IUserService } from '../core/interfaces/services/IUserService';
+import { INotificationService } from '../core/interfaces/services/INotificationService';
+import { NOTIFICATION_MESSAGES, NOTIFICATION_TYPES } from '../constants/notification.constants';
 
 @injectable()
 export class DietService implements IDietService {
   constructor(
     @inject(TYPES.IDietDayRepository) private _dietRepo: IDietDayRepository,
-    @inject(TYPES.IStreakService) private _streakService: IStreakService
-  ) {}
+    @inject(TYPES.IStreakService) private _streakService: IStreakService,
+    @inject(TYPES.IUserService) private _userService: IUserService,
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService
+  ) { }
 
   async createOrGetDay(userId: string, date: string): Promise<CreateOrGetDayResponseDto> {
     const day = await this._dietRepo.createOrGet(userId, date);
@@ -56,6 +61,19 @@ export class DietService implements IDietService {
 
     await this._dietRepo.createOrGet(userId, date);
     const day = await this._dietRepo.addMeal(userId, date, mealPayload as IMeal);
+
+    if (actor.role === Role.TRAINER) {
+      await this._notificationService.createNotification({
+        recipientId: userId,
+        recipientRole: 'user',
+        type: NOTIFICATION_TYPES.USER.DIET_ASSIGNED,
+        title: 'New Diet Assigned',
+        message: NOTIFICATION_MESSAGES.USER.DIET_ASSIGNED,
+        priority: 'medium',
+        category: 'info'
+      });
+    }
+
     return this.mapToResponseDto(day);
   }
 
@@ -100,6 +118,22 @@ export class DietService implements IDietService {
     await this._streakService.updateUserStreak(userId);
 
     const updated = await this._dietRepo.markMeal(userId, date, mealId, isEaten);
+
+    if (actor.role === Role.USER && isEaten) {
+      const user = await this._userService.getUserById(userId);
+      if (user && user.assignedTrainer) {
+        await this._notificationService.createNotification({
+          recipientId: user.assignedTrainer.toString(),
+          recipientRole: 'trainer',
+          type: NOTIFICATION_TYPES.TRAINER.CLIENT_DIET_LOGGED,
+          title: 'Client Logged Meal',
+          message: NOTIFICATION_MESSAGES.TRAINER.CLIENT_DIET_LOGGED.replace('{userName}', user.name),
+          priority: 'low',
+          category: 'info'
+        });
+      }
+    }
+
     return updated ? this.mapToResponseDto(updated) : null;
   }
 

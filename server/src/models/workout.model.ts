@@ -1,3 +1,4 @@
+
 import { Document, model, Schema, Types } from "mongoose";
 
 export interface IExercise {
@@ -7,7 +8,7 @@ export interface IExercise {
   sets: number;
   reps?: string;
   time?: string;
-  timeTaken?: number; 
+  timeTaken?: number;
 }
 
 export interface IWorkoutSession extends Document {
@@ -23,7 +24,8 @@ export interface IWorkoutSession extends Document {
   exercises: IExercise[];
   goal?: string;
   notes?: string;
-  isDone?: boolean; 
+  isDone?: boolean;
+  completedAt?: Date;
 }
 
 const ExerciseSchema = new Schema<IExercise>(
@@ -41,9 +43,9 @@ const ExerciseSchema = new Schema<IExercise>(
 
 const WorkoutSessionSchema = new Schema<IWorkoutSession>(
   {
-    
+
     name: { type: String, required: true },
-    givenBy: { type: String, enum: ["trainer", "user","admin"], required: true },
+    givenBy: { type: String, enum: ["trainer", "user", "admin"], required: true },
     trainerId: { type: Schema.Types.ObjectId, ref: "Trainer" },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     date: { type: String },
@@ -51,7 +53,8 @@ const WorkoutSessionSchema = new Schema<IWorkoutSession>(
     exercises: { type: [ExerciseSchema], default: [] },
     goal: { type: String },
     notes: { type: String },
-    isDone: { type: Boolean, default: false }, 
+    isDone: { type: Boolean, default: false },
+    completedAt: { type: Date },
   },
   { timestamps: true }
 );

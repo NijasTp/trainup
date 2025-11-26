@@ -12,15 +12,15 @@ import { MESSAGES } from '../constants/messages.constants'
 
 @injectable()
 export class WorkoutService implements IWorkoutService {
-  constructor (
+  constructor(
     @inject(TYPES.WorkoutSessionRepository)
     private _sessionRepo: IWorkoutSessionRepository,
     @inject(TYPES.WorkoutDayRepository)
     private _workoutDayRepo: IWorkoutDayRepository,
-    @inject(TYPES.IStreakService) private _streakService : IStreakService
-  ) {}
+    @inject(TYPES.IStreakService) private _streakService: IStreakService
+  ) { }
 
-  async createSession (payload: Partial<IWorkoutSession>): Promise<WorkoutSessionResponseDto> {
+  async createSession(payload: Partial<IWorkoutSession>): Promise<WorkoutSessionResponseDto> {
     if (!payload.userId && payload.givenBy === 'user') {
       throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
     }
@@ -48,7 +48,7 @@ export class WorkoutService implements IWorkoutService {
     return this.mapToSessionResponseDto(session)
   }
 
-  async getSession (id: string): Promise<WorkoutSessionResponseDto> {
+  async getSession(id: string): Promise<WorkoutSessionResponseDto> {
     const session = await this._sessionRepo.findById(id)
     if (!session) throw new AppError(MESSAGES.SESSION_NOT_FOUND, STATUS_CODE.NOT_FOUND)
     return this.mapToSessionResponseDto(session as any)
@@ -83,7 +83,7 @@ export class WorkoutService implements IWorkoutService {
     };
   }
 
-  async trainerCreateSession (
+  async trainerCreateSession(
     trainerId: string,
     clientId: string,
     payload: Partial<IWorkoutSession>
@@ -116,7 +116,7 @@ export class WorkoutService implements IWorkoutService {
     return this.mapToSessionResponseDto(session)
   }
 
-  async updateSession (id: string, payload: IWorkoutSessionPayload): Promise<WorkoutSessionResponseDto> {
+  async updateSession(id: string, payload: IWorkoutSessionPayload): Promise<WorkoutSessionResponseDto> {
     if (payload.notes && payload.givenBy && payload.givenBy !== 'trainer') {
       throw new AppError('Only trainers can set notes', STATUS_CODE.FORBIDDEN)
     }
@@ -140,12 +140,12 @@ export class WorkoutService implements IWorkoutService {
     return this.mapToSessionResponseDto(updated)
   }
 
-  async deleteSession (id: string) {
+  async deleteSession(id: string) {
     const success = await this._sessionRepo.delete(id)
-   
+
   }
 
-  async createDay (userId: string, date: string): Promise<WorkoutDayResponseDto> {
+  async createDay(userId: string, date: string): Promise<WorkoutDayResponseDto> {
     const existing = await this._workoutDayRepo.findByUserAndDate(userId, date)
     if (existing) return this.mapToDayResponseDto(existing)
 
@@ -153,7 +153,7 @@ export class WorkoutService implements IWorkoutService {
     return this.mapToDayResponseDto(day)
   }
 
-  async addSessionToDay (userId: string, date: string, sessionId: string): Promise<WorkoutDayResponseDto> {
+  async addSessionToDay(userId: string, date: string, sessionId: string): Promise<WorkoutDayResponseDto> {
     let day = await this._workoutDayRepo.findByUserAndDate(userId, date)
     if (!day)
       day = await this._workoutDayRepo.create({
@@ -170,7 +170,7 @@ export class WorkoutService implements IWorkoutService {
     return this.mapToDayResponseDto(day!)
   }
 
-  async getDay (userId: string, date: string): Promise<WorkoutDayResponseDto | null> {
+  async getDay(userId: string, date: string): Promise<WorkoutDayResponseDto | null> {
     const day = await this._workoutDayRepo.findByUserAndDate(userId, date)
     return day ? this.mapToDayResponseDto(day) : null
   }
@@ -247,10 +247,10 @@ export class WorkoutService implements IWorkoutService {
       date: day.date,
       sessions: Array.isArray(day.sessions)
         ? day.sessions.map((session: any) =>
-            typeof session === 'string'
-              ? { _id: session } as any
-              : this.mapToSessionResponseDto(session)
-          )
+          typeof session === 'string'
+            ? { _id: session } as any
+            : this.mapToSessionResponseDto(session)
+        )
         : [],
       createdAt: day.createdAt,
       updatedAt: day.updatedAt

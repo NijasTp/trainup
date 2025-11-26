@@ -674,8 +674,10 @@ export class UserController implements IUserController {
   async getGymRatings(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params
-      const ratings = await this._ratingService.getGymRatings(id)
-      res.status(STATUS_CODE.OK).json({ ratings })
+      const page = parseInt(req.query.page as string) || 1
+      const limit = parseInt(req.query.limit as string) || 5
+      const result = await this._ratingService.getGymRatings(id, page, limit)
+      res.status(STATUS_CODE.OK).json(result)
     } catch (err) {
       next(err)
     }
@@ -683,11 +685,12 @@ export class UserController implements IUserController {
 
   async addTrainerRating(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { trainerId, rating, message, subscriptionPlan } = req.body
-      const userId = (req as any).user._id
+      const { id } = req.params
+      const { rating, message, subscriptionPlan } = req.body
+      const userId = (req.user as JwtPayload).id
       const newRating = await this._ratingService.addTrainerRating(
+        id,
         userId,
-        trainerId,
         rating,
         message,
         subscriptionPlan
@@ -700,11 +703,12 @@ export class UserController implements IUserController {
 
   async addGymRating(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { gymId, rating, message, subscriptionPlan } = req.body
-      const userId = (req as any).user._id
+      const { id } = req.params
+      const { rating, message, subscriptionPlan } = req.body
+      const userId = (req.user as JwtPayload).id
       const newRating = await this._ratingService.addGymRating(
+        id,
         userId,
-        gymId,
         rating,
         message,
         subscriptionPlan
@@ -743,8 +747,10 @@ export class UserController implements IUserController {
   async getTrainerRatings(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params
-      const ratings = await this._ratingService.getTrainerRatings(id)
-      res.status(STATUS_CODE.OK).json({ ratings })
+      const page = parseInt(req.query.page as string) || 1
+      const limit = parseInt(req.query.limit as string) || 5
+      const result = await this._ratingService.getTrainerRatings(id, page, limit)
+      res.status(STATUS_CODE.OK).json(result)
     } catch (err) {
       next(err)
     }

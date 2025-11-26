@@ -450,7 +450,6 @@ const UserDashboard: React.FC = () => {
           (entry: any) => entry && typeof entry.weight === "number" && entry.date && !isNaN(new Date(entry.date).getTime())
         );
 
-        // Aggregate same-day entries
         const aggregatedHistory: { [key: string]: { weight: number; date: string } } = {};
         validHistory.forEach((entry: { weight: number; date: string }) => {
           const dateKey = format(new Date(entry.date), "yyyy-MM-dd");

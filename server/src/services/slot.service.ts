@@ -4,20 +4,25 @@ import { ISlotRepository } from '../core/interfaces/repositories/ISlotRepository
 import { IUserPlanService } from '../core/interfaces/services/IUserPlanService'
 import { ISlot } from '../models/slot.model'
 import TYPES from '../core/types/types'
+
 import { AppError } from '../utils/appError.util'
 import { STATUS_CODE } from '../constants/status'
 import { MESSAGES } from '../constants/messages.constants'
 import { v4 as uuidv4 } from 'uuid'
 import { Types } from 'mongoose'
+import { INotificationService } from '../core/interfaces/services/INotificationService'
+import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepository'
 
 @injectable()
 export class SlotService implements ISlotService {
-  constructor (
+  constructor(
     @inject(TYPES.ISlotRepository) private _slotRepository: ISlotRepository,
-    @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService
-  ) {}
+    @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService,
+    @inject(TYPES.ITrainerRepository) private _trainerRepository: ITrainerRepository
+  ) { }
 
-  async createSlot (
+  async createSlot(
     trainerId: string,
     date: Date,
     startTime: string,
@@ -53,23 +58,23 @@ export class SlotService implements ISlotService {
     })
   }
 
-  async getTrainerSlots (trainerId: string): Promise<ISlot[]> {
+  async getTrainerSlots(trainerId: string): Promise<ISlot[]> {
     return await this._slotRepository.findByTrainerId(trainerId)
   }
 
-  async getAvailableSlots (userId: string): Promise<ISlot[]> {
+  async getAvailableSlots(userId: string): Promise<ISlot[]> {
     return await this._slotRepository.findAvailableSlots(userId)
   }
 
-  async getUserSessions (userId: string): Promise<ISlot[]> {
+  async getUserSessions(userId: string): Promise<ISlot[]> {
     return await this._slotRepository.findUserSessions(userId)
   }
 
-  async getTrainerSessionRequests (trainerId: string): Promise<ISlot[]> {
+  async getTrainerSessionRequests(trainerId: string): Promise<ISlot[]> {
     return await this._slotRepository.findTrainerSessionRequests(trainerId)
   }
 
-  async deleteSlot (slotId: string, trainerId: string): Promise<void> {
+  async deleteSlot(slotId: string, trainerId: string): Promise<void> {
     const slot = await this._slotRepository.findById(slotId)
     if (!slot) {
       throw new AppError('Slot not found', STATUS_CODE.NOT_FOUND)
@@ -89,7 +94,7 @@ export class SlotService implements ISlotService {
     await this._slotRepository.deleteSlot(slotId)
   }
 
-  async bookSession (slotId: string, userId: string): Promise<void> {
+  async bookSession(slotId: string, userId: string): Promise<void> {
     const slot = await this._slotRepository.findById(slotId)
     if (!slot) {
       throw new AppError('Slot not found', STATUS_CODE.NOT_FOUND)
@@ -134,9 +139,11 @@ export class SlotService implements ISlotService {
     }
 
     await this._slotRepository.addBookingRequest(slotId, userId)
+
+    await this._notificationService.sendSessionRequestNotification(trainerId.toString(), userId)
   }
 
-  async approveSessionRequest (
+  async approveSessionRequest(
     slotId: string,
     userId: string,
     trainerId: string
@@ -146,7 +153,6 @@ export class SlotService implements ISlotService {
       throw new AppError('Session request not found', STATUS_CODE.NOT_FOUND)
     }
 
-    // Handle populated trainerId
     const slotTrainerId =
       typeof slot.trainerId === 'object' && slot.trainerId._id
         ? slot.trainerId._id.toString()
@@ -206,9 +212,14 @@ export class SlotService implements ISlotService {
     ]
 
     await this._slotRepository.updateSlot(slotId, update, { arrayFilters })
+
+    const trainer = await this._trainerRepository.findById(trainerId);
+    if (trainer) {
+      await this._notificationService.sendSessionResponseNotification(userId, trainer.name, true);
+    }
   }
 
-  async rejectSessionRequest (
+  async rejectSessionRequest(
     slotId: string,
     userId: string,
     trainerId: string,
@@ -255,9 +266,14 @@ export class SlotService implements ISlotService {
     const arrayFilters = [{ 'elem.userId': new Types.ObjectId(userId) }]
 
     await this._slotRepository.updateSlot(slotId, update, { arrayFilters })
+
+    const trainer = await this._trainerRepository.findById(trainerId);
+    if (trainer) {
+      await this._notificationService.sendSessionResponseNotification(userId, trainer.name, false, rejectionReason);
+    }
   }
 
-  async generateVideoCallLink (slotId: string): Promise<string> {
+  async generateVideoCallLink(slotId: string): Promise<string> {
     const roomId = `session_${slotId}_${uuidv4()}`
     return `${process.env.FRONTEND_URL}/video-call/${roomId}`
   }
