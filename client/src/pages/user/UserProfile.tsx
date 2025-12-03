@@ -43,6 +43,7 @@ export default function Profile() {
     setError(null);
     try {
       const response = await getProfile();
+      console.log(response)
       setProfile(response.user);
     } catch (err) {
       setError("Failed to fetch profile");
@@ -187,24 +188,38 @@ export default function Profile() {
                       <Mail className="h-5 w-5 text-primary" />
                       <span className="text-foreground">{profile.email}</span>
                     </div>
-                    {profile.phone && (
-                      <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                        <Phone className="h-5 w-5 text-primary" />
+                    <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
+                      <Phone className="h-5 w-5 text-primary" />
+                      {profile.phone ? (
                         <span className="text-foreground">{profile.phone}</span>
-                      </div>
-                    )}
-                    {profile.height && (
-                      <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                        <Ruler className="h-5 w-5 text-primary" />
+                      ) : (
+                        <span className="text-red-500 font-medium">Not added</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
+                      <Ruler className="h-5 w-5 text-primary" />
+                      {profile.height ? (
                         <span className="text-foreground">Height: {profile.height} cm</span>
-                      </div>
-                    )}
-                    {profile.weight && (
-                      <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                        <Scale className="h-5 w-5 text-primary" />
+                      ) : (
+                        <span className="text-red-500 font-medium">Height: Not added</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
+                      <Scale className="h-5 w-5 text-primary" />
+                      {profile.weight ? (
                         <span className="text-foreground">Weight: {profile.weight} kg</span>
-                      </div>
-                    )}
+                      ) : (
+                        <span className="text-red-500 font-medium">Weight: Not added</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      {profile.age ? (
+                        <span className="text-foreground">Age: {profile.age} years</span>
+                      ) : (
+                        <span className="text-red-500 font-medium">Age: Not added</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -273,7 +288,7 @@ export default function Profile() {
                     {profile.gymId && (
                       <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
                         <MapPin className="h-5 w-5 text-primary" />
-                        <span className="text-foreground">Gym ID: {profile.gymId}</span>
+                        <span className="text-foreground">Gym Name: {profile.gymId}</span>
                       </div>
                     )}
                     {profile.assignedTrainer && (

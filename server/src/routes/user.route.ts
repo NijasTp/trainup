@@ -105,5 +105,6 @@ router.post('/trainer/rating/:id', authMiddleware, userController.addTrainerRati
 router.post('/gym/rating/:id', authMiddleware, userController.addGymRating.bind(userController))
 router.get('/trainer/ratings/:id', authMiddleware, userController.getTrainerRatings.bind(userController))
 router.get('/gym/ratings/:id', authMiddleware, userController.getGymRatings.bind(userController))
+router.post('/chat/upload', authMiddleware, userController.uploadChatFile.bind(userController))
 
 export default router

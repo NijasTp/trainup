@@ -11,23 +11,24 @@ import {
   Ruler,
   Scale,
   Save,
-  ArrowLeft,
   Plus,
   X,
   Target,
-  Eye,
-  EyeOff,
-  Key,
+  Camera,
+  Upload,
   Weight,
   Activity,
+  EyeOff,
+  Eye,
+  Key,
   Loader2,
-  Upload,
-  Camera
+  ChevronRight,
+  Check
 } from "lucide-react";
-import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { updateUser } from "@/redux/slices/userAuthSlice";
+import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { getProfile, updateProfile } from "@/services/userService";
 import { z } from "zod";
 import { toast } from "react-toastify";
@@ -100,6 +101,9 @@ export default function EditProfile() {
     goalWeight: ""
   });
 
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
+
   const [profileImagePreview, setProfileImagePreview] = useState<string>("");
   const [newGoal, setNewGoal] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -107,32 +111,32 @@ export default function EditProfile() {
   const [errors, setErrors] = useState<Partial<Record<keyof ProfileFormData, string>>>({});
   const navigate = useNavigate();
   const dispatch = useDispatch();
-const [open, setOpen] = useState(false)
-const [currentPassword, setCurrentPassword] = useState("")
-const [newPassword, setNewPassword] = useState("")
-const [confirmPassword, setConfirmPassword] = useState("")
-const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [loading, setLoading] = useState(false)
 
-const handleChangePassword = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setLoading(true)
-  try {
-    await API.post("/user/change-password", {
-      currentPassword,
-      newPassword,
-      confirmPassword
-    })
-    toast.success("Password changed successfully!")
-    setOpen(false)
-    setCurrentPassword("")
-    setNewPassword("")
-    setConfirmPassword("")
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || "Failed to change password")
-  } finally {
-    setLoading(false)
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      await API.post("/user/change-password", {
+        currentPassword,
+        newPassword,
+        confirmPassword
+      })
+      toast.success("Password changed successfully!")
+      setOpen(false)
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to change password")
+    } finally {
+      setLoading(false)
+    }
   }
-}
   useEffect(() => {
     document.title = "TrainUp - Edit Profile";
     fetchProfile();
@@ -283,6 +287,406 @@ const handleChangePassword = async (e: React.FormEvent) => {
     }
   };
 
+  const nextStep = () => {
+    if (currentStep < totalSteps) setCurrentStep(prev => prev + 1);
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) setCurrentStep(prev => prev - 1);
+  };
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            {/* Profile Image Upload */}
+            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+                  <Camera className="h-6 w-6 text-primary" />
+                  Profile Picture
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center space-y-4">
+                <Avatar className="h-32 w-32">
+                  <AvatarImage src={profileImagePreview} />
+                  <AvatarFallback className="text-4xl">
+                    {formData.name ? formData.name[0]?.toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="profileImage" className="cursor-pointer">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
+                      <Upload className="h-4 w-4" />
+                      <span className="text-sm font-medium">Upload Photo</span>
+                    </div>
+                    <Input
+                      id="profileImage"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="sr-only"
+                    />
+                  </Label>
+
+                  {profileImagePreview && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setProfileImagePreview("");
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
+
+                <p className="text-xs text-muted-foreground text-center">
+                  JPG, PNG or GIF (max. 5MB)
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Personal Information */}
+            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+                  <User className="h-6 w-6 text-primary" />
+                  Personal Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="font-medium">Full Name *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      className={`bg-transparent border-border/50 ${errors.name ? 'border-destructive' : ''}`}
+                      placeholder="Enter your full name"
+                    />
+                    {errors.name && (
+                      <p className="text-sm text-destructive">{errors.name}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="font-medium">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                      className={`bg-transparent border-border/50 ${errors.phone ? 'border-destructive' : ''}`}
+                      placeholder="+91 9876543210"
+                    />
+                    {errors.phone && (
+                      <p className="text-sm text-destructive">{errors.phone}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="age" className="font-medium">Age</Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      value={formData.age}
+                      onChange={(e) => handleInputChange("age", e.target.value)}
+                      className={`bg-transparent border-border/50 ${errors.age ? 'border-destructive' : ''}`}
+                      placeholder="25"
+                      min="13"
+                      max="100"
+                    />
+                    {errors.age && (
+                      <p className="text-sm text-destructive">{errors.age}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gender" className="font-medium">Gender</Label>
+                    <Select value={formData.gender || undefined} onValueChange={(value) => handleInputChange("gender", value)}>
+                      <SelectTrigger className="bg-transparent border-border/50">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      case 2:
+        return (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            {/* Physical Information */}
+            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+                  <Weight className="h-6 w-6 text-primary" />
+                  Physical Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="height" className="font-medium flex items-center gap-2">
+                      <Ruler className="h-4 w-4" />
+                      Height (cm)
+                    </Label>
+                    <Input
+                      id="height"
+                      type="number"
+                      value={formData.height}
+                      onChange={(e) => handleInputChange("height", e.target.value)}
+                      className={`bg-transparent border-border/50 ${errors.height ? 'border-destructive' : ''}`}
+                      placeholder="170"
+                      min="100"
+                      max="250"
+                    />
+                    {errors.height && (
+                      <p className="text-sm text-destructive">{errors.height}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="todaysWeight" className="font-medium flex items-center gap-2">
+                      <Scale className="h-4 w-4" />
+                      Current Weight (kg)
+                    </Label>
+                    <Input
+                      id="todaysWeight"
+                      type="number"
+                      step="0.1"
+                      value={formData.todaysWeight}
+                      onChange={(e) => handleInputChange("todaysWeight", e.target.value)}
+                      className={`bg-transparent border-border/50 ${errors.todaysWeight ? 'border-destructive' : ''}`}
+                      placeholder="70.5"
+                      min="30"
+                      max="300"
+                    />
+                    {errors.todaysWeight && (
+                      <p className="text-sm text-destructive">{errors.todaysWeight}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="goalWeight" className="font-medium flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Goal Weight (kg)
+                    </Label>
+                    <Input
+                      id="goalWeight"
+                      type="number"
+                      step="0.1"
+                      value={formData.goalWeight}
+                      onChange={(e) => handleInputChange("goalWeight", e.target.value)}
+                      className={`bg-transparent border-border/50 ${errors.goalWeight ? 'border-destructive' : ''}`}
+                      placeholder="65.0"
+                      min="30"
+                      max="300"
+                    />
+                    {errors.goalWeight && (
+                      <p className="text-sm text-destructive">{errors.goalWeight}</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      case 3:
+        return (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            {/* Fitness Information */}
+            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+                  <Activity className="h-6 w-6 text-primary" />
+                  Fitness Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <Label className="font-medium">Fitness Goals</Label>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {formData.goals!.map((goal, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="font-medium bg-primary/10 hover:bg-primary/20 transition-all duration-300 flex items-center gap-1"
+                      >
+                        {goal}
+                        <button
+                          type="button"
+                          onClick={() => removeGoal(goal)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newGoal}
+                      onChange={(e) => setNewGoal(e.target.value)}
+                      placeholder="Add a custom goal"
+                      className="bg-transparent border-border/50"
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addGoal())}
+                    />
+                    <Button type="button" onClick={addGoal} variant="outline" size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Quick add popular goals:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {goalOptions.filter(goal => !formData.goals!.includes(goal)).map((goal) => (
+                        <Button
+                          key={goal}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addPredefinedGoal(goal)}
+                          className="text-xs"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          {goal}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="activityLevel" className="font-medium">Activity Level</Label>
+                  <Select value={formData.activityLevel} onValueChange={(value) => handleInputChange("activityLevel", value)}>
+                    <SelectTrigger className="bg-transparent border-border/50">
+                      <SelectValue placeholder="Select your activity level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activityLevels.map((level) => (
+                        <SelectItem key={level.value} value={level.value}>
+                          {level.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="equipment"
+                      checked={formData.equipment}
+                      onCheckedChange={(checked) => handleInputChange("equipment", checked)}
+                    />
+                    <Label htmlFor="equipment" className="font-medium">
+                      I have access to gym equipment
+                    </Label>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      case 4:
+        return (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            {/* Privacy Settings */}
+            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+                  {formData.isPrivate ? <EyeOff className="h-6 w-6 text-primary" /> : <Eye className="h-6 w-6 text-primary" />}
+                  Privacy Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isPrivate"
+                    checked={formData.isPrivate}
+                    onCheckedChange={(checked) => handleInputChange("isPrivate", checked)}
+                  />
+                  <Label htmlFor="isPrivate" className="font-medium">
+                    Make my profile private
+                  </Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  When enabled, your profile information will only be visible to you and your assigned trainer.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Security */}
+            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+                  <Key className="h-6 w-6 text-primary" />
+                  Security
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Dialog open={open} onOpenChange={setOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="hover:bg-primary/5">
+                      <Key className="h-4 w-4 mr-2" />
+                      Change Password
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Change Password</DialogTitle>
+                      <DialogDescription>
+                        Make sure your new password is strong and unique.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleChangePassword} className="space-y-4">
+                      <Input
+                        type="password"
+                        placeholder="Current password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        required
+                      />
+                      <Input
+                        type="password"
+                        placeholder="New password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                      />
+                      <Input
+                        type="password"
+                        placeholder="Confirm new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                      />
+                      <DialogFooter>
+                        <Button type="submit" disabled={loading}>
+                          {loading ? "Changing..." : "Change Password"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Update your account password for better security
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
@@ -304,17 +708,6 @@ const handleChangePassword = async (e: React.FormEvent) => {
       <SiteHeader />
 
       <main className="relative container mx-auto px-4 py-12 space-y-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/profile')}
-            className="hover:bg-primary/5"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Profile
-          </Button>
-        </div>
-
         <div className="text-center space-y-6 mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
             <User className="h-4 w-4 text-primary" />
@@ -324,406 +717,74 @@ const handleChangePassword = async (e: React.FormEvent) => {
             Update Your Profile
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Keep your fitness profile up to date for the best experience
+            Step {currentStep} of {totalSteps}
           </p>
         </div>
 
+        {/* Stepper */}
+        <div className="max-w-4xl mx-auto mb-12">
+          <div className="relative flex justify-between">
+            <div className="absolute top-1/2 left-0 w-full h-1 bg-muted -z-10 -translate-y-1/2 rounded-full" />
+            <div
+              className="absolute top-1/2 left-0 h-1 bg-primary -z-10 -translate-y-1/2 rounded-full transition-all duration-300"
+              style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
+            />
+            {[1, 2, 3, 4].map((step) => (
+              <div
+                key={step}
+                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${step <= currentStep
+                  ? "bg-primary border-primary text-primary-foreground"
+                  : "bg-background border-muted text-muted-foreground"
+                  }`}
+              >
+                {step < currentStep ? <Check className="h-5 w-5" /> : step}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-2 text-sm text-muted-foreground px-2">
+            <span>Personal</span>
+            <span>Body Metrics</span>
+            <span>Fitness</span>
+            <span>Account</span>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
-          {/* Profile Image Upload */}
-          <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <Camera className="h-6 w-6 text-primary" />
-                Profile Picture
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center space-y-4">
-              <Avatar className="h-32 w-32">
-                <AvatarImage src={profileImagePreview} />
-                <AvatarFallback className="text-4xl">
-                  {formData.name ? formData.name[0]?.toUpperCase() : 'U'}
-                </AvatarFallback>
-              </Avatar>
+          {renderStep()}
 
-              <div className="flex items-center gap-4">
-                <Label htmlFor="profileImage" className="cursor-pointer">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
-                    <Upload className="h-4 w-4" />
-                    <span className="text-sm font-medium">Upload Photo</span>
-                  </div>
-                  <Input
-                    id="profileImage"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="sr-only"
-                  />
-                </Label>
-
-                {profileImagePreview && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setProfileImagePreview("");
-                    }}
-                  >
-                    Remove
-                  </Button>
-                )}
-              </div>
-
-              <p className="text-xs text-muted-foreground text-center">
-                JPG, PNG or GIF (max. 5MB)
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Personal Information */}
-          <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <User className="h-6 w-6 text-primary" />
-                Personal Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="font-medium">Full Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    className={`bg-transparent border-border/50 ${errors.name ? 'border-destructive' : ''}`}
-                    placeholder="Enter your full name"
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-destructive">{errors.name}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="font-medium">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    className={`bg-transparent border-border/50 ${errors.phone ? 'border-destructive' : ''}`}
-                    placeholder="+91 9876543210"
-                  />
-                  {errors.phone && (
-                    <p className="text-sm text-destructive">{errors.phone}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="age" className="font-medium">Age</Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    value={formData.age}
-                    onChange={(e) => handleInputChange("age", e.target.value)}
-                    className={`bg-transparent border-border/50 ${errors.age ? 'border-destructive' : ''}`}
-                    placeholder="25"
-                    min="13"
-                    max="100"
-                  />
-                  {errors.age && (
-                    <p className="text-sm text-destructive">{errors.age}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gender" className="font-medium">Gender</Label>
-                  <Select value={formData.gender || undefined} onValueChange={(value) => handleInputChange("gender", value)}>
-                    <SelectTrigger className="bg-transparent border-border/50">
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Physical Information */}
-          <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <Weight className="h-6 w-6 text-primary" />
-                Physical Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="height" className="font-medium flex items-center gap-2">
-                    <Ruler className="h-4 w-4" />
-                    Height (cm)
-                  </Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    value={formData.height}
-                    onChange={(e) => handleInputChange("height", e.target.value)}
-                    className={`bg-transparent border-border/50 ${errors.height ? 'border-destructive' : ''}`}
-                    placeholder="170"
-                    min="100"
-                    max="250"
-                  />
-                  {errors.height && (
-                    <p className="text-sm text-destructive">{errors.height}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="todaysWeight" className="font-medium flex items-center gap-2">
-                    <Scale className="h-4 w-4" />
-                    Current Weight (kg)
-                  </Label>
-                  <Input
-                    id="todaysWeight"
-                    type="number"
-                    step="0.1"
-                    value={formData.todaysWeight}
-                    onChange={(e) => handleInputChange("todaysWeight", e.target.value)}
-                    className={`bg-transparent border-border/50 ${errors.todaysWeight ? 'border-destructive' : ''}`}
-                    placeholder="70.5"
-                    min="30"
-                    max="300"
-                  />
-                  {errors.todaysWeight && (
-                    <p className="text-sm text-destructive">{errors.todaysWeight}</p>
-                  )}
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="goalWeight" className="font-medium flex items-center gap-2">
-                    <Target className="h-4 w-4" />
-                    Goal Weight (kg)
-                  </Label>
-                  <Input
-                    id="goalWeight"
-                    type="number"
-                    step="0.1"
-                    value={formData.goalWeight}
-                    onChange={(e) => handleInputChange("goalWeight", e.target.value)}
-                    className={`bg-transparent border-border/50 ${errors.goalWeight ? 'border-destructive' : ''}`}
-                    placeholder="65.0"
-                    min="30"
-                    max="300"
-                  />
-                  {errors.goalWeight && (
-                    <p className="text-sm text-destructive">{errors.goalWeight}</p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Fitness Information */}
-          <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <Activity className="h-6 w-6 text-primary" />
-                Fitness Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <Label className="font-medium">Fitness Goals</Label>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {formData.goals!.map((goal, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="font-medium bg-primary/10 hover:bg-primary/20 transition-all duration-300 flex items-center gap-1"
-                    >
-                      {goal}
-                      <button
-                        type="button"
-                        onClick={() => removeGoal(goal)}
-                        className="ml-1 hover:text-destructive"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={newGoal}
-                    onChange={(e) => setNewGoal(e.target.value)}
-                    placeholder="Add a custom goal"
-                    className="bg-transparent border-border/50"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addGoal())}
-                  />
-                  <Button type="button" onClick={addGoal} variant="outline" size="icon">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Quick add popular goals:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {goalOptions.filter(goal => !formData.goals!.includes(goal)).map((goal) => (
-                      <Button
-                        key={goal}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addPredefinedGoal(goal)}
-                        className="text-xs"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        {goal}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="activityLevel" className="font-medium">Activity Level</Label>
-                <Select value={formData.activityLevel} onValueChange={(value) => handleInputChange("activityLevel", value)}>
-                  <SelectTrigger className="bg-transparent border-border/50">
-                    <SelectValue placeholder="Select your activity level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activityLevels.map((level) => (
-                      <SelectItem key={level.value} value={level.value}>
-                        {level.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="equipment"
-                    checked={formData.equipment}
-                    onCheckedChange={(checked) => handleInputChange("equipment", checked)}
-                  />
-                  <Label htmlFor="equipment" className="font-medium">
-                    I have access to gym equipment
-                  </Label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Privacy Settings */}
-          <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                {formData.isPrivate ? <EyeOff className="h-6 w-6 text-primary" /> : <Eye className="h-6 w-6 text-primary" />}
-                Privacy Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isPrivate"
-                  checked={formData.isPrivate}
-                  onCheckedChange={(checked) => handleInputChange("isPrivate", checked)}
-                />
-                <Label htmlFor="isPrivate" className="font-medium">
-                  Make my profile private
-                </Label>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                When enabled, your profile information will only be visible to you and your assigned trainer.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Security */}
-          <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <Key className="h-6 w-6 text-primary" />
-                Security
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="hover:bg-primary/5">
-                    <Key className="h-4 w-4 mr-2" />
-                    Change Password
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Change Password</DialogTitle>
-                    <DialogDescription>
-                      Make sure your new password is strong and unique.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleChangePassword} className="space-y-4">
-                    <Input
-                      type="password"
-                      placeholder="Current password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      required
-                    />
-                    <Input
-                      type="password"
-                      placeholder="New password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                    />
-                    <Input
-                      type="password"
-                      placeholder="Confirm new password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                    />
-                    <DialogFooter>
-                      <Button type="submit" disabled={loading}>
-                        {loading ? "Changing..." : "Change Password"}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-              <p className="text-sm text-muted-foreground mt-2">
-                Update your account password for better security
-              </p>
-            </CardContent>
-          </Card>
-
-          <div className="flex gap-4 justify-end pt-6">
+          <div className="flex gap-4 justify-between pt-6">
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/profile')}
+              onClick={currentStep === 1 ? () => navigate('/profile') : prevStep}
               className="hover:bg-muted/5"
             >
-              Cancel
+              {currentStep === 1 ? 'Cancel' : 'Previous'}
             </Button>
-            <Button
-              type="submit"
-              disabled={isSaving}
-              className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-8"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
-              )}
-            </Button>
+
+            {currentStep < totalSteps ? (
+              <Button type="button" onClick={nextStep} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                Next <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={isSaving}
+                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-8"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </form>
       </main>

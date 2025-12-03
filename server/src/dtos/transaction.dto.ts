@@ -1,6 +1,6 @@
 export interface ITransactionDTO {
   _id: string;
-  userId: string;
+  userId: string | any;
   trainerId?: string;
   razorpayOrderId: string;
   razorpayPaymentId?: string;

@@ -290,13 +290,11 @@ export class UserController implements IUserController {
   ): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id
-      const user = await this._userService.getUserById(userId)
-      if (!user || !user.assignedTrainer) {
+      const trainerId = await this._userService.getAssignedTrainerId(userId)
+      if (!trainerId) {
         throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
       }
-      const trainer = await this._trainerService.getTrainerById(
-        user.assignedTrainer
-      )
+      const trainer = await this._trainerService.getTrainerById(trainerId)
       const response: GetMyTrainerResponseDto = { trainer }
       res.status(STATUS_CODE.OK).json(response)
     } catch (err) {
@@ -311,16 +309,16 @@ export class UserController implements IUserController {
   ): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id
-      const user = await this._userService.getUserById(userId)
-      if (!user || !user.assignedTrainer) {
+      const trainerId = await this._userService.getAssignedTrainerId(userId)
+      if (!trainerId) {
         throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.BAD_REQUEST)
       }
-      await this._userService.cancelSubscription(userId, user.assignedTrainer)
+      await this._userService.cancelSubscription(userId, trainerId)
       await this._trainerService.removeClientFromTrainer(
-        user.assignedTrainer,
+        trainerId,
         userId
       )
-      await this._userPlanService.deleteUserPlan(userId, user.assignedTrainer)
+      await this._userPlanService.deleteUserPlan(userId, trainerId)
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.DELETED })
     } catch (err) {
       next(err)
@@ -509,15 +507,15 @@ export class UserController implements IUserController {
   ): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id
-      const user = await this._userService.getUserById(userId)
+      const trainerId = await this._userService.getAssignedTrainerId(userId)
 
-      if (!user || !user.assignedTrainer) {
+      if (!trainerId) {
         throw new AppError('No trainer assigned', STATUS_CODE.NOT_FOUND)
       }
 
       const plan = await this._userPlanService.getUserPlan(
         userId,
-        user.assignedTrainer
+        trainerId
       )
       res.status(STATUS_CODE.OK).json({ plan })
     } catch (err) {
@@ -751,6 +749,18 @@ export class UserController implements IUserController {
       const limit = parseInt(req.query.limit as string) || 5
       const result = await this._ratingService.getTrainerRatings(id, page, limit)
       res.status(STATUS_CODE.OK).json(result)
+    } catch (err) {
+      next(err)
+    }
+  }
+  async uploadChatFile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.files || !req.files.file) {
+        throw new AppError('No file uploaded', STATUS_CODE.BAD_REQUEST)
+      }
+      const file = req.files.file as UploadedFile
+      const fileUrl = await this._userService.uploadChatFile(file)
+      res.status(STATUS_CODE.OK).json({ fileUrl })
     } catch (err) {
       next(err)
     }

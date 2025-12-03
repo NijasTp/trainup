@@ -293,45 +293,45 @@ export default function AddSessionPage() {
         setModalOpen(false);
     }
 
-async function handleCreateSession() {
-    const payload: WorkoutSessionPayload = {
-        name: sessionName,
-        givenBy: "user",
-        date: sessionDate,
-        time: sessionTime,
-        goal: sessionGoal,
-        exercises: addedExercises,
-    };
+    async function handleCreateSession() {
+        const payload: WorkoutSessionPayload = {
+            name: sessionName,
+            givenBy: "user",
+            date: sessionDate,
+            time: sessionTime,
+            goal: sessionGoal,
+            exercises: addedExercises,
+        };
 
-    const [hours, minutes] = sessionTime.split(":").map(Number);
-    const selectedDateTime = parse(sessionDate, "yyyy-MM-dd", new Date());
-    selectedDateTime.setHours(hours, minutes);
-    const currentDateTime = new Date("2025-09-24T15:29:00+05:30"); 
+        const [hours, minutes] = sessionTime.split(":").map(Number);
+        const selectedDateTime = parse(sessionDate, "yyyy-MM-dd", new Date());
+        selectedDateTime.setHours(hours, minutes);
+        const currentDateTime = new Date("2025-09-24T15:29:00+05:30");
 
-    if (isBefore(selectedDateTime, currentDateTime)) {
-        toast.error("Validation failed: Time cannot be in the past");
-        return;
+        if (isBefore(selectedDateTime, currentDateTime)) {
+            toast.error("Validation failed: Time cannot be in the past");
+            return;
+        }
+
+        const result = sessionSchema.safeParse(payload);
+        if (!result.success) {
+            const errorMessages = result.error.issues.map((err) => err.message).join("\n");
+            toast.error(`Validation failed:\n${errorMessages}`);
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await createWorkoutSession(result.data);
+            toast.success("Workout session created!");
+            navigate("/workouts");
+        } catch (err: any) {
+            setError(err.message || "Error creating workout session");
+            toast.error("Failed to create session");
+        } finally {
+            setIsLoading(false);
+        }
     }
-
-    const result = sessionSchema.safeParse(payload);
-    if (!result.success) {
-        const errorMessages = result.error.issues.map((err) => err.message).join("\n");
-        toast.error(`Validation failed:\n${errorMessages}`);
-        return;
-    }
-
-    setIsLoading(true);
-    try {
-        await createWorkoutSession(result.data);
-        toast.success("Workout session created!");
-        navigate("/workouts");
-    } catch (err: any) {
-        setError(err.message || "Error creating workout session");
-        toast.error("Failed to create session");
-    } finally {
-        setIsLoading(false);
-    }
-}
 
     function handleRemoveExercise(id: string) {
         setAddedExercises(addedExercises.filter((ex) => ex.id !== id));

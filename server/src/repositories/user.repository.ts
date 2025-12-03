@@ -12,24 +12,22 @@ import { GymModel } from '../models/gym.model'
 
 @injectable()
 export class UserRepository implements IUserRepository {
-  async createUser (data: Partial<IUser>): Promise<IUser> {
+  async createUser(data: Partial<IUser>): Promise<IUser> {
     return await UserModel.create(data)
   }
 
-  async findByEmail (email: string): Promise<IUser | null> {
+  async checkUsername(username: string): Promise<IUser | null> {
+    return await UserModel.findOne({ name: username }).exec()
+  }
+
+  async findByGoogleId(googleId: string): Promise<IUser | null> {
+    return await UserModel.findOne({ googleId }).exec()
+  }
+
+  async findByEmail(email: string): Promise<IUser | null> {
     return await UserModel.findOne({ email }).exec()
   }
-
-  async checkUsername (username: string): Promise<IUser | null> {
-    const regex = new RegExp(`^${username}$`, 'i')
-    return await UserModel.findOne({ name: regex }).exec()
-  }
-
-  async findByGoogleId (googleId: string): Promise<IUser | null> {
-    return UserModel.findOne({ googleId }).exec()
-  }
-
-  async findAll (skip: number, limit: number): Promise<UserResponseDto[]> {
+  async findAll(skip: number, limit: number): Promise<UserResponseDto[]> {
     const users = await UserModel.find()
       .skip(skip)
       .limit(limit)
@@ -39,7 +37,7 @@ export class UserRepository implements IUserRepository {
     return users.map(user => this.mapToResponseDto(user))
   }
 
-  async findUsers (
+  async findUsers(
     page: number,
     limit: number,
     search: string,
@@ -83,11 +81,11 @@ export class UserRepository implements IUserRepository {
     }
   }
 
-  async count (): Promise<number> {
+  async count(): Promise<number> {
     return await UserModel.countDocuments()
   }
 
-  async updateUser (id: string, data: Partial<IUser>): Promise<IUser | null> {
+  async updateUser(id: string, data: Partial<IUser>): Promise<IUser | null> {
     if (data.assignedTrainer) {
       data.assignedTrainer = new Types.ObjectId(data.assignedTrainer)
     }
@@ -98,7 +96,7 @@ export class UserRepository implements IUserRepository {
     ).exec()
   }
 
-  async updateStatusAndIncrementVersion (
+  async updateStatusAndIncrementVersion(
     id: string,
     updateData: Partial<IUser>
   ): Promise<IUser | null> {
@@ -109,18 +107,26 @@ export class UserRepository implements IUserRepository {
     )
   }
 
-  async updateStatus (
+  async updateStatus(
     id: string,
     updateData: Partial<IUser>
   ): Promise<IUser | null> {
     return await UserModel.findByIdAndUpdate(id, updateData, { new: true })
   }
 
-  async findById (id: string): Promise<IUser | null> {
+  async findById(id: string): Promise<IUser | null> {
     return UserModel.findById(id).select('-password')
   }
 
-  async getWeightHistory (
+  async findProfileById(id: string): Promise<IUser | null> {
+    return UserModel.findById(id)
+      .select('-password')
+      .populate('assignedTrainer', 'name')
+      .populate('gymId', 'name')
+      .exec();
+  }
+
+  async getWeightHistory(
     userId: string
   ): Promise<{ weight: number; date: Date }[]> {
     const user = await UserModel.findById(userId).select('weightHistory').lean()
@@ -132,7 +138,7 @@ export class UserRepository implements IUserRepository {
     )
   }
 
-  async addWeight (
+  async addWeight(
     userId: string,
     weight: number,
     date: Date
@@ -149,8 +155,7 @@ export class UserRepository implements IUserRepository {
     return user
   }
 
-  // New methods from the first UserRepository
-  async updateProfile (
+  async updateProfile(
     userId: string,
     updates: UserUpdateProfileDto
   ): Promise<IUser | null> {
@@ -159,33 +164,33 @@ export class UserRepository implements IUserRepository {
     }).lean()
   }
 
-async findByIdWithPassword(userId: string): Promise<IUser | null> {
-  return await UserModel.findById(userId).select('+password').exec()
-}
+  async findByIdWithPassword(userId: string): Promise<IUser | null> {
+    return await UserModel.findById(userId).select('+password').exec()
+  }
 
-async updatePasswordWithId(userId: string, hashedPassword: string): Promise<void> {
-  await UserModel.findByIdAndUpdate(
-    userId,
-    { password: hashedPassword },
-    { new: true }
-  ).exec()
-}
+  async updatePasswordWithId(userId: string, hashedPassword: string): Promise<void> {
+    await UserModel.findByIdAndUpdate(
+      userId,
+      { password: hashedPassword },
+      { new: true }
+    ).exec()
+  }
 
-  async updateTrainer (userId: string, trainerId: string): Promise<void> {
+  async updateTrainer(userId: string, trainerId: string): Promise<void> {
     await UserModel.findByIdAndUpdate(userId, {
       assignedTrainer: trainerId,
       subscriptionStartDate: new Date()
     })
   }
 
-  async updatePlan (
+  async updatePlan(
     userId: string,
     planType: 'basic' | 'premium' | 'pro'
   ): Promise<void> {
     await UserModel.findByIdAndUpdate(userId, { trainerPlan: planType })
   }
 
-  async updateUserGymMembership (
+  async updateUserGymMembership(
     userId: string,
     gymId: string,
     planId: string,
@@ -219,7 +224,7 @@ async updatePasswordWithId(userId: string, hashedPassword: string): Promise<void
     return membership
   }
 
-  async removeTrainer (userId: string): Promise<void> {
+  async removeTrainer(userId: string): Promise<void> {
     await UserModel.findByIdAndUpdate(userId, {
       assignedTrainer: null,
       subscriptionStartDate: null,
@@ -227,11 +232,11 @@ async updatePasswordWithId(userId: string, hashedPassword: string): Promise<void
     })
   }
 
-  async updatePassword (email: string, hashedPassword: string): Promise<void> {
+  async updatePassword(email: string, hashedPassword: string): Promise<void> {
     await UserModel.findOneAndUpdate({ email }, { password: hashedPassword })
   }
 
-  mapToResponseDto (user: IUser): UserResponseDto {
+  mapToResponseDto(user: IUser): UserResponseDto {
     return {
       _id: user._id.toString(),
       name: user.name,

@@ -196,10 +196,12 @@ export class TransactionRepository implements ITransactionRepository {
         $project: {
           month: {
             $concat: [
-              { $arrayElemAt: [
-                ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                { $subtract: ['$_id.month', 1] }
-              ]},
+              {
+                $arrayElemAt: [
+                  ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                  { $subtract: ['$_id.month', 1] }
+                ]
+              },
               ' ',
               { $toString: '$_id.year' }
             ]
@@ -243,29 +245,28 @@ export class TransactionRepository implements ITransactionRepository {
     };
   }
 
-async getRecentActivity(trainerId: string) {
-  const transactions = await TransactionModel.find({
-    trainerId,
-    status: 'completed',
-  })
-    .populate<{ userId: { name: string } }>('userId', 'name') 
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .lean();
+  async getRecentActivity(trainerId: string) {
+    const transactions = await TransactionModel.find({
+      trainerId,
+      status: 'completed',
+    })
+      .populate<{ userId: { name: string } }>('userId', 'name')
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
 
-  return transactions.map(t => ({
-    type: 'subscription',
-    message: `New ${t.planType} subscription from ${
-      t.userId?.name ?? 'Unknown User'
-    }`,
-    date: t.createdAt.toISOString(),
-  }));
-}
+    return transactions.map(t => ({
+      type: 'subscription',
+      message: `New ${t.planType} subscription from ${t.userId?.name ?? 'Unknown User'
+        }`,
+      date: t.createdAt.toISOString(),
+    }));
+  }
 
   private mapToTransactionDto(transaction: ITransaction): ITransactionDTO {
     return {
       _id: transaction._id.toString(),
-      userId: transaction.userId.toString(),
+      userId: typeof transaction.userId === 'object' ? transaction.userId : transaction.userId.toString(),
       trainerId: transaction.trainerId?.toString(),
       razorpayOrderId: transaction.razorpayOrderId,
       razorpayPaymentId: transaction.razorpayPaymentId,

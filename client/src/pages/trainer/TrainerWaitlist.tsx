@@ -35,15 +35,15 @@ const TrainerWaitlist: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate()
 
-  const handleLogout = async () =>{
+  const handleLogout = async () => {
     try {
-        await trainerLogout();
-        dispatch(logoutTrainer())
-        toast.success('Logged out Successfully');
-        navigate('/trainer/login')
-    } catch (error:any) {
-        toast.error(error.response.data.error||error.message||'Failed to logout');
-        console.log('Error logging out:', error.response||error.message);
+      await trainerLogout();
+      dispatch(logoutTrainer())
+      toast.success('Logged out Successfully');
+      navigate('/trainer/login')
+    } catch (error: any) {
+      toast.error(error.response.data.error || error.message || 'Failed to logout');
+      console.log('Error logging out:', error.response || error.message);
     }
   }
 
@@ -53,9 +53,9 @@ const TrainerWaitlist: React.FC = () => {
       const res = await getTrainerDetails();
       setTrainerData(res.trainer);
       setShowApplication(true);
-    } catch (error:any) {
+    } catch (error: any) {
       console.error('Error fetching trainer details:', error);
-      toast.error(error.response.data.error||error.message||'Failed to fetch trainer details');
+      toast.error(error.response.data.error || error.message || 'Failed to fetch trainer details');
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ const TrainerWaitlist: React.FC = () => {
           }
         `}
       </style>
-      
+
       <div className="w-full max-w-md space-y-6 animate-fade-in">
         <div className="text-center">
           <Logo className="justify-center mb-6" />
@@ -94,9 +94,9 @@ const TrainerWaitlist: React.FC = () => {
             className="mt-4 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition"
           >
             Logout
-          </Button>
-        </div>
-        
+          </Button >
+        </div >
+
         <Card className="bg-[#111827] border border-[#4B8B9B]/30 shadow-xl">
           <CardHeader className="text-center space-y-4">
             <div className="mx-auto w-20 h-20 bg-[#4B8B9B]/20 rounded-full flex items-center justify-center animate-pulse-slow">
@@ -109,7 +109,7 @@ const TrainerWaitlist: React.FC = () => {
               Your trainer application is being verified by our team
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-6">
             <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
               <div className="flex items-center justify-between">
@@ -122,12 +122,12 @@ const TrainerWaitlist: React.FC = () => {
                 </Badge>
               </div>
             </div>
-            
+
             <div className="text-center text-sm text-gray-400">
               <p>We typically review applications within 24-48 hours.</p>
               <p className="mt-1">You'll receive an email once your application is processed.</p>
             </div>
-            
+
             <Button
               onClick={handleViewApplication}
               disabled={loading}
@@ -147,17 +147,17 @@ const TrainerWaitlist: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </div >
 
       <Dialog open={showApplication} onOpenChange={setShowApplication}>
         <DialogContent className="bg-[#111827] border border-[#4B8B9B]/30 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center justify-between">
               Your Application Details
-            
+
             </DialogTitle>
           </DialogHeader>
-          
+
           {trainerData && (
             <div className="space-y-6 mt-6">
               {/* Profile Image */}
@@ -170,7 +170,7 @@ const TrainerWaitlist: React.FC = () => {
                   />
                 </div>
               )}
-              
+
               {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
@@ -180,7 +180,7 @@ const TrainerWaitlist: React.FC = () => {
                   </div>
                   <p className="text-white">{trainerData.name}</p>
                 </div>
-                
+
                 <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
                   <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
                     <Mail className="h-4 w-4" />
@@ -188,7 +188,7 @@ const TrainerWaitlist: React.FC = () => {
                   </div>
                   <p className="text-white break-all">{trainerData.email}</p>
                 </div>
-                
+
                 <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
                   <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
                     <Phone className="h-4 w-4" />
@@ -196,7 +196,7 @@ const TrainerWaitlist: React.FC = () => {
                   </div>
                   <p className="text-white">{trainerData.phone}</p>
                 </div>
-                
+
                 <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
                   <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
                     <MapPin className="h-4 w-4" />
@@ -205,7 +205,7 @@ const TrainerWaitlist: React.FC = () => {
                   <p className="text-white">{trainerData.location}</p>
                 </div>
               </div>
-              
+
               {/* Professional Information */}
               <div className="space-y-4">
                 <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
@@ -215,7 +215,7 @@ const TrainerWaitlist: React.FC = () => {
                   </div>
                   <p className="text-white">{trainerData.experience}</p>
                 </div>
-                
+
                 <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
                   <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
                     <Award className="h-4 w-4" />
@@ -223,41 +223,41 @@ const TrainerWaitlist: React.FC = () => {
                   </div>
                   <p className="text-white">{trainerData.specialization}</p>
                 </div>
-                
+
                 <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
                   <div className="flex items-center space-x-2 text-[#4B8B9B] mb-2">
                     <FileText className="h-4 w-4" />
                     <span className="text-sm font-medium">Bio</span>
                   </div>
-                                    <p className="text-white whitespace-pre-wrap">{trainerData.bio}</p>
-                </div>
-                
-                {trainerData.certificate && (
-                  <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
-                    <div className="flex items-center space-x-2 text-[#4B8B9B] mb-2">
-                      <FileCheck className="h-4 w-4" />
-                      <span className="text-sm font-medium">Certificate</span>
-                    </div>
-                    <p className="text-white text-sm">Certificate uploaded ✓</p>
+                  <p className="text-white whitespace-pre-wrap">{trainerData.bio}</p>
+              </div>
+
+              {trainerData.certificate && (
+                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
+                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-2">
+                    <FileCheck className="h-4 w-4" />
+                    <span className="text-sm font-medium">Certificate</span>
                   </div>
-                )}
-              </div>
-              
-              {/* Submission Date */}
-              <div className="text-center text-sm text-gray-400 pt-4 border-t border-[#4B8B9B]/20">
-                <p>Application submitted on {new Date(trainerData.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}</p>
-              </div>
+                  <p className="text-white text-sm">Certificate uploaded ✓</p>
+                </div>
+              )}
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
+
+          {/* Submission Date */}
+          <div className="text-center text-sm text-gray-400 pt-4 border-t border-[#4B8B9B]/20">
+            <p>Application submitted on {new Date(trainerData.createdAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</p>
+          </div>
+        </div>
+      )}
+      </DialogContent>
+    </Dialog>
+    </div >
   );
 };
 

@@ -4,14 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-    Send, 
-    ArrowLeft, 
-    MessageSquare, 
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+    Send,
+    ArrowLeft,
+    MessageSquare,
     AlertCircle,
     Loader2,
     MoreHorizontal,
-    Trash2
+    Trash2,
+    Paperclip,
+    Mic
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -32,6 +42,8 @@ interface Message {
     message: string;
     createdAt: string;
     senderType: 'user' | 'trainer';
+    messageType: 'text' | 'image' | 'audio';
+    fileUrl?: string;
 }
 
 interface Client {
@@ -54,6 +66,25 @@ export default function TrainerChatPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const socketRef = useRef<Socket | null>(null);
 
+    // Media State
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [imageCaption, setImageCaption] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Lightbox State
+    const [viewImageUrl, setViewImageUrl] = useState<string | null>(null);
+
+    // Audio State
+    const [isRecording, setIsRecording] = useState(false);
+    const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const chunksRef = useRef<Blob[]>([]);
+    const [recordingDuration, setRecordingDuration] = useState(0);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const [shouldSendAudio, setShouldSendAudio] = useState(false);
+
     useEffect(() => {
         document.title = "TrainUp - Chat with Client";
         console.log('Initializing chat with clientId:', clientId);
@@ -63,6 +94,9 @@ export default function TrainerChatPage() {
                 socketRef.current.disconnect();
                 console.log('Socket disconnected for client:', clientId);
             }
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
         };
     }, [clientId]);
 
@@ -70,12 +104,19 @@ export default function TrainerChatPage() {
         scrollToBottom();
     }, [messages, isOtherUserTyping]);
 
+    useEffect(() => {
+        if (shouldSendAudio && audioBlob) {
+            sendMessage(audioBlob);
+            setShouldSendAudio(false);
+        }
+    }, [audioBlob, shouldSendAudio]);
+
     const initializeChat = async () => {
         try {
             const clientResponse = await API.get(`/trainer/client/${clientId}`);
             const clientData = clientResponse.data.client;
             console.log('Client Data:', clientData);
-            
+
             if (!clientData?.trainerPlan || clientData.trainerPlan === 'basic') {
                 setError("This client doesn't have chat access. They need Premium or Pro plan.");
                 setIsLoading(false);
@@ -88,7 +129,7 @@ export default function TrainerChatPage() {
             setMessages(messagesResponse.data.messages);
 
             socketRef.current = io(import.meta.env.VITE_API_URL, {
-                withCredentials: true, 
+                withCredentials: true,
                 transports: ['websocket', 'polling']
             });
 
@@ -138,19 +179,143 @@ export default function TrainerChatPage() {
         }
     };
 
-    const sendMessage = async () => {
-        if (!newMessage.trim() || !socketRef.current || !client) return;
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                toast.error("File size should be less than 5MB");
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                toast.error("Only image files are allowed");
+                return;
+            }
+            setSelectedFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
+            setIsPreviewOpen(true);
+        }
+    };
+
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorderRef.current = new MediaRecorder(stream);
+            chunksRef.current = [];
+
+            mediaRecorderRef.current.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    chunksRef.current.push(e.data);
+                }
+            };
+
+            mediaRecorderRef.current.onstop = () => {
+                const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+                setAudioBlob(blob);
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorderRef.current.start();
+            setIsRecording(true);
+            setRecordingDuration(0);
+            timerRef.current = setInterval(() => {
+                setRecordingDuration(prev => prev + 1);
+            }, 1000);
+        } catch (err) {
+            console.error("Error accessing microphone:", err);
+            toast.error("Could not access microphone");
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        }
+    };
+
+    const cancelRecording = () => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+            setAudioBlob(null);
+            chunksRef.current = [];
+        }
+    };
+
+    const uploadFile = async (file: File | Blob): Promise<string> => {
+        const formData = new FormData();
+        // If it's a Blob (audio), give it a filename
+        if (file instanceof Blob && !(file instanceof File)) {
+            formData.append('file', file, 'audio.webm');
+        } else {
+            formData.append('file', file);
+        }
+        const response = await API.post('/trainer/chat/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data.fileUrl;
+    };
+
+    const handleTyping = debounce(() => {
+        if (socketRef.current && newMessage.trim()) {
+            socketRef.current.emit('typing', { clientId, isTyping: true });
+            console.log('Emitted typing: true for client:', clientId);
+        }
+    }, 500);
+
+    const handleStopTyping = debounce(() => {
+        if (socketRef.current) {
+            socketRef.current.emit('typing', { clientId, isTyping: false });
+            console.log('Emitted typing: false for client:', clientId);
+        }
+    }, 1000);
+
+    const sendMessage = async (blobToSend?: Blob) => {
+        const audioToUpload = blobToSend || audioBlob;
+
+        if ((!newMessage.trim() && !selectedFile && !audioToUpload) || !socketRef.current || !client) return;
+
+        if (newMessage.length > 1000) {
+            toast.error("Message cannot exceed 1000 characters");
+            return;
+        }
 
         setIsSending(true);
         try {
+            let fileUrl = '';
+            let messageType: 'text' | 'image' | 'audio' = 'text';
+
+            if (selectedFile) {
+                fileUrl = await uploadFile(selectedFile);
+                messageType = 'image';
+            } else if (audioToUpload) {
+                fileUrl = await uploadFile(audioToUpload);
+                messageType = 'audio';
+            }
+
             const messageData = {
                 clientId: client._id,
-                message: newMessage.trim()
+                message: (selectedFile ? imageCaption : newMessage).trim(),
+                messageType,
+                fileUrl
             };
 
             socketRef.current.emit('send_message_trainer', messageData);
             console.log('Emitted send_message_trainer:', messageData);
+
+            // Reset state
             setNewMessage('');
+            setSelectedFile(null);
+            setPreviewUrl(null);
+            setIsPreviewOpen(false);
+            setImageCaption('');
+            setAudioBlob(null);
             handleStopTyping();
         } catch (err: any) {
             console.error("Failed to send message:", err);
@@ -171,20 +336,6 @@ export default function TrainerChatPage() {
         }
     };
 
-    const handleTyping = debounce(() => {
-        if (socketRef.current && newMessage.trim()) {
-            socketRef.current.emit('typing', { clientId, isTyping: true });
-            console.log('Emitted typing: true for client:', clientId);
-        }
-    }, 500);
-
-    const handleStopTyping = debounce(() => {
-        if (socketRef.current) {
-            socketRef.current.emit('typing', { clientId, isTyping: false });
-            console.log('Emitted typing: false for client:', clientId);
-        }
-    }, 1000);
-
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -195,6 +346,12 @@ export default function TrainerChatPage() {
             minute: '2-digit',
             hour12: true
         });
+    };
+
+    const formatDuration = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
     const formatDate = (dateString: string) => {
@@ -276,9 +433,9 @@ export default function TrainerChatPage() {
                             </Button>
                         </Link>
                         <Avatar className="h-10 w-10">
-                            <AvatarImage 
-                                src={client?.profileImage || "/placeholder.svg"} 
-                                alt={client?.name || "Client"} 
+                            <AvatarImage
+                                src={client?.profileImage || "/placeholder.svg"}
+                                alt={client?.name || "Client"}
                             />
                             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                                 {client?.name?.charAt(0) || "C"}
@@ -289,7 +446,7 @@ export default function TrainerChatPage() {
                             <p className="text-sm text-muted-foreground">Your Client</p>
                         </div>
                     </div>
-                    
+
                     {client && (
                         <Badge className={`${getPlanColor(client.trainerPlan)}`}>
                             {client.trainerPlan.charAt(0).toUpperCase() + client.trainerPlan.slice(1)}
@@ -312,11 +469,11 @@ export default function TrainerChatPage() {
                     ) : (
                         messages.map((message, index) => {
                             const isTrainer = message.senderType === 'trainer';
-                            const showDate = index === 0 || 
+                            const showDate = index === 0 ||
                                 formatDate(message.createdAt) !== formatDate(messages[index - 1].createdAt);
-                            
+
                             return (
-                                <div 
+                                <div
                                     key={message._id}
                                     className={`flex ${isTrainer ? 'justify-end' : 'justify-start'}`}
                                     onMouseEnter={() => isTrainer && setHoveredMessageId(message._id)}
@@ -329,26 +486,47 @@ export default function TrainerChatPage() {
                                             </Badge>
                                         </div>
                                     )}
-                                    
-                                    <div className={`relative max-w-[70%] rounded-2xl p-3 break-words ${
-                                        isTrainer 
-                                            ? 'bg-primary text-primary-foreground ml-auto' 
+
+                                    <div className={`relative max-w-[70%] rounded-2xl p-3 break-words ${isTrainer
+                                            ? 'bg-primary text-primary-foreground ml-auto'
                                             : 'bg-muted text-foreground mr-auto'
-                                    }`}>
-                                        <p className="text-sm break-words">{message.message}</p>
-                                        <p className={`text-xs mt-1 ${
-                                            isTrainer ? 'text-primary-foreground/70' : 'text-muted-foreground'
                                         }`}>
+
+                                        <div className="flex flex-col items-center">
+                                            {message.messageType === 'image' && message.fileUrl && (
+                                                <div className="mb-2 w-full">
+                                                    <img
+                                                        src={message.fileUrl}
+                                                        alt="Shared image"
+                                                        className="rounded-lg max-h-60 w-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                                        onClick={() => setViewImageUrl(message.fileUrl || null)}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {message.messageType === 'audio' && message.fileUrl && (
+                                                <div className="mb-2 min-w-[200px] w-full">
+                                                    <audio controls src={message.fileUrl} className="w-full h-8" />
+                                                </div>
+                                            )}
+
+                                            {message.message && (
+                                                <p className="text-sm break-words w-full text-left">{message.message}</p>
+                                            )}
+                                        </div>
+
+                                        <p className={`text-xs mt-1 text-right ${isTrainer ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                                            }`}>
                                             {formatTime(message.createdAt)}
                                         </p>
-                                        
+
                                         {/* Three dots menu */}
                                         {hoveredMessageId === message._id && isTrainer && (
                                             <div className={`absolute top-2 ${isTrainer ? '-left-8' : '-right-8'}`}>
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <Button 
-                                                            variant="ghost" 
+                                                        <Button
+                                                            variant="ghost"
                                                             size="icon"
                                                             className="h-6 w-6 bg-background/80 hover:bg-background shadow-sm"
                                                         >
@@ -356,7 +534,7 @@ export default function TrainerChatPage() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem 
+                                                        <DropdownMenuItem
                                                             onClick={() => deleteMessage(message._id)}
                                                             className="text-destructive focus:text-destructive"
                                                         >
@@ -383,40 +561,152 @@ export default function TrainerChatPage() {
                         {client?.name || "Client"} is typing...
                     </p>
                 )}
-                <div className="flex space-x-2">
-                    <Input
-                        value={newMessage}
-                        onChange={(e) => {
-                            setNewMessage(e.target.value);
-                            handleTyping();
-                        }}
-                        onBlur={handleStopTyping}
-                        placeholder="Type your message..."
-                        className="flex-1"
-                        onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                                sendMessage();
-                            }
-                        }}
-                    />
-                    <Button
-                        onClick={sendMessage}
-                        disabled={!newMessage.trim() || isSending}
-                        size="icon"
-                    >
-                        {isSending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+
+                {/* Audio Recording UI */}
+                {isRecording ? (
+                    <div className="flex items-center space-x-4 bg-muted/50 p-2 rounded-lg mb-2">
+                        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                        <span className="text-sm font-medium">{formatDuration(recordingDuration)}</span>
+                        <div className="flex-1" />
+                        <Button variant="ghost" size="sm" onClick={cancelRecording}>
+                            Cancel
+                        </Button>
+                        <Button size="sm" onClick={() => {
+                            setShouldSendAudio(true);
+                            stopRecording();
+                        }}>
+                            <Send className="h-4 w-4 mr-2" />
+                            Send
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="flex space-x-2">
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleFileSelect}
+                        />
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isSending}
+                        >
+                            <Paperclip className="h-4 w-4" />
+                        </Button>
+
+                        <Input
+                            value={newMessage}
+                            onChange={(e) => {
+                                setNewMessage(e.target.value);
+                                handleTyping();
+                            }}
+                            onBlur={handleStopTyping}
+                            placeholder="Type your message..."
+                            className="flex-1"
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                    sendMessage();
+                                }
+                            }}
+                            maxLength={1000}
+                        />
+
+                        {newMessage.trim() ? (
+                            <Button
+                                onClick={() => sendMessage()}
+                                disabled={isSending}
+                                size="icon"
+                            >
+                                {isSending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Send className="h-4 w-4" />
+                                )}
+                            </Button>
                         ) : (
-                            <Send className="h-4 w-4" />
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={startRecording}
+                                disabled={isSending}
+                            >
+                                <Mic className="h-4 w-4" />
+                            </Button>
                         )}
-                    </Button>
-                </div>
+                    </div>
+                )}
+
                 {client?.trainerPlan === 'premium' && (
                     <p className="text-xs text-muted-foreground mt-2">
                         Chatting with {client?.name || "Client"} ({client?.trainerPlan} plan)
                     </p>
                 )}
             </div>
+
+            {/* Image Preview Modal */}
+            <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Send Image</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        {previewUrl && (
+                            <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
+                                <img
+                                    src={previewUrl}
+                                    alt="Preview"
+                                    className="h-full w-full object-contain"
+                                />
+                            </div>
+                        )}
+                        <div className="space-y-2">
+                            <Label htmlFor="caption">Caption (optional)</Label>
+                            <Input
+                                id="caption"
+                                value={imageCaption}
+                                onChange={(e) => setImageCaption(e.target.value)}
+                                placeholder="Add a caption..."
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={() => sendMessage()} disabled={isSending}>
+                            {isSending ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Sending...
+                                </>
+                            ) : (
+                                <>
+                                    <Send className="mr-2 h-4 w-4" />
+                                    Send
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Image Lightbox (Viewing) */}
+            <Dialog open={!!viewImageUrl} onOpenChange={(open) => !open && setViewImageUrl(null)}>
+                <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-transparent border-none shadow-none flex items-center justify-center">
+                    <div className="relative w-full h-full flex items-center justify-center">
+                        {viewImageUrl && (
+                            <img
+                                src={viewImageUrl}
+                                alt="Full size"
+                                className="max-w-full max-h-full object-contain rounded-lg"
+                            />
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

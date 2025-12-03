@@ -20,7 +20,7 @@ import { JwtService } from '../utils/jwt'
 export class SocketHandler {
   private io: Server
 
-  constructor (
+  constructor(
     io: Server,
     @inject(TYPES.IUserService) private _userService: IUserService,
     @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
@@ -36,13 +36,13 @@ export class SocketHandler {
     this.initialize()
   }
 
-  private initialize () {
+  private initialize() {
     logger.info('Socket server initialized')
 
     this.io.use(async (socket, next) => {
       try {
         const cookieHeader = socket.handshake.headers.cookie
-        console.log('cookie header',cookieHeader)
+        console.log('cookie header', cookieHeader)
         const token = cookieHeader?.match(/accessToken=([^;]+)/)?.[1]
 
         if (!token) {
@@ -110,7 +110,7 @@ export class SocketHandler {
     })
   }
 
-  private handleConnection (socket: Socket) {
+  private handleConnection(socket: Socket) {
     socket.on('join_chat', ({ trainerId, clientId }) => {
       if (!trainerId && !clientId) {
         logger.error('Neither trainer ID nor client ID provided in join_chat')
@@ -127,15 +127,15 @@ export class SocketHandler {
 
     socket.on('send_message', async data => {
       try {
-        const { trainerId, message } = data
+        const { trainerId, message, messageType, fileUrl } = data
         logger.info(
           `Received send_message from user ${socket.userId} to trainer ${trainerId}`
         )
 
-        if (!trainerId || !message?.trim()) {
-          logger.error('Invalid message data: missing trainerId or message')
+        if (!trainerId || (!message?.trim() && !fileUrl)) {
+          logger.error('Invalid message data: missing trainerId or content')
           socket.emit('error', {
-            message: 'Trainer ID and message are required'
+            message: 'Trainer ID and message content are required'
           })
           return
         }
@@ -173,8 +173,10 @@ export class SocketHandler {
         const savedMessage = await this._messageService.createMessage({
           senderId: socket.userId,
           receiverId: trainerId,
-          message: message.trim(),
-          senderType: 'user'
+          message: message?.trim() || '',
+          senderType: 'user',
+          messageType: messageType || 'text',
+          fileUrl: fileUrl
         })
         logger.info(`Message saved: ${savedMessage._id}`)
 
@@ -196,17 +198,17 @@ export class SocketHandler {
 
     socket.on('send_message_trainer', async data => {
       try {
-        const { clientId, message } = data
+        const { clientId, message, messageType, fileUrl } = data
         logger.info(
           `Received send_message_trainer from trainer ${socket.userId} to client ${clientId}`
         )
 
-        if (!clientId || !message?.trim()) {
+        if (!clientId || (!message?.trim() && !fileUrl)) {
           logger.error(
-            'Invalid trainer message data: missing clientId or message'
+            'Invalid trainer message data: missing clientId or content'
           )
           socket.emit('error', {
-            message: 'Client ID and message are required'
+            message: 'Client ID and message content are required'
           })
           return
         }
@@ -214,8 +216,10 @@ export class SocketHandler {
         const savedMessage = await this._messageService.createMessage({
           senderId: socket.userId,
           receiverId: clientId,
-          message: message.trim(),
-          senderType: 'trainer'
+          message: message?.trim() || '',
+          senderType: 'trainer',
+          messageType: messageType || 'text',
+          fileUrl: fileUrl
         })
         logger.info(`Trainer message saved: ${savedMessage._id}`)
 
@@ -240,8 +244,7 @@ export class SocketHandler {
         const ids = [socket.userId, clientId].sort()
         const roomId = `chat_${ids[0]}_${ids[1]}`
         logger.info(
-          `User ${socket.userId} ${
-            isTyping ? 'started' : 'stopped'
+          `User ${socket.userId} ${isTyping ? 'started' : 'stopped'
           } typing in room: ${roomId}`
         )
         this.io.to(roomId).emit('typing', { userId: socket.userId, isTyping })

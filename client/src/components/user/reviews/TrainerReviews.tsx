@@ -46,7 +46,7 @@ export default function TrainerReviews({ trainerId, reviews, onReviewAdded, canR
         setIsSubmitting(true);
         try {
             const response = await addTrainerRating(trainerId, rating, message, currentUserPlan);
-            onReviewAdded(response.data);
+            onReviewAdded(response);
             setRating(0);
             setMessage("");
             toast.success("Review added successfully");
@@ -87,8 +87,8 @@ export default function TrainerReviews({ trainerId, reviews, onReviewAdded, canR
                                     >
                                         <Star
                                             className={`w-6 h-6 ${star <= rating
-                                                    ? "fill-amber-400 text-amber-400"
-                                                    : "text-muted-foreground/30"
+                                                ? "fill-amber-400 text-amber-400"
+                                                : "text-muted-foreground/30"
                                                 }`}
                                         />
                                     </button>
@@ -149,8 +149,8 @@ export default function TrainerReviews({ trainerId, reviews, onReviewAdded, canR
                                                     <Star
                                                         key={star}
                                                         className={`w-4 h-4 ${star <= review.rating
-                                                                ? "fill-amber-400 text-amber-400"
-                                                                : "text-muted-foreground/30"
+                                                            ? "fill-amber-400 text-amber-400"
+                                                            : "text-muted-foreground/30"
                                                             }`}
                                                     />
                                                 ))}

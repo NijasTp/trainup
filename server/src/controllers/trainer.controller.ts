@@ -38,7 +38,7 @@ import { Role } from '../constants/role'
 
 @injectable()
 export class TrainerController {
-  constructor (
+  constructor(
     @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
     @inject(TYPES.ITransactionService)
     private _transactionService: ITransactionService,
@@ -50,9 +50,9 @@ export class TrainerController {
     @inject(TYPES.ISlotService) private _slotService: ISlotService,
     @inject(TYPES.IMessageService) private _messageService: IMessageService,
     @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService
-  ) {}
+  ) { }
 
-  async login (req: Request, res: Response, next: NextFunction): Promise<void> {
+  async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: TrainerLoginDto = req.body
       const result: TrainerLoginResponseDto =
@@ -65,7 +65,7 @@ export class TrainerController {
     }
   }
 
-  async getDashboard (
+  async getDashboard(
     req: Request,
     res: Response,
     next: NextFunction
@@ -80,7 +80,7 @@ export class TrainerController {
     }
   }
 
-  async getTransactions (
+  async getTransactions(
     req: Request,
     res: Response,
     next: NextFunction
@@ -109,7 +109,7 @@ export class TrainerController {
     }
   }
 
-  async updateAvailability (
+  async updateAvailability(
     req: Request,
     res: Response,
     next: NextFunction
@@ -132,7 +132,7 @@ export class TrainerController {
     }
   }
 
-  async getWeeklySchedule (
+  async getWeeklySchedule(
     req: Request,
     res: Response,
     next: NextFunction
@@ -154,7 +154,7 @@ export class TrainerController {
     }
   }
 
-  async saveWeeklySchedule (
+  async saveWeeklySchedule(
     req: Request,
     res: Response,
     next: NextFunction
@@ -175,7 +175,7 @@ export class TrainerController {
     }
   }
 
-  async forgotPassword (
+  async forgotPassword(
     req: Request,
     res: Response,
     next: NextFunction
@@ -189,7 +189,7 @@ export class TrainerController {
     }
   }
 
-  async forgotPasswordResendOtp (
+  async forgotPasswordResendOtp(
     req: Request,
     res: Response,
     next: NextFunction
@@ -204,7 +204,7 @@ export class TrainerController {
     }
   }
 
-  async requestOtp (
+  async requestOtp(
     req: Request,
     res: Response,
     next: NextFunction
@@ -219,7 +219,7 @@ export class TrainerController {
     }
   }
 
-  async verifyOtp (
+  async verifyOtp(
     req: Request,
     res: Response,
     next: NextFunction
@@ -234,7 +234,7 @@ export class TrainerController {
     }
   }
 
-  async resetPassword (
+  async resetPassword(
     req: Request,
     res: Response,
     next: NextFunction
@@ -248,7 +248,7 @@ export class TrainerController {
     }
   }
 
-  async resendOtp (
+  async resendOtp(
     req: Request,
     res: Response,
     next: NextFunction
@@ -263,7 +263,7 @@ export class TrainerController {
     }
   }
 
-  async apply (req: Request, res: Response, next: NextFunction): Promise<void> {
+  async apply(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: TrainerApplyDto = req.body
       const { certificate, profileImage } = req.files as {
@@ -303,7 +303,7 @@ export class TrainerController {
     }
   }
 
-  async reapply (
+  async reapply(
     req: Request,
     res: Response,
     next: NextFunction
@@ -344,7 +344,7 @@ export class TrainerController {
     }
   }
 
-  async getData (
+  async getData(
     req: Request,
     res: Response,
     next: NextFunction
@@ -363,7 +363,7 @@ export class TrainerController {
     }
   }
 
-  async getClients (
+  async getClients(
     req: Request,
     res: Response,
     next: NextFunction
@@ -390,7 +390,7 @@ export class TrainerController {
     }
   }
 
-  async getClient (
+  async getClient(
     req: Request,
     res: Response,
     next: NextFunction
@@ -407,7 +407,7 @@ export class TrainerController {
     }
   }
 
-  async logout (req: Request, res: Response, next: NextFunction): Promise<void> {
+  async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       this._JwtService.clearTokens(res)
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.DELETED })
@@ -417,7 +417,7 @@ export class TrainerController {
     }
   }
 
-  async getSlots (
+  async getSlots(
     req: Request,
     res: Response,
     next: NextFunction
@@ -432,7 +432,7 @@ export class TrainerController {
     }
   }
 
-  async createSlot (
+  async createSlot(
     req: Request,
     res: Response,
     next: NextFunction
@@ -463,7 +463,7 @@ export class TrainerController {
     }
   }
 
-  async deleteSlot (
+  async deleteSlot(
     req: Request,
     res: Response,
     next: NextFunction
@@ -480,7 +480,7 @@ export class TrainerController {
     }
   }
 
-  async getSessionRequests (
+  async getSessionRequests(
     req: Request,
     res: Response,
     next: NextFunction
@@ -497,7 +497,7 @@ export class TrainerController {
     }
   }
 
-  async approveSessionRequest (
+  async approveSessionRequest(
     req: Request,
     res: Response,
     next: NextFunction
@@ -527,7 +527,7 @@ export class TrainerController {
     }
   }
 
-  async rejectSessionRequest (
+  async rejectSessionRequest(
     req: Request,
     res: Response,
     next: NextFunction
@@ -565,7 +565,7 @@ export class TrainerController {
     }
   }
 
-  async getClientDetails (
+  async getClientDetails(
     req: Request,
     res: Response,
     next: NextFunction
@@ -581,7 +581,7 @@ export class TrainerController {
     }
   }
 
-  async getChatMessages (
+  async getChatMessages(
     req: Request,
     res: Response,
     next: NextFunction
@@ -601,7 +601,7 @@ export class TrainerController {
     }
   }
 
-  async getUserPlan (
+  async getUserPlan(
     req: Request,
     res: Response,
     next: NextFunction
@@ -618,7 +618,7 @@ export class TrainerController {
     }
   }
 
-  async getTrainerApplication (
+  async getTrainerApplication(
     req: Request,
     res: Response,
     next: NextFunction
@@ -629,6 +629,18 @@ export class TrainerController {
       res.status(STATUS_CODE.OK).json({ application })
     } catch (err) {
       logger.error('Error fetching trainer application:', err)
+      next(err)
+    }
+  }
+  async uploadChatFile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.files || !req.files.file) {
+        throw new AppError('No file uploaded', STATUS_CODE.BAD_REQUEST)
+      }
+      const file = req.files.file as UploadedFile
+      const fileUrl = await this._userService.uploadChatFile(file)
+      res.status(STATUS_CODE.OK).json({ fileUrl })
+    } catch (err) {
       next(err)
     }
   }

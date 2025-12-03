@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import API from "@/lib/axios";
@@ -238,7 +237,7 @@ export default function UserNotifications() {
                         </div>
                     </CardContent>
                 </Card>
-                
+
                 {/* Header */}
                 <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-3">
@@ -300,21 +299,18 @@ export default function UserNotifications() {
                                 >
                                     {/* Priority Dot */}
                                     <div
-                                        className={`absolute top-3 right-3 h-3 w-3 rounded-full ${getPriorityColor(
-                                            n.priority
-                                        )}`}
+                                        className={`absolute top-3 right-3 h-3 w-3 rounded-full ${getPriorityColor(n.priority)}`}
                                     />
 
-                                    <CardContent className="p-5">
-                                        <div className="flex gap-4">
+                                    <CardContent className="p-4">
+                                        <div className="flex gap-4 items-start">
                                             {/* Icon */}
                                             <div className="flex-shrink-0 p-2 bg-muted rounded-full">
                                                 {getIcon(n.type)}
                                             </div>
 
-                                            {/* Body */}
-                                            <div className="flex-1 space-y-2">
-                                                <div className="flex items-start justify-between gap-3">
+                                            <div className="flex-1 space-y-1">
+                                                <div className="flex justify-between items-start">
                                                     <div>
                                                         <h3 className="font-semibold text-lg">{n.title}</h3>
                                                         <div className="flex flex-wrap items-center gap-2 mt-1">

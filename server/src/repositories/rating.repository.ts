@@ -12,7 +12,7 @@ export class RatingRepository implements IRatingRepository {
         rating: number,
         message: string,
         subscriptionPlan?: string
-    ): Promise<ITrainer | null> {
+    ): Promise<any> {
         const trainer = await Trainer.findById(trainerId);
         if (!trainer) return null;
         const review = {
@@ -25,7 +25,11 @@ export class RatingRepository implements IRatingRepository {
         trainer.reviews.push(review);
         const totalRating = trainer.reviews.reduce((acc, cur) => acc + cur.rating, 0);
         trainer.rating = totalRating / trainer.reviews.length;
-        return await trainer.save();
+        await trainer.save();
+
+        const updatedTrainer = await Trainer.findById(trainerId).populate('reviews.userId', 'name profileImage firstName lastName');
+        if (!updatedTrainer || !updatedTrainer.reviews) return null;
+        return updatedTrainer.reviews[updatedTrainer.reviews.length - 1];
     }
 
     async addGymRating(
@@ -34,7 +38,7 @@ export class RatingRepository implements IRatingRepository {
         rating: number,
         message: string,
         subscriptionPlan?: string
-    ): Promise<IGym | null> {
+    ): Promise<any> {
         const gym = await GymModel.findById(gymId);
         if (!gym) return null;
         const review = {
@@ -48,7 +52,11 @@ export class RatingRepository implements IRatingRepository {
         gym.reviews.push(review);
         const totalRating = gym.reviews.reduce((acc, cur) => acc + cur.rating, 0);
         gym.rating = totalRating / gym.reviews.length;
-        return await gym.save();
+        await gym.save();
+
+        const updatedGym = await GymModel.findById(gymId).populate('reviews.userId', 'name profileImage firstName lastName');
+        if (!updatedGym || !updatedGym.reviews) return null;
+        return updatedGym.reviews[updatedGym.reviews.length - 1];
     }
 
     async getTrainerRatings(

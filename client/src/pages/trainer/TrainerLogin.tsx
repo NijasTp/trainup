@@ -26,7 +26,7 @@ export default function TrainerLogin() {
         try {
             const res=await trainerLoginApi(email, password)
             dispatch(loginTrainer({trainer:res.trainer}))
-            toast.success('Trainer Logged in')
+            toast.success("You've Logged in")
             navigate('/trainer/dashboard', { state: { email } })
         } catch (error: any) {
             toast.error(error.response.data.error||error.message)

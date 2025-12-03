@@ -42,7 +42,7 @@ export default function Trainers() {
   const [maxPrice, setMaxPrice] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const limit = 1;
+  const limit = 7;
 
   console.log("Current filters:", { search, specialization, experience, minRating, minPrice, maxPrice });
 

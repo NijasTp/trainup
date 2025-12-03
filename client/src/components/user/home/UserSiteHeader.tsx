@@ -85,7 +85,7 @@ export const SiteHeader: React.FC = () => {
       return
     }
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, 30_000) 
+    const interval = setInterval(fetchNotifications, 30_000)
     return () => clearInterval(interval)
   }, [user, navigate])
 
@@ -138,9 +138,8 @@ export const SiteHeader: React.FC = () => {
           {/* Streak */}
           <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary/40">
             <Flame
-              className={`h-5 w-5 ${
-                user?.streak ? "text-orange-500 fill-orange-500" : "text-muted-foreground"
-              }`}
+              className={`h-5 w-5 ${user?.streak ? "text-orange-500 fill-orange-500" : "text-muted-foreground"
+                }`}
             />
             <span className="text-sm font-medium">{user?.streak ?? 0}</span>
           </div>
@@ -196,9 +195,8 @@ export const SiteHeader: React.FC = () => {
                   notifications.map((n) => (
                     <DropdownMenu.Item
                       key={n._id}
-                      className={`flex items-start gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent/5 ${
-                        n.isRead ? "opacity-70" : ""
-                      }`}
+                      className={`flex items-start gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent/5 ${n.isRead ? "opacity-70" : ""
+                        }`}
                       onSelect={() => !n.isRead && markAsRead(n._id)}
                     >
                       {/* Icon based on type – you can extend this map */}
@@ -233,9 +231,9 @@ export const SiteHeader: React.FC = () => {
                 className="flex items-center py-2 text-sm hover:bg-accent/5 cursor-pointer"
               >
                 <div className="flex items-center justify-center">
-                <Link to="/notifications" className="block w-full text-center py-2 text-sm hover:bg-accent/5 cursor-pointer">
-                  View all notifications
-                </Link>
+                  <Link to="/notifications" className="block w-full text-center py-2 text-sm hover:bg-accent/5 cursor-pointer">
+                    View all notifications
+                  </Link>
                 </div>
               </DropdownMenu.Item>
             </DropdownMenu.Content>

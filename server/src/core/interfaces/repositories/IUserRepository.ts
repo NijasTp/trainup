@@ -9,7 +9,6 @@ export interface PaginatedUsers {
   totalPages: number
 }
 
-
 export interface IUserRepository {
   createUser(data: Partial<IUser>): Promise<IUser>;
   findByEmail(email: string): Promise<IUser | null>;
@@ -24,27 +23,28 @@ export interface IUserRepository {
     isVerified?: string,
     startDate?: string,
     endDate?: string
-  ): Promise<{ users: UserResponseDto[]; total: number; page: number; totalPages: number }>;
+  ): Promise<PaginatedUsers>;
   count(): Promise<number>;
   updateUser(id: string, data: Partial<IUser>): Promise<IUser | null>;
   updateStatusAndIncrementVersion(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
-  findByIdWithPassword(userId: string): Promise<IUser | null> 
   updateStatus(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
   findById(id: string): Promise<IUser | null>;
+  findProfileById(id: string): Promise<IUser | null>;
   getWeightHistory(userId: string): Promise<{ weight: number; date: Date }[]>;
   addWeight(userId: string, weight: number, date: Date): Promise<IUser | null>;
   updateProfile(userId: string, updates: UserUpdateProfileDto): Promise<IUser | null>;
-  updatePasswordWithId(userId: string, hashedPassword: string): Promise<void>
+  findByIdWithPassword(userId: string): Promise<IUser | null>;
+  updatePasswordWithId(userId: string, hashedPassword: string): Promise<void>;
   updateTrainer(userId: string, trainerId: string): Promise<void>;
   updatePlan(userId: string, planType: 'basic' | 'premium' | 'pro'): Promise<void>;
- updateUserGymMembership(
-  userId: string,
-  gymId: string,
-  planId: string,
-  startDate: Date,
-  endDate: Date,
-  preferredTime?: string
-): Promise<IUserGymMembership>;
+  updateUserGymMembership(
+    userId: string,
+    gymId: string,
+    planId: string,
+    startDate: Date,
+    endDate: Date,
+    preferredTime?: string
+  ): Promise<IUserGymMembership>;
   removeTrainer(userId: string): Promise<void>;
   updatePassword(email: string, hashedPassword: string): Promise<void>;
 }

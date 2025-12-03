@@ -6,13 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  CreditCard, 
-  Search, 
-  Calendar, 
-  DollarSign, 
+import {
+  CreditCard,
+  Search,
+  Calendar,
   Filter,
-  TrendingUp,
   RefreshCw
 } from "lucide-react";
 import API from "@/lib/axios";
@@ -25,7 +23,7 @@ interface Transaction {
     _id: string;
     name: string;
     profileImage?: string;
-  };
+  } | string;
   amount: number;
   planType: 'basic' | 'premium' | 'pro';
   status: 'pending' | 'completed' | 'failed';
@@ -77,6 +75,7 @@ export default function TrainerTransactions() {
           planType: planFilter !== 'all' ? planFilter : undefined
         },
       });
+      console.log(response.data);
       setTransactions(response.data);
       setIsLoading(false);
     } catch (err: any) {
@@ -146,6 +145,7 @@ export default function TrainerTransactions() {
   };
 
   const getUserInitials = (name: string) => {
+    if (!name) return "U";
     return name
       .split(" ")
       .map((word) => word.charAt(0))
@@ -194,56 +194,9 @@ export default function TrainerTransactions() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <TrainerSiteHeader />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-      
+
       <main className="relative container mx-auto px-4 py-12 space-y-8">
-        {/* Revenue Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-green-500/10 rounded-full">
-                  <DollarSign className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {formatAmount(transactions.totalRevenue)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-blue-500/10 rounded-full">
-                  <CreditCard className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Transactions</p>
-                  <p className="text-2xl font-bold text-foreground">{transactions.total}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-purple-500/10 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {transactions.transactions.filter(t => t.status === 'completed').length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+       
 
         {/* Transactions Table */}
         <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
@@ -257,7 +210,7 @@ export default function TrainerTransactions() {
                 Page {transactions.page} of {transactions.totalPages}
               </Badge>
             </div>
-            
+
             {/* Filters */}
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
@@ -269,7 +222,7 @@ export default function TrainerTransactions() {
                   className="pl-10 bg-background/50 border-border/50"
                 />
               </div>
-              
+
               <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                 <SelectTrigger className="w-full md:w-48 bg-background/50 border-border/50">
                   <Filter className="h-4 w-4 mr-2" />
@@ -282,7 +235,7 @@ export default function TrainerTransactions() {
                   <SelectItem value="failed">Failed</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={planFilter} onValueChange={handlePlanFilterChange}>
                 <SelectTrigger className="w-full md:w-48 bg-background/50 border-border/50">
                   <Filter className="h-4 w-4 mr-2" />
@@ -297,7 +250,7 @@ export default function TrainerTransactions() {
               </Select>
             </div>
           </CardHeader>
-          
+
           <CardContent>
             <div className="space-y-4">
               {transactions.transactions.length === 0 ? (
@@ -305,8 +258,8 @@ export default function TrainerTransactions() {
                   <CreditCard className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
                   <p className="text-muted-foreground text-lg">No transactions found</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    {search || statusFilter !== 'all' || planFilter !== 'all' 
-                      ? "Try adjusting your search terms or filters" 
+                    {search || statusFilter !== 'all' || planFilter !== 'all'
+                      ? "Try adjusting your search terms or filters"
                       : "Transactions will appear here when clients subscribe"}
                   </p>
                 </div>
@@ -321,24 +274,24 @@ export default function TrainerTransactions() {
                         <div className="flex items-center space-x-4">
                           <Avatar className="h-12 w-12">
                             <AvatarImage
-                              src={transaction.userId.profileImage || "/placeholder.svg"}
-                              alt={transaction.userId.name}
+                              src={(typeof transaction.userId === 'object' && transaction.userId.profileImage) || "/placeholder.svg"}
+                              alt={typeof transaction.userId === 'object' ? transaction.userId.name : 'User'}
                             />
                             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                              {getUserInitials(transaction.userId.name)}
+                              {typeof transaction.userId === 'object' ? getUserInitials(transaction.userId.name) : 'U'}
                             </AvatarFallback>
                           </Avatar>
-                          
+
                           <div className="space-y-2">
                             <div>
                               <h3 className="font-semibold text-foreground">
-                                {transaction.userId.name}
+                                {typeof transaction.userId === 'object' ? transaction.userId.name : 'Unknown User'}
                               </h3>
                               <p className="text-sm text-muted-foreground">
                                 {transaction.razorpayOrderId}
                               </p>
                             </div>
-                            
+
                             <div className="flex items-center space-x-4">
                               <div className="flex items-center space-x-2 text-sm">
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -346,25 +299,25 @@ export default function TrainerTransactions() {
                                   {formatDate(transaction.createdAt)}
                                 </span>
                               </div>
-                              
+
                               <Badge className={`${getPlanColor(transaction.planType)} font-medium`}>
                                 {transaction.planType.charAt(0).toUpperCase() + transaction.planType.slice(1)} Plan
                               </Badge>
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="text-right space-y-2">
                           <div className="text-2xl font-bold text-foreground">
                             {formatAmount(transaction.amount)}
                           </div>
-                          
+
                           <Badge className={`${getStatusColor(transaction.status)} font-medium`}>
                             {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                           </Badge>
                         </div>
                       </div>
-                      
+
                       {transaction.razorpayPaymentId && (
                         <div className="mt-4 pt-4 border-t border-border/50">
                           <p className="text-xs text-muted-foreground">
@@ -389,7 +342,7 @@ export default function TrainerTransactions() {
                 >
                   Previous
                 </Button>
-                
+
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-muted-foreground">
                     Page {transactions.page} of {transactions.totalPages}
@@ -398,7 +351,7 @@ export default function TrainerTransactions() {
                     {transactions.total} total
                   </Badge>
                 </div>
-                
+
                 <Button
                   variant="outline"
                   disabled={page === transactions.totalPages}

@@ -104,10 +104,10 @@ function App() {
         <Route path={ROUTES.USER_HOME_ALT} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_NOTIFICATIONS} element={<ProtectedRoute><UserNotifications /></ProtectedRoute>} />
 
-        <Route path={ROUTES.USER_PROFILE} element={<ProtectedRoute><UserProfile/></ProtectedRoute>} />
-        <Route path={ROUTES.USER_EDIT_PROFILE} element={<ProtectedRoute><EditProfile/></ProtectedRoute>} />
-        <Route path={ROUTES.USER_TRANSACTIONS} element={<ProtectedRoute><Transactions/></ProtectedRoute>} />
-        <Route path={ROUTES.USER_DASHBOARD} element={<ProtectedRoute><UserDashboard/></ProtectedRoute>} />
+        <Route path={ROUTES.USER_PROFILE} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_EDIT_PROFILE} element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_TRANSACTIONS} element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_DASHBOARD} element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
         <Route path={ROUTES.USER_VERIFY_OTP} element={<PreventLoggedIn><VerifyOtp /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_TRAINER_PAGE} element={<ProtectedRoute><Trainers /></ProtectedRoute>} />
         <Route path={ROUTES.USER_INDIVIDUAL_TRAINER} element={<ProtectedRoute><TrainerPage /></ProtectedRoute>} />

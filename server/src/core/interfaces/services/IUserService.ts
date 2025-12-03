@@ -58,4 +58,6 @@ export interface IUserService {
     planType: 'basic' | 'premium' | 'pro'
   ): Promise<void>
   removeUserTrainer(userId: string): Promise<void>
+  getAssignedTrainerId(userId: string): Promise<string | null>
+  uploadChatFile(file: any): Promise<string>
 }
