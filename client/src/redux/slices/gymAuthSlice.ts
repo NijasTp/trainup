@@ -45,19 +45,19 @@ export const gymAuthSlice = createSlice({
   name: "gymAuth",
   initialState,
   reducers: {
-    loginGym: (state, action:  PayloadAction<Partial<GymType>>) => {
+    loginGym: (state, action: PayloadAction<Partial<GymType>>) => {
       const payload = action.payload;
       const isVerified = payload.verifyStatus === "approved";
 
       state.gym = {
         ...payload,
-        _id: payload._id.toString(),
+        _id: payload._id?.toString() || '',
         isVerified,
         trainers: payload.trainers?.map(id => id.toString()) || [],
         members: payload.members?.map(id => id.toString()) || [],
         createdAt: payload.createdAt ? new Date(payload.createdAt).toISOString() : null,
         updatedAt: payload.updatedAt ? new Date(payload.updatedAt).toISOString() : null,
-      };
+      } as GymType;
 
       state.isAuthenticated = true;
     },

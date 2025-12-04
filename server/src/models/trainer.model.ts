@@ -70,4 +70,5 @@ const TrainerSchema: Schema<ITrainer> = new Schema(
   }
 )
 
-export default mongoose.model<ITrainer>('Trainer', TrainerSchema)
+export const TrainerModel = mongoose.model<ITrainer>('Trainer', TrainerSchema)
+export default TrainerModel

@@ -62,3 +62,14 @@ export class CheckSessionResponseDto {
   id: string;
   role: string;
 }
+
+export class DashboardStatsDto {
+  totalUsers: number;
+  totalTrainers: number;
+  totalGyms: number;
+  totalRevenue: number;
+  recentTransactions: any[];
+  userGrowth: { date: string; count: number }[];
+  trainerGrowth: { date: string; count: number }[];
+  revenueGrowth: { date: string; amount: number }[];
+}

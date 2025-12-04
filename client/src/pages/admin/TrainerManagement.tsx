@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, FileText } from "lucide-react";
+import { Search, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, FileText, Star, Users, Phone, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getTrainerApplication, getTrainerById, getTrainers, toggleTrainerBan } from "@/services/adminService";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import type { ITrainer, TrainerResponse } from "@/interfaces/admin/adminTrainerManagement";
-
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const TrainerManagement = () => {
   const [response, setResponse] = useState<TrainerResponse>({ trainers: [], total: 0, page: 1, totalPages: 1 });
@@ -27,7 +27,6 @@ const TrainerManagement = () => {
   const trainersPerPage = 5;
   const navigate = useNavigate();
 
-
   useEffect(() => {
     const fetchTrainers = async () => {
       setLoading(true);
@@ -41,7 +40,6 @@ const TrainerManagement = () => {
           startDate,
           endDate
         );
-        console.log('trainers:',res)
         setResponse(res as TrainerResponse);
         setError(null);
       } catch (error: any) {
@@ -74,8 +72,14 @@ const TrainerManagement = () => {
   const handleBanToggle = async (trainerId: string, currentBanStatus: boolean) => {
     setActionLoading(trainerId);
     try {
-      
       await toggleTrainerBan(trainerId, !currentBanStatus);
+      // Optimistic update
+      setResponse(prev => ({
+        ...prev,
+        trainers: prev.trainers.map(t =>
+          t._id === trainerId ? { ...t, isBanned: !currentBanStatus } : t
+        )
+      }));
       setError(null);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -85,7 +89,6 @@ const TrainerManagement = () => {
       setActionLoading(null);
     }
   };
-
 
   const handleViewTrainer = async (trainerId: string) => {
     try {
@@ -113,7 +116,7 @@ const TrainerManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="p-8">
+      <div className="p-6 md:p-8 max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center">
             <UserCheck className="mr-3 h-8 w-8 text-[#4B8B9B]" />
@@ -147,7 +150,7 @@ const TrainerManagement = () => {
                     <SelectValue placeholder="Filter by Status" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-                    <SelectItem value="all">All </SelectItem>
+                    <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="banned">Banned</SelectItem>
                   </SelectContent>
@@ -157,7 +160,7 @@ const TrainerManagement = () => {
                     <SelectValue placeholder="Filter by Verification" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="all">All Verification</SelectItem>
                     <SelectItem value="verified">Verified</SelectItem>
                     <SelectItem value="unverified">Unverified</SelectItem>
                   </SelectContent>
@@ -206,118 +209,117 @@ const TrainerManagement = () => {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                <div className="overflow-hidden">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-700">
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Name</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Email</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Phone</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Specialization</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Experience</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Clients</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Rating</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Status</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Actions</th>
+                        <th className="text-left py-4 px-4 text-gray-400 font-medium w-[35%]">Trainer Details</th>
+                        <th className="text-left py-4 px-4 text-gray-400 font-medium w-[20%]">Expertise</th>
+                        <th className="text-left py-4 px-4 text-gray-400 font-medium w-[15%]">Stats</th>
+                        <th className="text-left py-4 px-4 text-gray-400 font-medium w-[15%]">Status</th>
+                        <th className="text-right py-4 px-4 text-gray-400 font-medium w-[15%]">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {response.trainers.map((trainer) => (
-                        <tr key={trainer._id} className="border-b border-gray-800 hover:bg-[#1F2A44]/30">
+                        <tr key={trainer._id} className="border-b border-gray-800 hover:bg-[#1F2A44]/30 transition-colors">
                           <td className="py-4 px-4">
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={trainer.profileImage || "/placeholder.svg"}
-                                alt={trainer.name}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                              <div>
-                                <p className="text-white font-medium">{trainer.name}</p>
-                                <p className="text-sm text-gray-400">{trainer.location}</p>
+                            <div className="flex items-start gap-3">
+                              <Avatar className="h-12 w-12 border border-gray-700">
+                                <AvatarImage src={trainer.profileImage} alt={trainer.name} />
+                                <AvatarFallback className="bg-[#1F2A44] text-[#4B8B9B]">
+                                  {trainer.name.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="space-y-1">
+                                <p className="text-white font-medium leading-none">{trainer.name}</p>
+                                <div className="flex items-center gap-2 text-xs text-gray-400">
+                                  <Mail className="h-3 w-3" />
+                                  {trainer.email}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-gray-400">
+                                  <Phone className="h-3 w-3" />
+                                  {trainer.phone}
+                                </div>
                               </div>
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-gray-300">{trainer.email}</td>
-                          <td className="py-4 px-4 text-gray-300">{trainer.phone}</td>
                           <td className="py-4 px-4">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#4B8B9B]/20 text-[#4B8B9B]">
-                              {trainer.specialization}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 text-gray-300">{trainer.experience}</td>
-                          <td className="py-4 px-4 text-gray-300">{trainer.clients.length}</td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-1">
-                              <span className="text-yellow-400">★</span>
-                              <span className="text-white">{trainer.rating.toFixed(1)}</span>
+                            <div className="space-y-2">
+                              <Badge variant="secondary" className="bg-[#4B8B9B]/10 text-[#4B8B9B] hover:bg-[#4B8B9B]/20 border-0">
+                                {trainer.specialization}
+                              </Badge>
+                              <p className="text-xs text-gray-400">{trainer.experience} Experience</p>
                             </div>
                           </td>
                           <td className="py-4 px-4">
-                            <div className="flex flex-col gap-1">
-                              <span
-                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${trainer.profileStatus == 'approved'
-                                    ? "bg-green-900/30 text-green-400"
-                                    : "bg-yellow-900/30 text-yellow-400"
-                                  }`}
-                              >
-                                {trainer.profileStatus == 'approved' ? "Verified" : "Unverified"}
-                              </span>
-                              {trainer.isBanned && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-400">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1.5 text-sm font-medium text-white">
+                                <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                                {trainer.rating.toFixed(1)}
+                              </div>
+                              <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                                <Users className="h-3.5 w-3.5" />
+                                {trainer.clients.length} Clients
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex flex-col gap-2 items-start">
+                              {trainer.isBanned ? (
+                                <Badge className="bg-red-900/40 text-red-400 border-0 hover:bg-red-900/60">
                                   Banned
-                                </span>
+                                </Badge>
+                              ) : (
+                                <Badge className={`border-0 ${trainer.profileStatus === 'approved'
+                                    ? "bg-green-900/40 text-green-400 hover:bg-green-900/60"
+                                    : trainer.profileStatus === 'pending'
+                                      ? "bg-yellow-900/40 text-yellow-400 hover:bg-yellow-900/60"
+                                      : "bg-red-900/40 text-red-400 hover:bg-red-900/60"
+                                  }`}>
+                                  {trainer.profileStatus === 'approved' ? 'Verified' :
+                                    trainer.profileStatus.charAt(0).toUpperCase() + trainer.profileStatus.slice(1)}
+                                </Badge>
                               )}
-                              <span
-                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${trainer.profileStatus === "active"
-                                    ? "bg-green-900/30 text-green-400"
-                                    : trainer.profileStatus === "pending"
-                                      ? "bg-yellow-900/30 text-yellow-400"
-                                      : trainer.profileStatus === "approved"
-                                        ? "bg-blue-900/30 text-blue-400"
-                                        : trainer.profileStatus === "rejected"
-                                          ? "bg-red-900/30 text-red-400"
-                                          : "bg-gray-900/30 text-gray-400"
-                                  }`}
-                              >
-                                {trainer.profileStatus}
-                              </span>
                             </div>
                           </td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-2">
+                          <td className="py-4 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
                               <Button
-                                variant="default"
-                                onClick={() => {handleBanToggle(trainer._id, trainer.isBanned)
-                                trainer.isBanned = !trainer.isBanned 
-                                }}
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleBanToggle(trainer._id, trainer.isBanned)}
                                 disabled={actionLoading === trainer._id}
-                                className="flex items-center gap-1 text-xs px-2 py-1"
+                                className={`h-8 w-8 ${trainer.isBanned ? "text-green-400 hover:text-green-300 hover:bg-green-900/20" : "text-red-400 hover:text-red-300 hover:bg-red-900/20"}`}
+                                title={trainer.isBanned ? "Unban Trainer" : "Ban Trainer"}
                               >
                                 {actionLoading === trainer._id ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                  <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
-                                  <Ban className="h-3 w-3" />
+                                  <Ban className="h-4 w-4" />
                                 )}
-                                {trainer.isBanned ? "Unban" : "Ban"}
                               </Button>
+
                               {trainer.profileStatus !== 'approved' && (
                                 <Button
-                                  variant="outline"
+                                  variant="ghost"
+                                  size="icon"
                                   onClick={() => handleViewApplication(trainer._id)}
-                                  className="flex items-center gap-1 text-xs px-2 py-1"
+                                  className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                                  title="View Application"
                                 >
-                                  <FileText className="h-3 w-3" />
-                                  App
+                                  <FileText className="h-4 w-4" />
                                 </Button>
                               )}
 
                               <Button
-                                variant="outline"
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => handleViewTrainer(trainer._id)}
-                                className="flex items-center gap-1 text-xs px-2 py-1"
+                                className="h-8 w-8 text-[#4B8B9B] hover:text-[#4B8B9B]/80 hover:bg-[#4B8B9B]/10"
+                                title="View Details"
                               >
-                                <Eye className="h-3 w-3" />
-                                View
+                                <Eye className="h-4 w-4" />
                               </Button>
                             </div>
                           </td>
@@ -336,6 +338,7 @@ const TrainerManagement = () => {
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={() => setCurrentPage(currentPage - 1)}
                         disabled={currentPage === 1}
                         className="flex items-center gap-2"
@@ -345,6 +348,7 @@ const TrainerManagement = () => {
                       </Button>
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={() => setCurrentPage(currentPage + 1)}
                         disabled={currentPage === response.totalPages}
                         className="flex items-center gap-2"

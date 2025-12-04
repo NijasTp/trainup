@@ -14,7 +14,7 @@ export const getTrainers = async (
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
-    search, 
+    search,
   });
 
   if (isBanned && isBanned !== "all") params.append("isBanned", isBanned);
@@ -30,27 +30,27 @@ export const getTrainers = async (
 
 
 export const toggleTrainerBan = async (trainerId: string, isBanned: boolean) => {
-    await API.patch(`/admin/trainers/${trainerId}/status`, { isBanned });
+  await API.patch(`/admin/trainers/${trainerId}/status`, { isBanned });
 };
 
 
 export const verifyTrainer = async (trainerId: string) => {
-    await API.patch(`/admin/trainers/${trainerId}/status`, { profileStatus: 'approved' });
+  await API.patch(`/admin/trainers/${trainerId}/status`, { profileStatus: 'approved' });
 };
- 
-export const rejectTrainer = async (trainerId:string,rejectReason:string) => {
-  await API.patch(`/admin/trainers/${trainerId}/status`, {profileStatus:'rejected', rejectReason})
+
+export const rejectTrainer = async (trainerId: string, rejectReason: string) => {
+  await API.patch(`/admin/trainers/${trainerId}/status`, { profileStatus: 'rejected', rejectReason })
 }
 
 export const getTrainerById = async (trainerId: string) => {
-    const res = await API.get(`/admin/trainers/${trainerId}`);
-    return res.data;
+  const res = await API.get(`/admin/trainers/${trainerId}`);
+  return res.data;
 };
 
 
 export const getTrainerApplication = async (trainerId: string) => {
-    const res = await API.get(`/admin/trainers/${trainerId}/application`);
-    return res.data;
+  const res = await API.get(`/admin/trainers/${trainerId}/application`);
+  return res.data;
 };
 
 export const getUsers = async (
@@ -85,11 +85,16 @@ export const toggleUserBan = async (userId: string, isBanned: boolean) => {
 
 
 export const getUserById = async (id: string) => {
-    const res = await API.get(`/admin/users/${id}`);
-    return res.data;
+  const res = await API.get(`/admin/users/${id}`);
+  return res.data;
 };
 
 export const getGymApplication = async (gymId: string) => {
   const res = await API.get(`/admin/gyms/${gymId}/application`);
+  return res.data;
+};
+
+export const getDashboardStats = async () => {
+  const res = await API.get('/admin/dashboard-stats');
   return res.data;
 };

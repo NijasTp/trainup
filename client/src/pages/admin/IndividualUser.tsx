@@ -2,10 +2,11 @@ import { useEffect, useState } from "react"
 import { AdminLayout } from "@/components/admin/AdminLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, User, Mail, Phone, Calendar, Target, Activity, Award, MapPin, Loader2, Ban } from "lucide-react"
-import {  useNavigate, useParams } from "react-router-dom"
+import { ArrowLeft, User, Mail, Phone, Calendar, Target, Activity, MapPin, Loader2, Ban, Shield, Dumbbell, CheckCircle, XCircle, Lock, Globe } from "lucide-react"
+import { useNavigate, useParams } from "react-router-dom"
 import { getUserById, toggleUserBan } from "@/services/adminService"
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 
 interface IUser {
     _id: string
@@ -29,9 +30,6 @@ interface IUser {
     } | null
     isPrivate?: boolean
     isBanned: boolean
-    streak?: number
-    xp?: number
-    achievements?: string[]
     workoutHistory?: Array<{
         date: string
         type: string
@@ -39,6 +37,10 @@ interface IUser {
     }>
     createdAt: Date
     updatedAt: Date
+    height?: number
+    weightHistory?: Array<{ weight: number, date: Date }>
+    age?: number
+    gender?: string
 }
 
 const IndividualUser = () => {
@@ -49,18 +51,14 @@ const IndividualUser = () => {
     const { userId } = useParams<{ userId: string }>()
 
     useEffect(() => {
-        console.log("useEffect triggered, userId:", userId);
-
         const fetchUserById = async () => {
             if (!userId) {
-                console.log("No userId provided");
                 setError("Invalid or missing user ID");
                 setLoading(false);
                 return;
             }
             setLoading(true);
             try {
-                console.log("Fetching user by ID:", userId);
                 const res = await getUserById(userId);
                 setUser(res);
                 setError(null);
@@ -91,11 +89,8 @@ const IndividualUser = () => {
     if (loading) {
         return (
             <AdminLayout>
-                <div className="p-8">
-                    <div className="flex items-center justify-center py-12">
-                        <Loader2 className="h-8 w-8 animate-spin text-[#4B8B9B]" />
-                        <span className="ml-2 text-gray-400">Loading user details...</span>
-                    </div>
+                <div className="flex items-center justify-center h-[calc(100vh-100px)]">
+                    <Loader2 className="h-10 w-10 animate-spin text-[#4B8B9B]" />
                 </div>
             </AdminLayout>
         )
@@ -104,11 +99,9 @@ const IndividualUser = () => {
     if (error || !user) {
         return (
             <AdminLayout>
-                <div className="p-8">
-                    <div className="text-center py-12">
-                        <p className="text-red-400 mb-4">{error || "User not found"}</p>
-                        <Button onClick={() => navigate("/admin/users")}>Back to Users</Button>
-                    </div>
+                <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] space-y-4">
+                    <p className="text-red-400 text-lg">{error || "User not found"}</p>
+                    <Button onClick={() => navigate("/admin/users")} variant="outline">Back to Users</Button>
                 </div>
             </AdminLayout>
         )
@@ -116,218 +109,255 @@ const IndividualUser = () => {
 
     return (
         <AdminLayout>
-            <div className="p-8">
-                <div className="mb-8">
-                    <Button variant="outline" onClick={() => navigate("/admin/users")} className="mb-4 flex items-center gap-2">
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Users
-                    </Button>
-                    <h1 className="text-3xl font-bold text-white mb-2 flex items-center">
-                        <User className="mr-3 h-8 w-8 text-[#4B8B9B]" />
-                        {user.name}
-                    </h1>
-                    <p className="text-gray-400">User Details and Activity</p>
+            <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
+                {/* Header Section */}
+                <div className="flex items-center justify-between">
                     <Button
-                        variant="default"
-                        onClick={() => handleBanToggle(user._id, user.isBanned)}
-                        className={`flex items-center gap-1 text-xs px-2 py-1 ${user.isBanned ? "bg-green-900/30 hover:bg-green-900/50" : "bg-red-900/30 hover:bg-red-900/50"}`}
+                        variant="ghost"
+                        onClick={() => navigate("/admin/users")}
+                        className="text-gray-400 hover:text-white hover:bg-[#1F2937]"
                     >
-                        <Ban className="h-3 w-3" />
-                        {user.isBanned ? "Unban" : "Ban"}
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back to Users
                     </Button>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* User Info */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-                            <CardHeader>
-                                <CardTitle className="text-white">Personal Information</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="flex items-center gap-3">
-                                        <Mail className="h-5 w-5 text-[#4B8B9B]" />
-                                        <div>
-                                            <p className="text-sm text-gray-400">Email</p>
-                                            <p className="text-white">{user.email}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Phone className="h-5 w-5 text-[#4B8B9B]" />
-                                        <div>
-                                            <p className="text-sm text-gray-400">Phone</p>
-                                            <p className="text-white">{user.phone || "N/A"}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Calendar className="h-5 w-5 text-[#4B8B9B]" />
-                                        <div>
-                                            <p className="text-sm text-gray-400">Joined</p>
-                                            <p className="text-white">{new Date(user.createdAt).toLocaleDateString()}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Activity className="h-5 w-5 text-[#4B8B9B]" />
-                                        <div>
-                                            <p className="text-sm text-gray-400">Activity Level</p>
-                                            <p className="text-white">{user.activityLevel || "N/A"}</p>
-                                        </div>
-                                    </div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Left Column: Profile Card */}
+                    <div className="lg:col-span-4 space-y-6">
+                        <Card className="bg-[#111827] border border-[#4B8B9B]/20 overflow-hidden shadow-lg">
+                            <div className="h-32 bg-gradient-to-r from-[#1F2937] to-[#111827] relative">
+                                <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
+                                    <Avatar className="h-24 w-24 border-4 border-[#111827] shadow-xl">
+                                        <AvatarImage src={`https://ui-avatars.com/api/?name=${user.name}&background=4B8B9B&color=fff`} />
+                                        <AvatarFallback className="bg-[#4B8B9B] text-white text-xl">
+                                            {user.name.substring(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </div>
+                            </div>
+                            <CardContent className="pt-16 pb-8 px-6 text-center space-y-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white">{user.name}</h2>
+                                    <p className="text-gray-400 text-sm mt-1">{user.email}</p>
+                                    <Badge variant="outline" className="mt-3 border-[#4B8B9B]/50 text-[#4B8B9B]">
+                                        {user.role.toUpperCase()}
+                                    </Badge>
+                                </div>
+
+                                <div className="flex justify-center gap-2 flex-wrap">
+                                    {user.isVerified ? (
+                                        <Badge className="bg-green-900/40 text-green-400 hover:bg-green-900/60 border-0 flex items-center gap-1">
+                                            <CheckCircle className="h-3 w-3" /> Verified
+                                        </Badge>
+                                    ) : (
+                                        <Badge className="bg-yellow-900/40 text-yellow-400 hover:bg-yellow-900/60 border-0 flex items-center gap-1">
+                                            <Shield className="h-3 w-3" /> Unverified
+                                        </Badge>
+                                    )}
+                                    {user.isPrivate ? (
+                                        <Badge className="bg-gray-800 text-gray-400 hover:bg-gray-700 border-0 flex items-center gap-1">
+                                            <Lock className="h-3 w-3" /> Private
+                                        </Badge>
+                                    ) : (
+                                        <Badge className="bg-blue-900/40 text-blue-400 hover:bg-blue-900/60 border-0 flex items-center gap-1">
+                                            <Globe className="h-3 w-3" /> Public
+                                        </Badge>
+                                    )}
+                                </div>
+
+                                <div className="pt-4 border-t border-gray-800">
+                                    <Button
+                                        onClick={() => handleBanToggle(user._id, user.isBanned)}
+                                        className={`w-full font-semibold shadow-md transition-all duration-200 ${user.isBanned
+                                                ? "bg-green-600 hover:bg-green-700 text-white"
+                                                : "bg-red-600 hover:bg-red-700 text-white"
+                                            }`}
+                                    >
+                                        {user.isBanned ? (
+                                            <>
+                                                <CheckCircle className="mr-2 h-4 w-4" /> Unban User
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Ban className="mr-2 h-4 w-4" /> Ban User
+                                            </>
+                                        )}
+                                    </Button>
+                                    {user.isBanned && (
+                                        <p className="text-red-400 text-xs mt-3 font-medium flex items-center justify-center gap-1">
+                                            <XCircle className="h-3 w-3" /> Account is currently suspended
+                                        </p>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
 
-                        <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-                            <CardHeader>
-                                <CardTitle className="text-white">Fitness Goals</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex flex-wrap gap-2">
-                                    {user.goals?.map((goal, index) => (
-                                        <span
-                                            key={index}
-                                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#4B8B9B]/20 text-[#4B8B9B]"
-                                        >
-                                            <Target className="h-3 w-3 mr-1" />
-                                            {goal}
-                                        </span>
-                                    )) || <p className="text-gray-400">No goals set</p>}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-                            <CardHeader>
-                                <CardTitle className="text-white">Recent Workouts</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {user.workoutHistory && user.workoutHistory.length > 0 ? (
-                                    <div className="space-y-3">
-                                        {user.workoutHistory.map((workout, index) => (
-                                            <div key={index} className="flex items-center justify-between p-3 bg-[#1F2A44]/30 rounded-lg">
-                                                <div>
-                                                    <p className="text-white font-medium">{workout.type}</p>
-                                                    <p className="text-sm text-gray-400">{new Date(workout.date).toLocaleDateString()}</p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="text-[#4B8B9B] font-medium">{workout.duration} min</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-gray-400">No workout history available</p>
-                                )}
-                            </CardContent>
-                        </Card>
+                        {/* Quick Stats Grid - Simplified */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <Card className="bg-[#111827] border border-[#4B8B9B]/20">
+                                <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                                    <Calendar className="h-6 w-6 text-[#4B8B9B] mb-2" />
+                                    <span className="text-xs text-gray-400">Joined</span>
+                                    <span className="text-sm font-semibold text-white">
+                                        {new Date(user.createdAt).toLocaleDateString()}
+                                    </span>
+                                </CardContent>
+                            </Card>
+                            <Card className="bg-[#111827] border border-[#4B8B9B]/20">
+                                <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                                    <Activity className="h-6 w-6 text-[#4B8B9B] mb-2" />
+                                    <span className="text-xs text-gray-400">Activity</span>
+                                    <span className="text-sm font-semibold text-white capitalize">
+                                        {user.activityLevel || "N/A"}
+                                    </span>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
 
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-                            <CardHeader>
-                                <CardTitle className="text-white">Status</CardTitle>
+                    {/* Right Column: Details */}
+                    <div className="lg:col-span-8 space-y-6">
+                        {/* Personal Information */}
+                        <Card className="bg-[#111827] border border-[#4B8B9B]/20">
+                            <CardHeader className="pb-3 border-b border-gray-800">
+                                <CardTitle className="text-lg font-medium text-white flex items-center gap-2">
+                                    <User className="h-5 w-5 text-[#4B8B9B]" />
+                                    Personal Information
+                                </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-gray-400">Verification</span>
-                                    <span
-                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.isVerified ? "bg-green-900/30 text-green-400" : "bg-yellow-900/30 text-yellow-400"}`}
-                                    >
-                                        {user.isVerified ? "Verified" : "Unverified"}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-gray-400">Account Status</span>
-                                    <span
-                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.isBanned ? "bg-red-900/30 text-red-400" : "bg-green-900/30 text-green-400"}`}
-                                    >
-                                        {user.isBanned ? "Banned" : "Active"}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-gray-400">Profile</span>
-                                    <span
-                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.isPrivate ? "bg-gray-900/30 text-gray-400" : "bg-blue-900/30 text-blue-400"}`}
-                                    >
-                                        {user.isPrivate ? "Private" : "Public"}
-                                    </span>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-                            <CardHeader>
-                                <CardTitle className="text-white">Progress Stats</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="text-center">
-                                    <div className="text-3xl font-bold text-[#4B8B9B]">{user.streak || 0}</div>
-                                    <p className="text-sm text-gray-400">Day Streak</p>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-3xl font-bold text-[#4B8B9B]">{user.xp || 0}</div>
-                                    <p className="text-sm text-gray-400">Experience Points</p>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-3xl font-bold text-[#4B8B9B]">{user.achievements?.length || 0}</div>
-                                    <p className="text-sm text-gray-400">Achievements</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {user.assignedTrainer && (
-                            <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-                                <CardHeader>
-                                    <CardTitle className="text-white">Assigned Trainer</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-center">
-                                        <p className="text-white font-medium">{user.assignedTrainer.name}</p>
-                                        <p className="text-sm text-gray-400">{user.assignedTrainer.specialization}</p>
+                            <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Phone</label>
+                                    <div className="flex items-center gap-2 text-gray-300">
+                                        <Phone className="h-4 w-4 text-[#4B8B9B]" />
+                                        {user.phone || "Not provided"}
                                     </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Email</label>
+                                    <div className="flex items-center gap-2 text-gray-300">
+                                        <Mail className="h-4 w-4 text-[#4B8B9B]" />
+                                        {user.email}
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Gender</label>
+                                    <div className="text-gray-300 capitalize">{user.gender || "N/A"}</div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Age</label>
+                                    <div className="text-gray-300">{user.age ? `${user.age} years` : "N/A"}</div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Height</label>
+                                    <div className="text-gray-300">{user.height ? `${user.height} cm` : "N/A"}</div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Current Weight</label>
+                                    <div className="text-gray-300">
+                                        {user.weightHistory && user.weightHistory.length > 0
+                                            ? `${user.weightHistory[user.weightHistory.length - 1].weight} kg`
+                                            : "N/A"}
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                        {user.gymId && (
-                            <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-                                <CardHeader>
-                                    <CardTitle className="text-white">Gym Membership</CardTitle>
-                                </CardHeader>
-                                <CardContent>
+                        {/* Fitness Profile */}
+                        <Card className="bg-[#111827] border border-[#4B8B9B]/20">
+                            <CardHeader className="pb-3 border-b border-gray-800">
+                                <CardTitle className="text-lg font-medium text-white flex items-center gap-2">
+                                    <Target className="h-5 w-5 text-[#4B8B9B]" />
+                                    Fitness Profile
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-6 space-y-6">
+                                <div>
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block mb-3">Goals</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {user.goals && user.goals.length > 0 ? (
+                                            user.goals.map((goal, index) => (
+                                                <Badge key={index} variant="secondary" className="bg-[#4B8B9B]/10 text-[#4B8B9B] hover:bg-[#4B8B9B]/20 border-0 px-3 py-1">
+                                                    {goal}
+                                                </Badge>
+                                            ))
+                                        ) : (
+                                            <span className="text-gray-400 text-sm italic">No specific goals set</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block mb-3">Equipment Access</label>
                                     <div className="flex items-center gap-2">
-                                        <MapPin className="h-4 w-4 text-[#4B8B9B]" />
-                                        <div>
-                                            <p className="text-white font-medium">{user.gymId.name}</p>
-                                            <p className="text-sm text-gray-400">{user.gymId.location}</p>
-                                        </div>
+                                        <Dumbbell className={`h-5 w-5 ${user.equipment ? "text-[#4B8B9B]" : "text-gray-600"}`} />
+                                        <span className={user.equipment ? "text-white" : "text-gray-400"}>
+                                            {user.equipment ? "Has access to equipment" : "No equipment access"}
+                                        </span>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                        {user.achievements && user.achievements.length > 0 && (
-                            <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-                                <CardHeader>
-                                    <CardTitle className="text-white flex items-center">
-                                        <Award className="mr-2 h-5 w-5 text-[#4B8B9B]" />
-                                        Achievements
+                        {/* Memberships & Associations */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Trainer Card */}
+                            <Card className="bg-[#111827] border border-[#4B8B9B]/20 h-full">
+                                <CardHeader className="pb-3 border-b border-gray-800">
+                                    <CardTitle className="text-base font-medium text-white flex items-center gap-2">
+                                        <User className="h-4 w-4 text-[#4B8B9B]" />
+                                        Assigned Trainer
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-2">
-                                        {user.achievements.map((achievement, index) => (
-                                            <div key={index} className="flex items-center gap-2 p-2 bg-[#1F2A44]/30 rounded">
-                                                <Award className="h-4 w-4 text-yellow-400" />
-                                                <span className="text-white text-sm">{achievement}</span>
+                                <CardContent className="pt-6">
+                                    {user.assignedTrainer ? (
+                                        <div className="flex items-start gap-4">
+                                            <Avatar className="h-12 w-12 border border-gray-700">
+                                                <AvatarFallback className="bg-[#1F2937] text-gray-300">
+                                                    {user.assignedTrainer.name.substring(0, 2).toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="text-white font-medium">{user.assignedTrainer.name}</p>
+                                                <p className="text-sm text-[#4B8B9B]">{user.assignedTrainer.specialization}</p>
                                             </div>
-                                        ))}
-                                    </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-4 text-gray-500 text-sm">
+                                            No trainer assigned
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
-                        )}
+
+                            {/* Gym Card */}
+                            <Card className="bg-[#111827] border border-[#4B8B9B]/20 h-full">
+                                <CardHeader className="pb-3 border-b border-gray-800">
+                                    <CardTitle className="text-base font-medium text-white flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-[#4B8B9B]" />
+                                        Gym Membership
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-6">
+                                    {user.gymId ? (
+                                        <div className="flex items-start gap-4">
+                                            <div className="h-12 w-12 rounded-full bg-[#1F2937] flex items-center justify-center border border-gray-700">
+                                                <Dumbbell className="h-6 w-6 text-gray-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-white font-medium">{user.gymId.name}</p>
+                                                <p className="text-sm text-gray-400">{user.gymId.location}</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-4 text-gray-500 text-sm">
+                                            No active gym membership
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 </div>
             </div>

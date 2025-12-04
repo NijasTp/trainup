@@ -31,7 +31,7 @@ export class AdminController {
     @inject(TYPES.IUserService) private _userService: IUserService,
     @inject(TYPES.IJwtService) private _jwtService: IJwtService,
     @inject(TYPES.IGymService) private _gymService: IGymService
-  ) {}
+  ) { }
 
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -227,6 +227,15 @@ export class AdminController {
       res.status(STATUS_CODE.OK).json({ message: MESSAGES.DELETED });
     } catch (err) {
       logger.error('Logout error:', err);
+      next(err);
+    }
+  }
+
+  async getDashboardStats(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const stats = await this._adminService.getDashboardStats();
+      res.status(STATUS_CODE.OK).json(stats);
+    } catch (err) {
       next(err);
     }
   }
