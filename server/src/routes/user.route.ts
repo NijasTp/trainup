@@ -107,4 +107,8 @@ router.get('/trainer/ratings/:id', authMiddleware, userController.getTrainerRati
 router.get('/gym/ratings/:id', authMiddleware, userController.getGymRatings.bind(userController))
 router.post('/chat/upload', authMiddleware, userController.uploadChatFile.bind(userController))
 
+router.post('/progress', authMiddleware, userController.addProgress.bind(userController))
+router.get('/progress', authMiddleware, userController.getProgress.bind(userController))
+router.get('/progress/compare', authMiddleware, userController.compareProgress.bind(userController))
+
 export default router

@@ -106,6 +106,7 @@ export class SocketHandler {
 
     this.io.on('connection', socket => {
       logger.info(`User connected: ${socket.userId}`)
+      socket.join(`user_${socket.userId}`)
       this.handleConnection(socket)
     })
   }

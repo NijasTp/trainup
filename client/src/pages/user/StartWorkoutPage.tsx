@@ -19,7 +19,7 @@ interface IExercise {
   rest?: string;
   notes?: string;
   isDone?: boolean;
-  timeTaken?: number; 
+  timeTaken?: number;
 }
 
 interface IWorkoutSession {
@@ -313,10 +313,10 @@ export default function StartSessionPage() {
   const progressPercentage = (currentExerciseIndex / session.exercises.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-black via-gray-900 to-black">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent"></div>
       <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 flex flex-col items-center min-h-[calc(100vh-200px)]">
+      <main className="relative container mx-auto px-4 py-12 flex flex-col items-center flex-1">
         <div className="flex items-center justify-between w-full max-w-6xl mb-10">
           <div className="flex items-center gap-4">
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-blue-400 via-blue-300 to-blue-200 bg-clip-text text-transparent">
@@ -349,13 +349,12 @@ export default function StartSessionPage() {
                   {session.exercises.map((ex, i) => (
                     <li
                       key={i}
-                      className={`p-3 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-md ${
-                        i === currentExerciseIndex
+                      className={`p-3 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-md ${i === currentExerciseIndex
                           ? "bg-blue-500/20 border border-blue-500/50"
                           : ex.isDone
-                          ? "bg-green-500/20 border border-green-500/50"
-                          : "bg-gray-700/50"
-                      }`}
+                            ? "bg-green-500/20 border border-green-500/50"
+                            : "bg-gray-700/50"
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-gray-100 font-medium">{ex.name}</span>
@@ -365,8 +364,8 @@ export default function StartSessionPage() {
                             {i < currentExerciseIndex
                               ? formatTime(exerciseTimes[i].duration)
                               : i === currentExerciseIndex
-                              ? formatTime(currentExerciseTime)
-                              : ""}
+                                ? formatTime(currentExerciseTime)
+                                : ""}
                           </span>
                         </div>
                       </div>

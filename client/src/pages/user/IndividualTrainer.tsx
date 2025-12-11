@@ -580,18 +580,6 @@ export default function TrainerPage() {
                                     </div>
                                 </div>
 
-                                {trainer.certificate && (
-                                    <div className="pt-4">
-                                        <Button
-                                            variant="outline"
-                                            className="flex items-center gap-2 hover:bg-primary/5"
-                                            onClick={() => setIsOpen(true)}
-                                        >
-                                            <FileText className="h-4 w-4" />
-                                            View Certifications
-                                        </Button>
-                                    </div>
-                                )}
                             </div>
                         </SpotlightCard>
 

@@ -118,9 +118,8 @@ function WorkoutSessionCard({ session, index }: { session: WorkoutSession; index
                       "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"
                     }
                     alt={exercise.name}
-                    className={`h-16 w-16 object-cover rounded-md transition-opacity duration-500 ${
-                      imageLoaded ? "opacity-100" : "opacity-0"
-                    }`}
+                    className={`h-16 w-16 object-cover rounded-md transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"
+                      }`}
                     loading="lazy"
                     onLoad={() => setImageLoaded(true)}
                   />
@@ -189,10 +188,10 @@ export default function AddWorkoutPage() {
     ?.sessions.filter((session) => session.givenBy === "user") || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 space-y-8">
+      <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
         <section className="flex flex-col items-start gap-4">
           <div className="flex items-center justify-between w-full">
             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">

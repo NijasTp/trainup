@@ -27,21 +27,21 @@ const CardDescription = ({ className, children }: { className?: string; children
 );
 
 // Button Component
-const Button = ({ 
-  className, 
-  children, 
-  onClick, 
-  disabled, 
+const Button = ({
+  className,
+  children,
+  onClick,
+  disabled,
   type = "button"
-}: { 
-  className?: string; 
-  children: React.ReactNode; 
-  onClick?: () => void; 
+}: {
+  className?: string;
+  children: React.ReactNode;
+  onClick?: () => void;
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
 }) => {
   return (
-    <button 
+    <button
       type={type}
       className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ${className}`}
       onClick={onClick}
@@ -53,18 +53,18 @@ const Button = ({
 };
 
 // Input Component
-const Input = ({ 
-  className, 
-  type = "text", 
-  placeholder, 
-  value, 
+const Input = ({
+  className,
+  type = "text",
+  placeholder,
+  value,
   onChange,
   id
-}: { 
-  className?: string; 
-  type?: string; 
-  placeholder?: string; 
-  value: string; 
+}: {
+  className?: string;
+  type?: string;
+  placeholder?: string;
+  value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   id?: string;
 }) => {
@@ -82,7 +82,7 @@ const Input = ({
 
 // Label Component
 const Label = ({ className, children, htmlFor }: { className?: string; children: React.ReactNode; htmlFor?: string }) => (
-  <label 
+  <label
     htmlFor={htmlFor}
     className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`}
   >
@@ -93,7 +93,7 @@ const Label = ({ className, children, htmlFor }: { className?: string; children:
 // Logo Component
 const Logo = ({ className }: { className?: string }) => (
   <div className={`flex items-center ${className}`}>
-      <Dumbbell/>
+    <Dumbbell />
     <div className="text-3xl font-bold text-white">
       <span className="text-[#4B8B9B]">Train</span>up
     </div>
@@ -181,7 +181,7 @@ function AdminLogin() {
                     placeholder="admin@trainup.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-black placeholder:text-gray-500 focus:border-[#4B8B9B] focus:ring-[#4B8B9B]/20"
+                    className="pl-10 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B] focus:ring-[#4B8B9B]/20"
                   />
                 </div>
               </div>
@@ -198,7 +198,7 @@ function AdminLogin() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-black placeholder:text-gray-500 focus:border-[#4B8B9B] focus:ring-[#4B8B9B]/20"
+                    className="pl-10 pr-10 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B] focus:ring-[#4B8B9B]/20"
                   />
                   <button
                     type="button"
@@ -214,7 +214,7 @@ function AdminLogin() {
                 </div>
               </div>
 
-            
+
 
               <Button
                 type="submit"

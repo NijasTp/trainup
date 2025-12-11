@@ -100,7 +100,7 @@ export default function ForgotPasswordPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full trainup-primary text-white hover:bg-opacity-80">
+              <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors">
                 Send Verification Code
               </Button>
             </form>

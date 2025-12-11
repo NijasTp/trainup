@@ -7,10 +7,14 @@ import { IStreak } from '../models/streak.model';
 import { MESSAGES } from '../constants/messages.constants';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
+import { IEventService } from '../core/interfaces/services/IEventService';
 
 @injectable()
 export class StreakService implements IStreakService {
-  constructor(@inject(TYPES.IStreakRepository) private _streakRepo: IStreakRepository) {}
+  constructor(
+    @inject(TYPES.IStreakRepository) private _streakRepo: IStreakRepository,
+    @inject(TYPES.IEventService) private _eventService: IEventService
+  ) { }
 
   async getOrCreateUserStreak(userId: Types.ObjectId): Promise<IStreak> {
     let streak = await this._streakRepo.findByUserId(userId);
@@ -32,7 +36,7 @@ export class StreakService implements IStreakService {
 
     const diffDays = Math.floor((today.getTime() - lastAction.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (isSameDay) {
+    if (isSameDay && streak.currentStreak > 0) {
       return streak;
     }
 
@@ -48,6 +52,9 @@ export class StreakService implements IStreakService {
     streak.lastActionDate = today;
     const updated = await this._streakRepo.update(streak);
     if (!updated) throw new AppError(MESSAGES.FAILED_TO_UPDATE_STREAK, STATUS_CODE.INTERNAL_SERVER_ERROR);
+
+    this._eventService.emitToUser(userId.toString(), 'streak_updated', { streak: updated.currentStreak });
+
     return updated;
   }
 

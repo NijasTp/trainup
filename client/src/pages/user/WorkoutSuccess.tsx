@@ -102,10 +102,10 @@ export default function SuccessPage() {
   ).toString().padStart(2, "0")}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 flex flex-col items-center min-h-[calc(100vh-200px)]">
+      <main className="relative container mx-auto px-4 py-12 flex flex-col items-center flex-1">
         <div className="text-center space-y-6 mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20 animate-pulse">
             <Trophy className="h-5 w-5 text-primary" />
@@ -128,8 +128,8 @@ export default function SuccessPage() {
             <p className="text-muted-foreground font-medium">Saving your progress...</p>
           </div>
         ) : (
-      
-          <Card onClick={()=> navigate('/workouts')} className="group relative bg-card/40 backdrop-blur-sm border-primary/30 w-full max-w-2xl shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+
+          <Card onClick={() => navigate('/workouts')} className="group relative bg-card/40 backdrop-blur-sm border-primary/30 w-full max-w-2xl shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <CardHeader>
               <CardTitle className="text-3xl font-bold text-foreground">Workout Summary</CardTitle>
@@ -163,15 +163,15 @@ export default function SuccessPage() {
                   <p className="text-muted-foreground text-center">No exercise times recorded.</p>
                 )}
               </div>
-         
-                <Button 
-                  className="w-full text-black bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  Back to Workouts
-                </Button>
+
+              <Button
+                className="w-full text-black bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Back to Workouts
+              </Button>
             </CardContent>
           </Card>
-      
+
         )}
       </main>
       <SiteFooter />

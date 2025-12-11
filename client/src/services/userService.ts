@@ -42,7 +42,11 @@ export const getTrainer = async () => {
 }
 
 export const updateProfile = async (data: FormData) => {
-  const response = await API.put("/user/update-profile", data);
+  const response = await API.put("/user/update-profile", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };
 

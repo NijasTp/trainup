@@ -292,32 +292,36 @@ const TrainerApplication = () => {
               >
                 Cancel
               </Button>
-              <Button
-                variant="destructive"
-                onClick={() => setIsRejectModalOpen(true)}
-                disabled={loading}
-                className="bg-red-600 text-white px-8 py-2 rounded-lg hover:bg-red-700 transition duration-300 shadow-lg"
-              >
-                <XCircle className="h-5 w-5 mr-2" />
-                Reject Trainer
-              </Button>
-              <Button
-                onClick={handleVerify}
-                disabled={loading}
-                className="bg-[#001C30] text-white px-8 py-2 rounded-lg hover:bg-gradient-to-r hover:from-[#001C30] hover:to-[#1F2A44] transition duration-300 shadow-lg"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-5 w-5 mr-2" />
-                    Verify Trainer
-                  </>
-                )}
-              </Button>
+              {application.profileStatus !== 'approved' && (
+                <>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setIsRejectModalOpen(true)}
+                    disabled={loading}
+                    className="bg-red-600 text-white px-8 py-2 rounded-lg hover:bg-red-700 transition duration-300 shadow-lg"
+                  >
+                    <XCircle className="h-5 w-5 mr-2" />
+                    Reject Trainer
+                  </Button>
+                  <Button
+                    onClick={handleVerify}
+                    disabled={loading}
+                    className="bg-[#001C30] text-white px-8 py-2 rounded-lg hover:bg-gradient-to-r hover:from-[#001C30] hover:to-[#1F2A44] transition duration-300 shadow-lg"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-5 w-5 mr-2" />
+                        Verify Trainer
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>

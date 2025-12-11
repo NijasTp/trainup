@@ -40,7 +40,7 @@ export interface IWorkoutSession {
   date?: string;
   time?: string;
   exercises: IExercise[];
-  exerciseUpdates?: IExerciseUpdate[]; 
+  exerciseUpdates?: IExerciseUpdate[];
   tags?: string[];
   goal?: string;
   notes?: string;
@@ -196,8 +196,8 @@ function ExerciseSuggestionCard({
                 suggestion.data.image
                   ? `https://wger.de${suggestion.data.image}`
                   : suggestion.data.image_thumbnail
-                  ? `https://wger.de${suggestion.data.image_thumbnail}`
-                  : "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
+                    ? `https://wger.de${suggestion.data.image_thumbnail}`
+                    : "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
               }
               alt={suggestion.value}
               className={`w-full h-32 object-cover rounded-md transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
@@ -250,7 +250,7 @@ export default function EditSessionPage() {
         const response = await getWorkoutSession(id!);
         const sessionData: IWorkoutSession = response;
         setSession(sessionData);
-        setSessionName(sessionData.name||'');
+        setSessionName(sessionData.name || '');
         setSessionDate(sessionData.date || "");
         setSessionTime(sessionData.time || "");
         setSessionGoal(sessionData.goal || "");
@@ -367,10 +367,10 @@ export default function EditSessionPage() {
   const isCardio = selectedExercise?.category === 15;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 space-y-8">
+      <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
         <div className="flex items-center justify-between w-full">
           <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
             Edit Workout Session

@@ -34,3 +34,14 @@ export const fetchAdminWorkoutSessions = async () => {
   const res = await API.get('/workout/admin/workout-templates')
   return res.data
 }
+
+export const getAllSessions = async () => {
+  // Fetching with a large limit to get "all" sessions for the calendar history
+  // Since pagination is implemented, this is a pragmatic way to get history without a dedicated "all" endpoint
+  const res = await API.get('/workout/get-sessions', {
+    params: {
+      limit: 1000 // Large enough number to cover reasonable history
+    }
+  })
+  return res.data
+}

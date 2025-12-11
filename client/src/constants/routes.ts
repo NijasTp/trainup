@@ -38,6 +38,7 @@ export const ROUTES = {
 
   USER_DIET: '/diets',
   USER_ADD_DIET: '/diets/add',
+  USER_PROGRESS: '/progress',
 
   CALLBACK: "/callback",
   USER_NOT_FOUND: "*",

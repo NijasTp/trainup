@@ -209,6 +209,7 @@ export class UserService implements IUserService {
         let profileImageUrl: string | undefined;
 
         if (files?.profileImage) {
+            console.log('Processing profile image upload...');
             const file = files.profileImage;
             const result = await cloudinary.uploader.upload(file.tempFilePath, {
                 folder: "trainup/users/profiles",

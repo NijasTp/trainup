@@ -26,18 +26,18 @@ const IndividualTrainer = () => {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { trainerId } = useParams();
   const location = useLocation();
 
   useEffect(() => {
     const stateTrainer = location.state?.trainer;
     if (stateTrainer) {
       setTrainer(stateTrainer);
-    } else if (id) {
+    } else if (trainerId) {
       const fetchTrainer = async () => {
         setLoading(true);
         try {
-          const res = await getTrainerById(id);
+          const res = await getTrainerById(trainerId);
           setTrainer(res);
         } catch (err) {
           console.error("Error fetching trainer:", err);
@@ -48,7 +48,7 @@ const IndividualTrainer = () => {
       };
       fetchTrainer();
     }
-  }, [location.state, id]);
+  }, [location.state, trainerId]);
 
   const handleBanToggle = async () => {
     if (!trainer) return;
@@ -68,7 +68,7 @@ const IndividualTrainer = () => {
     try {
         const res = await getTrainerApplication(trainer._id);
         const application = res
-        navigate(`/admin/trainers/${id}/application`, { state: { application } });
+        navigate(`/admin/trainers/${trainerId}/application`, { state: { application } });
     } catch (error) {
         console.log("Error fetching trainer application:", error);
     }

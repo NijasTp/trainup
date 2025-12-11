@@ -4,6 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CheckCircle2 } from "lucide-react";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
@@ -21,6 +31,7 @@ export default function Diets() {
   const [currentView, setCurrentView] = useState<'trainer' | 'self'>('trainer');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingMeal, setConfirmingMeal] = useState<{ id: string; isTrainer: boolean } | null>(null);
 
 
   const isMealMissed = (meal: Meal) => {
@@ -72,7 +83,11 @@ export default function Diets() {
     fetchMeals();
   }, []);
 
-  const handleMarkEaten = async (mealId: string, isTrainer: boolean) => {
+  const handleMarkEaten = async () => {
+    if (!confirmingMeal) return;
+    const { id: mealId, isTrainer } = confirmingMeal;
+
+    // Optimistic Update
     const now = new Date();
     const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
@@ -94,11 +109,37 @@ export default function Diets() {
       );
     }
 
-   try {
-    await markEaten(now.toISOString().split('T')[0], mealId)
-   } catch (error:any) {
-    toast.error(error.response.data.error || 'Failed to mark meal as eaten');
-   }
+    setConfirmingMeal(null);
+
+    try {
+      await markEaten(now.toISOString().split('T')[0], mealId)
+      toast.success("Meal marked as eaten!");
+    } catch (error: any) {
+      toast.error(error.response.data.error || 'Failed to mark meal as eaten');
+    }
+  };
+
+  const checkTimeAndInitiate = (meal: Meal, isTrainer: boolean) => {
+    if (meal.isEaten) {
+      setConfirmingMeal({ id: meal._id, isTrainer });
+      return;
+    }
+
+    const now = new Date();
+    const [hours, minutes] = meal.time.split(':').map(Number);
+    const mealDate = new Date();
+    mealDate.setHours(hours, minutes, 0, 0);
+
+    // Difference in minutes
+    const diffInMinutes = (mealDate.getTime() - now.getTime()) / (1000 * 60);
+
+    // If diffInMinutes > 10, it is MORE than 10 minutes before meal time.
+    if (diffInMinutes > 10) {
+      toast.warning("You can only mark this meal as eaten 10 minutes before the scheduled time.");
+      return;
+    }
+
+    setConfirmingMeal({ id: meal._id, isTrainer });
   };
 
   const meals = currentView === 'trainer' ? trainerDiet : userDiet;
@@ -121,10 +162,10 @@ export default function Diets() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 space-y-12">
+      <main className="relative container mx-auto px-4 py-12 space-y-12 flex-1">
         {/* Header Section */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-2">
@@ -152,8 +193,8 @@ export default function Diets() {
             onClick={() => setCurrentView('trainer')}
             variant={currentView === 'trainer' ? "default" : "outline"}
             className={`relative px-6 py-3 font-medium transition-all duration-300 ${currentView === 'trainer'
-                ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg"
-                : "hover:bg-primary/10 border-primary/30"
+              ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg"
+              : "hover:bg-primary/10 border-primary/30"
               }`}
           >
             Trainer Assigned
@@ -167,8 +208,8 @@ export default function Diets() {
             onClick={() => setCurrentView('self')}
             variant={currentView === 'self' ? "default" : "outline"}
             className={`relative px-6 py-3 font-medium transition-all duration-300 ${currentView === 'self'
-                ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg"
-                : "hover:bg-primary/10 border-primary/30"
+              ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg"
+              : "hover:bg-primary/10 border-primary/30"
               }`}
           >
             Self Assigned
@@ -193,10 +234,10 @@ export default function Diets() {
                 <Card
                   key={meal._id}
                   className={`group relative bg-card/40 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer ${meal.isEaten
-                      ? "bg-green-500/10 border-green-500/50"
-                      : isMealMissed(meal)
-                        ? "bg-red-500/10 border-red-500/50"
-                        : ""
+                    ? "bg-green-500/10 border-green-500/50"
+                    : isMealMissed(meal)
+                      ? "bg-red-500/10 border-red-500/50"
+                      : ""
                     }`}
                   onClick={() => setSelectedMeal(meal)}
                 >
@@ -229,14 +270,13 @@ export default function Diets() {
                     </div>
                     <Button
                       variant="outline"
-                      disabled={meal.isEaten || isMealMissed(meal)} // disables when eaten or missed
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleMarkEaten(meal._id, currentView === 'trainer');
+                        checkTimeAndInitiate(meal, currentView === 'trainer');
                       }}
                       className={`px-4 py-2 font-medium transition-all duration-300 ${isMealMissed(meal)
-                          ? "bg-red-500/20 border-red-500 text-red-500 hover:bg-red-500/30"
-                          : "hover:bg-primary/10 border-primary/30"
+                        ? "bg-red-500/20 border-red-500 text-red-500 hover:bg-red-500/30"
+                        : "hover:bg-primary/10 border-primary/30"
                         }`}
                     >
                       {isMealMissed(meal) ? "Missed" : "Mark Eaten"}
@@ -315,6 +355,24 @@ export default function Diets() {
           </DialogContent>
         </Dialog>
       )}
+      <AlertDialog open={!!confirmingMeal} onOpenChange={(open) => !open && setConfirmingMeal(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Action</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to mark this meal as {confirmingMeal &&
+                (currentView === 'trainer' ? trainerDiet : userDiet).find(m => m._id === confirmingMeal.id)?.isEaten
+                ? 'uneaten'
+                : 'eaten'
+              }?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarkEaten}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

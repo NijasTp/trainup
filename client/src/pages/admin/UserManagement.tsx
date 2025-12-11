@@ -136,40 +136,52 @@ const UserManagement = () => {
                 </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Select onValueChange={setIsBannedFilter} defaultValue="all">
-                  <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
-                    <SelectValue placeholder="Filter by Status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="banned">Banned</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select onValueChange={setIsVerifiedFilter} defaultValue="all">
-                  <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
-                    <SelectValue placeholder="Filter by Verification" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-                    <SelectItem value="all">All Verification</SelectItem>
-                    <SelectItem value="verified">Verified</SelectItem>
-                    <SelectItem value="unverified">Unverified</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="date"
-                  placeholder="Start Date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
-                />
-                <Input
-                  type="date"
-                  placeholder="End Date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
-                />
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium text-gray-400 ml-1">Status</span>
+                  <Select onValueChange={setIsBannedFilter} defaultValue="all">
+                    <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
+                      <SelectValue placeholder="Filter by Status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="active">Unbanned</SelectItem>
+                      <SelectItem value="banned">Banned</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium text-gray-400 ml-1">Verification</span>
+                  <Select onValueChange={setIsVerifiedFilter} defaultValue="all">
+                    <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
+                      <SelectValue placeholder="Filter by Verification" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
+                      <SelectItem value="all">All Verification</SelectItem>
+                      <SelectItem value="verified">Verified</SelectItem>
+                      <SelectItem value="unverified">Unverified</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium text-gray-400 ml-1">Start Date</span>
+                  <Input
+                    type="date"
+                    placeholder="Start Date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium text-gray-400 ml-1">End Date</span>
+                  <Input
+                    type="date"
+                    placeholder="End Date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
+                  />
+                </div>
               </div>
             </div>
           </CardContent>

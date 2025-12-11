@@ -202,7 +202,7 @@ export default function UserAddDiet() {
     };
     setMeals((prev) => [...prev, meal]);
     setSelectedFood(null);
-    setUsdaMealTime("12:00"); 
+    setUsdaMealTime("12:00");
   };
 
 
@@ -259,10 +259,10 @@ export default function UserAddDiet() {
   const paginatedFoods = usdaFoods;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 space-y-12">
+      <main className="relative container mx-auto px-4 py-12 space-y-12 flex-1">
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-2">
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
@@ -275,7 +275,7 @@ export default function UserAddDiet() {
           </p>
         </div>
 
-      {/* Date Selection */}
+        {/* Date Selection */}
         <Card className="bg-card/40 backdrop-blur-sm border-border/50">
           <CardHeader>
             <CardTitle>Select Date</CardTitle>

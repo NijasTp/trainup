@@ -104,6 +104,7 @@ export default function EditProfile() {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string>("");
   const [newGoal, setNewGoal] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -146,6 +147,7 @@ export default function EditProfile() {
     setIsLoading(true);
     try {
       const response = await getProfile();
+      console.log(response)
       const userProfile = response.user;
       setFormData({
         name: userProfile.name || "",
@@ -183,7 +185,7 @@ export default function EditProfile() {
         return;
       }
 
-
+      setProfileImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImagePreview(reader.result as string);
@@ -208,13 +210,17 @@ export default function EditProfile() {
       if (validatedData.height) submitData.append('height', validatedData.height);
       if (validatedData.age) submitData.append('age', validatedData.age);
       if (validatedData.gender) submitData.append('gender', validatedData.gender);
-      if (validatedData.goals) submitData.append('goals', JSON.stringify(validatedData.goals));
+      if (validatedData.goals) {
+        submitData.append('goals', JSON.stringify(validatedData.goals));
+      }
       if (validatedData.activityLevel) submitData.append('activityLevel', validatedData.activityLevel);
       submitData.append('equipment', validatedData.equipment?.toString() || 'false');
       submitData.append('isPrivate', validatedData.isPrivate?.toString() || 'false');
       if (validatedData.todaysWeight) submitData.append('todaysWeight', validatedData.todaysWeight);
       if (validatedData.goalWeight) submitData.append('goalWeight', validatedData.goalWeight);
-
+      if (profileImageFile) {
+        submitData.append('profileImage', profileImageFile);
+      }
 
 
       const response = await updateProfile(submitData);

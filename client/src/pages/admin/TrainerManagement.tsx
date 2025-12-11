@@ -11,6 +11,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import type { ITrainer, TrainerResponse } from "@/interfaces/admin/adminTrainerManagement";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { ROUTES } from "@/constants/routes";
 
 const TrainerManagement = () => {
   const [response, setResponse] = useState<TrainerResponse>({ trainers: [], total: 0, page: 1, totalPages: 1 });
@@ -90,11 +91,17 @@ const TrainerManagement = () => {
     }
   };
 
+
+
   const handleViewTrainer = async (trainerId: string) => {
+    if (!trainerId) {
+      console.error("Trainer ID is undefined");
+      return;
+    }
     try {
       const res = await getTrainerById(trainerId);
       const trainer = res as ITrainer;
-      navigate(`/admin/trainers/${trainerId}`, { state: { trainer } });
+      navigate(ROUTES.ADMIN_TRAINER_DETAILS.replace(':trainerId', trainerId), { state: { trainer } });
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       console.error("Error fetching trainer details:", error);
@@ -103,10 +110,14 @@ const TrainerManagement = () => {
   };
 
   const handleViewApplication = async (trainerId: string) => {
+    if (!trainerId) {
+      console.error("Trainer ID is undefined");
+      return;
+    }
     try {
       const res = await getTrainerApplication(trainerId);
       const application = res;
-      navigate(`/admin/trainers/${trainerId}/application`, { state: { application } });
+      navigate(ROUTES.ADMIN_TRAINER_APPLICATION.replace(':trainerId', trainerId), { state: { application } });
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       console.error("Error fetching trainer application:", error);
@@ -145,40 +156,52 @@ const TrainerManagement = () => {
                 </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Select onValueChange={setIsBannedFilter} defaultValue="all">
-                  <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
-                    <SelectValue placeholder="Filter by Status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="banned">Banned</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select onValueChange={setIsVerifiedFilter} defaultValue="all">
-                  <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
-                    <SelectValue placeholder="Filter by Verification" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-                    <SelectItem value="all">All Verification</SelectItem>
-                    <SelectItem value="verified">Verified</SelectItem>
-                    <SelectItem value="unverified">Unverified</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="date"
-                  placeholder="Start Date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
-                />
-                <Input
-                  type="date"
-                  placeholder="End Date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
-                />
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium text-gray-400 ml-1">Status</span>
+                  <Select onValueChange={setIsBannedFilter} defaultValue="all">
+                    <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
+                      <SelectValue placeholder="Filter by Status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="active">Unbanned</SelectItem>
+                      <SelectItem value="banned">Banned</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium text-gray-400 ml-1">Verification</span>
+                  <Select onValueChange={setIsVerifiedFilter} defaultValue="all">
+                    <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
+                      <SelectValue placeholder="Filter by Verification" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
+                      <SelectItem value="all">All Verification</SelectItem>
+                      <SelectItem value="verified">Verified</SelectItem>
+                      <SelectItem value="unverified">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium text-gray-400 ml-1">Start Date</span>
+                  <Input
+                    type="date"
+                    placeholder="Start Date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium text-gray-400 ml-1">End Date</span>
+                  <Input
+                    type="date"
+                    placeholder="End Date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
+                  />
+                </div>
               </div>
             </div>
           </CardContent>
@@ -272,10 +295,10 @@ const TrainerManagement = () => {
                                 </Badge>
                               ) : (
                                 <Badge className={`border-0 ${trainer.profileStatus === 'approved'
-                                    ? "bg-green-900/40 text-green-400 hover:bg-green-900/60"
-                                    : trainer.profileStatus === 'pending'
-                                      ? "bg-yellow-900/40 text-yellow-400 hover:bg-yellow-900/60"
-                                      : "bg-red-900/40 text-red-400 hover:bg-red-900/60"
+                                  ? "bg-green-900/40 text-green-400 hover:bg-green-900/60"
+                                  : trainer.profileStatus === 'pending'
+                                    ? "bg-yellow-900/40 text-yellow-400 hover:bg-yellow-900/60"
+                                    : "bg-red-900/40 text-red-400 hover:bg-red-900/60"
                                   }`}>
                                   {trainer.profileStatus === 'approved' ? 'Verified' :
                                     trainer.profileStatus.charAt(0).toUpperCase() + trainer.profileStatus.slice(1)}

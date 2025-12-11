@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Dumbbell, Plus, Target, CheckCircle, XCircle } from "lucide-react";
+import { Dumbbell, Plus, Target, CheckCircle, XCircle, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { format, addDays, subDays, isToday, differenceInMinutes, parse } from "date-fns";
+
+import { format, isToday, differenceInMinutes, parse, addDays, subDays } from "date-fns";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { toast } from "sonner";
-import { getWorkoutDays } from "@/services/workoutService";
+import { getWorkoutDays, getAllSessions } from "@/services/workoutService";
+import { WorkoutCalendar } from "@/components/user/workouts/WorkoutCalendar";
 
-interface Exercise {
+export interface Exercise {
   id: string;
   name: string;
   sets: number;
@@ -22,7 +23,7 @@ interface Exercise {
   timeTaken?: number;
 }
 
-interface WorkoutSession {
+export interface WorkoutSession {
   _id: string;
   name: string;
   givenBy: "trainer" | "user" | "admin";
@@ -47,64 +48,6 @@ function formatTime(seconds: number | undefined): string {
   const min = Math.floor(seconds / 60);
   const sec = seconds % 60;
   return `${min}:${sec.toString().padStart(2, "0")}`;
-}
-
-function DateSelector({
-  selectedDate,
-  setSelectedDate,
-  dateFilter,
-  setDateFilter,
-}: {
-  selectedDate: Date;
-  setSelectedDate: (date: Date) => void;
-  dateFilter: string;
-  setDateFilter: (value: string) => void;
-}) {
-  const handleDateChange = (direction: "prev" | "next") => {
-    const newDate = direction === "prev" ? subDays(selectedDate, 1) : addDays(selectedDate, 1);
-    setSelectedDate(newDate);
-    setDateFilter(format(newDate, "yyyy-MM-dd"));
-  };
-
-  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = new Date(e.target.value);
-    if (!isNaN(newDate.getTime())) {
-      setSelectedDate(newDate);
-      setDateFilter(e.target.value);
-    }
-  };
-
-  return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => handleDateChange("prev")}
-        className="bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"
-        aria-label="Previous day"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-        Workouts for {format(selectedDate, "MMMM d")}
-      </h1>
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => handleDateChange("next")}
-        className="bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"
-        aria-label="Next day"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-      <Input
-        type="date"
-        value={dateFilter}
-        onChange={handleDateInputChange}
-        className="w-40 bg-card/80 backdrop-blur-sm border-border/50 text-foreground focus-visible:ring-2 focus-visible:ring-primary/30"
-      />
-    </div>
-  );
 }
 
 function FilterButtons({ filter, setFilter }: { filter: "trainer" | "user" | "admin"; setFilter: (value: "trainer" | "user" | "admin") => void }) {
@@ -359,15 +302,36 @@ export default function WorkoutPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [filter, setFilter] = useState<"trainer" | "user" | "admin">("trainer");
   const [dailyWorkouts, setDailyWorkouts] = useState<WorkoutDay[]>([]);
+  const [allSessions, setAllSessions] = useState<WorkoutSession[]>([]);
   const [focusedSessionId, setFocusedSessionId] = useState<string | null>(null);
-  const [dateFilter, setDateFilter] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const handleDateChange = (direction: "prev" | "next") => {
+    const newDate = direction === "prev" ? subDays(selectedDate, 1) : addDays(selectedDate, 1);
+    setSelectedDate(newDate);
+  };
 
   useEffect(() => {
     document.title = "TrainUp - Your Daily Workouts";
     fetchWorkouts();
   }, [selectedDate]);
+
+  useEffect(() => {
+    fetchAllHistory();
+  }, []);
+
+  async function fetchAllHistory() {
+    try {
+      const data = await getAllSessions();
+      if (data && data.sessions) {
+        setAllSessions(data.sessions);
+      }
+    } catch (err) {
+      console.error("Failed to fetch history:", err);
+    }
+  }
 
   async function fetchWorkouts() {
     setIsLoading(true);
@@ -376,7 +340,6 @@ export default function WorkoutPage() {
       const response = await getWorkoutDays(format(selectedDate, "yyyy-MM-dd"));
       const workoutDay = response ? [response] : [{ _id: "", userId: "", date: format(selectedDate, "yyyy-MM-dd"), sessions: [] }];
       setDailyWorkouts(workoutDay);
-      console.log("Fetched workouts:", workoutDay);
     } catch (err: any) {
       setError("Failed to fetch workouts");
       console.error("API error:", err);
@@ -405,7 +368,7 @@ export default function WorkoutPage() {
             );
             return currDiff < prevDiff ? curr : prev;
           }, todayWorkouts.sessions[0]);
-        setFocusedSessionId(closestSession._id);
+        setFocusedSessionId(closestSession?._id || null);
       } else {
         setFocusedSessionId(null);
       }
@@ -421,18 +384,65 @@ export default function WorkoutPage() {
   ) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 space-y-8">
-        <section className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <DateSelector
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            dateFilter={dateFilter}
-            setDateFilter={setDateFilter}
-          />
-          <FilterButtons filter={filter} setFilter={setFilter} />
+      <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
+        <section className="flex flex-col gap-6">
+          {/* Date Navigation & Popover */}
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleDateChange("prev")}
+                  className="h-9 w-9 bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent min-w-[200px] text-center">
+                    {format(selectedDate, "MMMM d")}
+                  </h1>
+
+                  <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9 bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"
+                      >
+                        <CalendarIcon className="h-4 w-4 text-primary" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-fit p-0 border-border/50 bg-card/95 backdrop-blur-md">
+                      <WorkoutCalendar
+                        sessions={allSessions}
+                        selectedDate={selectedDate}
+                        onSelectDate={(date) => {
+                          setSelectedDate(date);
+                          setIsCalendarOpen(false);
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleDateChange("next")}
+                  className="h-9 w-9 bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <FilterButtons filter={filter} setFilter={setFilter} />
+            </div>
+          </div>
         </section>
 
         {isLoading && (

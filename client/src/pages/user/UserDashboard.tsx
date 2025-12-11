@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import { addWeight, getProfile , getWeightHistory } from "@/services/userService";
+import { addWeight, getProfile, getWeightHistory } from "@/services/userService";
 
 const getRecentWorkouts = async () => {
   return Promise.resolve([
@@ -357,6 +357,74 @@ const RecentXPLogs: React.FC<RecentXPLogsProps> = ({ xpLogs }) => {
   );
 };
 
+// Transformation Widget
+import { compareProgress } from "@/services/progressService";
+import { Link } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
+import { Image as ImageIcon } from "lucide-react";
+
+interface TransformationWidgetProps { }
+
+const TransformationWidget: React.FC<TransformationWidgetProps> = () => {
+  const [data, setData] = useState<{ first: any, latest: any } | null>(null);
+
+  useEffect(() => {
+    compareProgress().then(setData).catch(console.error);
+  }, []);
+
+  return (
+    <Card className="bg-card/40 backdrop-blur-sm border-border/50 col-span-2 lg:col-span-2">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <ImageIcon className="h-5 w-5 text-primary" />
+          Transformation
+        </CardTitle>
+        <Link to={ROUTES.USER_PROGRESS}>
+          <Button variant="outline" size="sm">View Gallery</Button>
+        </Link>
+      </CardHeader>
+      <CardContent>
+        {data && (data.first?.photos?.length || data.latest?.photos?.length) ? (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground text-center">Start ({data.first ? format(new Date(data.first.date), "MMM d, yyyy") : 'N/A'})</p>
+              <div className="aspect-[3/4] rounded-lg overflow-hidden bg-secondary/20 relative">
+                {data.first?.photos?.[0] ? (
+                  <img src={data.first.photos[0]} alt="First" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">No Photo</div>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground text-center">Latest ({data.latest ? format(new Date(data.latest.date), "MMM d, yyyy") : 'N/A'})</p>
+              <div className="aspect-[3/4] rounded-lg overflow-hidden bg-secondary/20 relative">
+                {data.latest?.photos?.[0] ? (
+                  <img src={data.latest.photos[0]} alt="Latest" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">No Photo</div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
+            <ImageIcon className="h-12 w-12 text-muted-foreground/30" />
+            <div>
+              <h3 className="font-medium">No progress photos yet</h3>
+              <p className="text-sm text-muted-foreground">Upload your first photo to start tracking.</p>
+            </div>
+            <Link to={ROUTES.USER_PROGRESS}>
+              <Button>Add Photo</Button>
+            </Link>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+
 // RecentWorkouts Component (unchanged)
 interface RecentWorkoutsProps {
   workouts: Workout[];
@@ -577,6 +645,7 @@ const UserDashboard: React.FC = () => {
             </div>
             <WeightChart weightData={weightData} />
             <div className="grid gap-8 lg:grid-cols-2">
+              <TransformationWidget />
               <RecentXPLogs xpLogs={xpLogs} />
               <RecentWorkouts workouts={recentWorkouts} />
             </div>

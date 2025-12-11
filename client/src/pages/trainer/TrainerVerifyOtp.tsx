@@ -136,6 +136,14 @@ const TrainerVerifyOtp: React.FC = () => {
           resendTimer={resendTimer}
           handleResend={handleResend}
           isResendDisabled={isResendDisabled}
+          handlePaste={(e: React.ClipboardEvent) => {
+            const pastedData = e.clipboardData.getData('text');
+            if (/^\d{6}$/.test(pastedData)) {
+              const newOtp = pastedData.split('');
+              setOtp(newOtp);
+              document.getElementById(`otp-5`)?.focus();
+            }
+          }}
         />
       </div>
     </div>

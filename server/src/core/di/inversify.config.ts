@@ -39,6 +39,8 @@ import { IMessageRepository } from "../interfaces/repositories/IMessageRepositor
 import { IMessageService } from "../interfaces/services/IMessageService";
 import { IVideoCallService } from "../interfaces/services/IVideoCallService";
 import { IVideoCallRepository } from "../interfaces/repositories/IVideoCallRepository";
+import { IProgressRepository } from "../interfaces/repositories/IProgressRepository";
+import { IProgressService } from "../interfaces/services/IProgressService";
 
 // Implementations
 
@@ -105,6 +107,8 @@ import { IRatingRepository } from "../interfaces/repositories/IRatingRepository"
 import { IRatingService } from "../interfaces/services/IRatingService";
 import { RatingRepository } from "../../repositories/rating.repository";
 import { RatingService } from "../../services/rating.service";
+import { ProgressRepository } from "../../repositories/progress.repository";
+import { ProgressService } from "../../services/progress.service";
 
 
 import { NotificationCron } from "../../cron/notification.cron";
@@ -192,6 +196,15 @@ container.bind<IRatingRepository>(TYPES.IRatingRepository).to(RatingRepository);
 container.bind<IRatingService>(TYPES.IRatingService).to(RatingService);
 
 
+
+
+import { IEventService } from "../interfaces/services/IEventService";
+import { EventService } from "../../services/event.service";
+
+container.bind<IEventService>(TYPES.IEventService).to(EventService).inSingletonScope();
+
+container.bind<IProgressRepository>(TYPES.IProgressRepository).to(ProgressRepository);
+container.bind<IProgressService>(TYPES.IProgressService).to(ProgressService);
 
 
 export default container;

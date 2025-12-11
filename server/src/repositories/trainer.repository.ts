@@ -13,15 +13,15 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     super(TrainerModel);
   }
 
-  async findByEmail (email: string): Promise<ITrainer | null> {
+  async findByEmail(email: string): Promise<ITrainer | null> {
     return await this.findOne({ email });
   }
 
-  async findById (id: string): Promise<ITrainer | null> {
+  async findById(id: string): Promise<ITrainer | null> {
     return await super.findById(id);
   }
 
-  async findAll (
+  async findAll(
     skip: number,
     limit: number,
     search: string,
@@ -128,11 +128,11 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
       if (endDate) dateQuery.$lte = new Date(endDate)
       query.createdAt = dateQuery
     }
-    const trainers = await this.find(query, { skip, limit });
+    const trainers = await this.find(query, { skip, limit, sort: { createdAt: -1 } });
     return trainers.map(trainer => this.mapToResponseDto(trainer))
   }
 
-  async count (
+  async count(
     search: string,
     isBanned?: string,
     isVerified?: string,
@@ -236,7 +236,7 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
   }
 
 
-  async findApplicationByTrainerId (
+  async findApplicationByTrainerId(
     id: string
   ): Promise<TrainerResponseDto | null> {
     const trainer = await TrainerModel.findById(id).select(
@@ -245,7 +245,7 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     return trainer ? this.mapToResponseDto(trainer) : null
   }
 
-  async updateStatus (
+  async updateStatus(
     identifier: string,
     updateData: Partial<ITrainer>
   ): Promise<ITrainer | null> {
@@ -255,7 +255,7 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     return await this.findOneAndUpdate(query, updateData)
   }
 
-  async addClient (trainerId: string, userId: string): Promise<void> {
+  async addClient(trainerId: string, userId: string): Promise<void> {
     await TrainerModel.findByIdAndUpdate(
       trainerId,
       { $push: { clients: new Types.ObjectId(userId) } },
@@ -263,7 +263,7 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     ).exec()
   }
 
-  async removeClient (trainerId: string, userId: string): Promise<void> {
+  async removeClient(trainerId: string, userId: string): Promise<void> {
     await TrainerModel.findByIdAndUpdate(
       trainerId,
       { $pull: { clients: new Types.ObjectId(userId) } },
@@ -271,7 +271,7 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     ).exec()
   }
 
-  async findClients (
+  async findClients(
     trainerId: string,
     skip: number,
     limit: number,
@@ -310,7 +310,7 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     }
   }
 
-  async countNewClients (
+  async countNewClients(
     trainerId: string,
     startDate: Date,
     endDate: Date
@@ -330,14 +330,14 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     return await UserModel.countDocuments(query).exec()
   }
 
-  async countCompletedSessions (trainerId: string): Promise<number> {
+  async countCompletedSessions(trainerId: string): Promise<number> {
     return await SlotModel.countDocuments({
       trainerId,
       status: 'completed'
     }).exec()
   }
 
-  mapToResponseDto (trainer: ITrainer): TrainerResponseDto {
+  mapToResponseDto(trainer: ITrainer): TrainerResponseDto {
     return {
       _id: trainer._id.toString(),
       name: trainer.name,
@@ -347,9 +347,9 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
       isBanned: trainer.isBanned,
       role: trainer.role,
       gymId: trainer.gymId?.toString(),
-      clients: Array.isArray(trainer.clients) 
-      ? trainer.clients.map(c => c.toString()) 
-      : [],
+      clients: Array.isArray(trainer.clients)
+        ? trainer.clients.map(c => c.toString())
+        : [],
       bio: trainer.bio,
       location: trainer.location,
       specialization: trainer.specialization,
@@ -364,7 +364,7 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     }
   }
 
-  mapToClientDto (client: IUser): ClientDto {
+  mapToClientDto(client: IUser): ClientDto {
     return {
       _id: client._id.toString(),
       name: client.name,

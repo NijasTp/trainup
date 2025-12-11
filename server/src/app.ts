@@ -59,6 +59,9 @@ const socketHandler = new SocketHandler(
   container.get(TYPES.IGymRepository)
 );
 
+const eventService = container.get<any>(TYPES.IEventService);
+eventService.setIO(io);
+
 // Routes
 app.use(BASE_ROUTE.USER, userRoutes);
 app.use(BASE_ROUTE.ADMIN, adminRoutes);

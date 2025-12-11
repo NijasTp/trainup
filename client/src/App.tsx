@@ -14,7 +14,6 @@ import UserManagement from './pages/admin/UserManagement';
 import HomePage from './pages/user/HomePage';
 import ForgotPasswordPage from './components/user/ForgotPassword';
 import NewPasswordPage from './components/user/NewPassword';
-import TrainerLogin from './pages/trainer/TrainerLogin';
 import TrainerApplyPage from './pages/trainer/TrainerApply';
 import TrainerVerifyOtp from './pages/trainer/TrainerVerifyOtp';
 import TrainerForgotPassword from './pages/trainer/TrainerForgotPassword';
@@ -88,6 +87,7 @@ import GymEditAnnouncement from './pages/gym/GymEditAnnouncement';
 import GymAttendanceView from './pages/gym/GymAttendanceView';
 import UserNotifications from './pages/user/UserNotifications';
 import TrainerNotifications from './pages/trainer/TrainerNotifications';
+import ProgressPage from './pages/user/Progress';
 
 function App() {
   return (
@@ -96,7 +96,7 @@ function App() {
       <Routes>
         <Route path={ROUTES.CHOOSE_LOGIN} element={<RoleSelectionPage />} />
         <Route path={ROUTES.GLOBAL_LOGIN} element={<RoleSelectionPage />} />
-        <Route path={ROUTES.USER_LOGIN} element={<PreventLoggedIn><Login /></PreventLoggedIn>} />
+        <Route path={ROUTES.USER_LOGIN} element={<Login initialRole="user" />} />
         <Route path={ROUTES.USER_FORGOT_PASSWORD} element={<PreventLoggedIn><ForgotPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_NEW_PASSWORD} element={<PreventLoggedIn><NewPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_SIGNUP} element={<PreventLoggedIn><Signup /></PreventLoggedIn>} />
@@ -132,10 +132,11 @@ function App() {
         <Route path={ROUTES.USER_WORKOUT_SUCCESS} element={<ProtectedRoute><SuccessPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_DIET} element={<ProtectedRoute><Diets /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_DIET} element={<ProtectedRoute><UserAddDiet /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_PROGRESS} element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_NOT_FOUND} element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
 
         {/* Trainer Routes */}
-        <Route path={ROUTES.TRAINER_LOGIN} element={<TrainerPreventLoggedIn><TrainerLogin /></TrainerPreventLoggedIn>} />
+        <Route path={ROUTES.TRAINER_LOGIN} element={<Login initialRole="trainer" />} />
         <Route path={ROUTES.TRAINER_FORGOT_PASSWORD} element={<TrainerPreventLoggedIn><TrainerForgotPassword /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_FORGOT_PASSWORD_VERIFY_OTP} element={<TrainerPreventLoggedIn><TrainerForgotPasswordVerifyOtp /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_RESET_PASSWORD} element={<TrainerPreventLoggedIn><TrainerResetPassword /></TrainerPreventLoggedIn>} />

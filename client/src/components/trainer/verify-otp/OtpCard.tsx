@@ -17,6 +17,7 @@ interface OtpCardProps {
   resendTimer: number;
   handleResend: () => void;
   isResendDisabled: boolean;
+  handlePaste: (e: React.ClipboardEvent) => void;
 }
 export default function OtpCard({
   otp,
@@ -27,6 +28,7 @@ export default function OtpCard({
   resendTimer,
   handleResend,
   isResendDisabled,
+  handlePaste,
 }: OtpCardProps) {
 
   return (
@@ -41,7 +43,10 @@ export default function OtpCard({
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label className="text-white text-lg font-semibold">Verification Code</Label>
-            <div className="flex justify-between mt-2 gap-2">
+            <div
+              className="flex justify-between mt-2 gap-2"
+              onPaste={handlePaste}
+            >
               {otp.map((digit, index) => (
                 <OtpInput
                   key={index}

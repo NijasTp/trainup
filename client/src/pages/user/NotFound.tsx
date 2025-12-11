@@ -22,13 +22,13 @@ export default function NotFound() {
           description: "Keep going or head back to your workout plan.",
         });
       }
-    }, 800); 
+    }, 800);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-      <main className="relative container mx-auto px-4 py-12 space-y-8 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+      <main className="relative container mx-auto px-4 py-12 space-y-8 flex flex-col items-center justify-center flex-1">
         <Card className="bg-card/80 backdrop-blur-sm border-border/50 w-full max-w-lg shadow-2xl">
           <CardHeader className="text-center">
             <CardTitle className="text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -43,17 +43,16 @@ export default function NotFound() {
             <div className="flex flex-col items-center space-y-4">
               <div className="relative w-48 h-32 flex items-center justify-center">
                 <div className="absolute bottom-0 w-32 h-2 bg-foreground/20 rounded-full"></div> {/* Ground */}
-                <div 
-                  className={`absolute bottom-2 w-40 h-4 bg-primary rounded-full transition-all duration-800 ease-in-out ${
-                    isLifting ? 'translate-y-[-60px] rotate-[-5deg]' : 'translate-y-0 rotate-0'
-                  }`}
+                <div
+                  className={`absolute bottom-2 w-40 h-4 bg-primary rounded-full transition-all duration-800 ease-in-out ${isLifting ? 'translate-y-[-60px] rotate-[-5deg]' : 'translate-y-0 rotate-0'
+                    }`}
                 >
                   <div className="absolute left-2 w-8 h-8 bg-accent rounded-full"></div> {/* Left weight */}
                   <div className="absolute right-2 w-8 h-8 bg-accent rounded-full"></div> {/* Right weight */}
                 </div>
                 <Dumbbell className="absolute bottom-4 h-12 w-12 text-foreground animate-pulse" />
               </div>
-              <Button 
+              <Button
                 onClick={handleLift}
                 className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-bold"
                 disabled={isLifting}

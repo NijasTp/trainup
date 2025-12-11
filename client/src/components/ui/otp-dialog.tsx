@@ -17,7 +17,7 @@ interface OTPDialogProps {
 
 export function OTPDialog({ open, onOpenChange, onVerify, email }: OTPDialogProps) {
   const [otp, setOtp] = useState("")
-  const [isResendCooldown, setIsResendCooldown] = useState(false)
+  const [isResendCooldown, setIsResendCooldown] = useState(true)
   const [cooldownSeconds, setCooldownSeconds] = useState(30)
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function OTPDialog({ open, onOpenChange, onVerify, email }: OTPDialogProp
         setCooldownSeconds((prev) => {
           if (prev <= 1) {
             setIsResendCooldown(false)
-            return 30
+            return 0
           }
           return prev - 1
         })
@@ -35,6 +35,13 @@ export function OTPDialog({ open, onOpenChange, onVerify, email }: OTPDialogProp
     }
     return () => clearInterval(timer)
   }, [isResendCooldown, cooldownSeconds])
+
+  useEffect(() => {
+    if (open) {
+      setIsResendCooldown(true)
+      setCooldownSeconds(30)
+    }
+  }, [open])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,7 +53,7 @@ export function OTPDialog({ open, onOpenChange, onVerify, email }: OTPDialogProp
       toast.warning(`Please wait ${cooldownSeconds} seconds before requesting another OTP.`)
       return
     }
-    
+
     try {
       const response = await forgotPassword(email)
       toast.success(response)
@@ -79,7 +86,7 @@ export function OTPDialog({ open, onOpenChange, onVerify, email }: OTPDialogProp
             />
           </div>
           <div className="flex gap-2">
-            <Button type="submit" className="trainup-primary text-white hover:bg-opacity-80 flex-1">
+            <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700 transition-colors flex-1">
               Verify OTP
             </Button>
             <Button

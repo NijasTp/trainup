@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers } from "@/services/userService";
-import { SiteHeader }  from "@/components/user/home/UserSiteHeader";
+import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { Link, useNavigate } from "react-router-dom";
 import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";
@@ -71,7 +71,7 @@ export default function HomePage() {
 
     const skipped = localStorage.getItem("profileCompletionSkipped");
     const skipDate = localStorage.getItem("profileCompletionSkipDate");
-    
+
     if (skipped && skipDate) {
       const daysSinceSkip = Math.floor((Date.now() - parseInt(skipDate)) / (1000 * 60 * 60 * 24));
       if (daysSinceSkip < 7) return;
@@ -169,8 +169,8 @@ export default function HomePage() {
 
       <SiteHeader />
 
-      <ProfileCompletionModal 
-        open={showProfileModal} 
+      <ProfileCompletionModal
+        open={showProfileModal}
         onOpenChange={setShowProfileModal}
       />
 
@@ -522,7 +522,7 @@ export default function HomePage() {
 
         {/* Quick Actions */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Card 
+          <Card
             className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
             onClick={() => navigate("/workouts")}
           >
@@ -537,7 +537,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
             onClick={() => navigate("/diets")}
           >
@@ -552,7 +552,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
             onClick={() => navigate("/trainers")}
           >
@@ -567,7 +567,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
             onClick={() => navigate("/gyms")}
           >
@@ -582,7 +582,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
             onClick={() => navigate("/dashboard")}
           >

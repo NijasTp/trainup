@@ -82,6 +82,9 @@ const TYPES = {
   ITrainerService: Symbol.for("ITrainerService"),
   IRatingRepository: Symbol.for("IRatingRepository"),
   IRatingService: Symbol.for("IRatingService"),
+  IEventService: Symbol.for("IEventService"),
+  IProgressRepository: Symbol.for("IProgressRepository"),
+  IProgressService: Symbol.for("IProgressService"),
 };
 
 export default TYPES;

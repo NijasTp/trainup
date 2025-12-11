@@ -3,6 +3,7 @@ import { injectable, inject } from 'inversify';
 import { STATUS_CODE } from '../constants/status';
 import TYPES from '../core/types/types';
 import { IWorkoutService } from '../core/interfaces/services/IWorkoutService';
+
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import { MESSAGES } from '../constants/messages.constants';
 import { Role } from '../constants/role';
@@ -29,11 +30,15 @@ import {
 } from '../dtos/workout.dto';
 import { AppError } from '../utils/appError.util';
 
+import { Types } from 'mongoose';
+import { IStreakService } from '../core/interfaces/services/IStreakService';
+
 @injectable()
 export class WorkoutController {
   constructor(
-    @inject(TYPES.WorkoutService) private _workoutService: IWorkoutService
-  ) {}
+    @inject(TYPES.WorkoutService) private _workoutService: IWorkoutService,
+    @inject(TYPES.IStreakService) private _streakService: IStreakService
+  ) { }
 
   async createSession(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -74,6 +79,11 @@ export class WorkoutController {
       if (!updated) {
         throw new AppError(MESSAGES.SESSION_NOT_FOUND, STATUS_CODE.NOT_FOUND);
       }
+
+      if (dto.isDone && updated.userId) {
+        await this._streakService.updateUserStreak(new Types.ObjectId(updated.userId));
+      }
+
       res.status(STATUS_CODE.OK).json(updated);
     } catch (err) {
       next(err);

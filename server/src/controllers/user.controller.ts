@@ -42,6 +42,7 @@ import { AppError } from '../utils/appError.util'
 import { IGymService } from '../core/interfaces/services/IGymService'
 import { UploadedFile } from 'express-fileupload'
 import { IRatingService } from '../core/interfaces/services/IRatingService'
+import { IProgressService } from '../core/interfaces/services/IProgressService'
 
 @injectable()
 export class UserController implements IUserController {
@@ -55,7 +56,8 @@ export class UserController implements IUserController {
     @inject(TYPES.IMessageService) private _messageService: IMessageService,
     @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
     @inject(TYPES.IGymService) private _gymService: IGymService,
-    @inject(TYPES.IRatingService) private _ratingService: IRatingService
+    @inject(TYPES.IRatingService) private _ratingService: IRatingService,
+    @inject(TYPES.IProgressService) private _progressService: IProgressService
   ) { }
 
   async requestOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -348,6 +350,7 @@ export class UserController implements IUserController {
         isPrivate: dto.isPrivate === true || dto.isPrivate === 'true'
       }
 
+      console.log('Update Profile Files:', req.files);
       const updatedUser = await this._userService.updateProfile(
         userId,
         updateData,
@@ -427,6 +430,9 @@ export class UserController implements IUserController {
       const updatedUser = await this._userService.addWeight(userId, dto.weight)
       if (!updatedUser)
         throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+
+      await this._streakService.updateUserStreak(userId);
+
       res
         .status(STATUS_CODE.OK)
         .json({ user: updatedUser, message: MESSAGES.UPDATED })
@@ -761,6 +767,58 @@ export class UserController implements IUserController {
       const file = req.files.file as UploadedFile
       const fileUrl = await this._userService.uploadChatFile(file)
       res.status(STATUS_CODE.OK).json({ fileUrl })
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async addProgress(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id
+      const { date, notes } = req.body
+      let photos: UploadedFile[] = []
+
+      if (req.files) {
+        if (Array.isArray(req.files.photos)) {
+          photos = req.files.photos
+        } else if (req.files.photos) {
+          photos = [req.files.photos as UploadedFile]
+        }
+      }
+
+      if (!date) {
+        throw new AppError('Date is required', STATUS_CODE.BAD_REQUEST)
+      }
+
+      const progress = await this._progressService.addProgress(userId, new Date(date), notes, photos)
+      res.status(STATUS_CODE.OK).json({ progress })
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async getProgress(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id
+      const { date } = req.query
+
+      if (date) {
+        const progress = await this._progressService.getProgress(userId, new Date(date as string))
+        res.status(STATUS_CODE.OK).json({ progress })
+      } else {
+        const progressList = await this._progressService.getAllProgress(userId)
+        res.status(STATUS_CODE.OK).json({ progress: progressList })
+      }
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async compareProgress(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id
+      const comparison = await this._progressService.compareProgress(userId)
+      res.status(STATUS_CODE.OK).json(comparison)
     } catch (err) {
       next(err)
     }

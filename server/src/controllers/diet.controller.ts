@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { injectable, inject } from 'inversify';
+import { Types } from 'mongoose';
 import TYPES from '../core/types/types';
 import { STATUS_CODE as STATUS } from '../constants/status';
 import { MESSAGES } from '../constants/messages.constants';
@@ -26,13 +27,15 @@ import {
 import { IDietService } from '../core/interfaces/services/IDietService';
 import { AppError } from '../utils/appError.util';
 import { IDietTemplateService } from '../core/interfaces/services/IDietTemplateService';
+import { IStreakService } from '../core/interfaces/services/IStreakService';
 
 @injectable()
 export class DietController {
   constructor(
     @inject(TYPES.IDietService) private _dietService: IDietService,
-    @inject(TYPES.ITemplateService) private _templateService: IDietTemplateService
-  ) {}
+    @inject(TYPES.ITemplateService) private _templateService: IDietTemplateService,
+    @inject(TYPES.IStreakService) private _streakService: IStreakService
+  ) { }
 
   async createOrGetDay(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -143,6 +146,11 @@ export class DietController {
       const dto: MarkEatenRequestDto = req.body;
       const updated = await this._dietService.markMealEaten(actor, userId, paramsDto.date, paramsDto.mealId, !!dto.isEaten);
       if (!updated) throw new AppError(MESSAGES.NOT_FOUND, STATUS.NOT_FOUND);
+
+      if (dto.isEaten) {
+        await this._streakService.updateUserStreak(new Types.ObjectId(userId));
+      }
+
       res.status(STATUS.OK).json(updated);
     } catch (err) {
       next(err);

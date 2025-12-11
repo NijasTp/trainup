@@ -137,6 +137,11 @@ export class WorkoutService implements IWorkoutService {
 
     const updated = await this._sessionRepo.update(id, payload)
     if (!updated) throw new AppError('Session not found', STATUS_CODE.NOT_FOUND)
+
+    if (payload.isDone) {
+      await this._streakService.updateUserStreak(updated.userId!);
+    }
+
     return this.mapToSessionResponseDto(updated)
   }
 

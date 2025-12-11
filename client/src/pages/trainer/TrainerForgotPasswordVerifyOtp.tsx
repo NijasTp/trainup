@@ -95,9 +95,9 @@ export default function TrainerForgotPasswordVerifyOtp() {
                                 <p className="text-sm text-red-500">{error}</p>
                             )}
 
-                            <Button 
-                                type="submit" 
-                                className="w-full trainup-primary text-white hover:bg-opacity-80"
+                            <Button
+                                type="submit"
+                                className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                                 disabled={isLoading}
                             >
                                 {isLoading ? "Verifying..." : "Verify OTP"}
@@ -106,9 +106,9 @@ export default function TrainerForgotPasswordVerifyOtp() {
 
                         <div className="mt-6 text-center space-y-2">
                             <p className="text-gray-400 text-sm">Didn't receive an OTP?</p>
-                            <Link 
-                                to="#" 
-                                onClick={handleResendOtp} 
+                            <Link
+                                to="#"
+                                onClick={handleResendOtp}
                                 className={`text-sm trainup-accent font-medium ${!canResend ? 'opacity-50 cursor-not-allowed' : 'hover:underline'}`}
                             >
                                 {canResend ? 'Resend OTP' : `Resend OTP in ${resendTimer}s`}
