@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,9 @@ import { getTrainers } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { Link } from "react-router-dom";
 import type { Trainer } from "@/interfaces/trainer/trainers";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
+import { toast } from "sonner";
+import io, { Socket } from "socket.io-client";
 
 const specialties = [
   "Weight Training",
@@ -43,8 +46,27 @@ export default function Trainers() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const limit = 7;
+  const socketRef = useRef<Socket | null>(null);
 
   console.log("Current filters:", { search, specialization, experience, minRating, minPrice, maxPrice });
+
+  useEffect(() => {
+    socketRef.current = io(import.meta.env.VITE_API_URL, {
+      withCredentials: true,
+      transports: ["websocket"]
+    });
+
+    socketRef.current.on("notification", (data: any) => {
+      if (data.type === "SESSION_REJECTED" || data.title === "Subscription Cancelled") {
+        toast.error(data.message || "Your subscription has been cancelled.");
+        fetchTrainers(); // Refresh trainers list
+      }
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     document.title = "TrainUp - Find Your Perfect Trainer";
@@ -105,10 +127,10 @@ export default function Trainers() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
       <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 space-y-8">
+      <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
         {/* Header Section */}
         <div className="text-center space-y-6 mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
@@ -266,11 +288,10 @@ export default function Trainers() {
                   variant={pageNum === page ? "default" : "ghost"}
                   size="sm"
                   onClick={() => handlePageChange(pageNum)}
-                  className={`w-10 h-10 font-medium transition-all duration-200 ${
-                    pageNum === page
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                      : "hover:bg-secondary/80"
-                  }`}
+                  className={`w-10 h-10 font-medium transition-all duration-200 ${pageNum === page
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                    : "hover:bg-secondary/80"
+                    }`}
                 >
                   {pageNum}
                 </Button>
@@ -288,6 +309,7 @@ export default function Trainers() {
           </Button>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }
@@ -314,9 +336,8 @@ function TrainerCard({ trainer, index }: { trainer: Trainer; index: number }) {
         <img
           src={trainer.profileImage}
           alt={trainer.name}
-          className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${
-            imageLoaded ? "opacity-100" : "opacity-0"
-          }`}
+          className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${imageLoaded ? "opacity-100" : "opacity-0"
+            }`}
           loading="lazy"
           onLoad={() => setImageLoaded(true)}
         />
@@ -347,16 +368,14 @@ function TrainerCard({ trainer, index }: { trainer: Trainer; index: number }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-lg font-bold text-primary">{trainer.price}</span>
+              <span className="text-lg font-bold text-primary">₹{trainer.price.basic}</span>
             </div>
-            <Link to={`/trainers/${trainer._id}`} className="hidden group-hover:block">
-              <Button
-                size="sm"
-                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
-              >
-                View Profile
-              </Button>
-            </Link>
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-medium hidden group-hover:block"
+            >
+              View Profile
+            </Button>
           </div>
         </div>
       </CardContent>

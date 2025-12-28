@@ -42,7 +42,6 @@ export class SocketHandler {
     this.io.use(async (socket, next) => {
       try {
         const cookieHeader = socket.handshake.headers.cookie
-        console.log('cookie header', cookieHeader)
         const token = cookieHeader?.match(/accessToken=([^;]+)/)?.[1]
 
         if (!token) {
@@ -60,19 +59,19 @@ export class SocketHandler {
           return next(new Error('Invalid token payload'))
         }
 
-        let account: any
+        let account: { tokenVersion: number; isBanned: boolean } | null = null;
         switch (decoded.role) {
           case Role.USER:
-            account = await this._userRepository.findById(decoded.id)
+            account = (await this._userRepository.findById(decoded.id)) as unknown as { tokenVersion: number; isBanned: boolean } | null
             break
           case Role.TRAINER:
-            account = await this._trainerRepository.findById(decoded.id)
+            account = (await this._trainerRepository.findById(decoded.id)) as unknown as { tokenVersion: number; isBanned: boolean } | null
             break
           case Role.ADMIN:
-            account = await this._adminRepository.findById(decoded.id)
+            account = (await this._adminRepository.findById(decoded.id)) as unknown as { tokenVersion: number; isBanned: boolean } | null
             break
           case Role.GYM:
-            account = await this._gymRepository.findById(decoded.id)
+            account = (await this._gymRepository.findById(decoded.id)) as unknown as { tokenVersion: number; isBanned: boolean } | null
             break
           default:
             logger.error(`Invalid role: ${decoded.role}`)

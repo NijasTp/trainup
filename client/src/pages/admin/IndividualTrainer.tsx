@@ -63,14 +63,14 @@ const IndividualTrainer = () => {
     }
   };
 
-  const handleViewApplication =async () => {
+  const handleViewApplication = async () => {
     if (!trainer) return;
     try {
-        const res = await getTrainerApplication(trainer._id);
-        const application = res
-        navigate(`/admin/trainers/${trainerId}/application`, { state: { application } });
+      const res = await getTrainerApplication(trainer._id);
+      const application = res
+      navigate(`/admin/trainers/${trainerId}/application`, { state: { application } });
     } catch (error) {
-        console.log("Error fetching trainer application:", error);
+      console.log("Error fetching trainer application:", error);
     }
   }
 
@@ -236,6 +236,26 @@ const IndividualTrainer = () => {
 
             <Card className="bg-[#111827] border border-[#4B8B9B]/30">
               <CardHeader>
+                <CardTitle className="text-white">Monthly Subscription Prices</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-[#1F2A44]/30 rounded-lg border border-[#4B8B9B]/10">
+                  <p className="text-sm text-gray-400 mb-1">Basic Plan</p>
+                  <p className="text-2xl font-bold text-white">₹{trainer.price?.basic?.toLocaleString() || '0'}</p>
+                </div>
+                <div className="p-4 bg-[#1F2A44]/30 rounded-lg border border-[#4B8B9B]/10">
+                  <p className="text-sm text-gray-400 mb-1">Premium Plan</p>
+                  <p className="text-2xl font-bold text-white">₹{trainer.price?.premium?.toLocaleString() || '0'}</p>
+                </div>
+                <div className="p-4 bg-[#1F2A44]/30 rounded-lg border border-[#4B8B9B]/10">
+                  <p className="text-sm text-gray-400 mb-1">Pro Plan</p>
+                  <p className="text-2xl font-bold text-white">₹{trainer.price?.pro?.toLocaleString() || '0'}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-[#111827] border border-[#4B8B9B]/30">
+              <CardHeader>
                 <CardTitle className="text-white flex items-center">
                   <Users className="mr-2 h-5 w-5 text-[#4B8B9B]" />
                   Clients ({trainer.clients.length})
@@ -262,7 +282,7 @@ const IndividualTrainer = () => {
               </CardContent>
             </Card>
 
-            
+
           </div>
 
           {/* Sidebar */}
@@ -275,9 +295,8 @@ const IndividualTrainer = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-gray-400">Verification</span>
                   <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      trainer.profileStatus == 'approved' ? "bg-green-900/30 text-green-400" : "bg-yellow-900/30 text-yellow-400"
-                    }`}
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${trainer.profileStatus == 'approved' ? "bg-green-900/30 text-green-400" : "bg-yellow-900/30 text-yellow-400"
+                      }`}
                   >
                     {trainer.profileStatus == 'approved' ? "Verified" : "Unverified"}
                   </span>
@@ -285,9 +304,8 @@ const IndividualTrainer = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-gray-400">Account Status</span>
                   <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      trainer.isBanned ? "bg-red-900/30 text-red-400" : "bg-green-900/30 text-green-400"
-                    }`}
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${trainer.isBanned ? "bg-red-900/30 text-red-400" : "bg-green-900/30 text-green-400"
+                      }`}
                   >
                     {trainer.isBanned ? "Banned" : "Active"}
                   </span>
@@ -295,15 +313,14 @@ const IndividualTrainer = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-gray-400">Profile Status</span>
                   <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      trainer.profileStatus === "active"
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${trainer.profileStatus === "active"
                         ? "bg-green-900/30 text-green-400"
                         : trainer.profileStatus === "pending"
                           ? "bg-yellow-900/30 text-yellow-400"
                           : trainer.profileStatus === "approved"
                             ? "bg-blue-900/30 text-blue-400"
                             : "bg-red-900/30 text-red-400"
-                    }`}
+                      }`}
                   >
                     {trainer.profileStatus}
                   </span>

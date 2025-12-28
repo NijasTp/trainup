@@ -26,53 +26,11 @@ import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow, addMonths } from "date-fns";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TrainerReviews from "@/components/user/reviews/TrainerReviews";
 
-interface User {
-    _id: string;
-    name: string;
-    email: string;
-    role: string;
-    trainerPlan?: 'basic' | 'premium' | 'pro';
-    subscriptionStartDate?: string;
-    assignedTrainer?: string;
-}
-
-interface Trainer {
-    _id: string;
-    name: string;
-    email: string;
-    phone: string;
-    isVerified: boolean;
-    isBanned: boolean;
-    role: string;
-    clients: string[];
-}
-
-interface Trainer {
-    _id: string;
-    name: string;
-    email: string;
-    phone: string;
-    isVerified: boolean;
-    isBanned: boolean;
-    role: string;
-    clients: string[];
-    bio: string;
-    location: string;
-    specialization: string;
-    tokenVersion: number;
-    experience: string;
-    badges: string[];
-    rating: number;
-    subscriptionStartDate?: string;
-    trainerPlan?: 'basic' | 'premium' | 'pro';
-    profileImage?: string;
-    certificate?: string;
-    reviews?: any[];
-    price?: string;
-}
+import type { User, Trainer } from "@/interfaces/user/IMyTrainer";
 
 export default function MyTrainerProfile() {
     const navigate = useNavigate();
@@ -212,7 +170,7 @@ export default function MyTrainerProfile() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
             <SiteHeader />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
@@ -227,7 +185,7 @@ export default function MyTrainerProfile() {
                 </div>
             </div>
 
-            <main className="relative container mx-auto px-4 py-12 space-y-12">
+            <main className="relative container mx-auto px-4 py-12 space-y-12 flex-1">
                 <div className="relative">
                     <Card className="group relative overflow-hidden bg-card/40 backdrop-blur-sm border-border/50 shadow-2xl">
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
@@ -459,11 +417,9 @@ export default function MyTrainerProfile() {
                     <div className="mt-8">
                         <TrainerReviews
                             trainerId={trainer._id}
-                            reviews={trainer.reviews || []}
                             onReviewAdded={(newReview) => {
                                 setTrainer(prev => prev ? {
                                     ...prev,
-                                    reviews: [...(prev.reviews || []), newReview]
                                 } : null);
                             }}
                             canReview={true}
@@ -522,8 +478,8 @@ export default function MyTrainerProfile() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="text-center p-6 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10">
-                                <div className="text-3xl font-bold text-primary mb-2">{trainer.price || "₹5,000"}</div>
-                                <p className="text-muted-foreground">per month</p>
+                                <div className="text-3xl font-bold text-primary mb-2">₹{trainer.price ? (typeof trainer.price === 'object' ? trainer.price.basic.toLocaleString() : trainer.price) : "5,000"}</div>
+                                <p className="text-muted-foreground">starting per month</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -547,6 +503,7 @@ export default function MyTrainerProfile() {
                     </Card>
                 </div>
             </main >
+            <SiteFooter />
         </div >
     );
 }

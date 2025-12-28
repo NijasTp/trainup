@@ -2,8 +2,8 @@ import API from '@/lib/axios';
 
 
 export const getTrainerDetails = async () => {
-    const res = await API.get('/trainer/get-details');
-    return res.data;
+  const res = await API.get('/trainer/get-details');
+  return res.data;
 }
 
 export const reapplyTrainer = async (data: FormData) => {
@@ -12,5 +12,19 @@ export const reapplyTrainer = async (data: FormData) => {
       "Content-Type": "multipart/form-data",
     }
   });
+  return res.data;
+};
+
+export const updateTrainerProfile = async (data: FormData) => {
+  const res = await API.put('/trainer/profile', data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    }
+  });
+  return res.data;
+};
+
+export const changeTrainerPassword = async (data: any) => {
+  const res = await API.post('/trainer/change-password', data);
   return res.data;
 };

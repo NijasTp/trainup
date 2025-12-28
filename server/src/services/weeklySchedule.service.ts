@@ -13,11 +13,11 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
   constructor(
     @inject(TYPES.IWeeklyScheduleRepository) private _scheduleRepository: IWeeklyScheduleRepository,
     @inject(TYPES.ISlotRepository) private _slotRepository: ISlotRepository
-  ) {}
+  ) { }
 
   async createOrUpdateSchedule(scheduleData: Partial<IWeeklySchedule>): Promise<IWeeklySchedule> {
     const { trainerId, weekStart, schedule } = scheduleData;
-    
+
     if (!trainerId || !weekStart || !schedule) {
       throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
     }
@@ -26,7 +26,7 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
 
     const weekStartDate = new Date(weekStart);
     const adjustedWeekStart = this.getCurrentWeekStart(weekStartDate);
-    
+
     const existingSchedule = await this._scheduleRepository.findByTrainerAndWeek(
       trainerId.toString(),
       adjustedWeekStart
@@ -37,7 +37,7 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
     if (existingSchedule) {
       // Merge existing schedule with new schedule instead of replacing
       const updatedSchedule = this.mergeSchedules(existingSchedule.schedule, schedule as DaySchedule[]);
-      
+
       savedSchedule = await this._scheduleRepository.update(existingSchedule._id.toString(), {
         schedule: updatedSchedule,
         updatedAt: new Date()
@@ -63,48 +63,39 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
   async deleteSchedule(trainerId: string, weekStart: Date): Promise<void> {
     const adjustedWeekStart = this.getCurrentWeekStart(weekStart);
     const schedule = await this._scheduleRepository.findByTrainerAndWeek(trainerId, adjustedWeekStart);
-    
+
     if (!schedule) {
       throw new AppError(MESSAGES.SESSION_NOT_FOUND, STATUS_CODE.NOT_FOUND);
     }
 
     await this._slotRepository.deleteUnbookedSlotsByWeek(trainerId, adjustedWeekStart);
-    
+
     await this._scheduleRepository.delete(schedule._id.toString());
   }
 
   private mergeSchedules(existingSchedule: DaySchedule[], newSchedule: DaySchedule[]): DaySchedule[] {
     const merged = [...existingSchedule];
-    
+
     newSchedule.forEach(newDay => {
       const existingDayIndex = merged.findIndex(day => day.day === newDay.day);
-      
+
       if (existingDayIndex >= 0) {
-        // Merge slots for the same day
         const existingDay = merged[existingDayIndex];
-        const existingSlotIds = new Set(existingDay.slots.map(slot => slot.id));
-        
-        // Add new slots that don't already exist
-        newDay.slots.forEach(newSlot => {
-          if (!existingSlotIds.has(newSlot.id)) {
-            existingDay.slots.push(newSlot);
-          }
-        });
-        
-        // Update the day's active status
+
+        existingDay.slots = newDay.slots;
+
         existingDay.isActive = newDay.isActive;
       } else {
-        // Add entirely new day
         merged.push(newDay);
       }
     });
-    
+
     return merged;
   }
 
   private validateSchedule(schedule: DaySchedule[]): void {
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    
+
     for (const daySchedule of schedule) {
       if (!daysOfWeek.includes(daySchedule.day)) {
         throw new AppError(`Invalid day: ${daySchedule.day}`, STATUS_CODE.BAD_REQUEST);
@@ -156,7 +147,7 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
 
   private async generateSlotsFromSchedule(schedule: IWeeklySchedule): Promise<void> {
     const weekStart = this.getCurrentWeekStart(new Date(schedule.weekStart));
-    
+
     await this._slotRepository.deleteUnbookedSlotsByWeek(schedule.trainerId.toString(), weekStart);
 
     const daysMap: Record<string, number> = {
@@ -193,24 +184,21 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
   }
 
   private getCurrentWeekStart(date?: Date): Date {
-    const now = date || new Date();
-    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const daysFromToday = 0; // Start from today instead of Monday
-    
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - daysFromToday);
-    weekStart.setHours(0, 0, 0, 0);
-    
-    return weekStart;
+    const now = date ? new Date(date) : new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+    const monday = new Date(now.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    return monday;
   }
 
   async resetWeeklySchedules(): Promise<void> {
     const allSchedules = await this._scheduleRepository.findAll();
-    
+
     for (const schedule of allSchedules) {
       const nextWeekStart = new Date(schedule.weekStart);
       nextWeekStart.setDate(nextWeekStart.getDate() + 7);
-      
+
       await this.createOrUpdateSchedule({
         trainerId: schedule.trainerId,
         weekStart: nextWeekStart.toISOString(),

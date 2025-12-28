@@ -62,6 +62,17 @@ export class DietService implements IDietService {
     await this._dietRepo.createOrGet(userId, date);
     const day = await this._dietRepo.addMeal(userId, date, mealPayload as IMeal);
 
+    if (userId && date && mealPayload.time) {
+      const mealDate = new Date(`${date}T${mealPayload.time}`);
+      if (mealDate > new Date()) {
+        await this._notificationService.sendMealReminder(
+          userId,
+          mealPayload.name!,
+          mealDate
+        );
+      }
+    }
+
     if (actor.role === Role.TRAINER) {
       await this._notificationService.createNotification({
         recipientId: userId,

@@ -8,27 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Eye, ChevronLeft, ChevronRight, Loader2, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getUsers } from "@/services/adminService";
-
-interface IUser {
-  _id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  isVerified?: boolean;
-  role: "user";
-  goals?: string[];
-  activityLevel?: string;
-  equipment?: boolean;
-  assignedTrainer?: string;
-  gymId?: string;
-  isPrivate?: boolean;
-  isBanned: boolean;
-  streak?: number;
-  xp?: number;
-  achievements?: string[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+import type { IUser } from "@/interfaces/admin/IUserManagement";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<IUser[]>([]);
@@ -109,40 +89,40 @@ const UserManagement = () => {
     <AdminLayout>
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center">
-            <Users className="mr-3 h-8 w-8 text-[#4B8B9B]" />
+          <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center">
+            <Users className="mr-3 h-8 w-8 text-primary" />
             User Management
           </h1>
-          <p className="text-gray-400">Manage and monitor all registered users</p>
+          <p className="text-muted-foreground">Manage and monitor all registered users</p>
         </div>
 
         {/* Search and Filters */}
-        <Card className="bg-[#111827] border border-[#4B8B9B]/30 mb-6">
+        <Card className="bg-card/40 backdrop-blur-sm border-border/50 mb-6 shadow-sm">
           <CardContent className="p-6">
             <div className="flex flex-col gap-4">
               <div className="flex gap-4 items-center">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#4B8B9B]" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
                     placeholder="Search users by name or email..."
                     value={searchInput}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    className="pl-10 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
+                    className="pl-10 bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                   />
                 </div>
-                <Button onClick={handleSearch} className="bg-[#4B8B9B] hover:bg-[#4B8B9B]/80">
+                <Button onClick={handleSearch} className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-md transition-all duration-300">
                   Search
                 </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-gray-400 ml-1">Status</span>
+                  <span className="text-sm font-medium text-muted-foreground ml-1">Status</span>
                   <Select onValueChange={setIsBannedFilter} defaultValue="all">
-                    <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
+                    <SelectTrigger className="bg-background/50 border-border/50 text-foreground">
                       <SelectValue placeholder="Filter by Status" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
+                    <SelectContent className="bg-card border-border/50 text-foreground">
                       <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="active">Unbanned</SelectItem>
                       <SelectItem value="banned">Banned</SelectItem>
@@ -150,12 +130,12 @@ const UserManagement = () => {
                   </Select>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-gray-400 ml-1">Verification</span>
+                  <span className="text-sm font-medium text-muted-foreground ml-1">Verification</span>
                   <Select onValueChange={setIsVerifiedFilter} defaultValue="all">
-                    <SelectTrigger className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white">
+                    <SelectTrigger className="bg-background/50 border-border/50 text-foreground">
                       <SelectValue placeholder="Filter by Verification" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
+                    <SelectContent className="bg-card border-border/50 text-foreground">
                       <SelectItem value="all">All Verification</SelectItem>
                       <SelectItem value="verified">Verified</SelectItem>
                       <SelectItem value="unverified">Unverified</SelectItem>
@@ -163,23 +143,23 @@ const UserManagement = () => {
                   </Select>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-gray-400 ml-1">Start Date</span>
+                  <span className="text-sm font-medium text-muted-foreground ml-1">Start Date</span>
                   <Input
                     type="date"
                     placeholder="Start Date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
+                    className="bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary"
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-gray-400 ml-1">End Date</span>
+                  <span className="text-sm font-medium text-muted-foreground ml-1">End Date</span>
                   <Input
                     type="date"
                     placeholder="End Date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
+                    className="bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-primary"
                   />
                 </div>
               </div>
@@ -188,74 +168,75 @@ const UserManagement = () => {
         </Card>
 
         {/* Users Table */}
-        <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-          <CardHeader>
-            <CardTitle className="text-white">
-              <div className="text-sm text-gray-400">
+        <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg overflow-hidden">
+          <CardHeader className="border-b border-border/40 pb-4">
+            <CardTitle className="text-foreground">
+              <div className="text-sm text-muted-foreground font-normal">
                 Showing {Math.min(currentPage * usersPerPage, total)} of {total} users
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-[#4B8B9B]" />
-                <span className="ml-2 text-gray-400">Loading users...</span>
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading users...</span>
               </div>
             ) : error ? (
               <div className="text-center py-12">
-                <p className="text-red-400 mb-4">{error}</p>
-                <Button onClick={() => window.location.reload()}>Try Again</Button>
+                <p className="text-destructive mb-4">{error}</p>
+                <Button onClick={() => window.location.reload()} variant="outline">Try Again</Button>
               </div>
             ) : users.length === 0 ? (
               <div className="text-center py-12">
-                <Users className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No users found</p>
+                <Users className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                <p className="text-muted-foreground">No users found</p>
               </div>
             ) : (
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-700">
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Name</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Email</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Status</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Joined</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Actions</th>
+                    <thead className="bg-muted/30">
+                      <tr>
+                        <th className="text-left py-4 px-6 text-muted-foreground font-medium text-sm">Name</th>
+                        <th className="text-left py-4 px-6 text-muted-foreground font-medium text-sm">Email</th>
+                        <th className="text-left py-4 px-6 text-muted-foreground font-medium text-sm">Status</th>
+                        <th className="text-left py-4 px-6 text-muted-foreground font-medium text-sm">Joined</th>
+                        <th className="text-left py-4 px-6 text-muted-foreground font-medium text-sm">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {users.map((user) => (
-                        <tr key={user._id} className="border-b border-gray-800 hover:bg-[#1F2A44]/30">
-                          <td className="py-4 px-4">
+                        <tr key={user._id} className="border-b border-border/40 hover:bg-muted/30 transition-colors">
+                          <td className="py-4 px-6">
                             <div>
-                              <p className="text-white font-medium">{user.name}</p>
-                              <p className="text-sm text-gray-400">XP: {user.xp || 0}</p>
+                              <p className="text-foreground font-medium">{user.name}</p>
+                              <p className="text-xs text-muted-foreground">XP: {user.xp || 0}</p>
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-gray-300">{user.email}</td>
-                          <td className="py-4 px-4">
-                            <div className="flex flex-col gap-1">
+                          <td className="py-4 px-6 text-muted-foreground text-sm">{user.email}</td>
+                          <td className="py-4 px-6">
+                            <div className="flex flex-col gap-1 items-start">
                               {user.isBanned ? (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-400">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20">
                                   Banned
                                 </span>
                               ) : (
-                                <span className="inline-flex text-center px-1 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-400">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-600 border border-green-500/20">
                                   Active
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-gray-300">{new Date(user.createdAt).toLocaleDateString()}</td>
-                          <td className="py-4 px-4">
+                          <td className="py-4 px-6 text-muted-foreground text-sm">{new Date(user.createdAt).toLocaleDateString()}</td>
+                          <td className="py-4 px-6">
                             <Button
                               variant="outline"
+                              size="sm"
                               onClick={() => handleViewUser(user._id)}
-                              className="flex items-center gap-2"
+                              className="flex items-center gap-2 hover:bg-primary/5 hover:text-primary transition-colors"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-3.5 w-3.5" />
                               View
                             </Button>
                           </td>
@@ -267,13 +248,14 @@ const UserManagement = () => {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-700">
-                    <div className="text-sm text-gray-400">
+                  <div className="flex items-center justify-between p-4 border-t border-border/40">
+                    <div className="text-sm text-muted-foreground">
                       Page {currentPage} of {totalPages}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
                         className="flex items-center gap-2"
@@ -283,6 +265,7 @@ const UserManagement = () => {
                       </Button>
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
                         className="flex items-center gap-2"

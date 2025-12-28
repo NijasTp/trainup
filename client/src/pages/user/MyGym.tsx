@@ -18,48 +18,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { useNavigate } from "react-router-dom";
 import API from "@/lib/axios";
 import GymReviews from "@/components/user/reviews/GymReviews";
 
-interface Member {
-  _id: string;
-  name: string;
-  email: string;
-  profileImage?: string;
-  joinedAt?: string;
-}
+import type { MyGymData } from "@/interfaces/user/IMyGym";
 
-interface UserSubscription {
-  planName: string;
-  planPrice: number;
-  planDuration: number;
-  planDurationUnit: string;
-  subscribedAt: string;
-  preferredTime: string;
-}
-
-interface Gym {
-  _id: string;
-  name: string;
-  email: string;
-  planDuration: number;
-  planDurationUnit: string;
-  subscribedAt: string;
-  preferredTime: string;
-  description?: string;
-  rating?: number;
-  memberCount?: number;
-  phone?: string;
-  images?: string[];
-  reviews?: any[];
-}
-
-interface MyGymData {
-  gym: Gym;
-  members: Member[];
-  userSubscription: UserSubscription;
-}
 
 export default function MyGym() {
   const [gymData, setGymData] = useState<MyGymData | null>(null);
@@ -132,12 +97,12 @@ export default function MyGym() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
       <SiteHeader />
 
-      <main className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 flex-1">
         <div className="text-center space-y-4 mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
             <Building className="h-4 w-4 text-primary" />
@@ -419,6 +384,7 @@ export default function MyGym() {
           </div>
         </div>
       </main >
+      <SiteFooter />
     </div >
   );
 }

@@ -9,40 +9,15 @@ import { Search, Plus, Trash, Save, X, FileText, Loader2, ArrowLeft } from "luci
 import { toast } from "sonner";
 import API from "@/lib/axios";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
-interface Exercise {
-  id: string;
-  name: string;
-  image?: string;
-  sets: number;
-  reps?: string;
-  weight?: string;
-}
-
-interface WgerExercise {
-  value: string;
-  data: {
-    id: string;
-    base_id: string;
-    name: string;
-    category: string;
-    image: string;
-    image_thumbnail: string;
-  };
-}
-
-interface WorkoutTemplate {
-  name: string;
-  goal: string;
-  notes: string;
-  exercises: Exercise[];
-}
+import type { Exercise, WgerExercise, WorkoutTemplate } from "@/interfaces/trainer/ITrainerWorkoutTemplate";
 
 export default function TrainerWorkoutTemplateForm() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const isEdit = !!id;
-  
+
   const [formData, setFormData] = useState<WorkoutTemplate>({
     name: "",
     goal: "",
@@ -190,11 +165,11 @@ export default function TrainerWorkoutTemplateForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <TrainerSiteHeader/>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
+      <TrainerSiteHeader />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-      
-      <main className="relative container mx-auto px-4 py-12">
+
+      <main className="relative container mx-auto px-4 py-12 flex-1">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="flex items-center space-x-4">
             <Button
@@ -267,14 +242,14 @@ export default function TrainerWorkoutTemplateForm() {
                       className="pl-10 bg-background/50 border-border/50"
                     />
                   </div>
-                  
+
                   {searchLoading && (
                     <div className="flex items-center justify-center py-4">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       <span className="ml-2 text-muted-foreground">Searching...</span>
                     </div>
                   )}
-                  
+
                   {searchResults.length > 0 && (
                     <div className="mt-2 max-h-60 overflow-y-auto border border-border/50 rounded-md bg-card/40 backdrop-blur-sm">
                       {searchResults.map((exercise) => (
@@ -402,6 +377,7 @@ export default function TrainerWorkoutTemplateForm() {
           </Card>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

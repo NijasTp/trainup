@@ -1,4 +1,3 @@
-import { Types } from "mongoose";
 import { IOTP } from "../../../models/otp.model";
 
 export interface IOtpRepository {

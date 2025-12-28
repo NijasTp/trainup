@@ -23,6 +23,11 @@ export interface ITrainer {
   rating: number
   certificate: string
   profileImage: string
+  price: {
+    basic: number;
+    premium: number;
+    pro: number;
+  }
   profileStatus: "pending" | "approved" | "rejected" | "active" | "suspended"
   createdAt: Date
   updatedAt: Date

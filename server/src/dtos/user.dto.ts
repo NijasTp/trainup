@@ -1,5 +1,50 @@
 
 
+import { IUser } from '../models/user.model';
+
+export class UserDto {
+  static toResponse(user: IUser): UserResponseDto {
+    return {
+      _id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      isVerified: user.isVerified || false,
+      role: user.role,
+      goals: user.goals,
+      activityLevel: user.activityLevel,
+      equipment: user.equipment,
+      assignedTrainer: user.assignedTrainer?.toString(),
+      subscriptionStartDate: user.subscriptionStartDate || undefined,
+      gymId: user.gymId?.toString(),
+      isPrivate: user.isPrivate,
+      isBanned: user.isBanned,
+      streak: user.streak,
+      lastActiveDate: user.lastActiveDate,
+      xp: user.xp,
+      xpLogs:
+        user.xpLogs?.map(log => ({
+          amount: log.amount,
+          reason: log.reason,
+          date: log.date
+        })) || [],
+      achievements: user.achievements || [],
+      currentWeight: user.todaysWeight,
+      goalWeight: user.goalWeight,
+      weightHistory:
+        user.weightHistory?.map(weight => ({
+          weight: weight.weight,
+          date: weight.date
+        })) || [],
+      height: user.height,
+      age: user.age,
+      gender: user.gender,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
+  }
+}
+
 export class RequestOtpDto {
   email: string;
 }
@@ -46,7 +91,7 @@ export class LoginResponseDto {
   user: UserResponseDto;
   accessToken: string;
   refreshToken: string;
-  streak?: any;
+  streak?: unknown;
 }
 
 export class UserResponseDto {
@@ -136,7 +181,11 @@ export class TrainerPublicDto {
   name: string;
   email: string;
   phone: string;
-  price: string;
+  price: {
+    basic: number;
+    premium: number;
+    pro: number;
+  };
   bio: string;
   location: string;
   specialization: string;
@@ -147,7 +196,7 @@ export class TrainerPublicDto {
 }
 
 export class GetIndividualTrainerParamsDto {
-  id?: string ;
+  id?: string;
 }
 
 export class GetIndividualTrainerResponseDto {

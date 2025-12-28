@@ -22,7 +22,8 @@ import api from "@/lib/axios";
 import { Link } from "react-router-dom";
 import { markEaten } from "@/services/dietServices";
 import { toast } from "react-toastify";
-import type { ApiResponse, Meal } from "@/interfaces/user/iDietPage";
+import type { ApiResponse, Meal } from "@/interfaces/user/IDiets";
+
 
 export default function Diets() {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);

@@ -43,4 +43,5 @@ export interface ITrainerRepository {
   ): Promise<{ clients: ClientDto[]; total: number }>;
   countNewClients(trainerId: string, startDate: Date, endDate: Date): Promise<number>;
   countCompletedSessions(trainerId: string): Promise<number>;
+  getPlanDistribution(trainerId: string): Promise<Array<{ plan: string; count: number }>>;
 }

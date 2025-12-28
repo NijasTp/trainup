@@ -22,12 +22,6 @@ export const ROUTES = {
   VIDEO_CALL: '/video-call/:roomId',
 
 
-  USER_GYMS: '/gyms',
-  USER_INDIVIDUAL_GYM: '/gyms/:id',
-  USER_MY_GYM: '/gyms/my-gym',
-  USER_GYM_DASHBOARD: '/gyms/dashboard',
-  USER_GYM_ANNOUNCEMENTS: '/gyms/announcements',
-
   USER_WORKOUTS_PAGE: '/workouts',
   USER_ADMIN_WORKOUT_TEMPLATES: '/workouts/browse',
   USER_ADD_WORKOUT: '/workouts/add',
@@ -57,6 +51,7 @@ export const ROUTES = {
   TRAINER_CLIENTS: "/trainer/clients",
   TRAINER_TRANSACTIONS: "/trainer/transactions",
   TRAINER_PROFILE: "/trainer/profile",
+  TRAINER_EDIT_PROFILE: "/trainer/edit-profile",
   TRAINER_SLOTS: "/trainer/slots",
   TRAINER_WEEKLY_SCHEDULE: "/trainer/weekly-schedule",
   TRAINER_INDIVIDUAL_CLIENT: "/trainer/user/:id",
@@ -67,20 +62,6 @@ export const ROUTES = {
   TRAINER_CLIENT_SESSION: "/trainer/workout/add-session/:clientId",
   TRAINER_CLIENT_DIET: "/trainer/diet/:clientId",
 
-  // Gym Routes
-  GYM_LOGIN: "/gym/login",
-  GYM_APPLY: "/gym/apply",
-  GYM_VERIFY_OTP: "/gym/verify-otp",
-  GYM_WAITLIST: "/gym/waitlist",
-  GYM_DASHBOARD: "/gym/dashboard",
-  GYM_REAPPLY: "/gym/reapply",
-  GYM_SUBSCRIPTIONS: "/gym/subscriptions",
-  GYM_SUBSCRIPTIONS_NEW: "/gym/subscriptions/new",
-  GYM_SUBSCRIPTIONS_EDIT: "/gym/subscriptions/edit/:id",
-  GYM_ANNOUNCEMENTS: "/gym/announcements",
-  GYM_ANNOUNCEMENTS_NEW: "/gym/announcements/new",
-  GYM_ANNOUNCEMENTS_EDIT: "/gym/announcements/edit/:id",
-  GYM_ATTENDANCE: "/gym/attendance",
 
   // Admin Routes
   ADMIN_LOGIN: "/admin/login",
@@ -90,10 +71,9 @@ export const ROUTES = {
   ADMIN_TRAINER_APPLICATION: "/admin/trainers/:trainerId/application",
   ADMIN_USERS: "/admin/users",
   ADMIN_USER_DETAILS: "/admin/users/:userId",
-  ADMIN_GYMS: "/admin/gyms",
-  ADMIN_GYM_APPLICATION: "/admin/gyms/:id/application",
   ADMIN_TEMPLATE_MANAGEMENT: "/admin/templates",
   ADMIN_ADD_WORKOUT_TEMPLATE: "/admin/templates/new/workout",
   ADMIN_ADD_DIET_TEMPLATE: "/admin/templates/new/diet",
   ADMIN_EDIT_TEMPLATE: "/admin/templates/:id/:template/edit",
+  ADMIN_TRANSACTIONS: "/admin/transactions",
 };

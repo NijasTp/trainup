@@ -1,4 +1,4 @@
-import { Document, Model, Types, FilterQuery, UpdateQuery, QueryOptions, PopulateOptions } from 'mongoose';
+import { Document, Model, FilterQuery, UpdateQuery, QueryOptions, PopulateOptions } from 'mongoose';
 import { injectable } from 'inversify';
 
 export interface IBaseRepository<T extends Document> {
@@ -42,6 +42,9 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
     }
     if (options?.limit !== undefined) {
       query = query.limit(options.limit);
+    }
+    if (options?.sort) {
+      query = query.sort(options.sort);
     }
 
     if (typeof options?.populate === 'string') {

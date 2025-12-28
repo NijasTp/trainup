@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import Razorpay from "razorpay";
-import { IPaymentRepository } from "../core/interfaces/repositories/IPaymentRepository";
+import { IPaymentRepository, RazorpayOrder } from "../core/interfaces/repositories/IPaymentRepository";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -16,10 +16,11 @@ export class PaymentRepository implements IPaymentRepository {
     });
   }
 
-  async createOrder(amount: number, currency: string): Promise<any> {
-    return await this.razorpay.orders.create({
-      amount: amount * 100, 
+  async createOrder(amount: number, currency: string): Promise<RazorpayOrder> {
+    const order = await this.razorpay.orders.create({
+      amount: amount * 100,
       currency,
     });
+    return order as unknown as RazorpayOrder;
   }
 }

@@ -13,7 +13,6 @@ import { IOtpRepository } from "../interfaces/repositories/IOtpRepository";
 import { IMailService } from "../interfaces/services/IMailService";
 import { ITrainerRepository } from "../interfaces/repositories/ITrainerRepository";
 import { ITrainerService } from "../interfaces/services/ITrainerService";
-import { IAdminController } from "../interfaces/controllers/IAdminController";
 import { IGymService } from "../interfaces/services/IGymService";
 import { IGymRepository } from "../interfaces/repositories/IGymRepository";
 import { IJwtService } from "../interfaces/services/IJwtService";
@@ -109,6 +108,12 @@ import { RatingRepository } from "../../repositories/rating.repository";
 import { RatingService } from "../../services/rating.service";
 import { ProgressRepository } from "../../repositories/progress.repository";
 import { ProgressService } from "../../services/progress.service";
+import { ReviewRepository } from "../../repositories/review.repository";
+import { ReviewService } from "../../services/review.service";
+import { IReviewRepository } from "../interfaces/repositories/IReviewRepository";
+import { IReviewService } from "../interfaces/services/IReviewService";
+import { IQueueService } from "../interfaces/services/IQueueService";
+import { QueueService } from "../../services/queue.service";
 
 
 import { NotificationCron } from "../../cron/notification.cron";
@@ -206,5 +211,9 @@ container.bind<IEventService>(TYPES.IEventService).to(EventService).inSingletonS
 container.bind<IProgressRepository>(TYPES.IProgressRepository).to(ProgressRepository);
 container.bind<IProgressService>(TYPES.IProgressService).to(ProgressService);
 
+container.bind<IReviewRepository>(TYPES.IReviewRepository).to(ReviewRepository);
+container.bind<IReviewService>(TYPES.IReviewService).to(ReviewService);
+
+container.bind<IQueueService>(TYPES.IQueueService).to(QueueService).inSingletonScope();
 
 export default container;

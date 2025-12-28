@@ -3,11 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Dumbbell, 
-  Apple, 
-  Trash2, 
-  Plus, 
+import {
+  Dumbbell,
+  Apple,
+  Trash2,
+  Plus,
   Search,
   ChevronLeft,
   ChevronRight,
@@ -17,25 +17,9 @@ import API from "@/lib/axios";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
-interface Template {
-  _id: string;
-  name?: string; 
-  title?: string;
-  goal?: string; 
-  description?: string; 
-  exercises?: any[];
-  meals?: any[]; 
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface TemplateListResponse {
-  templates: Template[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
+import type { Template, TemplateListResponse } from "@/interfaces/trainer/ITrainerTemplateListing";
 
 export default function TrainerTemplateList() {
   const navigate = useNavigate();
@@ -83,7 +67,7 @@ export default function TrainerTemplateList() {
 
   const handleDeleteTemplate = async (id: string, type: 'workout' | 'diet') => {
     if (!confirm("Are you sure you want to delete this template?")) return;
-    
+
     try {
       await API.delete(`/${type}/trainer/${type}-templates/${id}`);
       toast.success("Template deleted successfully");
@@ -129,11 +113,11 @@ export default function TrainerTemplateList() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <TrainerSiteHeader/>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
+      <TrainerSiteHeader />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-      
-      <main className="relative container mx-auto px-4 py-12 space-y-8">
+
+      <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button
@@ -181,22 +165,20 @@ export default function TrainerTemplateList() {
         <div className="flex space-x-1 bg-card/40 backdrop-blur-sm p-1 rounded-lg border border-border/50">
           <button
             onClick={() => setActiveTab('workout')}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all ${
-              activeTab === 'workout'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all ${activeTab === 'workout'
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             <Dumbbell className="h-4 w-4" />
             <span>Workout Templates ({workoutTemplates.total})</span>
           </button>
           <button
             onClick={() => setActiveTab('diet')}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all ${
-              activeTab === 'diet'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all ${activeTab === 'diet'
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             <Apple className="h-4 w-4" />
             <span>Diet Templates ({dietTemplates.total})</span>
@@ -258,7 +240,7 @@ export default function TrainerTemplateList() {
               No {activeTab} templates found
             </h3>
             <p className="text-muted-foreground mb-6">
-              {searchQuery 
+              {searchQuery
                 ? `No templates match "${searchQuery}". Try adjusting your search.`
                 : `Create your first ${activeTab} template to get started.`
               }
@@ -304,6 +286,7 @@ export default function TrainerTemplateList() {
           </div>
         )}
       </main>
+      <SiteFooter />
     </div>
   );
 }

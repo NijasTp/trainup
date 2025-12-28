@@ -7,6 +7,7 @@ import { UploadedFile } from "express-fileupload";
 import { v2 as cloudinary } from 'cloudinary';
 import { AppError } from "../utils/appError.util";
 import { STATUS_CODE } from "../constants/status";
+import { Types } from "mongoose";
 
 @injectable()
 export class ProgressService implements IProgressService {
@@ -52,7 +53,7 @@ export class ProgressService implements IProgressService {
         } else {
             // Create new
             return await this._progressRepo.create({
-                userId: userId as any,
+                userId: new Types.ObjectId(userId) as unknown as Types.ObjectId,
                 date,
                 notes,
                 photos: photoUrls

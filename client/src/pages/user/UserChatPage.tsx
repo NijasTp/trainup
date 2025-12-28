@@ -34,27 +34,7 @@ import { Link } from "react-router-dom";
 import io, { Socket } from 'socket.io-client';
 import { debounce } from 'lodash';
 
-interface Message {
-    _id: string;
-    senderId: string;
-    receiverId: string;
-    message: string;
-    createdAt: string;
-    senderType: 'user' | 'trainer';
-    messageType: 'text' | 'image' | 'audio';
-    fileUrl?: string;
-}
-
-interface Trainer {
-    _id: string;
-    name: string;
-    profileImage?: string;
-}
-
-interface UserPlan {
-    messagesLeft: number;
-    planType: 'basic' | 'premium' | 'pro';
-}
+import type { Message, ChatTrainer as Trainer, UserPlan } from "@/interfaces/user/IUserChat";
 
 export default function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -185,7 +165,7 @@ export default function ChatPage() {
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 5 * 1024 * 1024) { 
+            if (file.size > 5 * 1024 * 1024) {
                 toast.error("File size should be less than 5MB");
                 return;
             }

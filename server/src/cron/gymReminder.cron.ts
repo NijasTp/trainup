@@ -36,13 +36,11 @@ export class GymReminderCron {
         return;
       }
 
-      const currentTimeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
-
       const reminders = await this._gymReminderService.getAllActiveReminders();
 
       for (const reminder of reminders) {
         const [preferredHour] = reminder.preferredTime.split(':');
-        
+
         if (parseInt(preferredHour, 10) === currentHour && currentMinute === 0) {
           await this._mailService.sendDailyWorkoutReminder(
             reminder.userEmail,

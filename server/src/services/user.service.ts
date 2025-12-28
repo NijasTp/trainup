@@ -12,11 +12,11 @@ import { v2 as cloudinary } from 'cloudinary'
 import { STATUS_CODE } from '../constants/status'
 import { MESSAGES } from '../constants/messages.constants'
 import {
-    LoginDto,
     LoginResponseDto,
     GetWeightHistoryResponseDto,
     UserResponseDto
 } from '../dtos/user.dto'
+import { logger } from '../utils/logger.util'
 import { UploadedFile } from 'express-fileupload'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
@@ -209,7 +209,7 @@ export class UserService implements IUserService {
         let profileImageUrl: string | undefined;
 
         if (files?.profileImage) {
-            console.log('Processing profile image upload...');
+            logger.info('Processing profile image upload...');
             const file = files.profileImage;
             const result = await cloudinary.uploader.upload(file.tempFilePath, {
                 folder: "trainup/users/profiles",
@@ -385,9 +385,9 @@ export class UserService implements IUserService {
             activityLevel: user.activityLevel,
             profileImage: user.profileImage || undefined,
             equipment: user.equipment,
-            assignedTrainer: (user.assignedTrainer as any)?.name || user.assignedTrainer?.toString(),
+            assignedTrainer: (user.assignedTrainer as unknown as { name?: string })?.name || user.assignedTrainer?.toString(),
             subscriptionStartDate: user.subscriptionStartDate || undefined,
-            gymId: (user.gymId as any)?.name || user.gymId?.toString(),
+            gymId: (user.gymId as unknown as { name?: string })?.name || user.gymId?.toString(),
             isPrivate: user.isPrivate,
             isBanned: user.isBanned,
             streak: user.streak,

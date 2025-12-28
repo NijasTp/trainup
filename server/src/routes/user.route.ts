@@ -3,6 +3,7 @@ import container from '../core/di/inversify.config'
 import { UserController } from '../controllers/user.controller'
 import TYPES from '../core/types/types'
 import { authMiddleware, roleMiddleware } from '../middlewares/auth.middleware'
+import { checkSubscriptionExpiry } from '../middlewares/checkSubscription.middleware'
 
 const router = express.Router()
 
@@ -36,6 +37,7 @@ router.post(
 )
 
 router.use(authMiddleware)
+router.use(checkSubscriptionExpiry)
 
 router.post(
   '/logout',
@@ -105,6 +107,10 @@ router.post('/trainer/rating/:id', authMiddleware, userController.addTrainerRati
 router.post('/gym/rating/:id', authMiddleware, userController.addGymRating.bind(userController))
 router.get('/trainer/ratings/:id', authMiddleware, userController.getTrainerRatings.bind(userController))
 router.get('/gym/ratings/:id', authMiddleware, userController.getGymRatings.bind(userController))
+
+router.put('/review/:id', authMiddleware, userController.editReview.bind(userController))
+router.delete('/review/:id', authMiddleware, userController.deleteReview.bind(userController))
+
 router.post('/chat/upload', authMiddleware, userController.uploadChatFile.bind(userController))
 
 router.post('/progress', authMiddleware, userController.addProgress.bind(userController))

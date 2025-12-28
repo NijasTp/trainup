@@ -6,6 +6,7 @@ export interface IReview extends Document {
     targetModel: 'Trainer' | 'Gym';
     rating: number;
     comment: string;
+    subscriptionPlan?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -17,6 +18,7 @@ const ReviewSchema: Schema = new Schema(
         targetModel: { type: String, required: true, enum: ['Trainer', 'Gym'] },
         rating: { type: Number, required: true, min: 1, max: 5 },
         comment: { type: String, required: true },
+        subscriptionPlan: { type: String },
     },
     { timestamps: true }
 );

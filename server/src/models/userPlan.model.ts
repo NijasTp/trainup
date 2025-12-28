@@ -8,6 +8,8 @@ export interface IUserPlan extends Document {
   messagesLeft: number;
   videoCallsLeft: number;
   expiryDate: Date;
+  duration: number; // in months
+  amount: number; // total paid
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +21,8 @@ export const UserPlanSchema = new Schema<IUserPlan>({
   messagesLeft: { type: Number, default: 0 },
   videoCallsLeft: { type: Number, default: 0 },
   expiryDate: { type: Date, required: true },
+  duration: { type: Number, required: true },
+  amount: { type: Number, required: true },
 }, { timestamps: true });
 
 UserPlanSchema.index({ userId: 1, trainerId: 1 }, { unique: true });

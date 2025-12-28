@@ -277,12 +277,14 @@ export class TrainerController {
           STATUS_CODE.BAD_REQUEST
         )
 
+      const priceData = typeof dto.price === 'string' ? JSON.parse(dto.price) : dto.price;
+
       const trainerData = {
         name: dto.fullName,
         email: dto.email,
         password: dto.password,
         phone: dto.phone,
-        price: dto.price,
+        price: priceData,
         location: dto.location,
         experience: dto.experience,
         specialization: dto.specialization,
@@ -321,12 +323,14 @@ export class TrainerController {
           STATUS_CODE.BAD_REQUEST
         )
 
+      const priceData = typeof dto.price === 'string' ? JSON.parse(dto.price) : dto.price;
+
       const data = {
         name: dto.fullName,
         email: dto.email,
         password: dto.password,
         phone: dto.phone,
-        price: dto.price,
+        price: priceData,
         location: dto.location,
         experience: dto.experience,
         specialization: dto.specialization,
@@ -640,6 +644,31 @@ export class TrainerController {
       const file = req.files.file as UploadedFile
       const fileUrl = await this._userService.uploadChatFile(file)
       res.status(STATUS_CODE.OK).json({ fileUrl })
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id
+      const updateData = req.body
+      const profileImage = req.files?.profileImage
+
+      const result = await this._trainerService.updateProfile(trainerId, updateData, profileImage)
+      res.status(STATUS_CODE.OK).json({ trainer: result, message: 'Profile updated successfully' })
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async changePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id
+      const { currentPassword, newPassword } = req.body
+
+      await this._trainerService.changePassword(trainerId, currentPassword, newPassword)
+      res.status(STATUS_CODE.OK).json({ message: 'Password changed successfully' })
     } catch (err) {
       next(err)
     }

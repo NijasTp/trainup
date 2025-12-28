@@ -3,7 +3,7 @@ import TrainerModel, { ITrainer } from '../models/trainer.model'
 import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepository'
 import { Types } from 'mongoose'
 import { IUser, UserModel } from '../models/user.model'
-import { TrainerResponseDto, ClientDto } from '../dtos/trainer.dto'
+import { TrainerResponseDto, ClientDto, TrainerDto } from '../dtos/trainer.dto'
 import { SlotModel } from '../models/slot.model'
 import { BaseRepository } from './base.repository'
 
@@ -112,14 +112,14 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     }
 
     if (minPrice || maxPrice) {
-      const priceQuery: Record<string, number> = {}
+      const priceFilter: Record<string, number> = {}
       if (minPrice && !isNaN(parseFloat(minPrice))) {
-        priceQuery.$gte = parseFloat(minPrice)
+        priceFilter.$gte = parseFloat(minPrice)
       }
       if (maxPrice && !isNaN(parseFloat(maxPrice))) {
-        priceQuery.$lte = parseFloat(maxPrice)
+        priceFilter.$lte = parseFloat(maxPrice)
       }
-      query.price = priceQuery
+      query['price.basic'] = priceFilter
     }
 
     if (startDate || endDate) {
@@ -128,8 +128,14 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
       if (endDate) dateQuery.$lte = new Date(endDate)
       query.createdAt = dateQuery
     }
-    const trainers = await this.find(query, { skip, limit, sort: { createdAt: -1 } });
-    return trainers.map(trainer => this.mapToResponseDto(trainer))
+    const trainers = await TrainerModel.find(query)
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean()
+      .exec();
+
+    return trainers.map(trainer => TrainerDto.toResponse(trainer as ITrainer))
   }
 
   async count(
@@ -219,10 +225,14 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     if (minRating) query.rating = { $gte: parseFloat(minRating) }
 
     if (minPrice || maxPrice) {
-      const priceQuery: Record<string, number> = {}
-      if (minPrice) priceQuery.$gte = parseFloat(minPrice)
-      if (maxPrice) priceQuery.$lte = parseFloat(maxPrice)
-      query.price = priceQuery
+      const priceFilter: Record<string, number> = {}
+      if (minPrice && !isNaN(parseFloat(minPrice))) {
+        priceFilter.$gte = parseFloat(minPrice)
+      }
+      if (maxPrice && !isNaN(parseFloat(maxPrice))) {
+        priceFilter.$lte = parseFloat(maxPrice)
+      }
+      query['price.basic'] = priceFilter
     }
 
     if (startDate || endDate) {
@@ -240,9 +250,9 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     id: string
   ): Promise<TrainerResponseDto | null> {
     const trainer = await TrainerModel.findById(id).select(
-      'name email phone bio location specialization experience badges rating certificate profileImage profileStatus createdAt'
+      'name email phone price bio location specialization experience badges rating certificate profileImage profileStatus createdAt'
     )
-    return trainer ? this.mapToResponseDto(trainer) : null
+    return trainer ? TrainerDto.toResponse(trainer) : null
   }
 
   async updateStatus(
@@ -305,7 +315,7 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     const total = await UserModel.countDocuments(query).exec()
 
     return {
-      clients: clients.map(client => this.mapToClientDto(client as IUser)),
+      clients: clients.map(client => TrainerDto.toClientDto(client as IUser)),
       total
     }
   }
@@ -337,40 +347,34 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     }).exec()
   }
 
-  mapToResponseDto(trainer: ITrainer): TrainerResponseDto {
-    return {
-      _id: trainer._id.toString(),
-      name: trainer.name,
-      email: trainer.email,
-      phone: trainer.phone,
-      price: trainer.price,
-      isBanned: trainer.isBanned,
-      role: trainer.role,
-      gymId: trainer.gymId?.toString(),
-      clients: Array.isArray(trainer.clients)
-        ? trainer.clients.map(c => c.toString())
-        : [],
-      bio: trainer.bio,
-      location: trainer.location,
-      specialization: trainer.specialization,
-      experience: trainer.experience,
-      rating: trainer.rating,
-      certificate: trainer.certificate,
-      profileImage: trainer.profileImage,
-      profileStatus: trainer.profileStatus,
-      rejectReason: trainer.rejectReason,
-      createdAt: trainer.createdAt,
-      updatedAt: trainer.updatedAt
+  async getPlanDistribution(trainerId: string): Promise<Array<{ plan: string; count: number }>> {
+    const trainer = await TrainerModel.findById(trainerId).select('clients').exec();
+    if (!trainer) {
+      throw new Error('Trainer not found');
     }
+
+    const distribution = await UserModel.aggregate([
+      {
+        $match: {
+          _id: { $in: trainer.clients },
+          trainerPlan: { $in: ['basic', 'premium', 'pro'] }
+        }
+      },
+      {
+        $group: {
+          _id: '$trainerPlan',
+          count: { $sum: 1 }
+        }
+      }
+    ]).exec();
+
+    // Ensure all plans are present
+    const plans = ['basic', 'premium', 'pro'];
+    return plans.map(plan => ({
+      plan,
+      count: distribution.find(d => d._id === plan)?.count || 0
+    }));
   }
 
-  mapToClientDto(client: IUser): ClientDto {
-    return {
-      _id: client._id.toString(),
-      name: client.name,
-      email: client.email,
-      phone: client.phone,
-      subscriptionStartDate: client.subscriptionStartDate
-    }
-  }
+
 }

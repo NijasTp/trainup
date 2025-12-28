@@ -17,13 +17,8 @@ import {
   GymDataResponseDto,
   CreateSubscriptionPlanDto,
   UpdateSubscriptionPlanDto,
-  AddTrainerDto,
-  UpdateTrainerDto,
-  AddMemberDto,
-  UpdateMemberDto,
   CreateAnnouncementDto,
   UpdateAnnouncementDto,
-  CreatePaymentDto,
 } from '../dtos/gym.dto';
 import { logger } from '../utils/logger.util';
 import { AppError } from '../utils/appError.util';
@@ -34,7 +29,7 @@ export class GymController {
     @inject(TYPES.IGymService) private _gymService: IGymService,
     @inject(TYPES.IOtpService) private _otpService: IOTPService,
     @inject(TYPES.IJwtService) private _jwtService: IJwtService
-  ) {}
+  ) { }
 
   async requestOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -101,7 +96,7 @@ export class GymController {
       next(err);
     }
   }
-  
+
 
   async createSubscriptionPlan(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -143,7 +138,7 @@ export class GymController {
     try {
       const planId = req.params.id;
       const dto: UpdateSubscriptionPlanDto = req.body;
-      const plan = await this._gymService.updateSubscriptionPlan(planId as any, dto as any);
+      const plan = await this._gymService.updateSubscriptionPlan(planId, dto);
       res.status(STATUS_CODE.OK).json(plan);
     } catch (err) {
       next(err);
@@ -225,7 +220,7 @@ export class GymController {
       const announcement = await this._gymService.createAnnouncement(gymId, dto, imageFile);
       res.status(STATUS_CODE.CREATED).json({ announcement });
     } catch (err) {
-      console.log(err);
+      logger.error('Error in createAnnouncement:', err);
       next(err);
     }
   }
@@ -238,7 +233,7 @@ export class GymController {
       const imageFile = req.files?.image as UploadedFile;
 
       const announcement = await this._gymService.updateAnnouncement(id, gymId, dto, imageFile);
-      
+
       if (!announcement) {
         throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND);
       }

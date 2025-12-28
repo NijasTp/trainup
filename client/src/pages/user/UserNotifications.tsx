@@ -25,24 +25,9 @@ import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
-interface Notification {
-    _id: string;
-    title: string;
-    message: string;
-    type: string;
-    isRead: boolean;
-    priority: "low" | "medium" | "high" | "urgent";
-    category: "info" | "warning" | "success" | "error";
-    createdAt: string;
-    data?: Record<string, any>;
-}
-
-interface NotificationsResponse {
-    notifications: Notification[];
-    total: number;
-    unreadCount: number;
-}
+import type { Notification, NotificationsResponse } from "@/interfaces/user/IUserNotifications";
 
 const PAGE_SIZE = 10;
 
@@ -177,225 +162,229 @@ export default function UserNotifications() {
     }
 
     return (
-        <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
             <SiteHeader />
-            <div className="mx-auto max-w-5xl space-y-8">
-                <Card>
-                    <CardContent className="p-4">
-                        <div className="flex flex-col sm:flex-row gap-4 items-end">
-                            <div className="flex-1 relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search notifications..."
-                                    className="pl-9"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                />
+            <main className="relative container mx-auto px-4 py-8 space-y-8 flex-1">
+                <div className="mx-auto max-w-5xl space-y-8">
+                    <Card>
+                        <CardContent className="p-4">
+                            <div className="flex flex-col sm:flex-row gap-4 items-end">
+                                <div className="flex-1 relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search notifications..."
+                                        className="pl-9"
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <Select value={filterType} onValueChange={setFilterType}>
+                                        <SelectTrigger className="w-40">
+                                            <SelectValue placeholder="Type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Types</SelectItem>
+                                            <SelectItem value="workout">Workout</SelectItem>
+                                            <SelectItem value="session">Session</SelectItem>
+                                            <SelectItem value="announcement">Announcement</SelectItem>
+                                            <SelectItem value="promo">Promo</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+
+                                    <Select value={filterPriority} onValueChange={setFilterPriority}>
+                                        <SelectTrigger className="w-32">
+                                            <SelectValue placeholder="Priority" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All</SelectItem>
+                                            <SelectItem value="low">Low</SelectItem>
+                                            <SelectItem value="medium">Medium</SelectItem>
+                                            <SelectItem value="high">High</SelectItem>
+                                            <SelectItem value="urgent">Urgent</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+
+                                    {(search || filterType !== "" || filterPriority !== "") && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                setSearch("");
+                                                setFilterType("");
+                                                setFilterPriority("");
+                                            }}
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
-
-                            <div className="flex gap-2">
-                                <Select value={filterType} onValueChange={setFilterType}>
-                                    <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Types</SelectItem>
-                                        <SelectItem value="workout">Workout</SelectItem>
-                                        <SelectItem value="session">Session</SelectItem>
-                                        <SelectItem value="announcement">Announcement</SelectItem>
-                                        <SelectItem value="promo">Promo</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
-                                <Select value={filterPriority} onValueChange={setFilterPriority}>
-                                    <SelectTrigger className="w-32">
-                                        <SelectValue placeholder="Priority" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All</SelectItem>
-                                        <SelectItem value="low">Low</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
-                                        <SelectItem value="urgent">Urgent</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
-                                {(search || filterType !== "" || filterPriority !== "") && (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            setSearch("");
-                                            setFilterType("");
-                                            setFilterPriority("");
-                                        }}
-                                    >
-                                        Clear
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Header */}
-                <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <Bell className="h-9 w-9 text-primary" />
-                        <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold">Notifications</h1>
-                            <p className="text-sm text-muted-foreground">
-                                {unreadCount
-                                    ? `${unreadCount} unread`
-                                    : "You're all caught up!"}
-                            </p>
-                        </div>
-                    </div>
-                    {unreadCount > 0 && (
-                        <Button
-                            onClick={markAllAsRead}
-                            disabled={loadingAction === "all"}
-                            size="sm"
-                        >
-                            {loadingAction === "all" ? "…" : "Mark all read"}
-                        </Button>
-                    )}
-                </header>
-
-                {/* Loading */}
-                {loading && (
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {[...Array(4)].map((_, i) => (
-                            <Card key={i}>
-                                <CardContent className="p-5">
-                                    <Skeleton className="h-5 w-3/4 mb-2" />
-                                    <Skeleton className="h-4 w-full" />
-                                    <Skeleton className="h-3 w-1/2 mt-3" />
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                )}
-
-                {/* Empty */}
-                {!loading && notifications.length === 0 && (
-                    <Card className="text-center py-16">
-                        <CardContent>
-                            <Bell className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-                            <p className="text-muted-foreground">No notifications yet.</p>
                         </CardContent>
                     </Card>
-                )}
 
-                {/* Notifications Grid */}
-                {!loading && notifications.length > 0 && (
-                    <>
+                    {/* Header */}
+                    <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <Bell className="h-9 w-9 text-primary" />
+                            <div>
+                                <h1 className="text-2xl sm:text-3xl font-bold">Notifications</h1>
+                                <p className="text-sm text-muted-foreground">
+                                    {unreadCount
+                                        ? `${unreadCount} unread`
+                                        : "You're all caught up!"}
+                                </p>
+                            </div>
+                        </div>
+                        {unreadCount > 0 && (
+                            <Button
+                                onClick={markAllAsRead}
+                                disabled={loadingAction === "all"}
+                                size="sm"
+                            >
+                                {loadingAction === "all" ? "…" : "Mark all read"}
+                            </Button>
+                        )}
+                    </header>
+
+                    {/* Loading */}
+                    {loading && (
                         <div className="grid gap-4 md:grid-cols-2">
-                            {notifications.map((n) => (
-                                <Card
-                                    key={n._id}
-                                    className={`relative overflow-hidden transition-all ${n.isRead ? "opacity-80" : "ring-2 ring-primary/20"
-                                        }`}
-                                >
-                                    {/* Priority Dot */}
-                                    <div
-                                        className={`absolute top-3 right-3 h-3 w-3 rounded-full ${getPriorityColor(n.priority)}`}
-                                    />
-
-                                    <CardContent className="p-4">
-                                        <div className="flex gap-4 items-start">
-                                            {/* Icon */}
-                                            <div className="flex-shrink-0 p-2 bg-muted rounded-full">
-                                                {getIcon(n.type)}
-                                            </div>
-
-                                            <div className="flex-1 space-y-1">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <h3 className="font-semibold text-lg">{n.title}</h3>
-                                                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                            <Badge variant={getCategoryVariant(n.category)}>
-                                                                {n.category}
-                                                            </Badge>
-                                                            {!n.isRead && (
-                                                                <Badge variant="default" className="text-xs">
-                                                                    New
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Actions */}
-                                                    <div className="flex gap-1">
-                                                        {!n.isRead && (
-                                                            <Button
-                                                                size="icon"
-                                                                variant="ghost"
-                                                                onClick={() => markAsRead(n._id)}
-                                                                disabled={loadingAction === n._id}
-                                                            >
-                                                                {loadingAction === n._id ? (
-                                                                    <Circle className="h-4 w-4 animate-spin" />
-                                                                ) : (
-                                                                    <CheckCircle className="h-4 w-4" />
-                                                                )}
-                                                            </Button>
-                                                        )}
-                                                        <Button
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            onClick={() => deleteNotification(n._id)}
-                                                            disabled={loadingAction === n._id}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-
-                                                <p className="text-sm text-muted-foreground">{n.message}</p>
-
-                                                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                                    <Clock className="h-3 w-3" />
-                                                    {formatDistanceToNow(new Date(n.createdAt), {
-                                                        addSuffix: true,
-                                                    })}
-                                                </p>
-                                            </div>
-                                        </div>
+                            {[...Array(4)].map((_, i) => (
+                                <Card key={i}>
+                                    <CardContent className="p-5">
+                                        <Skeleton className="h-5 w-3/4 mb-2" />
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-3 w-1/2 mt-3" />
                                     </CardContent>
                                 </Card>
                             ))}
                         </div>
+                    )}
 
-                        {/* Pagination */}
-                        {total > PAGE_SIZE && (
-                            <div className="flex items-center justify-between mt-6">
-                                <p className="text-sm text-muted-foreground">
-                                    Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
-                                </p>
-                                <div className="flex gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                        disabled={page === 1}
+                    {/* Empty */}
+                    {!loading && notifications.length === 0 && (
+                        <Card className="text-center py-16">
+                            <CardContent>
+                                <Bell className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+                                <p className="text-muted-foreground">No notifications yet.</p>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Notifications Grid */}
+                    {!loading && notifications.length > 0 && (
+                        <>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {notifications.map((n) => (
+                                    <Card
+                                        key={n._id}
+                                        className={`relative overflow-hidden transition-all ${n.isRead ? "opacity-80" : "ring-2 ring-primary/20"
+                                            }`}
                                     >
-                                        Previous
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setPage((p) => p + 1)}
-                                        disabled={page * PAGE_SIZE >= total}
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
+                                        {/* Priority Dot */}
+                                        <div
+                                            className={`absolute top-3 right-3 h-3 w-3 rounded-full ${getPriorityColor(n.priority)}`}
+                                        />
+
+                                        <CardContent className="p-4">
+                                            <div className="flex gap-4 items-start">
+                                                {/* Icon */}
+                                                <div className="flex-shrink-0 p-2 bg-muted rounded-full">
+                                                    {getIcon(n.type)}
+                                                </div>
+
+                                                <div className="flex-1 space-y-1">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <h3 className="font-semibold text-lg">{n.title}</h3>
+                                                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                                <Badge variant={getCategoryVariant(n.category)}>
+                                                                    {n.category}
+                                                                </Badge>
+                                                                {!n.isRead && (
+                                                                    <Badge variant="default" className="text-xs">
+                                                                        New
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Actions */}
+                                                        <div className="flex gap-1">
+                                                            {!n.isRead && (
+                                                                <Button
+                                                                    size="icon"
+                                                                    variant="ghost"
+                                                                    onClick={() => markAsRead(n._id)}
+                                                                    disabled={loadingAction === n._id}
+                                                                >
+                                                                    {loadingAction === n._id ? (
+                                                                        <Circle className="h-4 w-4 animate-spin" />
+                                                                    ) : (
+                                                                        <CheckCircle className="h-4 w-4" />
+                                                                    )}
+                                                                </Button>
+                                                            )}
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                onClick={() => deleteNotification(n._id)}
+                                                                disabled={loadingAction === n._id}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+
+                                                    <p className="text-sm text-muted-foreground">{n.message}</p>
+
+                                                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                                        <Clock className="h-3 w-3" />
+                                                        {formatDistanceToNow(new Date(n.createdAt), {
+                                                            addSuffix: true,
+                                                        })}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
                             </div>
-                        )}
-                    </>
-                )}
-            </div>
+
+                            {/* Pagination */}
+                            {total > PAGE_SIZE && (
+                                <div className="flex items-center justify-between mt-6">
+                                    <p className="text-sm text-muted-foreground">
+                                        Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                            disabled={page === 1}
+                                        >
+                                            Previous
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPage((p) => p + 1)}
+                                            disabled={page * PAGE_SIZE >= total}
+                                        >
+                                            Next
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </main>
+            <SiteFooter />
         </div>
     );
 }

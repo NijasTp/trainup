@@ -5,45 +5,21 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-    Calendar, 
-    Clock, 
-    Video, 
-    CheckCircle, 
-    XCircle, 
+import {
+    Calendar,
+    Clock,
+    Video,
+    CheckCircle,
+    XCircle,
     AlertCircle,
     RefreshCw,
 } from "lucide-react";
 import API from "@/lib/axios";
 import { toast } from "sonner";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
-interface User {
-    _id: string;
-    name: string;
-    profileImage?: string;
-}
-
-interface RequestedBy {
-    _id: string;
-    userId: User;
-    requestedAt: string;
-    status: 'pending' | 'approved' | 'rejected';
-    rejectionReason?: string;
-}
-
-interface SessionRequest {
-    _id: string;
-    trainerId: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    isBooked: boolean;
-    requestedBy: RequestedBy[];
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
-}
+import type { SessionRequest, User, RequestedBy } from "@/interfaces/trainer/ITrainerSessionRequests";
 
 export default function TrainerSessionRequests() {
     const [requests, setRequests] = useState<SessionRequest[]>([]);
@@ -202,11 +178,11 @@ export default function TrainerSessionRequests() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
             <TrainerSiteHeader />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
-            <main className="relative container mx-auto px-4 py-12 space-y-8">
+            <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
                 <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
                     <CardHeader className="space-y-4">
                         <div className="flex items-center justify-between">
@@ -247,9 +223,9 @@ export default function TrainerSessionRequests() {
                                                     <div className="flex items-start justify-between mb-4">
                                                         <div className="flex items-center space-x-3">
                                                             <Avatar className="h-12 w-12">
-                                                                <AvatarImage 
-                                                                    src={user.profileImage || "/placeholder.svg"} 
-                                                                    alt={user.name} 
+                                                                <AvatarImage
+                                                                    src={user.profileImage || "/placeholder.svg"}
+                                                                    alt={user.name}
                                                                 />
                                                                 <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                                                                     {user.name.charAt(0)}
@@ -392,6 +368,7 @@ export default function TrainerSessionRequests() {
                     </DialogContent>
                 </Dialog>
             </main>
+            <SiteFooter />
         </div>
     );
 }

@@ -172,6 +172,7 @@ export class WorkoutController {
           name: dto.name,
           date: dto.date,
           time: dto.time,
+          exercises: dto.exercises,
           goal: dto.goal,
           notes: dto.notes
         }

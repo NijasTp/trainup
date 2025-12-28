@@ -1,41 +1,29 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Award, 
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Award,
   DollarSign,
   Star,
   Users
 } from "lucide-react";
 import API from "@/lib/axios";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
-interface TrainerProfile {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  bio: string;
-  location: string;
-  specialization: string;
-  experience: string;
-  price: string;
-  rating: number;
-  profileImage: string;
-  certificate: string;
-  profileStatus: string;
-  clients: string[];
-  createdAt: string;
-}
+import type { TrainerProfile } from "@/interfaces/trainer/ITrainerProfile";
 
 export default function TrainerProfile() {
   const [profile, setProfile] = useState<TrainerProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "TrainUp - My Profile";
@@ -103,53 +91,56 @@ export default function TrainerProfile() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <TrainerSiteHeader />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-      
-      <main className="relative container mx-auto px-4 py-12 space-y-8 max-w-4xl">
+
+      <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1 max-w-4xl">
         <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
           <CardContent className="p-8">
-            <div className="flex flex-col md:flex-row items-start md:items-center space-y-6 md:space-y-0 md:space-x-6">
-              <div className="relative">
-                <img
-                  src={profile.profileImage || "/placeholder.svg"}
-                  alt={profile.name}
-                  className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
-                />
+            <div className="flex flex-col md:flex-row items-center justify-between w-full space-y-6 md:space-y-0">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="relative">
+                  <img
+                    src={profile.profileImage || "/placeholder.svg"}
+                    alt={profile.name}
+                    className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
+                  />
+                </div>
+
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <h1 className="text-3xl font-bold text-foreground">{profile.name}</h1>
+                    <p className="text-lg text-muted-foreground">{profile.specialization}</p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <Badge className={`${getStatusColor(profile.profileStatus)} font-medium`}>
+                      {profile.profileStatus.charAt(0).toUpperCase() + profile.profileStatus.slice(1)}
+                    </Badge>
+
+                    <div className="flex items-center space-x-1">
+                      <Star className="h-4 w-4 text-amber-500 fill-current" />
+                      <span className="text-sm font-medium">{profile.rating.toFixed(1)}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span>{profile.clients.length} Clients</span>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Award className="h-4 w-4 text-muted-foreground" />
+                      <span>{profile.experience} Experience</span>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <span>₹{profile.price}/month</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              
-              <div className="flex-1 space-y-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-foreground">{profile.name}</h1>
-                  <p className="text-lg text-muted-foreground">{profile.specialization}</p>
-                </div>
-                
-                <div className="flex flex-wrap gap-3">
-                  <Badge className={`${getStatusColor(profile.profileStatus)} font-medium`}>
-                    {profile.profileStatus.charAt(0).toUpperCase() + profile.profileStatus.slice(1)}
-                  </Badge>
-                  
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 text-amber-500 fill-current" />
-                    <span className="text-sm font-medium">{profile.rating.toFixed(1)}</span>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span>{profile.clients.length} Clients</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Award className="h-4 w-4 text-muted-foreground" />
-                    <span>{profile.experience} Experience</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span>₹{profile.price}/month</span>
-                  </div>
-                </div>
-              </div>
+              <Button onClick={() => navigate("/trainer/edit-profile")}>Edit Profile</Button>
             </div>
           </CardContent>
         </Card>
@@ -167,7 +158,7 @@ export default function TrainerProfile() {
                   <p className="font-medium text-foreground">{profile.email}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-muted-foreground" />
                 <div>
@@ -175,7 +166,7 @@ export default function TrainerProfile() {
                   <p className="font-medium text-foreground">{profile.phone}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <MapPin className="h-5 w-5 text-muted-foreground" />
                 <div>
@@ -195,17 +186,17 @@ export default function TrainerProfile() {
                 <p className="text-sm text-muted-foreground">Specialization</p>
                 <p className="font-medium text-foreground">{profile.specialization}</p>
               </div>
-              
+
               <div>
                 <p className="text-sm text-muted-foreground">Experience</p>
                 <p className="font-medium text-foreground">{profile.experience}</p>
               </div>
-              
+
               <div>
                 <p className="text-sm text-muted-foreground">Monthly Rate</p>
                 <p className="font-medium text-foreground">₹{profile.price}</p>
               </div>
-              
+
               <div>
                 <p className="text-sm text-muted-foreground">Member Since</p>
                 <p className="font-medium text-foreground">
@@ -231,6 +222,7 @@ export default function TrainerProfile() {
           </CardContent>
         </Card>
       </main>
-    </div>
+      <SiteFooter />
+    </div >
   );
 }

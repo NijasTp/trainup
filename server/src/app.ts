@@ -1,4 +1,5 @@
 import express from "express";
+import { IEventService } from "./core/interfaces/services/IEventService";
 import userRoutes from "./routes/user.route";
 import adminRoutes from "./routes/admin.route";
 import { Server as HttpServer } from "http";
@@ -47,7 +48,7 @@ const io = new SocketServer(httpServer, {
   },
 });
 
-const socketHandler = new SocketHandler(
+new SocketHandler(
   io,
   container.get(TYPES.IUserService),
   container.get(TYPES.IUserPlanService),
@@ -59,7 +60,7 @@ const socketHandler = new SocketHandler(
   container.get(TYPES.IGymRepository)
 );
 
-const eventService = container.get<any>(TYPES.IEventService);
+const eventService = container.get<IEventService>(TYPES.IEventService);
 eventService.setIO(io);
 
 // Routes

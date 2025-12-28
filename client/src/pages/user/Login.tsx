@@ -5,9 +5,7 @@ import TrainerLoginForm from '../../components/trainer/TrainerLoginForm';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../redux/store';
 
-interface LoginPageProps {
-  initialRole?: 'user' | 'trainer';
-}
+import type { LoginPageProps } from "@/interfaces/user/ILogin";
 
 const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
   const isTrainer = initialRole === 'trainer';

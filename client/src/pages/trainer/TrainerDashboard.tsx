@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Users, 
-  DollarSign, 
-  TrendingUp, 
+import {
+  Users,
+  DollarSign,
+  TrendingUp,
   Calendar,
   Star,
   Target,
@@ -12,6 +12,7 @@ import {
 import API from "@/lib/axios";
 import { toast } from "sonner";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import {
   LineChart,
   Line,
@@ -20,6 +21,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  BarChart,
+  Bar,
 } from "recharts";
 
 interface DashboardStats {
@@ -119,12 +122,15 @@ export default function TrainerDashboard() {
 
   const growthPercentage = calculateGrowthPercentage(stats.totalEarningsThisMonth, stats.totalEarningsLastMonth);
 
+  // Calculate total plan count for percentage
+  const totalPlanCount = stats.planDistribution.reduce((acc, curr) => acc + curr.count, 0);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20 flex flex-col">
       <TrainerSiteHeader />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-      
-      <main className="relative container mx-auto px-4 py-12 space-y-8">
+
+      <main className="relative container mx-auto px-4 py-8 space-y-8 flex-1">
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground text-lg">
@@ -201,7 +207,7 @@ export default function TrainerDashboard() {
         </div>
 
         {/* Charts Section */}
-        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Monthly Earnings Chart */}
           <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
             <CardHeader>
@@ -217,19 +223,19 @@ export default function TrainerDashboard() {
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value) => [formatAmount(Number(value)), 'Earnings']}
                       labelStyle={{ color: 'hsl(var(--foreground))' }}
-                      contentStyle={{ 
+                      contentStyle={{
                         backgroundColor: 'hsl(var(--background))',
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '8px'
                       }}
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="earnings" 
-                      stroke="hsl(var(--primary))" 
+                    <Line
+                      type="monotone"
+                      dataKey="earnings"
+                      stroke="hsl(var(--primary))"
                       strokeWidth={2}
                       dot={{ fill: 'hsl(var(--primary))' }}
                     />
@@ -240,7 +246,7 @@ export default function TrainerDashboard() {
           </Card>
 
           {/* Client Growth Chart */}
-          {/* <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
+          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
@@ -255,18 +261,18 @@ export default function TrainerDashboard() {
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                       <XAxis dataKey="month" />
                       <YAxis allowDecimals={false} />
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value) => [value, 'New Clients']}
                         labelStyle={{ color: 'hsl(var(--foreground))' }}
-                        contentStyle={{ 
+                        contentStyle={{
                           backgroundColor: 'hsl(var(--background))',
                           border: '1px solid hsl(var(--border))',
                           borderRadius: '8px'
                         }}
                       />
-                      <Bar 
-                        dataKey="clients" 
-                        fill="hsl(var(--primary))" 
+                      <Bar
+                        dataKey="clients"
+                        fill="hsl(var(--primary))"
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
@@ -278,8 +284,8 @@ export default function TrainerDashboard() {
                 )}
               </div>
             </CardContent>
-          </Card> */}
-        {/* </div> */}
+          </Card>
+        </div>
 
         {/* Plan Distribution and Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -294,10 +300,10 @@ export default function TrainerDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {stats.planDistribution.map((plan) => {
-                  const percentage = stats.totalClients > 0 
-                    ? ((plan.count / stats.totalClients) * 100).toFixed(1)
+                  const percentage = totalPlanCount > 0
+                    ? ((plan.count / totalPlanCount) * 100).toFixed(1)
                     : '0';
-                  
+
                   const planColor = {
                     basic: 'bg-blue-500',
                     premium: 'bg-amber-500',
@@ -337,12 +343,11 @@ export default function TrainerDashboard() {
               <div className="space-y-4">
                 {stats.recentActivity.map((activity, index) => (
                   <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-background/30">
-                    <div className={`p-2 rounded-full ${
-                      activity.type === 'subscription' ? 'bg-green-500/10' :
+                    <div className={`p-2 rounded-full ${activity.type === 'subscription' ? 'bg-green-500/10' :
                       activity.type === 'session' ? 'bg-blue-500/10' :
-                      activity.type === 'rating' ? 'bg-amber-500/10' :
-                      'bg-gray-500/10'
-                    }`}>
+                        activity.type === 'rating' ? 'bg-amber-500/10' :
+                          'bg-gray-500/10'
+                      }`}>
                       {activity.type === 'subscription' && <DollarSign className="h-4 w-4 text-green-600" />}
                       {activity.type === 'session' && <Calendar className="h-4 w-4 text-blue-600" />}
                       {activity.type === 'rating' && <Star className="h-4 w-4 text-amber-600" />}
@@ -370,6 +375,7 @@ export default function TrainerDashboard() {
           </Card>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

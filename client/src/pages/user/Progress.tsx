@@ -28,9 +28,8 @@ const ProgressPage = () => {
 
     const fetchAllProgressDates = async () => {
         try {
-            const data = await getProgress(); // No date param = get all
+            const data = await getProgress(); 
             if (data && data.progress && Array.isArray(data.progress)) {
-                // Ensure unique dates and parse them correctly
                 const dates = data.progress.map((p: any) => new Date(p.date));
                 setMarkedDates(dates);
             }

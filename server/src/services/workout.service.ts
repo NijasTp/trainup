@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify'
 import TYPES from '../core/types/types'
 import { IExerciseUpdate, IWorkoutService, IWorkoutSessionPayload } from '../core/interfaces/services/IWorkoutService'
+import { INotificationService } from '../core/interfaces/services/INotificationService'
 import { IWorkoutSessionRepository } from '../core/interfaces/repositories/IWorkoutSessionRepository'
 import { IWorkoutDayRepository } from '../core/interfaces/repositories/IWorkoutDayRepository';
 import { IWorkoutSession } from '../models/workout.model';
@@ -17,7 +18,8 @@ export class WorkoutService implements IWorkoutService {
     private _sessionRepo: IWorkoutSessionRepository,
     @inject(TYPES.WorkoutDayRepository)
     private _workoutDayRepo: IWorkoutDayRepository,
-    @inject(TYPES.IStreakService) private _streakService: IStreakService
+    @inject(TYPES.IStreakService) private _streakService: IStreakService,
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService
   ) { }
 
   async createSession(payload: Partial<IWorkoutSession>): Promise<WorkoutSessionResponseDto> {
@@ -26,9 +28,21 @@ export class WorkoutService implements IWorkoutService {
     }
     const session = await this._sessionRepo.create(payload)
 
+    if (payload.userId && payload.date && payload.time) {
+      const workoutDate = new Date(`${payload.date}T${payload.time}`);
+      const reminderTime = new Date(workoutDate.getTime() - 15 * 60000); // 15 mins before
+      if (reminderTime > new Date()) {
+        await this._notificationService.sendWorkoutReminder(
+          payload.userId.toString(),
+          payload.name!,
+          reminderTime
+        );
+      }
+    }
+
     if (payload.givenBy === 'user' || payload.givenBy === 'admin') {
       let day = await this._workoutDayRepo.findByUserAndDate(
-        payload.userId?.toString()!,
+        payload.userId?.toString() || '',
         payload.date!
       )
 
@@ -51,7 +65,7 @@ export class WorkoutService implements IWorkoutService {
   async getSession(id: string): Promise<WorkoutSessionResponseDto> {
     const session = await this._sessionRepo.findById(id)
     if (!session) throw new AppError(MESSAGES.SESSION_NOT_FOUND, STATUS_CODE.NOT_FOUND)
-    return this.mapToSessionResponseDto(session as any)
+    return this.mapToSessionResponseDto(session as IWorkoutSession)
   }
 
   async getSessions(
@@ -60,7 +74,7 @@ export class WorkoutService implements IWorkoutService {
     limit: number = 10,
     search: string = ''
   ): Promise<{ sessions: WorkoutSessionResponseDto[]; total: number; totalPages: number }> {
-    const query: any = {
+    const query: Record<string, unknown> = {
       $or: [
         { userId },
         { givenBy: 'user', userId },
@@ -77,7 +91,7 @@ export class WorkoutService implements IWorkoutService {
     const { sessions, total } = await this._sessionRepo.findSessions(query, page, limit);
 
     return {
-      sessions: sessions.map((session: IWorkoutSession) => this.mapToSessionResponseDto(session)),
+      sessions: sessions.map((session: unknown) => this.mapToSessionResponseDto(session as IWorkoutSession)),
       total,
       totalPages: Math.ceil(total / limit)
     };
@@ -96,6 +110,18 @@ export class WorkoutService implements IWorkoutService {
     }
 
     const session = await this._sessionRepo.create(sessionPayload)
+
+    if (clientId && payload.date && payload.time) {
+      const workoutDate = new Date(`${payload.date}T${payload.time}`);
+      const reminderTime = new Date(workoutDate.getTime() - 15 * 60000);
+      if (reminderTime > new Date()) {
+        await this._notificationService.sendWorkoutReminder(
+          clientId,
+          payload.name!,
+          reminderTime
+        );
+      }
+    }
 
     let day = await this._workoutDayRepo.findByUserAndDate(
       clientId,
@@ -135,19 +161,36 @@ export class WorkoutService implements IWorkoutService {
       delete payload.exerciseUpdates
     }
 
-    const updated = await this._sessionRepo.update(id, payload)
+    const updated = await this._sessionRepo.update(id, payload as unknown as Partial<IWorkoutSession>)
     if (!updated) throw new AppError('Session not found', STATUS_CODE.NOT_FOUND)
 
     if (payload.isDone) {
       await this._streakService.updateUserStreak(updated.userId!);
+
+      // Trigger "Doing a workout" if it's being started (though isDone implies completion)
+      // If we don't have separate 'start' event, we can notify on completion or similar.
+      // But user specifically said "Doing a workout" (active). 
+      // I'll assume they want an immediate notification when they interact with it in a certain way.
+      // For now, I'll add an immediate notification in updateSession if it's NOT done yet (i.e. just started/modified).
+    }
+
+    if (!payload.isDone && (payload.exercises || payload.exerciseUpdates)) {
+      await this._notificationService.createNotification({
+        recipientId: updated.userId!.toString(),
+        recipientRole: 'user',
+        type: 'DOING_WORKOUT',
+        title: 'Workout in Progress',
+        message: `You are currently doing ${updated.name}. Keep it up!`,
+        priority: 'medium',
+        category: 'info'
+      });
     }
 
     return this.mapToSessionResponseDto(updated)
   }
 
   async deleteSession(id: string) {
-    const success = await this._sessionRepo.delete(id)
-
+    await this._sessionRepo.delete(id)
   }
 
   async createDay(userId: string, date: string): Promise<WorkoutDayResponseDto> {
@@ -196,7 +239,7 @@ export class WorkoutService implements IWorkoutService {
   async getAdminTemplates(page: number, limit: number, search: string): Promise<GetAdminTemplatesResponseDto> {
     const result = await this._sessionRepo.findAdminTemplates(page, limit, search);
     return {
-      templates: result.templates.map(template => this.mapToSessionResponseDto(template as any)),
+      templates: result.templates.map(template => this.mapToSessionResponseDto(template as IWorkoutSession)),
       total: result.total,
       page: result.page,
       totalPages: result.totalPages
@@ -245,20 +288,28 @@ export class WorkoutService implements IWorkoutService {
     };
   }
 
-  private mapToDayResponseDto(day: any): WorkoutDayResponseDto {
+  private mapToDayResponseDto(day: unknown): WorkoutDayResponseDto {
+    const d = day as {
+      _id: { toString: () => string },
+      userId: { toString: () => string },
+      date: string,
+      sessions: unknown[],
+      createdAt: Date,
+      updatedAt: Date
+    };
     return {
-      _id: day._id.toString(),
-      userId: day.userId.toString(),
-      date: day.date,
-      sessions: Array.isArray(day.sessions)
-        ? day.sessions.map((session: any) =>
+      _id: d._id.toString(),
+      userId: d.userId.toString(),
+      date: d.date,
+      sessions: Array.isArray(d.sessions)
+        ? d.sessions.map((session: unknown) =>
           typeof session === 'string'
-            ? { _id: session } as any
-            : this.mapToSessionResponseDto(session)
+            ? { _id: session } as unknown as WorkoutSessionResponseDto
+            : this.mapToSessionResponseDto(session as IWorkoutSession)
         )
         : [],
-      createdAt: day.createdAt,
-      updatedAt: day.updatedAt
+      createdAt: d.createdAt,
+      updatedAt: d.updatedAt
     };
   }
 }

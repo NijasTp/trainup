@@ -10,7 +10,7 @@ export class TransactionService implements ITransactionService {
   constructor(
     @inject(TYPES.ITransactionRepository)
     private _transactionRepository: ITransactionRepository
-  ) {}
+  ) { }
 
   async createTransaction(data: Partial<ITransaction>): Promise<ITransaction> {
     return await this._transactionRepository.createTransaction(data);
@@ -50,7 +50,7 @@ export class TransactionService implements ITransactionService {
     search: string,
     status: string,
     planType: string
-  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }> {
+  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number; totalRevenue: number; total: number }> {
     return this._transactionRepository.getTrainerTransactions(trainerId, page, limit, search, status, planType);
   }
 

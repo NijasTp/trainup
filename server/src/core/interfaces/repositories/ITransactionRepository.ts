@@ -25,7 +25,7 @@ export interface ITransactionRepository {
     search: string,
     status: string,
     planType: string
-  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }>;
+  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number; totalRevenue: number; total: number }>;
   findByOrderId(orderId: string): Promise<ITransaction | null>;
   getUserPendingTransaction(userId: string): Promise<ITransaction | null>;
   markUserPendingTransactionsAsFailed(userId: string): Promise<number>;
@@ -41,4 +41,13 @@ export interface ITransactionRepository {
     planDistribution: Array<{ plan: string; count: number }>;
   }>;
   getRecentActivity(trainerId: string): Promise<Array<{ type: string; message: string; date: string }>>;
+  getAllTransactions(
+    page: number,
+    limit: number,
+    search: string,
+    status: string,
+    sort: string
+  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }>;
+  getAllTransactionsForExport(): Promise<ITransactionDTO[]>;
+  getGraphData(filter: 'day' | 'week' | 'month' | 'year'): Promise<unknown[]>;
 }

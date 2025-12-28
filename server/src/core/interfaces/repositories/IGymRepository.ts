@@ -3,8 +3,9 @@ import { ISubscriptionPlan } from '../../../models/gymSubscriptionPlan.model';
 import { ITrainer } from '../../../models/trainer.model';
 import { IUserGymMembership } from '../../../models/userGymMembership.model';
 import { IUser } from '../../../models/user.model';
+
 import { IGymAnnouncement } from '../../../models/gymAnnouncement.model';
-import { GymResponseDto, AnnouncementDto, GymListingDto } from '../../../dtos/gym.dto';
+import { GymResponseDto, AnnouncementDto, GymListingDto, MyGymResponseDto } from '../../../dtos/gym.dto';
 
 export interface IGymRepository {
   findByEmail(email: string): Promise<IGym | null>;
@@ -26,7 +27,7 @@ export interface IGymRepository {
   getGymById(gymId: string): Promise<GymResponseDto | null>;
 
   getGymTrainers(gymId: string): Promise<ITrainer[]>;
-  getGymMembers(gymId: string): Promise<unknown[]> ;
+  getGymMembers(gymId: string): Promise<IUser[]>; // Populated users
   getGymAnnouncements(gymId: string): Promise<AnnouncementDto[]>;
 
   createSubscriptionPlan(
@@ -94,18 +95,21 @@ export interface IGymRepository {
     totalPages: number;
     total: number;
   }>;
-  getGymForUser(gymId: string): Promise<any>;
+  getGymForUser(gymId: string): Promise<IGym | null>;
   getActiveSubscriptionPlans(gymId: string): Promise<ISubscriptionPlan[]>;
-  getMyGymDetails(gymId: string, userId: string): Promise<any>;
+  getMyGymDetails(gymId: string, userId: string): Promise<MyGymResponseDto | null>;
+
   getGymAnnouncementsForUser(
     gymId: string,
     page: number,
     limit: number,
     search: string
-  ): Promise<{ announcements: any[]; totalPages: number; total: number }>;
+  ): Promise<{ announcements: IGymAnnouncement[]; totalPages: number; total: number }>;
+
 
   getGymTotalRevenue(gymId: string): Promise<number>;
-  getRecentMembers(gymId: string, limit: number): Promise<any[]>;
+  getRecentMembers(gymId: string, limit: number): Promise<IUserGymMembership[]>;
+
 
 
   mapToResponseDto(gym: IGym): GymResponseDto;

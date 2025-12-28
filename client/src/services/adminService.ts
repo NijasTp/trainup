@@ -98,3 +98,31 @@ export const getDashboardStats = async () => {
   const res = await API.get('/admin/dashboard-stats');
   return res.data;
 };
+
+export const getAdminTransactions = async (
+  page: number,
+  limit: number = 10,
+  search: string = "",
+  status: string = "",
+  sort: string = ""
+) => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    search,
+    status,
+    sort
+  });
+  const res = await API.get(`/admin/transactions?${params.toString()}`);
+  return res.data;
+};
+
+export const downloadSaleReport = async () => {
+  const res = await API.get('/admin/transactions/export');
+  return res.data;
+};
+
+export const getDashboardGraphData = async (filter: 'day' | 'week' | 'month' | 'year', type: 'revenue' | 'users' | 'trainers' = 'revenue') => {
+  const res = await API.get(`/admin/dashboard-graph?filter=${filter}&type=${type}`);
+  return res.data;
+};

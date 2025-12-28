@@ -1,4 +1,3 @@
-
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { JwtService } from "../utils/jwt";
 import container from "../core/di/inversify.config";
@@ -9,6 +8,7 @@ import { IGymRepository } from "../core/interfaces/repositories/IGymRepository";
 import TYPES from "../core/types/types";
 import { Role } from "../constants/role";
 import { MESSAGES } from "../constants/messages.constants";
+import { logger } from "../utils/logger.util";
 
 export const roleMiddleware = (allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -39,8 +39,8 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
       req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-       res.status(401).json({ error: "No token" });
-       return
+      res.status(401).json({ error: "No token" });
+      return
     }
 
     const decoded = JwtService.verifyToken(token) as {
@@ -54,29 +54,34 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
     const adminRepo = container.get<IAdminRepository>(TYPES.IAdminRepository);
     const gymRepo = container.get<IGymRepository>(TYPES.IGymRepository);
 
-    let account: any;
+    interface IAccount {
+      tokenVersion?: number;
+      isBanned?: boolean;
+    }
+
+    let account: IAccount | null = null;
     switch (decoded.role) {
-      case Role.USER: account = await userRepo.findById(decoded.id); break;
-      case Role.TRAINER: account = await trainerRepo.findById(decoded.id); break;
-      case Role.ADMIN: account = await adminRepo.findById(decoded.id); break;
-      case Role.GYM: account = await gymRepo.findById(decoded.id); break;
+      case Role.USER: account = await userRepo.findById(decoded.id) as unknown as IAccount; break;
+      case Role.TRAINER: account = await trainerRepo.findById(decoded.id) as unknown as IAccount; break;
+      case Role.ADMIN: account = await adminRepo.findById(decoded.id) as unknown as IAccount; break;
+      case Role.GYM: account = await gymRepo.findById(decoded.id) as unknown as IAccount; break;
     }
 
     if (!account || decoded.tokenVersion !== account.tokenVersion) {
-       res.status(401).json({ error: "Invalid session" });
-       return
+      res.status(401).json({ error: "Invalid session" });
+      return
     }
 
     if (account.isBanned) {
-       res.status(403).json({ error: "Banned" });
-       return
+      res.status(403).json({ error: "Banned" });
+      return
     }
 
     req.user = { id: decoded.id, role: decoded.role };
     next();
   } catch (err) {
     const error = err as Error;
-    console.log("Token error:", error);
-     res.status(401).json({ error: "Invalid token" });
+    logger.error("Token error:", error);
+    res.status(401).json({ error: "Invalid token" });
   }
 };

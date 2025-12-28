@@ -1,4 +1,5 @@
 import { injectable } from "inversify";
+import { FilterQuery } from "mongoose";
 import { TemplateModel, ITemplate } from "../models/dietTemplate.model";
 
 @injectable()
@@ -8,7 +9,7 @@ export class TemplateRepository {
     return doc.save();
   }
 
-  async list(filter: any = {}): Promise<ITemplate[]> {
+  async list(filter: FilterQuery<ITemplate> = {}): Promise<ITemplate[]> {
     return TemplateModel.find(filter).lean().exec();
   }
 

@@ -13,54 +13,8 @@ import API from "@/lib/axios";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
 // Interfaces
-export interface Meal {
-    _id?: string;
-    name: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fats: number;
-    time: string;
-    source: "user" | "trainer" | "admin";
-    sourceId?: string;
-    usedBy?: string;
-    description?: string;
-    isEaten?: boolean;
-}
-
-interface USDAFood {
-    fdcId: number;
-    description: string;
-    ingredients?: string;
-    foodNutrients: {
-        nutrientId: number;
-        nutrientName: string;
-        unitName: string;
-        value: number;
-    }[];
-    foodAttributes?: {
-        id: number;
-        name: string;
-        value: string;
-    }[];
-}
-
-interface USDAResponse {
-    totalHits: number;
-    currentPage: number;
-    totalPages: number;
-    foods: USDAFood[];
-}
-
-interface IDietDay {
-    _id: string;
-    user: string;
-    date: string;
-    meals: Meal[];
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
-}
+import type { Meal, IDietDay } from "@/interfaces/trainer/ITrainerUserDiet";
+import type { USDAFood, USDAResponse } from "@/interfaces/common/IUSDA";
 
 function DateSelector({
     selectedDate,

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import { AdminLayout } from "@/components/admin/AdminLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, UserCheck, Building2, DollarSign, Activity, TrendingUp } from "lucide-react"
-import { getDashboardStats } from "@/services/adminService"
+import { Users, UserCheck, DollarSign, Activity, TrendingUp, BarChart3 } from "lucide-react"
+import { getDashboardStats, getDashboardGraphData } from "@/services/adminService"
 import {
   LineChart,
   Line,
@@ -56,6 +56,15 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
+  const [revenueFilter, setRevenueFilter] = useState<'day' | 'week' | 'month' | 'year'>('month')
+  const [revenueData, setRevenueData] = useState<any[]>([])
+
+  const [userFilter, setUserFilter] = useState<'day' | 'week' | 'month' | 'year'>('day')
+  const [userData, setUserData] = useState<any[]>([])
+
+  const [trainerFilter, setTrainerFilter] = useState<'day' | 'week' | 'month' | 'year'>('day')
+  const [trainerData, setTrainerData] = useState<any[]>([])
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -70,6 +79,45 @@ const AdminDashboard = () => {
 
     fetchStats()
   }, [])
+
+  // Fetch Revenue Data
+  useEffect(() => {
+    const fetchRevenue = async () => {
+      try {
+        const data = await getDashboardGraphData(revenueFilter, 'revenue')
+        setRevenueData(data)
+      } catch (error) {
+        console.error("Failed to fetch revenue data", error)
+      }
+    }
+    fetchRevenue()
+  }, [revenueFilter])
+
+  // Fetch User Data
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await getDashboardGraphData(userFilter, 'users')
+        setUserData(data)
+      } catch (error) {
+        console.error("Failed to fetch user data", error)
+      }
+    }
+    fetchUsers()
+  }, [userFilter])
+
+  // Fetch Trainer Data
+  useEffect(() => {
+    const fetchTrainers = async () => {
+      try {
+        const data = await getDashboardGraphData(trainerFilter, 'trainers')
+        setTrainerData(data)
+      } catch (error) {
+        console.error("Failed to fetch trainer data", error)
+      }
+    }
+    fetchTrainers()
+  }, [trainerFilter])
 
   if (loading) {
     return (
@@ -106,15 +154,9 @@ const AdminDashboard = () => {
       change: "+8% from last month",
       changeType: "positive" as const,
     },
+
     {
-      title: "Total Gyms",
-      value: stats?.totalGyms?.toString() || "0",
-      icon: Building2,
-      change: "+3 new this month",
-      changeType: "positive" as const,
-    },
-    {
-      title: "Total Revenue",
+      title: "Platform Profit",
       value: `₹${stats?.totalRevenue?.toLocaleString() || "0"}`,
       icon: DollarSign,
       change: "+15% from last month",
@@ -131,26 +173,92 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {statCards.map((stat, index) => (
             <StatCard key={index} {...stat} />
           ))}
         </div>
 
+        {/* Revenue Chart */}
+        <Card className="bg-[#111827] border border-[#4B8B9B]/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-white flex items-center">
+              <BarChart3 className="mr-2 h-5 w-5 text-[#4B8B9B]" />
+              Platform Earnings Analytics
+            </CardTitle>
+            <div className="flex bg-gray-800 rounded-lg p-1">
+              {(['day', 'week', 'month', 'year'] as const).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setRevenueFilter(filter)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${revenueFilter === filter
+                    ? 'bg-[#4B8B9B] text-white'
+                    : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                </button>
+              ))}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueData}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="date" stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#1F2937", border: "none", color: "#fff" }}
+                    formatter={(value: any) => [`₹${value}`, "Profit"]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#10B981"
+                    fillOpacity={1}
+                    fill="url(#colorRevenue)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* User Growth Chart */}
           <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-white flex items-center">
                 <TrendingUp className="mr-2 h-5 w-5 text-[#4B8B9B]" />
-                User Growth (Last 30 Days)
+                User Growth
               </CardTitle>
+              <div className="flex bg-gray-800 rounded-lg p-1">
+                {(['day', 'week', 'month', 'year'] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setUserFilter(filter)}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${userFilter === filter
+                      ? 'bg-[#4B8B9B] text-white'
+                      : 'text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  </button>
+                ))}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={stats?.userGrowth || []}>
+                  <AreaChart data={userData}>
                     <defs>
                       <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#4B8B9B" stopOpacity={0.8} />
@@ -178,16 +286,30 @@ const AdminDashboard = () => {
 
           {/* Trainer Growth Chart */}
           <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-white flex items-center">
                 <UserCheck className="mr-2 h-5 w-5 text-[#4B8B9B]" />
-                Trainer Growth (Last 30 Days)
+                Trainer Growth
               </CardTitle>
+              <div className="flex bg-gray-800 rounded-lg p-1">
+                {(['day', 'week', 'month', 'year'] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setTrainerFilter(filter)}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${trainerFilter === filter
+                      ? 'bg-[#4B8B9B] text-white'
+                      : 'text-gray-400 hover:text-white'
+                      }`}
+                  >
+                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  </button>
+                ))}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={stats?.trainerGrowth || []}>
+                  <LineChart data={trainerData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="date" stroke="#9CA3AF" />
                     <YAxis stroke="#9CA3AF" />

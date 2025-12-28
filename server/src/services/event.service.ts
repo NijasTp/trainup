@@ -1,6 +1,7 @@
 import { injectable } from "inversify";
 import { Server } from "socket.io";
 import { IEventService } from "../core/interfaces/services/IEventService";
+import { logger } from "../utils/logger.util";
 
 @injectable()
 export class EventService implements IEventService {
@@ -10,9 +11,9 @@ export class EventService implements IEventService {
         this._io = io;
     }
 
-    emitToUser(userId: string, event: string, data: any): void {
+    emitToUser(userId: string, event: string, data: unknown): void {
         if (!this._io) {
-            console.warn("Socket.io instance not set in EventService");
+            logger.warn("Socket.io instance not set in EventService");
             return;
         }
         this._io.to(`user_${userId}`).emit(event, data);

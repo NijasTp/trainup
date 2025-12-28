@@ -9,17 +9,8 @@ import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { updateWorkoutSession } from "@/services/workoutService";
 import confetti from "canvas-confetti";
 
-interface ExerciseTime {
-  exerciseId: string;
-  name: string;
-  duration: number;
-}
+import type { LocationState } from "@/interfaces/user/IWorkoutSuccess";
 
-interface LocationState {
-  exerciseTimes: ExerciseTime[];
-  totalWorkoutTime: number;
-  isDone: boolean;
-}
 
 export default function SuccessPage() {
   const { id } = useParams<{ id: string }>();

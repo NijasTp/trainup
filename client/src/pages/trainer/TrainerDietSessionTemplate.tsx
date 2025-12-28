@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, ArrowLeft, Save, X, Loader2, Plus, Trash2 } from "lucide-react";
 import API from "@/lib/axios";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
 interface TemplateMeal {
   name: string;
@@ -55,7 +56,7 @@ export default function TrainerDietTemplateForm() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const isEdit = !!id;
-  
+
   const [template, setTemplate] = useState<DietTemplate>({
     title: "",
     description: "",
@@ -109,12 +110,12 @@ export default function TrainerDietTemplateForm() {
         `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${import.meta.env.VITE_USDA_API_KEY}&query=${encodeURIComponent(query)}&pageSize=${itemsPerPage}&pageNumber=${page}`
       );
       if (!response.ok) throw new Error("Failed to fetch USDA food data");
-      
+
       const data: USDAResponse = await response.json();
       setUsdaFoods(data.foods || []);
       setCurrentPage(data.currentPage || 1);
       setTotalPages(data.totalPages || 1);
-      
+
       if (!data.foods.length) {
         toast.error("No meals found. Try adding a meal manually below.");
       }
@@ -169,7 +170,7 @@ export default function TrainerDietTemplateForm() {
       toast.error("Please select a time for the meal");
       return;
     }
-    
+
     const nutrients = food.foodNutrients;
     const calories = nutrients.find((n) => n.nutrientName === "Energy")?.value || 0;
     const protein = nutrients.find((n) => n.nutrientName === "Protein")?.value || 0;
@@ -188,7 +189,7 @@ export default function TrainerDietTemplateForm() {
         .filter((n) => !["Energy", "Protein", "Carbohydrate, by difference", "Total lipid (fat)"].includes(n.nutrientName))
         .map((n) => ({ label: n.nutrientName, value: n.value, unit: n.unitName })),
     };
-    
+
     setTemplate((prev) => ({
       ...prev,
       meals: [...prev.meals, meal],
@@ -213,7 +214,7 @@ export default function TrainerDietTemplateForm() {
       toast.error("Please add at least one meal to the template");
       return;
     }
-    
+
     setSaving(true);
     try {
       if (isEdit) {
@@ -243,11 +244,11 @@ export default function TrainerDietTemplateForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <TrainerSiteHeader/>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
+      <TrainerSiteHeader />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-      
-      <main className="relative container mx-auto px-4 py-12">
+
+      <main className="relative container mx-auto px-4 py-12 flex-1">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex items-center space-x-4">
             <Button
@@ -373,10 +374,10 @@ export default function TrainerDietTemplateForm() {
                   Search
                 </Button>
               </div>
-              
+
               {loading && <p className="text-muted-foreground">Loading...</p>}
               {error && <p className="text-red-500">{error}</p>}
-              
+
               {usdaFoods.length > 0 && (
                 <div className="space-y-4">
                   {usdaFoods.map((food) => (
@@ -411,7 +412,7 @@ export default function TrainerDietTemplateForm() {
                       </CardContent>
                     </Card>
                   ))}
-                  
+
                   <div className="flex justify-between items-center mt-4">
                     <Button
                       onClick={() => {
@@ -622,6 +623,7 @@ export default function TrainerDietTemplateForm() {
           </DialogContent>
         </Dialog>
       )}
+      <SiteFooter />
     </div>
   );
 }

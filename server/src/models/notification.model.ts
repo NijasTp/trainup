@@ -7,7 +7,7 @@ export interface INotification extends Document {
   type: string;
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   isRead: boolean;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   category: 'info' | 'warning' | 'success' | 'error';

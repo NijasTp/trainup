@@ -8,26 +8,9 @@ import { ArrowLeft, Dumbbell, Apple, MessageSquare, Video, Calendar, Star, Crown
 import API from "@/lib/axios";
 import { toast } from "sonner";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
-interface User {
-    _id: string;
-    name: string;
-    email: string;
-    phone: string;
-    height: number; // in cm
-    weight: number; // in kg
-    activityStatus: 'active' | 'inactive';
-    subscriptionStartDate: string;
-    profileImage?: string;
-    trainerPlan?: 'basic' | 'premium' | 'pro';
-}
-
-interface UserPlan {
-    messagesLeft: number;
-    videoCallsLeft: number;
-    planType: 'basic' | 'premium' | 'pro';
-    expiryDate: string;
-}
+import type { User, UserPlan } from "@/interfaces/trainer/ITrainerUserDetails";
 
 export default function TrainerUserDetails() {
     const { id } = useParams<{ id: string }>();
@@ -142,7 +125,7 @@ export default function TrainerUserDetails() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
             <TrainerSiteHeader />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
@@ -159,7 +142,7 @@ export default function TrainerUserDetails() {
                 </div>
             </div>
 
-            <main className="relative container mx-auto px-4 py-12 space-y-8">
+            <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
                 <div className="grid gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-2 space-y-8">
                         <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
@@ -246,7 +229,7 @@ export default function TrainerUserDetails() {
                                             Set Diet Plan
                                         </Button>
                                     </Link>
-                                    
+
                                     {/* Chat Button - Only for Premium/Pro */}
                                     {user.trainerPlan && user.trainerPlan !== 'basic' && (
                                         <Button
@@ -302,8 +285,8 @@ export default function TrainerUserDetails() {
                                                     <span className="text-sm font-medium">Chat Messages</span>
                                                 </div>
                                                 <Badge variant="outline">
-                                                    {userPlan.planType === 'premium' 
-                                                        ? `${userPlan.messagesLeft} left` 
+                                                    {userPlan.planType === 'premium'
+                                                        ? `${userPlan.messagesLeft} left`
                                                         : 'Unlimited'
                                                     }
                                                 </Badge>
@@ -367,6 +350,7 @@ export default function TrainerUserDetails() {
                     </div>
                 </div>
             </main>
+            <SiteFooter />
         </div>
     );
 }

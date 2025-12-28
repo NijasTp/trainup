@@ -11,6 +11,10 @@ const adminController = container.get<AdminController>(TYPES.AdminController);
 router.post("/login", adminController.login.bind(adminController));
 router.get('/session', authMiddleware, adminController.checkSession.bind(adminController));
 router.get('/dashboard-stats', authMiddleware, roleMiddleware(['admin']), adminController.getDashboardStats.bind(adminController));
+router.get('/dashboard-graph', authMiddleware, roleMiddleware(['admin']), adminController.getDashboardGraphData.bind(adminController));
+router.get('/transactions', authMiddleware, roleMiddleware(['admin']), adminController.getAllTransactions.bind(adminController));
+router.get('/transactions/export', authMiddleware, roleMiddleware(['admin']), adminController.getExportTransactions.bind(adminController));
+
 
 
 router.get("/trainers", authMiddleware, roleMiddleware(['admin']), adminController.getAllTrainers.bind(adminController));

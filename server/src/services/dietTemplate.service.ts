@@ -1,13 +1,14 @@
 import { inject, injectable } from "inversify";
 import { TemplateRepository } from "../repositories/dietTemplate.repository";
 import { ITemplate } from "../models/dietTemplate.model";
+import { FilterQuery } from "mongoose";
 import TYPES from "../core/types/types";
 import { IDietTemplateService } from "../core/interfaces/services/IDietTemplateService";
 import { CreateTemplateRequestDto, TemplateResponseDto } from '../dtos/diet.dto';
 
 @injectable()
 export class DietTemplateService implements IDietTemplateService {
-  constructor(@inject(TYPES.ITemplateRepository) private _dietTemplateRepo: TemplateRepository) {}
+  constructor(@inject(TYPES.ITemplateRepository) private _dietTemplateRepo: TemplateRepository) { }
 
   async createTemplate(adminId: string, dto: CreateTemplateRequestDto): Promise<TemplateResponseDto> {
     const payload: Partial<ITemplate> = {
@@ -18,7 +19,7 @@ export class DietTemplateService implements IDietTemplateService {
     return this.mapToResponseDto(template);
   }
 
-  async listTemplates(filter: any = {}): Promise<TemplateResponseDto[]> {
+  async listTemplates(filter: FilterQuery<ITemplate> = {}): Promise<TemplateResponseDto[]> {
     const templates = await this._dietTemplateRepo.list(filter);
     return templates.map(template => this.mapToResponseDto(template));
   }
@@ -29,7 +30,7 @@ export class DietTemplateService implements IDietTemplateService {
   }
 
   async deleteTemplate(id: string): Promise<void> {
-    const success = await this._dietTemplateRepo.delete(id);
+    await this._dietTemplateRepo.delete(id);
   }
 
   private mapToResponseDto(template: ITemplate): TemplateResponseDto {

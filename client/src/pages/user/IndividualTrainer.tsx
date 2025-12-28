@@ -28,40 +28,11 @@ import { toast } from "sonner";
 import API from "@/lib/axios";
 import { getIndividualTrainer } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import SubscriptionModal from "@/components/ui/SubscriptionModal";
 import TrainerReviews from "@/components/user/reviews/TrainerReviews";
 
-interface Position {
-    x: number;
-    y: number;
-}
-
-interface Trainer {
-    _id: string;
-    name: string;
-    email: string;
-    phone: string;
-    specialization: string;
-    experience: string;
-    rating: number;
-    location: string;
-    bio: string;
-    price: string;
-    profileImage: string;
-    certificate: string;
-    isVerified: boolean;
-    clients: any[];
-    reviews?: any[];
-}
-
-interface User {
-    _id: string;
-    name: string;
-    email: string;
-    role: string;
-    assignedTrainer?: string;
-    trainerPlan?: "basic" | "premium" | "pro";
-}
+import type { Position, Trainer, User } from "@/interfaces/user/IIndividualTrainer";
 
 const SpotlightCard = ({
     children,
@@ -150,7 +121,7 @@ export default function TrainerPage() {
             const response = await getIndividualTrainer(id);
             setTrainer(response.trainer);
             setIsLoading(false);
-        } catch (err: any) {
+        } catch (err) {
             console.error("Failed to fetch trainer:", err);
             setError("Failed to load trainer details");
             toast.error("Failed to load trainer details");
@@ -162,7 +133,7 @@ export default function TrainerPage() {
         try {
             const response = await API.get("/user/get-profile");
             setUser(response.data.user);
-        } catch (err: any) {
+        } catch (err) {
             console.error("Failed to fetch user:", err);
             toast.error("Failed to load user data");
         }
@@ -178,7 +149,7 @@ export default function TrainerPage() {
         }
     };
 
-    const handleSubscribe = async (planType: string) => {
+    const handleSubscribe = async (planType: string, duration: number) => {
         if (!trainer) return;
 
         setShowSubscriptionModal(false);
@@ -189,22 +160,17 @@ export default function TrainerPage() {
 
         script.onload = async () => {
             try {
-                const monthlyPrice = trainer?.price ? parseFloat(trainer.price) : 5000;
-                let amount = monthlyPrice;
-
-                // Calculate amount based on plan
-                if (planType === 'premium') {
-                    amount = Math.round(monthlyPrice * 1.25);
-                } else if (planType === 'pro') {
-                    amount = Math.round(monthlyPrice * 1.5);
-                }
+                const trainerPrice = trainer.price;
+                const basePrice = trainerPrice[planType as keyof typeof trainerPrice];
+                const totalAmount = basePrice * duration;
 
                 const response = await API.post("/payment/create-order", {
-                    amount,
+                    amount: totalAmount,
                     currency: "INR",
                     receipt: `booking_${Date.now()}`,
                     trainerId: trainer._id,
-                    planType
+                    planType,
+                    duration
                 });
                 const order = response.data;
 
@@ -224,7 +190,8 @@ export default function TrainerPage() {
                                 signature: response.razorpay_signature,
                                 trainerId: id,
                                 planType: planType,
-                                amount: amount
+                                amount: totalAmount,
+                                duration: duration
                             });
                             if (verifyResponse.data.success) {
                                 toast.success("Payment successful! Subscription confirmed.");
@@ -232,7 +199,7 @@ export default function TrainerPage() {
                             } else {
                                 toast.error("Payment verification failed");
                             }
-                        } catch (err: any) {
+                        } catch (err) {
                             console.error("Payment verification failed:", err);
                             toast.error("Failed to verify payment");
                         }
@@ -256,7 +223,8 @@ export default function TrainerPage() {
                         }
                     }
                 };
-                const rzp = new (window as any).Razorpay(options);
+
+                const rzp = new (window as unknown as { Razorpay: new (options: any) => any }).Razorpay(options);
                 rzp.on("payment.failed", async () => {
                     try {
                         await API.post("/payment/cleanup-pending");
@@ -380,10 +348,9 @@ export default function TrainerPage() {
 
     const isSameTrainer = user?.assignedTrainer === id;
     const hasTrainer = !!user?.assignedTrainer;
-    const monthlyPrice = trainer?.price ? parseFloat(trainer.price) : 5000;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
             {hasTrainer && !isSameTrainer && (
@@ -412,7 +379,7 @@ export default function TrainerPage() {
                 </div>
             </div>
 
-            <main className="relative container mx-auto px-4 py-12 space-y-12">
+            <main className="relative container mx-auto px-4 py-12 space-y-12 flex-1">
                 {/* Hero Section */}
                 <SpotlightCard className="p-8 md:p-12">
                     <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
@@ -527,15 +494,6 @@ export default function TrainerPage() {
                                         )}
                                     </Button>
                                 )}
-                                <Button
-                                    variant="outline"
-                                    size="lg"
-                                    className="border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300 font-medium px-8 bg-transparent text-base"
-                                    onClick={handleChat}
-                                >
-                                    <MessageSquare className="h-5 w-5 mr-2" />
-                                    Send Message
-                                </Button>
                                 {isSameTrainer && (
                                     <Link to="/my-trainer/profile">
                                         <Button
@@ -622,7 +580,6 @@ export default function TrainerPage() {
                     <div className="mt-8">
                         <TrainerReviews
                             trainerId={trainer._id}
-                            reviews={trainer.reviews || []}
                             onReviewAdded={handleReviewAdded}
                             canReview={hasTrainer && isSameTrainer}
                             currentUserPlan={user?.trainerPlan}
@@ -639,7 +596,7 @@ export default function TrainerPage() {
                                 Plans Starting From
                             </h3>
                             <div className="text-center p-6 bg-gradient-to-br from-primary/5 via-primary/3 to-accent/5 rounded-xl border border-primary/10">
-                                <div className="text-4xl font-bold text-primary mb-2">₹{monthlyPrice.toLocaleString()}</div>
+                                <div className="text-4xl font-bold text-primary mb-2">₹{trainer.price.basic.toLocaleString()}</div>
                                 <p className="text-muted-foreground font-medium">per month</p>
                                 <p className="text-sm text-muted-foreground/70 mt-2">Transform your fitness journey</p>
                             </div>
@@ -708,9 +665,10 @@ export default function TrainerPage() {
                 isOpen={showSubscriptionModal}
                 onClose={() => setShowSubscriptionModal(false)}
                 onSubscribe={handleSubscribe}
-                monthlyPrice={monthlyPrice}
+                prices={trainer.price}
                 trainerName={trainer.name}
             />
+            <SiteFooter />
         </div>
     );
 }

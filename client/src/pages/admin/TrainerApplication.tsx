@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { verifyTrainer, rejectTrainer } from '@/services/adminService';
+import { verifyTrainer, rejectTrainer, getTrainerApplication } from '@/services/adminService';
 import {
   ArrowLeft,
   CheckCircle,
@@ -15,6 +15,7 @@ import {
   Calendar,
   Loader2,
   Shield,
+  Star,
   Clock,
   Badge,
   XCircle
@@ -36,25 +37,28 @@ const TrainerApplication = () => {
   const { trainerId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const application = location.state?.application || {
-    _id: trainerId,
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 234 567 8900",
-    location: "New York, NY",
-    experience: "5 years",
-    specialization: "Strength Training, HIIT, Nutrition",
-    bio: "Certified personal trainer with a passion for helping clients achieve their fitness goals. Specializing in strength training and high-intensity interval training. I believe in creating personalized workout plans that are both challenging and enjoyable.",
-    certificate: "cert_url_here",
-    profileImage: "https://via.placeholder.com/150",
-    profileStatus: "pending",
-    createdAt: new Date("2024-01-15T10:30:00")
-  };
-
+  const [application, setApplication] = useState<any>(location.state?.application || null);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(!location.state?.application);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!application && trainerId) {
+      const fetchApplication = async () => {
+        try {
+          const data = await getTrainerApplication(trainerId);
+          setApplication(data);
+        } catch (error) {
+          console.error("Error fetching trainer application:", error);
+        } finally {
+          setFetching(false);
+        }
+      };
+      fetchApplication();
+    }
+  }, [trainerId, application]);
 
   const handleVerify = async () => {
     setLoading(true);
@@ -89,6 +93,24 @@ const TrainerApplication = () => {
   const handleBack = () => {
     navigate('/admin/trainers');
   };
+
+  if (fetching) {
+    return (
+      <div className="min-h-screen bg-[#1F2A44] flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-[#4B8B9B]" />
+        <span className="ml-4 text-white text-xl">Loading application details...</span>
+      </div>
+    );
+  }
+
+  if (!application) {
+    return (
+      <div className="min-h-screen bg-[#1F2A44] flex flex-col items-center justify-center">
+        <p className="text-white text-xl mb-4">Application not found</p>
+        <Button onClick={handleBack}>Back to Trainers</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#1F2A44] p-4">
@@ -203,6 +225,39 @@ const TrainerApplication = () => {
                     <span className="text-sm font-medium">Experience</span>
                   </div>
                   <p className="text-white">{application.experience}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Subscription Plans */}
+            <div>
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                <Shield className="h-5 w-5 mr-2 text-[#4B8B9B]" />
+                Proposed Subscription Plans (Monthly)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
+                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
+                    <Star className="h-4 w-4" />
+                    <span className="text-sm font-medium">Basic Plan</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white">₹{application.price?.basic?.toLocaleString() || '0'}</p>
+                </div>
+
+                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
+                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
+                    <Briefcase className="h-4 w-4" />
+                    <span className="text-sm font-medium">Premium Plan</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white">₹{application.price?.premium?.toLocaleString() || '0'}</p>
+                </div>
+
+                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
+                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
+                    <Award className="h-4 w-4" />
+                    <span className="text-sm font-medium">Pro Plan</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white">₹{application.price?.pro?.toLocaleString() || '0'}</p>
                 </div>
               </div>
             </div>

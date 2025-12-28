@@ -5,6 +5,7 @@ export interface Client {
   phone: string
   subscriptionStartDate: string
   profileImage?: string
+  trainerPlan?: 'basic' | 'premium' | 'pro'
 }
 
 export interface PaginatedClients {

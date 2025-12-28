@@ -9,39 +9,13 @@ import { format, isToday, differenceInMinutes, parse, addDays, subDays } from "d
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
+
 import { toast } from "sonner";
 import { getWorkoutDays, getAllSessions } from "@/services/workoutService";
 import { WorkoutCalendar } from "@/components/user/workouts/WorkoutCalendar";
 
-export interface Exercise {
-  id: string;
-  name: string;
-  sets: number;
-  reps: string;
-  weight?: number;
-  image?: string;
-  timeTaken?: number;
-}
+import type { WorkoutSession, WorkoutDay } from "@/interfaces/user/IWorkouts";
 
-export interface WorkoutSession {
-  _id: string;
-  name: string;
-  givenBy: "trainer" | "user" | "admin";
-  trainerId?: string;
-  date: string;
-  time: string;
-  exercises: Exercise[];
-  goal?: string;
-  notes?: string;
-  isDone?: boolean;
-}
-
-interface WorkoutDay {
-  _id: string;
-  userId: string;
-  date: string;
-  sessions: WorkoutSession[];
-}
 
 function formatTime(seconds: number | undefined): string {
   if (!seconds) return "0:00";
@@ -491,6 +465,6 @@ export default function WorkoutPage() {
         )}
       </main>
       <SiteFooter />
-    </div>
+    </div >
   );
 }

@@ -1,8 +1,8 @@
 import { IWorkoutSession } from "../../../models/workout.model";
-import { 
-  WorkoutSessionResponseDto, 
-  WorkoutDayResponseDto, 
-  GetAdminTemplatesResponseDto 
+import {
+  WorkoutSessionResponseDto,
+  WorkoutDayResponseDto,
+  GetAdminTemplatesResponseDto
 } from '../../../dtos/workout.dto'
 
 export interface IExerciseUpdate {
@@ -12,7 +12,7 @@ export interface IExerciseUpdate {
 
 export interface IWorkoutSessionPayload {
   name?: string;
-  exercises?: any[];
+  exercises?: unknown[];
   goal?: string;
   notes?: string;
   isDone?: boolean;

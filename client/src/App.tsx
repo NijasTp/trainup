@@ -19,19 +19,11 @@ import TrainerVerifyOtp from './pages/trainer/TrainerVerifyOtp';
 import TrainerForgotPassword from './pages/trainer/TrainerForgotPassword';
 import TrainerForgotPasswordVerifyOtp from './pages/trainer/TrainerForgotPasswordVerifyOtp';
 import TrainerResetPassword from './pages/trainer/TrainerResetPassword';
-import GymApply from './pages/gym/GymApply';
-import GymVerifyOtp from './pages/gym/GymVerifyOtp';
-import GymDashboard from './pages/gym/GymDashboard';
-import GymLogin from './pages/gym/GymLogin';
-import GymWaitlist from './pages/gym/GymWaitlist';
-import { GymAuthRedirect, GymProtectedRoute } from './redirects/GymRedirects';
 import { TrainerPreventLoggedIn, TrainerProtectedRoute } from './redirects/TrainerRedirects';
 import TrainerWaitlist from './pages/trainer/TrainerWaitlist';
 import TrainerApplication from './pages/admin/TrainerApplication';
 import IndividualTrainer from './pages/admin/IndividualTrainer';
 import IndividualUser from './pages/admin/IndividualUser';
-import GymManagement from './pages/admin/GymManagement';
-import GymApplication from './pages/admin/GymApplication';
 import Callback from './components/Callback';
 import Trainers from './pages/user/Trainers';
 import Workouts from './pages/user/Workouts';
@@ -72,22 +64,12 @@ import TrainerProfile from './pages/trainer/TrainerProfile';
 import TrainerDashboard from './pages/trainer/TrainerDashboard';
 import WeeklySchedule from './pages/trainer/WeeklySchedule';
 import TrainerClients from './pages/trainer/TrainerClientListing';
-import GymReapply from './pages/gym/GymReapply';
-import GymCreateSubscriptionPlan from './pages/gym/GymCreateSubscriptionPlan';
-import GymSubscriptionList from './pages/gym/GymSubscriptionList';
-import GymEditSubscriptionPlan from './pages/gym/GymEditSubscriptionPlan';
-import GymAnnouncementManagement from './pages/gym/GymCreateAnnouncement';
-import GymsListing from './pages/user/GymListing';
-import IndividualGym from './pages/user/IndividualGym';
-import MyGym from './pages/user/MyGym';
-import GymAnnouncements from './pages/user/GymAnnouncements';
-import UserGymDashboard from './pages/user/UserGymDashboard';
-import GymCreateAnnouncement from './pages/gym/GymCreateAnnouncement';
-import GymEditAnnouncement from './pages/gym/GymEditAnnouncement';
-import GymAttendanceView from './pages/gym/GymAttendanceView';
+import TrainerEditProfile from './pages/trainer/TrainerEditProfile';
+
 import UserNotifications from './pages/user/UserNotifications';
 import TrainerNotifications from './pages/trainer/TrainerNotifications';
 import ProgressPage from './pages/user/Progress';
+import AdminTransactions from './pages/admin/AdminTransactions';
 
 function App() {
   return (
@@ -117,11 +99,6 @@ function App() {
         <Route path={ROUTES.MY_TRAINER_AVAILABILITY} element={<ProtectedRoute><TrainerAvailability /></ProtectedRoute>} />
         <Route path={ROUTES.VIDEO_CALL} element={<ProtectedRoute><VideoCallPage /></ProtectedRoute>} />
 
-        <Route path={ROUTES.USER_GYMS} element={<ProtectedRoute><GymsListing /></ProtectedRoute>} />
-        <Route path={ROUTES.USER_INDIVIDUAL_GYM} element={<ProtectedRoute><IndividualGym /></ProtectedRoute>} />
-        <Route path={ROUTES.USER_MY_GYM} element={<ProtectedRoute><MyGym /></ProtectedRoute>} />
-        <Route path={ROUTES.USER_GYM_DASHBOARD} element={<ProtectedRoute><UserGymDashboard /></ProtectedRoute>} />
-        <Route path={ROUTES.USER_GYM_ANNOUNCEMENTS} element={<ProtectedRoute><GymAnnouncements /></ProtectedRoute>} />
 
         <Route path={ROUTES.USER_WORKOUTS_PAGE} element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADMIN_WORKOUT_TEMPLATES} element={<ProtectedRoute><WorkoutTemplates /></ProtectedRoute>} />
@@ -149,6 +126,7 @@ function App() {
         <Route path={ROUTES.TRAINER_CLIENTS} element={<TrainerProtectedRoute><TrainerClients /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_TRANSACTIONS} element={<TrainerProtectedRoute><TrainerTransactions /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_PROFILE} element={<TrainerProtectedRoute><TrainerProfile /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_EDIT_PROFILE} element={<TrainerProtectedRoute><TrainerEditProfile /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_SLOTS} element={<TrainerProtectedRoute><TrainerSlots /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_WEEKLY_SCHEDULE} element={<TrainerProtectedRoute><WeeklySchedule /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_SESSION_REQUESTS} element={<TrainerProtectedRoute><TrainerSessionRequests /></TrainerProtectedRoute>} />
@@ -159,31 +137,15 @@ function App() {
         <Route path={ROUTES.TRAINER_CLIENT_SESSION} element={<TrainerProtectedRoute><TrainerAddSessionPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_DIET} element={<TrainerProtectedRoute><TrainerUserDietPage /></TrainerProtectedRoute>} />
 
-        {/* Gym Routes */}
-        <Route path={ROUTES.GYM_LOGIN} element={<GymAuthRedirect><GymLogin /></GymAuthRedirect>} />
-        <Route path={ROUTES.GYM_APPLY} element={<GymAuthRedirect><GymApply /></GymAuthRedirect>} />
-        <Route path={ROUTES.GYM_VERIFY_OTP} element={<GymAuthRedirect><GymVerifyOtp /></GymAuthRedirect>} />
-        <Route path={ROUTES.GYM_WAITLIST} element={<GymProtectedRoute><GymWaitlist /></GymProtectedRoute>} />
-        <Route path={ROUTES.GYM_DASHBOARD} element={<GymProtectedRoute><GymDashboard /></GymProtectedRoute>} />
-        <Route path={ROUTES.GYM_REAPPLY} element={<GymProtectedRoute><GymReapply /></GymProtectedRoute>} />
-        <Route path={ROUTES.GYM_SUBSCRIPTIONS} element={<GymProtectedRoute><GymSubscriptionList /></GymProtectedRoute>} />
-        <Route path={ROUTES.GYM_SUBSCRIPTIONS_NEW} element={<GymProtectedRoute><GymCreateSubscriptionPlan /></GymProtectedRoute>} />
-        <Route path={ROUTES.GYM_SUBSCRIPTIONS_EDIT} element={<GymProtectedRoute><GymEditSubscriptionPlan /></GymProtectedRoute>} />
-        <Route path={ROUTES.GYM_ANNOUNCEMENTS} element={<GymProtectedRoute><GymAnnouncementManagement /></GymProtectedRoute>} />
-        <Route path={ROUTES.GYM_ANNOUNCEMENTS_NEW} element={<GymProtectedRoute><GymCreateAnnouncement /></GymProtectedRoute>} />
-        <Route path={ROUTES.GYM_ANNOUNCEMENTS_EDIT} element={<GymProtectedRoute><GymEditAnnouncement /></GymProtectedRoute>} />
-        <Route path={ROUTES.GYM_ATTENDANCE} element={<GymProtectedRoute><GymAttendanceView /></GymProtectedRoute>} />
-
         {/* Admin Routes */}
         <Route path={ROUTES.ADMIN_LOGIN} element={<AdminPreventLoggedIn><AdminLogin /></AdminPreventLoggedIn>} />
         <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_TRAINERS} element={<AdminProtectedRoute><TrainerManagement /></AdminProtectedRoute>} />
+        <Route path={ROUTES.ADMIN_TRANSACTIONS} element={<AdminProtectedRoute><AdminTransactions /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_TRAINER_DETAILS} element={<AdminProtectedRoute><IndividualTrainer /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_TRAINER_APPLICATION} element={<AdminProtectedRoute><TrainerApplication /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_USERS} element={<AdminProtectedRoute><UserManagement /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_USER_DETAILS} element={<AdminProtectedRoute><IndividualUser /></AdminProtectedRoute>} />
-        <Route path={ROUTES.ADMIN_GYMS} element={<AdminProtectedRoute><GymManagement /></AdminProtectedRoute>} />
-        <Route path={ROUTES.ADMIN_GYM_APPLICATION} element={<AdminProtectedRoute><GymApplication /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_TEMPLATE_MANAGEMENT} element={<AdminProtectedRoute><TemplateManagement /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_ADD_WORKOUT_TEMPLATE} element={<AdminProtectedRoute><WorkoutTemplateForm /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_ADD_DIET_TEMPLATE} element={<AdminProtectedRoute><NewDietTemplate /></AdminProtectedRoute>} />

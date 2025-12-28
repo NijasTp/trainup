@@ -15,7 +15,8 @@ import { toast } from "react-toastify";
 import { InfoModal } from "@/components/user/general/InfoModal";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import * as z from "zod";
-import type { AddedExercise, WgerExerciseInfo, WgerExerciseSuggestion, WorkoutSessionPayload } from "@/interfaces/user/addWorkoutSession";
+import type { AddedExercise, WgerExerciseInfo, WgerExerciseSuggestion, WorkoutSessionPayload } from "@/interfaces/user/IAddWorkoutSession";
+
 
 function ExerciseSuggestionCard({
     suggestion,

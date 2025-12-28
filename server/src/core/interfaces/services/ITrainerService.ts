@@ -4,6 +4,7 @@ import {
   TrainerResponseDto,
   GetClientsResponseDto
 } from '../../../dtos/trainer.dto'
+import { UploadedFile } from 'express-fileupload'
 
 export interface PaginatedTrainers {
   trainers: TrainerResponseDto[]
@@ -17,13 +18,17 @@ export interface TrainerApplyData {
   email: string
   phone: string
   password: string
-  price?: string
+  price?: {
+    basic: number;
+    premium: number;
+    pro: number;
+  }
   bio?: string
   location?: string
   experience?: string
   specialization?: string
-  certificate: any
-  profileImage: any
+  certificate: UploadedFile
+  profileImage: UploadedFile
 }
 
 export interface DashboardStats {
@@ -102,5 +107,16 @@ export interface ITrainerService {
     trainerId: string,
     isAvailable: boolean,
     unavailableReason?: string
+  ): Promise<void>
+  updateProfile(
+    trainerId: string,
+    updateData: Partial<TrainerApplyData>,
+    profileImage?: UploadedFile
+  ): Promise<TrainerResponseDto>
+
+  changePassword(
+    trainerId: string,
+    currentPass: string,
+    newPass: string
   ): Promise<void>
 }

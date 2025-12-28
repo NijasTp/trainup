@@ -6,6 +6,7 @@ export interface CreateOrderRequestDto {
   receipt?: string;
   trainerId: string;
   planType: 'basic' | 'premium' | 'pro';
+  duration: number; // in months
 }
 
 export interface CreateOrderResponseDto {
@@ -27,10 +28,11 @@ export interface VerifyPaymentRequestDto {
   trainerId: string;
   planType: 'basic' | 'premium' | 'pro';
   amount: number;
+  duration: number; // in months
 }
 
 export interface VerifyPaymentResponseDto {
   success: boolean;
   message: string;
-  transactionId?:ObjectId| string ;
+  transactionId?: ObjectId | string;
 }

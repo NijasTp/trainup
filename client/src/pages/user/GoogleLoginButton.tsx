@@ -2,10 +2,7 @@
 import api from '@/lib/axios';
 import React, { useEffect } from 'react';
 
-interface GoogleLoginButtonProps {
-  onLoginSuccess: (jwt: string) => void;
-  onLoginError?: (error: any) => void;
-}
+import type { GoogleLoginButtonProps } from "@/interfaces/user/IGoogleLogin";
 
 declare global {
   interface Window {
@@ -13,7 +10,7 @@ declare global {
   }
 }
 
-const CLIENT_ID = '779990597734-ge56n8rthf0vcd38gc1c3htqlecn2nqj.apps.googleusercontent.com';
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   onLoginSuccess,
@@ -49,7 +46,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       const res = await api.post('/user/google-login', { idToken });
       const data = await res.data;
       if (res.status === 200) {
-        onLoginSuccess(data.user); 
+        onLoginSuccess(data.user);
       } else {
         throw new Error(data.message || 'Login failed');
       }

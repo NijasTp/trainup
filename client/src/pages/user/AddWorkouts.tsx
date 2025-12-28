@@ -12,33 +12,8 @@ import { toast } from "sonner";
 import { getWorkoutDays } from "@/services/workoutService";
 import { InfoModal } from "@/components/user/general/InfoModal";
 
-interface Exercise {
-  id: string;
-  name: string;
-  sets: number;
-  reps: string;
-  weight?: number;
-  image?: string;
-}
+import type { WorkoutSession, WorkoutDay } from "@/interfaces/user/IAddWorkouts";
 
-interface WorkoutSession {
-  _id: string;
-  name: string;
-  givenBy: "trainer" | "user";
-  trainerId?: string;
-  date: string;
-  time: string;
-  exercises: Exercise[];
-  goal?: string;
-  notes?: string;
-}
-
-interface WorkoutDay {
-  _id: string;
-  userId: string;
-  date: string;
-  sessions: WorkoutSession[];
-}
 
 function DateSelector({
   selectedDate,

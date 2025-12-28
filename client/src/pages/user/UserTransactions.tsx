@@ -10,20 +10,7 @@ import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { useNavigate } from "react-router-dom";
 import API from "@/lib/axios";
 
-interface Transaction {
-  _id: string;
-  amount: number;
-  status: 'completed' | 'failed' | 'pending';
-  trainerId: {
-    _id: string;
-    name: string;
-    profileImage?: string;
-  };
-  months: number;
-  createdAt: string;
-  razorpayOrderId?: string;
-  razorpayPaymentId?: string;
-}
+import type { Transaction } from "@/interfaces/user/IUserTransactions";
 
 
 export default function Transactions() {

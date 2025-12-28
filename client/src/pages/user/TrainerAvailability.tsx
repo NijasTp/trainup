@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-    Calendar, 
-    Clock, 
-    Video, 
+import {
+    Calendar,
+    Clock,
+    Video,
     ArrowLeft,
     RefreshCw,
     Send,
@@ -19,24 +19,11 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 
-interface WeeklySlot {
-    _id: string;
-    trainerId: {
-        _id: string;
-        name: string;
-        profileImage?: string;
-    };
-    day: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    isBooked: boolean;
-    isRequested: boolean;
-}
+import type { WeeklySlot } from "@/interfaces/user/ITrainerAvailability";
 
 const DAYS_OF_WEEK = [
     'Monday',
-    'Tuesday', 
+    'Tuesday',
     'Wednesday',
     'Thursday',
     'Friday'
@@ -75,7 +62,7 @@ export default function TrainerAvailability() {
         try {
             await API.post("/user/book-session", { slotId });
             toast.success("Session request sent successfully!");
-            fetchAvailability(); 
+            fetchAvailability();
         } catch (err: any) {
             console.error("Failed to book slot:", err);
             toast.error(err.response?.data?.error || "Failed to book session");
@@ -104,8 +91,8 @@ export default function TrainerAvailability() {
         return slotDateTime < new Date();
     };
 
-    const filteredSlots = selectedDay === "all" 
-        ? slots 
+    const filteredSlots = selectedDay === "all"
+        ? slots
         : slots.filter(slot => slot.day === selectedDay);
 
     // Group slots by day for better organization
@@ -226,31 +213,30 @@ export default function TrainerAvailability() {
                                                 {slotsByDay[day].length} session{slotsByDay[day].length !== 1 ? 's' : ''}
                                             </Badge>
                                         </div>
-                                        
+
                                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                             {slotsByDay[day].map((slot) => {
                                                 const isPastSlot = isSlotInPast(slot.date, slot.startTime);
-                                                
+
                                                 return (
                                                     <Card
                                                         key={slot._id}
-                                                        className={`bg-background/50 border-border/50 hover:shadow-md transition-all duration-200 ${
-                                                            isPastSlot ? 'opacity-50' : ''
-                                                        }`}
+                                                        className={`bg-background/50 border-border/50 hover:shadow-md transition-all duration-200 ${isPastSlot ? 'opacity-50' : ''
+                                                            }`}
                                                     >
                                                         <CardContent className="p-6">
                                                             <div className="space-y-4">
                                                                 <div className="flex items-center space-x-3">
                                                                     <Avatar className="h-10 w-10">
-                                                                        <AvatarImage 
-                                                                            src={slot.trainerId.profileImage || "/placeholder.svg"} 
-                                                                            alt={slot.trainerId.name} 
+                                                                        <AvatarImage
+                                                                            src={slot.trainerId.profileImage || "/placeholder.svg"}
+                                                                            alt={slot.trainerId.name}
                                                                         />
                                                                         <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
                                                                             {slot.trainerId.name.charAt(0)}
                                                                         </AvatarFallback>
                                                                     </Avatar>
-                                                                    
+
                                                                     <div>
                                                                         <h4 className="font-medium text-foreground">
                                                                             {slot.trainerId.name}
@@ -260,7 +246,7 @@ export default function TrainerAvailability() {
                                                                         </p>
                                                                     </div>
                                                                 </div>
-                                                                
+
                                                                 <div className="space-y-2">
                                                                     <div className="flex items-center space-x-2 text-sm">
                                                                         <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -281,7 +267,7 @@ export default function TrainerAvailability() {
                                                                         </span>
                                                                     </div>
                                                                 </div>
-                                                                
+
                                                                 <div className="pt-2">
                                                                     {slot.isBooked ? (
                                                                         <Badge className="w-full justify-center bg-green-500/10 text-green-600 border-green-500/20">
@@ -328,7 +314,7 @@ export default function TrainerAvailability() {
                                 ))
                             )}
                         </div>
-                        
+
                         {slots.length > 0 && (
                             <div className="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/10">
                                 <h4 className="font-medium text-foreground mb-2">How it works:</h4>

@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
 import { IRatingRepository } from '../core/interfaces/repositories/IRatingRepository';
-import Trainer, { ITrainer } from '../models/trainer.model';
-import { GymModel, IGym } from '../models/gym.model';
+import Trainer from '../models/trainer.model';
+import { GymModel } from '../models/gym.model';
 import mongoose from 'mongoose';
 
 @injectable()
@@ -12,7 +12,7 @@ export class RatingRepository implements IRatingRepository {
         rating: number,
         message: string,
         subscriptionPlan?: string
-    ): Promise<any> {
+    ): Promise<unknown> {
         const trainer = await Trainer.findById(trainerId);
         if (!trainer) return null;
         const review = {
@@ -38,7 +38,7 @@ export class RatingRepository implements IRatingRepository {
         rating: number,
         message: string,
         subscriptionPlan?: string
-    ): Promise<any> {
+    ): Promise<unknown> {
         const gym = await GymModel.findById(gymId);
         if (!gym) return null;
         const review = {
@@ -63,7 +63,7 @@ export class RatingRepository implements IRatingRepository {
         trainerId: string,
         page: number = 1,
         limit: number = 5
-    ): Promise<{ ratings: any[]; totalPages: number; totalCount: number }> {
+    ): Promise<{ ratings: unknown[]; totalPages: number; totalCount: number }> {
         const trainer = await Trainer.findById(trainerId).populate('reviews.userId', 'name profileImage');
         const allReviews = trainer?.reviews || [];
         const totalCount = allReviews.length;
@@ -77,7 +77,7 @@ export class RatingRepository implements IRatingRepository {
         gymId: string,
         page: number = 1,
         limit: number = 5
-    ): Promise<{ ratings: any[]; totalPages: number; totalCount: number }> {
+    ): Promise<{ ratings: unknown[]; totalPages: number; totalCount: number }> {
         const gym = await GymModel.findById(gymId).populate('reviews.userId', 'name profileImage');
         const allReviews = gym?.reviews || [];
         const totalCount = allReviews.length;

@@ -9,31 +9,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "react-toastify";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import API from "@/lib/axios";
-import { type TemplateMeal } from "@/interfaces/admin/templateManagement";
+import type { TemplateMeal } from "@/interfaces/admin/templateManagement";
+import type { USDAFood, USDAResponse } from "@/interfaces/common/IUSDA";
 
-interface USDAFood {
-  fdcId: number;
-  description: string;
-  ingredients?: string;
-  foodNutrients: {
-    nutrientId: number;
-    nutrientName: string;
-    unitName: string;
-    value: number;
-  }[];
-  foodAttributes?: {
-    id: number;
-    name: string;
-    value: string;
-  }[];
-}
-
-interface USDAResponse {
-  totalHits: number;
-  currentPage: number;
-  totalPages: number;
-  foods: USDAFood[];
-}
 
 export default function NewDietTemplate() {
   const [template, setTemplate] = useState({

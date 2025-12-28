@@ -96,6 +96,7 @@ export class SlotService implements ISlotService {
 
   async bookSession(slotId: string, userId: string): Promise<void> {
     const slot = await this._slotRepository.findById(slotId)
+    
     if (!slot) {
       throw new AppError('Slot not found', STATUS_CODE.NOT_FOUND)
     }

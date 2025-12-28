@@ -3,7 +3,11 @@ export type Trainer = {
     name: string;
     specialty: string;
     location: string;
-    price: string;
+    price: {
+        basic: string;
+        premium: string;
+        pro: string;
+    };
     rating: number;
     bio: string;
     experience: string;

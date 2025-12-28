@@ -68,7 +68,7 @@ export class DashboardStatsDto {
   totalTrainers: number;
   totalGyms: number;
   totalRevenue: number;
-  recentTransactions: any[];
+  recentTransactions: unknown[];
   userGrowth: { date: string; count: number }[];
   trainerGrowth: { date: string; count: number }[];
   revenueGrowth: { date: string; amount: number }[];

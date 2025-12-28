@@ -18,40 +18,24 @@ import {
   Award,
   Activity,
   TrendingDown,
-  Building,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { Link, useNavigate } from "react-router-dom";
 import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";
-import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/homeInterface";
+import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/IHomePage";
+
 import { useSelector } from "react-redux";
 import ProfileCompletionModal from "@/components/user/general/ProfileCompletionModal";
-import API from "@/lib/axios";
-
-interface Gym {
-  _id: string;
-  name: string;
-  profileImage?: string;
-  images?: string[];
-  geoLocation: {
-    type: "Point";
-    coordinates: [number, number];
-  };
-  memberCount: number;
-  planCount: number;
-  minPrice: number;
-  rating: number;
-  distance?: number;
-}
+// import API from "@/lib/axios";
 
 export default function HomePage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
-  const [gyms, setGyms] = useState<Gym[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const navigate = useNavigate();
@@ -125,14 +109,6 @@ export default function HomePage() {
         toast.error("Failed to fetch diet");
       }
 
-      // Fetch gyms
-      try {
-        const gymResponse = await API.get("/user/gyms?limit=3");
-        setGyms(gymResponse.data.gyms || []);
-      } catch (err: any) {
-        console.error("Failed to fetch gyms:", err);
-        toast.error("Failed to fetch gyms");
-      }
     } catch (error) {
       console.error("Error fetching home data:", error);
     } finally {
@@ -164,7 +140,7 @@ export default function HomePage() {
   const workoutProgress = calculateWorkoutProgress();
 
   return (
-    <div className="relative min-h-screen w-full bg-gradient-to-br from-background via-background/95 to-secondary/20">
+    <div className="relative min-h-screen w-full flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent z-0"></div>
 
       <SiteHeader />
@@ -174,7 +150,7 @@ export default function HomePage() {
         onOpenChange={setShowProfileModal}
       />
 
-      <main className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 z-10">
+      <main className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 z-10 flex-1">
         <div className="text-center space-y-4 mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
             <Flame className="h-4 w-4 text-primary" />
@@ -240,14 +216,14 @@ export default function HomePage() {
           </Card>
         </div>
 
-        {/* Featured Gyms Section */}
+        {/* Featured Trainers */}
         <Card className="bg-card/40 backdrop-blur-sm border-border/50">
           <CardHeader className="flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
-              <Building className="h-5 w-5 text-primary" />
-              <CardTitle>Featured Gyms</CardTitle>
+              <Users className="h-5 w-5 text-primary" />
+              <CardTitle>Featured Trainers</CardTitle>
             </div>
-            <Link to="/gyms">
+            <Link to="/trainers">
               <Button variant="ghost" size="sm">
                 View All <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
@@ -258,59 +234,57 @@ export default function HomePage() {
               <div className="flex items-center justify-center py-8">
                 <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
               </div>
-            ) : gyms.length === 0 ? (
+            ) : trainers.length === 0 ? (
               <div className="text-center py-8 space-y-2">
-                <Building className="h-12 w-12 mx-auto text-muted-foreground/50" />
-                <p className="text-muted-foreground">No gyms available at the moment</p>
-                <Button variant="outline" size="sm" onClick={() => navigate("/gyms")}>
-                  <Building className="h-4 w-4 mr-2" />
-                  Browse Gyms
+                <Users className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                <p className="text-muted-foreground">No trainers available at the moment</p>
+                <Button variant="outline" size="sm">
+                  <Users className="h-4 w-4 mr-2" />
+                  Browse Trainers
                 </Button>
               </div>
             ) : (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {gyms.map((gym) => (
+                {trainers.slice(0, 3).map((trainer) => (
                   <div
-                    key={gym._id}
-                    className="group relative overflow-hidden bg-secondary/30 rounded-lg border border-border/30 hover:border-border transition-all duration-300 hover:shadow-lg cursor-pointer"
-                    onClick={() => navigate(`/gyms/${gym._id}`)}
+                    key={trainer._id}
+                    className="group relative overflow-hidden bg-secondary/30 rounded-lg border border-border/30 hover:border-border transition-all duration-300 hover:shadow-lg"
                   >
                     <div className="relative h-48 overflow-hidden">
                       <img
-                        src={gym.profileImage || gym.images?.[0] || "/placeholder.svg"}
-                        alt={gym.name}
+                        src={trainer.profileImage || "/placeholder.svg"}
+                        alt={trainer.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       <div className="absolute top-3 right-3">
                         <div className="flex items-center gap-1 px-2 py-1 bg-black/40 backdrop-blur-sm rounded-full">
                           <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
-                          <span className="text-white text-xs font-medium">{gym.rating}</span>
+                          <span className="text-white text-xs font-medium">{trainer.rating}</span>
                         </div>
                       </div>
                       <div className="absolute bottom-3 left-3 right-3">
-                        <h4 className="font-semibold text-white mb-1">{gym.name}</h4>
+                        <h4 className="font-semibold text-white mb-1">{trainer.name}</h4>
                         <div className="flex items-center gap-2 text-white/80 text-sm">
-                          <Users className="h-3 w-3" />
-                          <span>{gym.memberCount} members</span>
+                          <MapPin className="h-3 w-3" />
+                          <span>{trainer.location}</span>
                         </div>
                       </div>
                     </div>
                     <div className="p-4">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between">
                         <Badge variant="secondary" className="text-xs">
-                          {gym.planCount} plans available
+                          {trainer.specialty}
                         </Badge>
-                        <span className="font-bold text-primary">₹{gym.minPrice}/month</span>
+                        <span className="font-bold text-primary">
+                          {typeof trainer.price === 'object'
+                            ? `From ₹${trainer.price.basic}`
+                            : trainer.price}
+                        </span>
                       </div>
-                      {gym.distance && (
-                        <div className="flex items-center text-sm text-muted-foreground mb-2">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span>{gym.distance.toFixed(1)} km away</span>
-                        </div>
-                      )}
-                      <Button className="w-full mt-3" size="sm">
-                        View Details
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{trainer.bio}</p>
+                      <Button onClick={() => navigate(`/trainers/${trainer._id}`)} className="w-full mt-3" size="sm">
+                        View Profile
                       </Button>
                     </div>
                   </div>
@@ -446,82 +420,8 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        {/* Featured Trainers */}
-        <Card className="bg-card/40 backdrop-blur-sm border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              <CardTitle>Featured Trainers</CardTitle>
-            </div>
-            <Link to="/trainers">
-              <Button variant="ghost" size="sm">
-                View All <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-              </div>
-            ) : trainers.length === 0 ? (
-              <div className="text-center py-8 space-y-2">
-                <Users className="h-12 w-12 mx-auto text-muted-foreground/50" />
-                <p className="text-muted-foreground">No trainers available at the moment</p>
-                <Button variant="outline" size="sm">
-                  <Users className="h-4 w-4 mr-2" />
-                  Browse Trainers
-                </Button>
-              </div>
-            ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {trainers.slice(0, 3).map((trainer) => (
-                  <div
-                    key={trainer._id}
-                    className="group relative overflow-hidden bg-secondary/30 rounded-lg border border-border/30 hover:border-border transition-all duration-300 hover:shadow-lg"
-                  >
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={trainer.profileImage || "/placeholder.svg"}
-                        alt={trainer.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute top-3 right-3">
-                        <div className="flex items-center gap-1 px-2 py-1 bg-black/40 backdrop-blur-sm rounded-full">
-                          <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
-                          <span className="text-white text-xs font-medium">{trainer.rating}</span>
-                        </div>
-                      </div>
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <h4 className="font-semibold text-white mb-1">{trainer.name}</h4>
-                        <div className="flex items-center gap-2 text-white/80 text-sm">
-                          <MapPin className="h-3 w-3" />
-                          <span>{trainer.location}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="text-xs">
-                          {trainer.specialty}
-                        </Badge>
-                        <span className="font-bold text-primary">{trainer.price}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{trainer.bio}</p>
-                      <Button onClick={() => navigate(`/trainers/${trainer._id}`)} className="w-full mt-3" size="sm">
-                        View Profile
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
         {/* Quick Actions */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card
             className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
             onClick={() => navigate("/workouts")}
@@ -568,21 +468,6 @@ export default function HomePage() {
           </Card>
 
           <Card
-            className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
-            onClick={() => navigate("/gyms")}
-          >
-            <CardContent className="flex items-center gap-3 p-6">
-              <div className="p-2 bg-orange-500/20 rounded-lg">
-                <Building className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <h4 className="font-medium">Join Gym</h4>
-                <p className="text-sm text-muted-foreground">Find local gyms</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
             className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
             onClick={() => navigate("/dashboard")}
           >
@@ -598,6 +483,7 @@ export default function HomePage() {
           </Card>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

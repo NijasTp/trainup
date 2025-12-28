@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
 import { ITransactionRepository } from '../core/interfaces/repositories/ITransactionRepository';
 import { ITransaction, TransactionModel } from '../models/transaction.model';
-import { SortOrder } from 'mongoose';
-import { ITransactionDTO } from '../dtos/transaction.dto';
+import { SortOrder, FilterQuery, Types } from 'mongoose';
+import { ITransactionDTO, TransactionDto } from '../dtos/transaction.dto';
 
 @injectable()
 export class TransactionRepository implements ITransactionRepository {
@@ -34,7 +34,7 @@ export class TransactionRepository implements ITransactionRepository {
     status: string,
     sort: string
   ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }> {
-    const query: any = { userId };
+    const query: FilterQuery<ITransaction> = { userId };
     if (status && status !== 'all') query.status = status;
     if (search) {
       query.$or = [
@@ -62,7 +62,7 @@ export class TransactionRepository implements ITransactionRepository {
 
     return {
       transactions: transactions.map(transaction =>
-        this.mapToTransactionDto(transaction as ITransaction)
+        TransactionDto.toResponse(transaction as ITransaction)
       ),
       totalPages
     };
@@ -75,8 +75,8 @@ export class TransactionRepository implements ITransactionRepository {
     search: string,
     status: string,
     planType: string
-  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }> {
-    const query: any = { trainerId };
+  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number; totalRevenue: number; total: number }> {
+    const query: FilterQuery<ITransaction> = { trainerId };
     if (status && status !== 'all') query.status = status;
     if (planType && planType !== 'all') query.planType = planType;
     if (search) {
@@ -103,11 +103,20 @@ export class TransactionRepository implements ITransactionRepository {
     const total = await TransactionModel.countDocuments(query);
     const totalPages = Math.ceil(total / limit);
 
+    // Calculate total revenue from all completed transactions for this trainer (using trainerEarnings)
+    const revenueResult = await TransactionModel.aggregate([
+      { $match: { trainerId: new Types.ObjectId(trainerId), status: 'completed' } },
+      { $group: { _id: null, totalRevenue: { $sum: '$trainerEarnings' } } }
+    ]);
+    const totalRevenue = revenueResult[0]?.totalRevenue || 0;
+
     return {
       transactions: transactions.map(transaction =>
-        this.mapToTransactionDto(transaction as ITransaction)
+        TransactionDto.toResponse(transaction as ITransaction)
       ),
-      totalPages
+      totalPages,
+      totalRevenue,
+      total
     };
   }
 
@@ -143,7 +152,7 @@ export class TransactionRepository implements ITransactionRepository {
     const thisMonthEarnings = await TransactionModel.aggregate([
       {
         $match: {
-          trainerId,
+          trainerId: new Types.ObjectId(trainerId),
           status: 'completed',
           createdAt: { $gte: thisMonthStart, $lte: new Date() }
         }
@@ -151,7 +160,7 @@ export class TransactionRepository implements ITransactionRepository {
       {
         $group: {
           _id: null,
-          total: { $sum: '$amount' }
+          total: { $sum: '$trainerEarnings' } // Changed from amount to trainerEarnings
         }
       }
     ]);
@@ -159,7 +168,7 @@ export class TransactionRepository implements ITransactionRepository {
     const lastMonthEarnings = await TransactionModel.aggregate([
       {
         $match: {
-          trainerId,
+          trainerId: new Types.ObjectId(trainerId),
           status: 'completed',
           createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd }
         }
@@ -167,7 +176,7 @@ export class TransactionRepository implements ITransactionRepository {
       {
         $group: {
           _id: null,
-          total: { $sum: '$amount' }
+          total: { $sum: '$trainerEarnings' } // Changed from amount to trainerEarnings
         }
       }
     ]);
@@ -175,7 +184,7 @@ export class TransactionRepository implements ITransactionRepository {
     const monthlyEarnings = await TransactionModel.aggregate([
       {
         $match: {
-          trainerId,
+          trainerId: new Types.ObjectId(trainerId),
           status: 'completed',
           createdAt: {
             $gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1))
@@ -188,33 +197,43 @@ export class TransactionRepository implements ITransactionRepository {
             year: { $year: '$createdAt' },
             month: { $month: '$createdAt' }
           },
-          earnings: { $sum: '$amount' },
+          earnings: { $sum: '$trainerEarnings' },
           clients: { $addToSet: '$userId' }
         }
       },
       {
         $project: {
-          month: {
-            $concat: [
-              {
-                $arrayElemAt: [
-                  ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                  { $subtract: ['$_id.month', 1] }
-                ]
-              },
-              ' ',
-              { $toString: '$_id.year' }
-            ]
-          },
+          year: '$_id.year',
+          monthNum: '$_id.month',
           earnings: 1,
           clients: { $size: '$clients' },
           _id: 0
         }
       },
-      { $sort: { month: -1 } },
-      { $limit: 12 }
+      { $sort: { year: 1, monthNum: 1 } }
     ]);
 
+    // Fill in last 12 months
+    const filledMonthlyEarnings = [];
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const monthNum = d.getMonth() + 1;
+      const monthName = d.toLocaleString('en-US', { month: 'short' });
+
+      const found = monthlyEarnings.find(m => m.year === year && m.monthNum === monthNum);
+
+      filledMonthlyEarnings.push({
+        month: `${monthName} ${year}`,
+        earnings: found ? found.earnings : 0,
+        clients: found ? found.clients : 0
+      });
+    }
+
+    // Keep the plan distribution from transaction repo for now as fallback or remove if not used by service anymore
+    // logic moved to TrainerRepo based on active users, but method contract calculates it.
+    // We will leave the old logic here but Service will effectively ignore it by overwriting with TrainerRepo call.
     const planDistribution = await TransactionModel.aggregate([
       {
         $match: {
@@ -240,7 +259,7 @@ export class TransactionRepository implements ITransactionRepository {
     return {
       totalEarningsThisMonth: thisMonthEarnings[0]?.total || 0,
       totalEarningsLastMonth: lastMonthEarnings[0]?.total || 0,
-      monthlyEarnings,
+      monthlyEarnings: filledMonthlyEarnings,
       planDistribution
     };
   }
@@ -263,18 +282,133 @@ export class TransactionRepository implements ITransactionRepository {
     }));
   }
 
-  private mapToTransactionDto(transaction: ITransaction): ITransactionDTO {
+  async getAllTransactions(
+    page: number,
+    limit: number,
+    search: string,
+    status: string,
+    sort: string
+  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }> {
+    const query: FilterQuery<ITransaction> = {};
+    if (status && status !== 'all') query.status = status;
+    if (search) {
+      query.$or = [
+        { razorpayOrderId: { $regex: search, $options: 'i' } },
+        { razorpayPaymentId: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const sortOptions: { [key: string]: { [field: string]: SortOrder } } = {
+      newest: { createdAt: -1 },
+      oldest: { createdAt: 1 },
+      amount_high: { amount: -1 },
+      amount_low: { amount: 1 }
+    };
+
+    const transactions = await TransactionModel.find(query)
+      .populate('userId', 'name email')
+      .populate('trainerId', 'name')
+      .sort(sortOptions[sort] || sortOptions.newest)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    const total = await TransactionModel.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
+
     return {
-      _id: transaction._id.toString(),
-      userId: typeof transaction.userId === 'object' ? transaction.userId : transaction.userId.toString(),
-      trainerId: transaction.trainerId?.toString(),
-      razorpayOrderId: transaction.razorpayOrderId,
-      razorpayPaymentId: transaction.razorpayPaymentId,
-      amount: transaction.amount,
-      status: transaction.status,
-      planType: transaction.planType,
-      createdAt: transaction.createdAt,
-      updatedAt: transaction.updatedAt
+      transactions: transactions.map(transaction =>
+        TransactionDto.toResponse(transaction as ITransaction)
+      ),
+      totalPages
     };
   }
+
+  async getAllTransactionsForExport(): Promise<ITransactionDTO[]> {
+    const transactions = await TransactionModel.find({})
+      .populate('userId', 'name email')
+      .populate('trainerId', 'name')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return transactions.map(transaction =>
+      TransactionDto.toResponse(transaction as ITransaction)
+    );
+  }
+
+  async getGraphData(filter: 'day' | 'week' | 'month' | 'year'): Promise<unknown[]> {
+    const now = new Date();
+    let groupBy: Record<string, unknown>;
+    let startDate: Date;
+
+    switch (filter) {
+      case 'day':
+        startDate = new Date(now.setDate(now.getDate() - 30)); // Last 30 days
+        groupBy = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
+          day: { $dayOfMonth: '$createdAt' }
+        };
+        break;
+      case 'week':
+        startDate = new Date(now.setDate(now.getDate() - 90)); // Last ~3 months
+        groupBy = {
+          year: { $year: '$createdAt' },
+          week: { $week: '$createdAt' }
+        };
+        break;
+      case 'month':
+        startDate = new Date(now.setFullYear(now.getFullYear() - 1)); // Last year
+        groupBy = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        };
+        break;
+      case 'year':
+      default:
+        startDate = new Date(now.setFullYear(now.getFullYear() - 5)); // Last 5 years
+        groupBy = {
+          year: { $year: '$createdAt' }
+        };
+        break;
+    }
+
+    const data = await TransactionModel.aggregate([
+      {
+        $match: {
+          status: 'completed',
+          createdAt: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: groupBy,
+          totalAmount: { $sum: '$platformFee' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1, '_id.week': 1 } }
+    ]);
+
+    return data.map(item => {
+      let label = '';
+      if (filter === 'day') {
+        label = `${item._id.day}/${item._id.month}`;
+      } else if (filter === 'week') {
+        label = `Week ${item._id.week}`;
+      } else if (filter === 'month') {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        label = `${monthNames[item._id.month - 1]} ${item._id.year}`;
+      } else {
+        label = `${item._id.year}`;
+      }
+      return {
+        date: label, // Using 'date' as key for Recharts
+        amount: item.totalAmount,
+        count: item.count
+      };
+    });
+  }
+
+
 }

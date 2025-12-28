@@ -14,42 +14,20 @@ import {
     RefreshCw
 } from "lucide-react";
 import API from "@/lib/axios";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 
-interface RequestedBy {
-    userId: string;
-    requestedAt: string;
-    status: 'pending' | 'approved' | 'rejected';
-    rejectionReason?: string;
-}
+import type { Session } from "@/interfaces/user/IUserSessions";
 
-interface Session {
-    _id: string;
-    trainerId: {
-        _id: string;
-        name: string;
-        profileImage?: string;
-    };
-    date: string;
-    startTime: string;
-    endTime: string;
-    requestedBy: RequestedBy[];
-    isBooked: boolean;
-    bookedBy?: string;
-    createdAt: string;
-    currentUserId?: string;
-}
 
 export default function UserSessions() {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const user = useSelector((state: RootState) => state.userAuth.user);
-    console.log('', user);
     const currentUserId = user?._id;
     const navigate = useNavigate();
 
@@ -63,7 +41,13 @@ export default function UserSessions() {
         setError(null);
         try {
             const response = await API.get("/user/sessions");
-            setSessions(response.data.sessions);
+            // Sort sessions: Latest date first
+            const sortedSessions = (response.data.sessions || []).sort((a: Session, b: Session) => {
+                const dateA = new Date(`${a.date.split('T')[0]}T${a.startTime}`);
+                const dateB = new Date(`${b.date.split('T')[0]}T${b.startTime}`);
+                return dateB.getTime() - dateA.getTime();
+            });
+            setSessions(sortedSessions);
             setIsLoading(false);
         } catch (err: any) {
             console.error("Failed to fetch sessions:", err);
@@ -75,21 +59,29 @@ export default function UserSessions() {
 
     const canJoinSession = (session: Session) => {
         if (!currentUserId) return false;
-
         const userRequest = session.requestedBy.find(req => req.userId === currentUserId);
         if (!userRequest || userRequest.status !== 'approved' || !session.isBooked) return false;
 
-        const sessionDateTime = new Date(`${session.date.split('T')[0]}T${session.startTime}:00`);
-        const now = new Date();
-        const tenMinutesBefore = new Date(sessionDateTime.getTime() - 10 * 60 * 1000);
-        const sessionEnd = new Date(`${session.date.split('T')[0]}T${session.endTime}:00`);
+        // Parse the slot date ensuring we get the correct local year, month, day
+        const slotDate = new Date(session.date);
+        const year = slotDate.getFullYear();
+        const month = slotDate.getMonth();
+        const day = slotDate.getDate();
 
-        return now >= tenMinutesBefore && now <= sessionEnd;
+        const [hours, minutes] = session.startTime.split(':').map(Number);
+        const [endHours, endMinutes] = session.endTime.split(':').map(Number);
+
+        const start = new Date(year, month, day, hours, minutes);
+        const end = new Date(year, month, day, endHours, endMinutes);
+
+        const now = new Date();
+        const tenMinutesBefore = new Date(start.getTime() - 10 * 60000);
+
+        return now >= tenMinutesBefore && now <= end;
     };
 
     const joinVideoCall = async (slotId: string) => {
         try {
-            console.log('Attempting to join video call for slotId:', slotId);
             const response = await API.get(`/video-call/slot/${slotId}`);
             const roomId = response.data.videoCall.roomId;
             console.log('Navigating to video call with roomId:', roomId, 'With slotId:', slotId);
@@ -263,16 +255,16 @@ export default function UserSessions() {
                                                     <div className="flex items-center space-x-3">
                                                         <Avatar className="h-12 w-12">
                                                             <AvatarImage
-                                                                src={session.trainerId.profileImage || "/placeholder.svg"}
-                                                                alt={session.trainerId.name}
+                                                                src={session.trainerId?.profileImage || "/placeholder.svg"}
+                                                                alt={session.trainerId?.name || "Trainer"}
                                                             />
                                                             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                                                                {session.trainerId.name.charAt(0)}
+                                                                {session.trainerId?.name?.charAt(0) || "T"}
                                                             </AvatarFallback>
                                                         </Avatar>
                                                         <div>
                                                             <h3 className="font-semibold text-foreground">
-                                                                Session with {session.trainerId.name}
+                                                                Session with {session.trainerId?.name || "Unknown Trainer"}
                                                             </h3>
                                                             <p className="text-sm text-muted-foreground">
                                                                 Requested on {new Date(session.createdAt).toLocaleDateString()}

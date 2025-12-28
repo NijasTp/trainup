@@ -32,26 +32,9 @@ import {
 import API from "@/lib/axios";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import type { Client, Message } from "@/interfaces/trainer/ITrainerChat";
 import io, { Socket } from 'socket.io-client';
 import { debounce } from 'lodash';
-
-interface Message {
-    _id: string;
-    senderId: string;
-    receiverId: string;
-    message: string;
-    createdAt: string;
-    senderType: 'user' | 'trainer';
-    messageType: 'text' | 'image' | 'audio';
-    fileUrl?: string;
-}
-
-interface Client {
-    _id: string;
-    name: string;
-    profileImage?: string;
-    trainerPlan: 'basic' | 'premium' | 'pro';
-}
 
 export default function TrainerChatPage() {
     const { clientId } = useParams<{ clientId: string }>();
@@ -488,8 +471,8 @@ export default function TrainerChatPage() {
                                     )}
 
                                     <div className={`relative max-w-[70%] rounded-2xl p-3 break-words ${isTrainer
-                                            ? 'bg-primary text-primary-foreground ml-auto'
-                                            : 'bg-muted text-foreground mr-auto'
+                                        ? 'bg-primary text-primary-foreground ml-auto'
+                                        : 'bg-muted text-foreground mr-auto'
                                         }`}>
 
                                         <div className="flex flex-col items-center">

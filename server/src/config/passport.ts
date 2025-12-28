@@ -4,12 +4,13 @@ import { injectable, inject } from "inversify";
 import TYPES from "../core/types/types";
 import { IUserRepository } from "../core/interfaces/repositories/IUserRepository";
 import dotenv from "dotenv";
+import { logger } from "../utils/logger.util";
 dotenv.config();
 
 @injectable()
 export class PassportConfig {
   constructor(@inject(TYPES.IUserRepository) private userRepo: IUserRepository) {
-    console.log("Initializing PassportConfig"); 
+    logger.info("Initializing PassportConfig");
     passport.use(
       new GoogleStrategy(
         {
@@ -19,7 +20,7 @@ export class PassportConfig {
         },
         async (accessToken, refreshToken, profile, done) => {
           try {
-            console.log("Google Strategy: Processing profile", profile.id); // Debug log
+            logger.info(`Google Strategy: Processing profile ${profile.id}`); // Debug log
             let user = await this.userRepo.findByGoogleId(profile.id);
             if (!user) {
               user = await this.userRepo.createUser({
@@ -30,24 +31,24 @@ export class PassportConfig {
               });
             }
             return done(null, user);
-          } catch (err) {
-            console.error("Google Strategy Error:", err);
-            return done(err);
+          } catch (err: unknown) {
+            logger.error("Google Strategy Error:", err);
+            return done(err as Error);
           }
         }
       )
     );
 
-    passport.serializeUser((user: any, done) => {
-      done(null, user.id);
+    passport.serializeUser((user: unknown, done) => {
+      done(null, (user as { id: string }).id);
     });
 
     passport.deserializeUser(async (id: string, done) => {
       try {
         const user = await this.userRepo.findById(id);
         done(null, user);
-      } catch (err) {
-        done(err);
+      } catch (err: unknown) {
+        done(err as Error);
       }
     });
   }

@@ -23,8 +23,13 @@ import {
   Key,
   Loader2,
   ChevronRight,
-  Check
+  Check,
+  ZoomIn,
+  ZoomOut
 } from "lucide-react";
+import Cropper from 'react-easy-crop';
+import getCroppedImg from "@/lib/cropImage";
+import { Slider } from "@/components/ui/slider";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { updateUser } from "@/redux/slices/userAuthSlice";
@@ -118,6 +123,41 @@ export default function EditProfile() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [loading, setLoading] = useState(false)
 
+  // Cropping State
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null)
+  const [isCropping, setIsCropping] = useState(false)
+  const [tempImage, setTempImage] = useState<string | null>(null)
+
+  const onCropComplete = (_: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels)
+  }
+
+  const showCroppedImage = async () => {
+    try {
+      if (!tempImage || !croppedAreaPixels) return
+      const croppedImage = await getCroppedImg(
+        tempImage,
+        croppedAreaPixels
+      )
+      if (croppedImage) {
+        setProfileImageFile(croppedImage)
+        setProfileImagePreview(URL.createObjectURL(croppedImage))
+        setIsCropping(false)
+        setTempImage(null)
+      }
+    } catch (e) {
+      console.error(e)
+      toast.error("Failed to crop image")
+    }
+  }
+
+  const closeCrop = () => {
+    setIsCropping(false)
+    setTempImage(null)
+  }
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -185,10 +225,10 @@ export default function EditProfile() {
         return;
       }
 
-      setProfileImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfileImagePreview(reader.result as string);
+        setTempImage(reader.result as string);
+        setIsCropping(true);
       };
       reader.readAsDataURL(file);
     }
@@ -603,6 +643,53 @@ export default function EditProfile() {
       case 4:
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            {/* Crop Dialog */}
+            <Dialog open={isCropping} onOpenChange={(open) => !open && closeCrop()}>
+              <DialogContent className="sm:max-w-xl">
+                <DialogHeader>
+                  <DialogTitle>Adjust Image</DialogTitle>
+                  <DialogDescription>
+                    Drag to position and use the slider to zoom.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="relative w-full h-96 bg-black/5 rounded-lg overflow-hidden my-4">
+                  {tempImage && (
+                    <Cropper
+                      image={tempImage}
+                      crop={crop}
+                      zoom={zoom}
+                      aspect={1}
+                      onCropChange={setCrop}
+                      onCropComplete={onCropComplete}
+                      onZoomChange={setZoom}
+                      showGrid={false}
+                    />
+                  )}
+                </div>
+                <div className="flex items-center gap-4 px-4">
+                  <ZoomOut className="h-4 w-4 text-muted-foreground" />
+                  <Slider
+                    value={[zoom]}
+                    min={1}
+                    max={3}
+                    step={0.1}
+                    onValueChange={(value) => setZoom(value[0])}
+                    className="flex-1"
+                  />
+                  <ZoomIn className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <DialogFooter className="flex justify-between gap-2 sm:justify-between">
+                  <Button variant="ghost" onClick={closeCrop}>
+                    Cancel
+                  </Button>
+                  <Button onClick={showCroppedImage}>
+                    <Check className="w-4 h-4 mr-2" />
+                    Apply Crop
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
             {/* Privacy Settings */}
             <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
               <CardHeader>

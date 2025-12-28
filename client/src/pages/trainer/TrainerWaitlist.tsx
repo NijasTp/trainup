@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Loader2, Clock, FileText, User, Mail, Phone, MapPin, Award, Briefcase, FileCheck } from 'lucide-react';
 import { getTrainerDetails } from '@/services/trainerService';
 import { logoutTrainer } from '@/redux/slices/trainerAuthSlice';
@@ -12,20 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-interface TrainerDetails {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  experience: string;
-  specialization: string;
-  bio: string;
-  certificate: string;
-  profileImage: string;
-  profileStatus: "pending" | "approved" | "rejected" | "active" | "suspended";
-  createdAt: Date;
-}
+import type { TrainerDetails } from "@/interfaces/trainer/ITrainerWaitlist";
 
 // Main Component
 const TrainerWaitlist: React.FC = () => {
@@ -34,6 +21,23 @@ const TrainerWaitlist: React.FC = () => {
   const [trainerData, setTrainerData] = useState<TrainerDetails | null>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await getTrainerDetails();
+        if (res.trainer.profileStatus === "approved" || res.trainer.profileStatus === "active") {
+          toast.success("Your application has been approved!");
+          navigate("/trainer/dashboard");
+        }
+      } catch (error) {
+        console.error("Error polling trainer status:", error);
+      }
+    };
+
+    const interval = setInterval(checkStatus, 5000);
+    return () => clearInterval(interval);
+  }, [navigate]);
 
   const handleLogout = async () => {
     try {
@@ -230,33 +234,33 @@ const TrainerWaitlist: React.FC = () => {
                     <span className="text-sm font-medium">Bio</span>
                   </div>
                   <p className="text-white whitespace-pre-wrap">{trainerData.bio}</p>
+                </div>
+
+                {trainerData.certificate && (
+                  <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
+                    <div className="flex items-center space-x-2 text-[#4B8B9B] mb-2">
+                      <FileCheck className="h-4 w-4" />
+                      <span className="text-sm font-medium">Certificate</span>
+                    </div>
+                    <p className="text-white text-sm">Certificate uploaded ✓</p>
+                  </div>
+                )}
               </div>
 
-              {trainerData.certificate && (
-                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
-                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-2">
-                    <FileCheck className="h-4 w-4" />
-                    <span className="text-sm font-medium">Certificate</span>
-                  </div>
-                  <p className="text-white text-sm">Certificate uploaded ✓</p>
-                </div>
-              )}
+              {/* Submission Date */}
+              <div className="text-center text-sm text-gray-400 pt-4 border-t border-[#4B8B9B]/20">
+                <p>Application submitted on {new Date(trainerData.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</p>
+              </div>
             </div>
-
-          {/* Submission Date */}
-          <div className="text-center text-sm text-gray-400 pt-4 border-t border-[#4B8B9B]/20">
-            <p>Application submitted on {new Date(trainerData.createdAt).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}</p>
-          </div>
-        </div>
-      )}
-      </DialogContent>
-    </Dialog>
+          )}
+        </DialogContent>
+      </Dialog>
     </div >
   );
 };

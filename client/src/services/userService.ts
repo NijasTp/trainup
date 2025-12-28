@@ -78,3 +78,13 @@ export const addGymRating = async (gymId: string, rating: number, message: strin
   const response = await API.post(`/user/gym/rating/${gymId}`, { rating, message, subscriptionPlan });
   return response.data;
 };
+
+export const editReview = async (reviewId: string, rating: number, comment: string) => {
+  const response = await API.put(`/user/review/${reviewId}`, { rating, comment });
+  return response.data;
+};
+
+export const deleteReview = async (reviewId: string) => {
+  const response = await API.delete(`/user/review/${reviewId}`);
+  return response.data;
+};

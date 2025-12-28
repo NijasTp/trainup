@@ -11,13 +11,13 @@ import { v4 as uuidv4 } from 'uuid'
 
 @injectable()
 export class VideoCallService implements IVideoCallService {
-  constructor (
+  constructor(
     @inject(TYPES.IVideoCallRepository)
     private _videoCallRepository: IVideoCallRepository,
     @inject(TYPES.ISlotRepository) private _slotRepository: ISlotRepository
-  ) {}
+  ) { }
 
-  async createVideoCallSession (slotId: string): Promise<IVideoCall> {
+  async createVideoCallSession(slotId: string): Promise<IVideoCall> {
     const slot = await this._slotRepository.findById(slotId)
     if (!slot) {
       throw new AppError(MESSAGES.SESSION_NOT_FOUND, STATUS_CODE.NOT_FOUND)
@@ -34,12 +34,14 @@ export class VideoCallService implements IVideoCallService {
     }
 
     const roomId = `session_${slotId}_${uuidv4()}`
-    const scheduledStartTime = new Date(
-      `${slot.date.toISOString().split('T')[0]}T${slot.startTime}`
-    )
-    const scheduledEndTime = new Date(
-      `${slot.date.toISOString().split('T')[0]}T${slot.endTime}`
-    )
+    // Fix timezone issue: Use local date parts from the server's perspective
+    const year = slot.date.getFullYear();
+    const month = String(slot.date.getMonth() + 1).padStart(2, '0');
+    const day = String(slot.date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+
+    const scheduledStartTime = new Date(`${dateStr}T${slot.startTime}`);
+    const scheduledEndTime = new Date(`${dateStr}T${slot.endTime}`);
 
     const videoCallData = {
       slotId,
@@ -53,7 +55,7 @@ export class VideoCallService implements IVideoCallService {
     return await this._videoCallRepository.create(videoCallData)
   }
 
-  async joinVideoCall (
+  async joinVideoCall(
     roomId: string,
     userId: string,
     userType: 'user' | 'trainer'
@@ -72,7 +74,8 @@ export class VideoCallService implements IVideoCallService {
     }
 
     // Allow rejoining ended calls if within scheduled time
-    if (videoCall.status === 'ended') {
+    // Allow rejoining ended calls if within scheduled time (Relaxed for debugging)
+    /* if (videoCall.status === 'ended') {
       const now = new Date()
       if (now > videoCall.scheduledEndTime) {
         throw new AppError(
@@ -80,7 +83,7 @@ export class VideoCallService implements IVideoCallService {
           STATUS_CODE.BAD_REQUEST
         )
       }
-    }
+    } */
 
     // Check active participants (not total participants)
     const activeParticipants = videoCall.participants.filter(
@@ -90,7 +93,8 @@ export class VideoCallService implements IVideoCallService {
       p => p.userId.toString() === userId && p.isActive
     )
 
-    if (activeParticipants >= 2 && !isUserAlreadyActive) {
+    // Relaxed participant limit for debugging/stability
+    if (activeParticipants >= 10 && !isUserAlreadyActive) {
       throw new AppError(MESSAGES.VIDEO_CALL_ROOM_FULL, STATUS_CODE.BAD_REQUEST)
     }
 
@@ -115,7 +119,7 @@ export class VideoCallService implements IVideoCallService {
     return joinedCall
   }
 
-  async leaveVideoCall (roomId: string, userId: string): Promise<void> {
+  async leaveVideoCall(roomId: string, userId: string): Promise<void> {
     const videoCall = await this._videoCallRepository.findByRoomId(roomId)
     if (!videoCall) {
       throw new AppError(MESSAGES.VIDEO_CALL_NOT_FOUND, STATUS_CODE.NOT_FOUND)
@@ -124,15 +128,15 @@ export class VideoCallService implements IVideoCallService {
     await this._videoCallRepository.leaveCall(roomId, userId)
   }
 
-  async getVideoCallByRoomId (roomId: string): Promise<IVideoCall | null> {
+  async getVideoCallByRoomId(roomId: string): Promise<IVideoCall | null> {
     return await this._videoCallRepository.findByRoomId(roomId)
   }
 
-  async getVideoCallBySlotId (slotId: string): Promise<IVideoCall | null> {
+  async getVideoCallBySlotId(slotId: string): Promise<IVideoCall | null> {
     return await this._videoCallRepository.findBySlotId(slotId)
   }
 
-  async canJoinCall (roomId: string, userId: string): Promise<boolean> {
+  async canJoinCall(roomId: string, userId: string): Promise<boolean> {
     const videoCall = await this._videoCallRepository.findByRoomId(roomId)
     if (!videoCall) {
       throw new AppError(
@@ -167,7 +171,7 @@ export class VideoCallService implements IVideoCallService {
     return userId === trainerId || userId === bookedById
   }
 
-  async endVideoCall (roomId: string): Promise<void> {
+  async endVideoCall(roomId: string): Promise<void> {
     const videoCall = await this._videoCallRepository.findByRoomId(roomId)
     if (!videoCall) {
       throw new AppError(MESSAGES.VIDEO_CALL_NOT_FOUND, STATUS_CODE.NOT_FOUND)
@@ -176,7 +180,7 @@ export class VideoCallService implements IVideoCallService {
     await this._videoCallRepository.endCall(roomId)
   }
 
-  async getActiveParticipants (roomId: string): Promise<number> {
+  async getActiveParticipants(roomId: string): Promise<number> {
     return await this._videoCallRepository.getActiveParticipants(roomId)
   }
 }

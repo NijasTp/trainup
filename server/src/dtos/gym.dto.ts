@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+
 
 export interface GymRequestOtpDto {
   email: string;
@@ -57,20 +57,16 @@ export interface GymLoginResponseDto {
   refreshToken: string;
 }
 
-export interface AnnouncementDto {
-  title: string;
-  message: string;
-  date: Date;
-}
+
 
 export interface GymDataResponseDto {
-  gymDetails: any;
-  trainers: any[];
-  members: any[];
-  announcements: any[];
+  gymDetails: unknown;
+  trainers: unknown[];
+  members: unknown[];
+  announcements: unknown[];
   totalRevenue: number;
   memberCount: number;
-  recentMembers: any[];
+  recentMembers: unknown[];
 }
 
 export interface CreateSubscriptionPlanDto {
@@ -110,7 +106,7 @@ export interface AddTrainerDto {
   bio?: string;
 }
 
-export interface UpdateTrainerDto extends Partial<AddTrainerDto> {}
+export type UpdateTrainerDto = Partial<AddTrainerDto>;
 
 export interface AddMemberDto {
   userId: string;
@@ -123,7 +119,7 @@ export interface AddMemberDto {
   subscriptionEndDate: Date;
 }
 
-export interface UpdateMemberDto extends Partial<AddMemberDto> {}
+export type UpdateMemberDto = Partial<AddMemberDto>;
 
 export interface MemberResponseDto {
   _id: string;

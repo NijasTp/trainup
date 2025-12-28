@@ -23,6 +23,19 @@ router.get('/get-details', authMiddleware, roleMiddleware(['trainer']), trainerC
 router.get('/get-clients', authMiddleware, roleMiddleware(['trainer']), trainerController.getClients.bind(trainerController));
 router.get('/get-client/:id', authMiddleware, roleMiddleware(['trainer']), trainerController.getClient.bind(trainerController));
 
+router.get('/dashboard-stats', authMiddleware, (req, res, next) =>
+    container.get<TrainerController>(TYPES.TrainerController).getDashboardStats(req, res, next)
+)
+router.patch('/availability', authMiddleware, (req, res, next) =>
+    container.get<TrainerController>(TYPES.TrainerController).updateAvailability(req, res, next)
+)
+router.put('/profile', authMiddleware, (req, res, next) =>
+    container.get<TrainerController>(TYPES.TrainerController).updateProfile(req, res, next)
+)
+router.post('/change-password', authMiddleware, (req, res, next) =>
+    container.get<TrainerController>(TYPES.TrainerController).changePassword(req, res, next)
+)
+
 router.get('/dashboard', authMiddleware, roleMiddleware(['trainer']), trainerController.getDashboard.bind(trainerController));
 router.get('/transactions', authMiddleware, roleMiddleware(['trainer']), trainerController.getTransactions.bind(trainerController));
 

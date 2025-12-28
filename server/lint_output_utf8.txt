@@ -1,0 +1,27 @@
+
+> server@1.0.0 lint
+> eslint . --ext .ts
+
+
+C:\Users\nihas\Downloads\Brototype\trainup\server\src\core\interfaces\repositories\IGymRepository.ts
+  30:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\nihas\Downloads\Brototype\trainup\server\src\middlewares\auth.middleware.ts
+  59:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  60:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:74  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:70  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\nihas\Downloads\Brototype\trainup\server\src\services\gym.service.ts
+   62:16  warning  '_e' is defined but never used  @typescript-eslint/no-unused-vars
+  492:16  warning  '_e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\nihas\Downloads\Brototype\trainup\server\src\services\payment.service.ts
+  49:14  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\nihas\Downloads\Brototype\trainup\server\src\services\user.service.ts
+  388:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  390:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+G£û 10 problems (7 errors, 3 warnings)
+

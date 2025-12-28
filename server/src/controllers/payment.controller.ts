@@ -14,6 +14,7 @@ import { CreateGymTransactionDto, VerifyGymPaymentDto } from '../dtos/gym.dto';
 import { MESSAGES } from '../constants/messages.constants';
 import { logger } from '../utils/logger.util';
 import { ITransaction } from '../models/transaction.model';
+
 import { AppError } from '../utils/appError.util';
 import { addDays, addMonths, addYears } from 'date-fns';
 import { IMailService } from '../core/interfaces/services/IMailService';
@@ -58,13 +59,27 @@ export class PaymentController {
         throw new AppError('You already have a trainer assigned.', STATUS_CODE.BAD_REQUEST);
       }
 
-      const order: CreateOrderResponseDto = await this._paymentService.createOrder(dto.amount, dto.currency, dto.receipt);
+      const trainer = await this._trainerService.getTrainerById(trainerId);
+      if (!trainer) throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+
+      const trainerPrice = trainer.price as unknown as Record<string, number>;
+      const basePrice = trainerPrice[planType as string];
+      if (!basePrice) throw new AppError('Invalid plan price configuration', STATUS_CODE.BAD_REQUEST);
+
+      const calculatedAmount = basePrice * dto.duration;
+      const platformFee = Math.floor(calculatedAmount * 0.10); // 10% fee
+      const trainerEarnings = calculatedAmount - platformFee;
+
+      const order: CreateOrderResponseDto = await this._paymentService.createOrder(calculatedAmount, dto.currency, dto.receipt);
 
       const transactionData: Partial<ITransaction> = {
         userId,
         trainerId,
-        amount: dto.amount,
-        planType,
+        amount: calculatedAmount,
+        platformFee,
+        trainerEarnings,
+        planType: planType as 'basic' | 'premium' | 'pro',
+        duration: dto.duration,
         razorpayOrderId: order.id,
         razorpayPaymentId: '',
         status: 'pending',
@@ -146,17 +161,18 @@ export class PaymentController {
       await this._userService.updateUserPlan(userId, dto.planType);
       await this._trainerService.addClientToTrainer(dto.trainerId, userId);
 
-      const expiryDate = addMonths(new Date(), 1);
+      const duration = dto.duration || 1;
+      const expiryDate = addMonths(new Date(), duration);
       let messagesLeft = 0;
       let videoCallsLeft = 0;
 
       switch (dto.planType) {
         case 'premium':
-          messagesLeft = 200;
+          messagesLeft = 200 * duration;
           break;
         case 'pro':
           messagesLeft = -1;
-          videoCallsLeft = 5;
+          videoCallsLeft = 5 * duration;
           break;
       }
 
@@ -166,7 +182,9 @@ export class PaymentController {
         planType: dto.planType,
         messagesLeft,
         videoCallsLeft,
-        expiryDate
+        expiryDate,
+        duration,
+        amount: dto.amount
       });
 
       await this._notificationService.sendTrainerSubscribedNotification(userId, trainer.name);

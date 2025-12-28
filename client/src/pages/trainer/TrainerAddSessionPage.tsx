@@ -12,37 +12,8 @@ import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 import API from "@/lib/axios";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
+import type { Exercise, WgerExerciseInfo, WgerExerciseSuggestion } from "@/interfaces/trainer/ITrainerAddSession";
 
-interface WgerExerciseSuggestion {
-  value: string;
-  data: {
-    id: string;
-    base_id: string;
-    name: string;
-    category: string;
-    image: string;
-    image_thumbnail: string;
-  };
-}
-
-interface WgerExerciseInfo {
-  id: number;
-  name: string;
-  description: string;
-  category: number;
-  equipment?: number[];
-  images?: { image: string; is_main: boolean }[];
-}
-
-interface Exercise {
-  id: string;
-  name: string;
-  sets: number;
-  reps?: string;
-  time?: string;
-  weight?: number;
-  image?: string;
-}
 
 function ExerciseSuggestionCard({
   suggestion,

@@ -10,17 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Loader2, ArrowLeft } from 'lucide-react';
 
-interface TrainerDetails {
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  experience: string;
-  specialization: string;
-  bio: string;
-  price: string;
-  rejectReason: string
-}
+import type { TrainerDetails } from "@/interfaces/trainer/ITrainerReapply";
 
 const TrainerReapply: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +22,11 @@ const TrainerReapply: React.FC = () => {
     experience: '',
     specialization: '',
     bio: '',
-    price: '',
+    price: {
+      basic: '',
+      premium: '',
+      pro: '',
+    },
     certificate: null as File | null,
     profileImage: null as File | null,
   });
@@ -57,7 +51,11 @@ const TrainerReapply: React.FC = () => {
           experience: trainer.experience || '',
           specialization: trainer.specialization || '',
           bio: trainer.bio || '',
-          price: trainer.price || '',
+          price: {
+            basic: trainer.price?.basic || '',
+            premium: trainer.price?.premium || '',
+            pro: trainer.price?.pro || '',
+          },
         }));
       } catch (error: any) {
         toast.error(error.response?.data?.error || error.message || 'Failed to fetch trainer details');
@@ -106,11 +104,11 @@ const TrainerReapply: React.FC = () => {
     data.append("experience", formData.experience);
     data.append("specialization", formData.specialization);
     data.append("bio", formData.bio);
-    data.append("price", formData.price);
+    data.append("price", JSON.stringify(formData.price));
 
     // files
     if (formData.certificate) {
-      data.append("certificate", formData.certificate); 
+      data.append("certificate", formData.certificate);
     }
     if (formData.profileImage) {
       data.append("profileImage", formData.profileImage);
@@ -318,19 +316,49 @@ const TrainerReapply: React.FC = () => {
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="price" className="text-white">
-                    Price per Session
-                  </Label>
-                  <Input
-                    id="price"
-                    name="price"
-                    type="text"
-                    placeholder="e.g., $50"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    className="bg-gray-700 border-gray-600 text-white mt-2"
-                  />
+                <div className="space-y-4">
+                  <Label className="text-white font-semibold">Monthly Subscription Prices (₹)</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="price-basic" className="text-gray-400 text-xs">Basic Plan</Label>
+                      <Input
+                        id="price-basic"
+                        name="price-basic"
+                        type="number"
+                        placeholder="Basic"
+                        value={formData.price.basic}
+                        onChange={(e) => setFormData({ ...formData, price: { ...formData.price, basic: e.target.value } })}
+                        className="bg-gray-700 border-gray-600 text-white mt-1"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="price-premium" className="text-gray-400 text-xs">Premium Plan</Label>
+                      <Input
+                        id="price-premium"
+                        name="price-premium"
+                        type="number"
+                        placeholder="Premium"
+                        value={formData.price.premium}
+                        onChange={(e) => setFormData({ ...formData, price: { ...formData.price, premium: e.target.value } })}
+                        className="bg-gray-700 border-gray-600 text-white mt-1"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="price-pro" className="text-gray-400 text-xs">Pro Plan</Label>
+                      <Input
+                        id="price-pro"
+                        name="price-pro"
+                        type="number"
+                        placeholder="Pro"
+                        value={formData.price.pro}
+                        onChange={(e) => setFormData({ ...formData, price: { ...formData.price, pro: e.target.value } })}
+                        className="bg-gray-700 border-gray-600 text-white mt-1"
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div>

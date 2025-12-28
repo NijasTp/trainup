@@ -6,8 +6,11 @@ export interface ITransaction extends Document {
   trainerId: Types.ObjectId | string
   sessionId?: string
   amount: number
+  platformFee: number
+  trainerEarnings: number
   planType: 'basic' | 'premium' | 'pro'
   razorpayOrderId: string
+  duration?: number
   razorpayPaymentId?: string
   status: 'pending' | 'completed' | 'failed'
   createdAt: Date
@@ -28,12 +31,15 @@ export const TransactionSchema = new Schema<ITransaction>(
     },
     sessionId: { type: String },
     amount: { type: Number, required: true },
+    platformFee: { type: Number, default: 0 },
+    trainerEarnings: { type: Number, default: 0 },
     planType: {
       type: String,
       required: true,
       enum: ['basic', 'premium', 'pro']
     },
     razorpayOrderId: { type: String, required: true },
+    duration: { type: Number },
     razorpayPaymentId: { type: String },
     status: {
       type: String,

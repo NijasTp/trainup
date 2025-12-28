@@ -5,10 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { 
-    Calendar, 
-    Clock, 
-    Plus, 
+import {
+    Calendar,
+    Clock,
+    Plus,
     Trash2,
     CheckCircle,
     XCircle,
@@ -19,27 +19,9 @@ import API from "@/lib/axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
-interface Slot {
-    _id: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    isBooked: boolean;
-    bookedBy?: {
-        _id: string;
-        name: string;
-        profileImage?: string;
-    };
-    requestedBy: Array<{
-        userId: {
-            _id: string;
-            name: string;
-            profileImage?: string;
-        };
-        status: 'pending' | 'approved' | 'rejected';
-    }>;
-}
+import type { Slot } from "@/interfaces/trainer/ITrainerSlots";
 
 export default function TrainerSlots() {
     const [slots, setSlots] = useState<Slot[]>([]);
@@ -129,16 +111,16 @@ export default function TrainerSlots() {
         }
     };
 
-const canJoinSession = (slot: Slot) => {
-    if (!slot.isBooked) return false;
-    
-    const sessionDateTime = new Date(`${slot.date.split('T')[0]}T${slot.startTime}:00`);
-    const now = new Date();
-    const tenMinutesBefore = new Date(sessionDateTime.getTime() - 10 * 60 * 1000);
-    const sessionEnd = new Date(`${slot.date.split('T')[0]}T${slot.endTime}:00`);
-    
-    return now >= tenMinutesBefore && now <= sessionEnd;
-};
+    const canJoinSession = (slot: Slot) => {
+        if (!slot.isBooked) return false;
+
+        const sessionDateTime = new Date(`${slot.date.split('T')[0]}T${slot.startTime}:00`);
+        const now = new Date();
+        const tenMinutesBefore = new Date(sessionDateTime.getTime() - 10 * 60 * 1000);
+        const sessionEnd = new Date(`${slot.date.split('T')[0]}T${slot.endTime}:00`);
+
+        return now >= tenMinutesBefore && now <= sessionEnd;
+    };
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -224,11 +206,11 @@ const canJoinSession = (slot: Slot) => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
             <TrainerSiteHeader />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
-            <main className="relative container mx-auto px-4 py-12 space-y-8">
+            <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
                 <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
                     <CardHeader className="space-y-4">
                         <div className="flex items-center justify-between">
@@ -276,8 +258,8 @@ const canJoinSession = (slot: Slot) => {
                                         <p className="text-sm text-muted-foreground">
                                             Note: Sessions must be exactly 1 hour long
                                         </p>
-                                        <Button 
-                                            onClick={createSlot} 
+                                        <Button
+                                            onClick={createSlot}
                                             disabled={isCreating}
                                             className="w-full"
                                         >
@@ -358,7 +340,7 @@ const canJoinSession = (slot: Slot) => {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    
+
                                                     <div className="flex items-center space-x-3">
                                                         <Badge className={`${getStatusColor(approvedRequest?.status || 'available', slot.isBooked)} font-medium`}>
                                                             {getStatusIcon(approvedRequest?.status || 'available', slot.isBooked)}
@@ -415,6 +397,7 @@ const canJoinSession = (slot: Slot) => {
                     </CardContent>
                 </Card>
             </main>
+            <SiteFooter />
         </div>
     );
 }

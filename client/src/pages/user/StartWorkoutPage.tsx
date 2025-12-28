@@ -8,41 +8,7 @@ import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { getWorkoutSession } from "@/services/workoutService";
 import { CheckCircle, Info, Pause, Play, SkipForward } from "lucide-react";
 
-interface IExercise {
-  id: string;
-  name: string;
-  image?: string;
-  sets: number;
-  weight?: number;
-  reps?: string;
-  time?: string;
-  rest?: string;
-  notes?: string;
-  isDone?: boolean;
-  timeTaken?: number;
-}
-
-interface IWorkoutSession {
-  _id: string;
-  name: string;
-  givenBy: "trainer" | "user";
-  trainerId?: string;
-  userId: string;
-  date?: string;
-  time?: string;
-  exercises: IExercise[];
-  tags?: string[];
-  goal?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface ExerciseTime {
-  exerciseId: string;
-  name: string;
-  duration: number;
-}
+import type { IExercise, IWorkoutSession, ExerciseTime } from "@/interfaces/user/IStartWorkout";
 
 function InfoPopup() {
   const [open, setOpen] = useState(false);
@@ -350,10 +316,10 @@ export default function StartSessionPage() {
                     <li
                       key={i}
                       className={`p-3 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-md ${i === currentExerciseIndex
-                          ? "bg-blue-500/20 border border-blue-500/50"
-                          : ex.isDone
-                            ? "bg-green-500/20 border border-green-500/50"
-                            : "bg-gray-700/50"
+                        ? "bg-blue-500/20 border border-blue-500/50"
+                        : ex.isDone
+                          ? "bg-green-500/20 border border-green-500/50"
+                          : "bg-gray-700/50"
                         }`}
                     >
                       <div className="flex items-center justify-between">

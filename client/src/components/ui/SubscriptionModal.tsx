@@ -1,15 +1,19 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Zap, MessageSquare, Video, Check, Crown, Star } from "lucide-react";
-import { useEffect } from "react";
+import { Zap, Check, Crown, Star, Shield } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import API from "@/lib/axios";
 
 interface SubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubscribe: (planType: string) => void;
-  monthlyPrice: number;
+  onSubscribe: (planType: string, duration: number) => void;
+  prices: {
+    basic: number;
+    premium: number;
+    pro: number;
+  };
   trainerName: string;
 }
 
@@ -17,50 +21,90 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   isOpen,
   onClose,
   onSubscribe,
-  monthlyPrice,
+  prices,
   trainerName,
 }) => {
+  const [duration, setDuration] = useState<number>(1);
+
+  const durations = [
+    { label: "1 Month", value: 1, discount: 0 },
+    { label: "3 Months", value: 3, discount: 10 },
+    { label: "6 Months", value: 6, discount: 15 },
+    { label: "12 Months", value: 12, discount: 20 },
+  ];
+
+  const calculatePrice = (basePrice: number, months: number) => {
+    return basePrice * months;
+  };
+
   const plans = [
     {
       type: "basic",
-      title: "Basic Plan",
-      icon: <Zap className="h-6 w-6 text-primary" />,
-      price: monthlyPrice,
+      title: "Basic",
+      subtitle: "Kickstart your journey",
+      icon: <Zap className="h-6 w-6 text-blue-500" />,
+      basePrice: prices.basic,
       features: [
-        "Personalized workout plans",
+        "Personal workout plans",
         "Custom diet plans",
         "Progress tracking",
         "Basic support"
       ],
-      color: "from-blue-500 to-blue-600",
+      styles: {
+        border: "border-blue-500/50",
+        bg: "bg-blue-500/5",
+        iconBg: "bg-blue-500/10",
+        featureBg: "bg-blue-500/20",
+        checkColor: "text-blue-600",
+        button: "bg-blue-600 hover:bg-blue-700 shadow-blue-500/25",
+        badge: "bg-blue-500"
+      },
       popular: false
     },
     {
       type: "premium",
-      title: "Premium Plan",
-      icon: <MessageSquare className="h-6 w-6 text-amber-400" />,
-      price: Math.round(monthlyPrice * 1.25),
+      title: "Premium",
+      subtitle: "Most popular choice",
+      icon: <Crown className="h-6 w-6 text-amber-500" />,
+      basePrice: prices.premium,
       features: [
         "Everything in Basic",
-        "Limited chat (200 messages/month)",
+        "Limited chat (200 msgs/mo)",
         "Priority support",
         "Weekly check-ins"
       ],
-      color: "from-amber-500 to-amber-600",
+      styles: {
+        border: "border-amber-500/50",
+        bg: "bg-amber-500/5",
+        iconBg: "bg-amber-500/10",
+        featureBg: "bg-amber-500/20",
+        checkColor: "text-amber-600",
+        button: "bg-amber-600 hover:bg-amber-700 shadow-amber-500/25",
+        badge: "bg-amber-500"
+      },
       popular: true
     },
     {
       type: "pro",
-      title: "Pro Plan",
-      icon: <Video className="h-6 w-6 text-purple-400" />,
-      price: Math.round(monthlyPrice * 1.5),
+      title: "Pro",
+      subtitle: "Ultimate experience",
+      icon: <Star className="h-6 w-6 text-purple-500" />,
+      basePrice: prices.pro,
       features: [
         "Everything in Premium",
-        "Unlimited chat",
-        "Video calls (5 per month)",
-        "24/7 priority support"
+        "Unlimited chat access",
+        "Video calls (5/month)",
+        "24/7 VIP support"
       ],
-      color: "from-purple-500 to-purple-600",
+      styles: {
+        border: "border-purple-500/50",
+        bg: "bg-purple-500/5",
+        iconBg: "bg-purple-500/10",
+        featureBg: "bg-purple-500/20",
+        checkColor: "text-purple-600",
+        button: "bg-purple-600 hover:bg-purple-700 shadow-purple-500/25",
+        badge: "bg-purple-500"
+      },
       popular: false
     }
   ];
@@ -68,8 +112,9 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   // Handle modal close - cleanup pending transactions
   const handleModalClose = async () => {
     try {
-      // Mark any pending transactions as failed when modal is closed
-      await API.post("/payment/cleanup-pending");
+      if (isOpen) {
+        await API.post("/payment/cleanup-pending");
+      }
     } catch (error) {
       console.error("Failed to cleanup pending transactions:", error);
     }
@@ -79,7 +124,6 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   // Cleanup on component unmount
   useEffect(() => {
     return () => {
-      // Cleanup when component unmounts (user navigates away)
       if (isOpen) {
         API.post("/payment/cleanup-pending").catch(console.error);
       }
@@ -87,80 +131,105 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   }, [isOpen]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleModalClose}>
-      <DialogContent className="max-w-5xl bg-card/90 backdrop-blur-md border border-border/50 rounded-2xl p-8">
-        <DialogHeader>
-          <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-foreground bg-clip-text text-transparent text-center">
-            Choose Your Training Plan with {trainerName}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleModalClose()}>
+      <DialogContent className="max-w-5xl bg-background/95 backdrop-blur-xl border-border/50 p-0 overflow-y-auto max-h-[85vh] gap-0">
+        <div className="p-6 pb-2 text-center space-y-2">
+          <DialogTitle className="text-2xl font-bold">
+            Choose Your Plan with <span className="text-primary">{trainerName}</span>
           </DialogTitle>
-        </DialogHeader>
-        <div className="py-6">
-          <p className="text-muted-foreground text-lg mb-8 text-center">
-            Select the perfect plan to achieve your fitness goals with expert guidance
+          <p className="text-muted-foreground">
+            Select the perfect plan to achieve your fitness goals
           </p>
-          <div className="grid gap-6 md:grid-cols-3">
-            {plans.map((plan) => (
-              <div
-                key={plan.type}
-                className={`relative group rounded-2xl border p-6 transition-all duration-300 ${
-                  plan.popular 
-                    ? 'border-amber-400 bg-gradient-to-br from-amber-50/50 via-amber-25/25 to-transparent shadow-lg transform scale-105' 
-                    : 'border-border/50 bg-gradient-to-br from-primary/5 via-primary/3 to-accent/5 hover:border-primary/30'
+        </div>
+
+        <div className="flex justify-center py-4">
+          <Tabs
+            value={duration.toString()}
+            onValueChange={(val) => setDuration(parseInt(val))}
+            className="w-auto"
+          >
+            <TabsList className="grid grid-cols-4 w-[400px]">
+              {durations.map((d) => (
+                <TabsTrigger
+                  key={d.value}
+                  value={d.value.toString()}
+                  className="px-4"
+                >
+                  {d.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 p-6 pt-2 items-stretch">
+          {plans.map((plan) => (
+            <div
+              key={plan.type}
+              className={`relative flex flex-col rounded-xl border-2 transition-all duration-300 ${plan.popular
+                ? `${plan.styles.border} ${plan.styles.bg} shadow-xl scale-105 z-10`
+                : "border-border bg-card/50 hover:border-primary/50 hover:bg-card/80"
                 }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-1">
-                      <Star className="h-3 w-3 mr-1" />
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
-                
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
-                
-                <div className="relative flex flex-col items-center space-y-6">
-                  <div className={`p-4 rounded-full bg-gradient-to-r ${plan.color}/10`}>
+            >
+              {plan.popular && (
+                <div className={`absolute -top-4 left-1/2 -translate-x-1/2 ${plan.styles.badge} bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg uppercase tracking-wide flex items-center gap-1`}>
+                  <Crown className="h-3 w-3" /> Most Popular
+                </div>
+              )}
+
+              <div className="p-6 flex-1 flex flex-col">
+                <div className="flex flex-col items-center text-center mb-6">
+                  <div className={`p-3 rounded-xl ${plan.styles.iconBg} mb-3`}>
                     {plan.icon}
                   </div>
-                  
-                  <div className="text-center space-y-2">
-                    <h3 className="text-xl font-bold text-foreground">{plan.title}</h3>
-                    <div className="flex items-center justify-center">
-                      <span className="text-3xl font-bold text-primary">₹{plan.price.toLocaleString()}</span>
-                      <span className="text-muted-foreground ml-2">/month</span>
-                    </div>
-                  </div>
+                  <h3 className="font-bold text-xl">{plan.title}</h3>
+                  <p className="text-sm text-muted-foreground">{plan.subtitle}</p>
+                </div>
 
-                  <div className="space-y-3 w-full">
-                    {plan.features.map((feature, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm text-muted-foreground">{feature}</span>
+                <div className="mb-6 text-center">
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-3xl font-bold">
+                      ₹{calculatePrice(plan.basePrice, duration).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Equivalent to ₹{plan.basePrice.toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="space-y-3 flex-1">
+                  {plan.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <div className={`mt-1 rounded-full p-0.5 ${plan.styles.featureBg}`}>
+                        <Check className={`h-3 w-3 ${plan.styles.checkColor}`} strokeWidth={3} />
                       </div>
-                    ))}
-                  </div>
+                      <span className="text-sm text-muted-foreground text-left">{feature}</span>
+                    </div>
+                  ))}
+                </div>
 
+                <div className="mt-6 pt-6 border-t border-border/50">
                   <Button
-                    onClick={() => onSubscribe(plan.type)}
-                    className={`w-full bg-gradient-to-r ${plan.color} hover:opacity-90 shadow-lg hover:shadow-xl transition-all duration-300 text-white`}
+                    onClick={() => onSubscribe(plan.type, duration)}
+                    className={`w-full font-semibold shadow-lg transition-all duration-300 ${plan.popular
+                      ? `${plan.styles.button} text-white`
+                      : ""
+                      }`}
+                    variant={plan.popular ? "default" : "secondary"}
+                    size="lg"
                   >
-                    {plan.popular && <Crown className="h-4 w-4 mr-2" />}
-                    Choose {plan.title}
+                    Choose
                   </Button>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleModalClose}
-            className="border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300"
-          >
-            Cancel
-          </Button>
+
+        <DialogFooter className="p-4 bg-muted/20 border-t border-border/50 justify-center sm:justify-center">
+          <p className="text-xs text-muted-foreground flex items-center gap-2">
+            <Shield className="h-3 w-3" /> Secure payment via Razorpay
+          </p>
         </DialogFooter>
       </DialogContent>
     </Dialog>

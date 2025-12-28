@@ -1,9 +1,9 @@
 import { injectable } from 'inversify'
 import { UserModel, IUser } from '../models/user.model'
 import { IUserRepository } from '../core/interfaces/repositories/IUserRepository'
-import { Types } from 'mongoose'
+import { Types, FilterQuery } from 'mongoose'
 import { MESSAGES } from '../constants/messages.constants'
-import { UserResponseDto, UserUpdateProfileDto } from '../dtos/user.dto'
+import { UserResponseDto, UserUpdateProfileDto, UserDto } from '../dtos/user.dto'
 import {
   IUserGymMembership,
   UserGymMembershipModel
@@ -34,7 +34,7 @@ export class UserRepository implements IUserRepository {
       .select(
         'name email phone isVerified isBanned role goals motivationLevel equipment assignedTrainer gymId isPrivate streak xp achievements createdAt'
       )
-    return users.map(user => this.mapToResponseDto(user))
+    return users.map(user => UserDto.toResponse(user))
   }
 
   async findUsers(
@@ -46,7 +46,7 @@ export class UserRepository implements IUserRepository {
     startDate?: string,
     endDate?: string
   ) {
-    const query: any = {}
+    const query: FilterQuery<IUser> = {}
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -66,7 +66,7 @@ export class UserRepository implements IUserRepository {
     const skip = (page - 1) * limit
     const [users, total] = await Promise.all([
       UserModel.find(query)
-        .sort({ createdAt: -1 })
+        .sort({ createdAt: -1, _id: -1 })
         .skip(skip)
         .limit(limit)
         .select('name email phone role isVerified isBanned createdAt')
@@ -75,7 +75,7 @@ export class UserRepository implements IUserRepository {
     ])
 
     return {
-      users: users.map(user => this.mapToResponseDto(user as IUser)),
+      users: users.map(user => UserDto.toResponse(user as IUser)),
       total,
       page,
       totalPages: Math.ceil(total / limit)
@@ -236,45 +236,6 @@ export class UserRepository implements IUserRepository {
   async updatePassword(email: string, hashedPassword: string): Promise<void> {
     await UserModel.findOneAndUpdate({ email }, { password: hashedPassword })
   }
-
-  mapToResponseDto(user: IUser): UserResponseDto {
-    return {
-      _id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      isVerified: user.isVerified || false,
-      role: user.role,
-      goals: user.goals,
-      activityLevel: user.activityLevel,
-      equipment: user.equipment,
-      assignedTrainer: user.assignedTrainer?.toString(),
-      subscriptionStartDate: user.subscriptionStartDate || undefined,
-      gymId: user.gymId?.toString(),
-      isPrivate: user.isPrivate,
-      isBanned: user.isBanned,
-      streak: user.streak,
-      lastActiveDate: user.lastActiveDate,
-      xp: user.xp,
-      xpLogs:
-        user.xpLogs?.map(log => ({
-          amount: log.amount,
-          reason: log.reason,
-          date: log.date
-        })) || [],
-      achievements: user.achievements || [],
-      currentWeight: user.todaysWeight,
-      goalWeight: user.goalWeight,
-      weightHistory:
-        user.weightHistory?.map(weight => ({
-          weight: weight.weight,
-          date: weight.date
-        })) || [],
-      height: user.height,
-      age: user.age,
-      gender: user.gender,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt
-    }
-  }
 }
+
+

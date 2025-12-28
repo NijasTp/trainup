@@ -23,7 +23,7 @@ export interface IUserService {
     isVerified?: string,
     startDate?: string,
     endDate?: string
-  ): Promise<any>
+  ): Promise<unknown>
   getUserById(id: string): Promise<UserResponseDto | null>
   changePassword(
     userId: string,
@@ -59,5 +59,5 @@ export interface IUserService {
   ): Promise<void>
   removeUserTrainer(userId: string): Promise<void>
   getAssignedTrainerId(userId: string): Promise<string | null>
-  uploadChatFile(file: any): Promise<string>
+  uploadChatFile(file: unknown): Promise<string>
 }

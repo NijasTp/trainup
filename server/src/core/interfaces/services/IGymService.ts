@@ -11,11 +11,8 @@ import {
   UpdateSubscriptionPlanDto,
   AddTrainerDto,
   UpdateTrainerDto,
-  AddMemberDto,
-  UpdateMemberDto,
   CreateAnnouncementDto,
   UpdateAnnouncementDto,
-  CreatePaymentDto,
   GymListingDto
 } from '../../../dtos/gym.dto';
 
@@ -37,7 +34,7 @@ export interface IGymService {
     files: { certificate?: UploadedFile; profileImage?: UploadedFile; images?: UploadedFile | UploadedFile[] }
   ): Promise<GymLoginResponseDto>;
 
-  getAllGyms(page: number, limit: number, searchQuery: string): Promise<any>;
+  getAllGyms(page: number, limit: number, searchQuery: string): Promise<unknown>;
 
   updateGymStatus(id: string, updateData: Partial<IGym>): Promise<IGym | null>;
 
@@ -49,7 +46,7 @@ export interface IGymService {
 
   addTrainer(dto: AddTrainerDto, gymId: string): Promise<ITrainer>;
 
-  addMemberToGym(gymId: string, userId: string): Promise<void>; 
+  addMemberToGym(gymId: string, userId: string): Promise<void>;
 
   updateTrainer(dto: UpdateTrainerDto, trainerId: string, gymId: string): Promise<ITrainer | null>;
 
@@ -76,7 +73,7 @@ export interface IGymService {
     limit: number,
     search?: string,
     active?: string
-  ): Promise<{ items: any[]; total: number; page: number; totalPages: number }>;
+  ): Promise<{ items: unknown[]; total: number; page: number; totalPages: number }>;
 
 
   getSubscriptionPlan(planId: string): Promise<{
@@ -101,7 +98,7 @@ export interface IGymService {
     gymId: string;
     name: string;
     duration: number;
-    durationUnit: any;
+    durationUnit: 'day' | 'month' | 'year';
     price: number;
     description?: string;
     features: string[];
@@ -119,11 +116,11 @@ export interface IGymService {
     userLocation?: { lat: number; lng: number }
   ): Promise<{ gyms: GymListingDto[]; totalPages: number; total: number }>;
 
-  getGymForUser(gymId: string): Promise<any>;
+  getGymForUser(gymId: string): Promise<unknown>;
 
   getActiveSubscriptionPlans(gymId: string): Promise<ISubscriptionPlan[]>;
 
-  getMyGymDetails(gymId: string, userId: string): Promise<any>;
+  getMyGymDetails(gymId: string, userId: string): Promise<unknown>;
 
   createAnnouncement(
     gymId: string,
@@ -153,5 +150,6 @@ export interface IGymService {
     page: number,
     limit: number,
     search: string
-  ): Promise<{ announcements: any[]; totalPages: number; total: number }>;
+  ): Promise<{ announcements: unknown[]; totalPages: number; total: number }>;
+
 }

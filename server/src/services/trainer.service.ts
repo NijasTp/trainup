@@ -12,29 +12,29 @@ import { ITrainer } from '../models/trainer.model'
 import bcrypt from 'bcryptjs'
 import { IOTPService } from '../core/interfaces/services/IOtpService'
 import { IJwtService } from '../core/interfaces/services/IJwtService'
+import { UploadedFile } from 'express-fileupload'
 import { logger } from '../utils/logger.util'
 import {
   TrainerLoginResponseDto,
   TrainerResponseDto,
-  GetClientsResponseDto,
-  ClientDto
+  GetClientsResponseDto
 } from '../dtos/trainer.dto'
 import { AppError } from '../utils/appError.util'
 import { STATUS_CODE } from '../constants/status'
 import { MESSAGES } from '../constants/messages.constants'
-import mongoose from 'mongoose'
+
 
 @injectable()
 export class TrainerService implements ITrainerService {
-  constructor (
+  constructor(
     @inject(TYPES.ITrainerRepository) private _trainerRepo: ITrainerRepository,
     @inject(TYPES.IOtpService) private _otpService: IOTPService,
     @inject(TYPES.IJwtService) private _jwtService: IJwtService,
     @inject(TYPES.ITransactionRepository)
     private _transactionRepo: ITransactionRepository
-  ) {}
+  ) { }
 
-  async loginTrainer (
+  async loginTrainer(
     email: string,
     password: string
   ): Promise<TrainerLoginResponseDto> {
@@ -70,25 +70,25 @@ export class TrainerService implements ITrainerService {
     }
   }
 
-  async forgotPassword (email: string) {
+  async forgotPassword(email: string) {
     const trainer = await this._trainerRepo.findByEmail(email)
     if (!trainer) throw new AppError('Trainer not found', STATUS_CODE.NOT_FOUND)
     await this._otpService.requestForgotPasswordOtp(email, 'trainer')
   }
 
-  async verifyOtp (email: string, otp: string) {
+  async verifyOtp(email: string, otp: string) {
     const isValid = await this._otpService.verifyOtp(email, otp)
     if (!isValid)
       throw new AppError('Invalid or expired OTP', STATUS_CODE.BAD_REQUEST)
   }
 
-  async resetPassword (email: string, password: string) {
+  async resetPassword(email: string, password: string) {
     const hashed = await bcrypt.hash(password, 10)
     await this._trainerRepo.updateStatus(email, { password: hashed })
     await this._otpService.clearOtp(email)
   }
 
-  async applyAsTrainer (
+  async applyAsTrainer(
     trainerData: TrainerApplyData
   ): Promise<TrainerLoginResponseDto> {
     if (
@@ -120,14 +120,15 @@ export class TrainerService implements ITrainerService {
 
     try {
       const certificateUploadResult = await cloudinary.uploader.upload(
-        trainerData.certificate.tempFilePath,
+        (trainerData.certificate as UploadedFile).tempFilePath,
         { resource_type: 'auto', folder: 'trainer_certificates' }
       )
       certificateUrl = certificateUploadResult.secure_url
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string; http_code?: number };
       logger.error('Cloudinary certificate upload error:', {
-        message: error.message,
-        status: error.http_code,
+        message: err.message,
+        status: err.http_code,
         details: error,
         fileInfo: {
           name: trainerData.certificate.name,
@@ -136,21 +137,22 @@ export class TrainerService implements ITrainerService {
         }
       })
       throw new AppError(
-        `Failed to upload certificate: ${error.message || 'Unknown error'}`,
+        `Failed to upload certificate: ${err.message || 'Unknown error'}`,
         STATUS_CODE.INTERNAL_SERVER_ERROR
       )
     }
 
     try {
       const profileImageUploadResult = await cloudinary.uploader.upload(
-        trainerData.profileImage.tempFilePath,
+        (trainerData.profileImage as UploadedFile).tempFilePath,
         { resource_type: 'image', folder: 'trainer_profile_images' }
       )
       profileImageUrl = profileImageUploadResult.secure_url
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string };
       logger.error('Cloudinary profile image upload error:', error)
       throw new AppError(
-        `Failed to upload profile image: ${error.message || 'Unknown error'}`,
+        `Failed to upload profile image: ${err.message || 'Unknown error'}`,
         STATUS_CODE.INTERNAL_SERVER_ERROR
       )
     }
@@ -189,7 +191,7 @@ export class TrainerService implements ITrainerService {
     }
   }
 
-  async reapplyAsTrainer (
+  async reapplyAsTrainer(
     trainerId: string,
     trainerData: TrainerApplyData
   ): Promise<ITrainer | null> {
@@ -213,14 +215,15 @@ export class TrainerService implements ITrainerService {
     if (trainerData.certificate) {
       try {
         const certificateUploadResult = await cloudinary.uploader.upload(
-          trainerData.certificate.tempFilePath,
+          (trainerData.certificate as UploadedFile).tempFilePath,
           { resource_type: 'auto', folder: 'trainer_certificates' }
         )
         trainerToUpdate.certificate = certificateUploadResult.secure_url
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { message?: string };
         logger.error('cloudinary error:', error)
         throw new AppError(
-          `Failed to upload certificate: ${error.message || 'Unknown error'}`,
+          `Failed to upload certificate: ${err.message || 'Unknown error'}`,
           STATUS_CODE.INTERNAL_SERVER_ERROR
         )
       }
@@ -229,14 +232,15 @@ export class TrainerService implements ITrainerService {
     if (trainerData.profileImage) {
       try {
         const profileImageUploadResult = await cloudinary.uploader.upload(
-          trainerData.profileImage.tempFilePath,
+          (trainerData.profileImage as UploadedFile).tempFilePath,
           { resource_type: 'image', folder: 'trainer_profile_images' }
         )
         trainerToUpdate.profileImage = profileImageUploadResult.secure_url
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { message?: string };
         logger.error('Cloudinary profile image upload error:', error)
         throw new AppError(
-          `Failed to upload profile image: ${error.message || 'Unknown error'}`,
+          `Failed to upload profile image: ${err.message || 'Unknown error'}`,
           STATUS_CODE.INTERNAL_SERVER_ERROR
         )
       }
@@ -249,13 +253,13 @@ export class TrainerService implements ITrainerService {
     return updatedTrainer
   }
 
-  async getTrainerById (id: string): Promise<TrainerResponseDto> {
+  async getTrainerById(id: string): Promise<TrainerResponseDto> {
     const trainer = await this._trainerRepo.findById(id)
     if (!trainer) throw new AppError('Trainer not found', STATUS_CODE.NOT_FOUND)
     return this.mapToResponseDto(trainer)
   }
 
-  async getAllTrainers (
+  async getAllTrainers(
     page: number,
     limit: number,
     search: string,
@@ -305,28 +309,28 @@ export class TrainerService implements ITrainerService {
     }
   }
 
-  async getTrainerApplication (id: string) {
+  async getTrainerApplication(id: string) {
     const application = await this._trainerRepo.findApplicationByTrainerId(id)
     if (!application)
       throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND)
     return application
   }
 
-  async updateTrainerStatus (id: string, updateData: Partial<ITrainer>) {
+  async updateTrainerStatus(id: string, updateData: Partial<ITrainer>) {
     const trainer = await this._trainerRepo.updateStatus(id, updateData)
     if (!trainer)
       throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
     return trainer
   }
 
-  async addClientToTrainer (trainerId: string, userId: string): Promise<void> {
+  async addClientToTrainer(trainerId: string, userId: string): Promise<void> {
     const trainer = await this._trainerRepo.findById(trainerId)
     if (!trainer)
       throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
     await this._trainerRepo.addClient(trainerId, userId)
   }
 
-  async removeClientFromTrainer (
+  async removeClientFromTrainer(
     trainerId: string,
     userId: string
   ): Promise<void> {
@@ -336,7 +340,7 @@ export class TrainerService implements ITrainerService {
     await this._trainerRepo.removeClient(trainerId, userId)
   }
 
-  async getTrainerClients (
+  async getTrainerClients(
     trainerId: string,
     page: number,
     limit: number,
@@ -358,7 +362,7 @@ export class TrainerService implements ITrainerService {
     }
   }
 
-  async getDashboardStats (trainerId: string): Promise<DashboardStats> {
+  async getDashboardStats(trainerId: string): Promise<DashboardStats> {
     const trainer = await this._trainerRepo.findById(trainerId)
     if (!trainer) {
       throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
@@ -380,14 +384,15 @@ export class TrainerService implements ITrainerService {
     const {
       totalEarningsThisMonth,
       totalEarningsLastMonth,
-      monthlyEarnings,
-      planDistribution
+      monthlyEarnings
     } = await this._transactionRepo.getTrainerEarningsStats(
       trainerId,
       thisMonthStart,
       lastMonthStart,
       lastMonthEnd
     )
+
+    const planDistribution = await this._trainerRepo.getPlanDistribution(trainerId);
 
     const totalSessions = await this._trainerRepo.countCompletedSessions(
       trainerId
@@ -410,7 +415,83 @@ export class TrainerService implements ITrainerService {
     }
   }
 
-  async updateAvailability (
+  async updateProfile(
+    trainerId: string,
+    updateData: Partial<TrainerApplyData>,
+    profileImage?: unknown
+  ): Promise<TrainerResponseDto> {
+    const trainer = await this._trainerRepo.findById(trainerId)
+    if (!trainer) {
+      throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    }
+
+    const updateFields: Partial<ITrainer> = {
+      name: updateData.name,
+      phone: updateData.phone,
+      bio: updateData.bio,
+      price: updateData.price,
+      location: updateData.location,
+      experience: updateData.experience,
+      specialization: updateData.specialization
+    }
+
+    // Filter undefined values
+    Object.keys(updateFields).forEach(
+      key =>
+        updateFields[key as keyof ITrainer] === undefined &&
+        delete updateFields[key as keyof ITrainer]
+    )
+
+    if (profileImage) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(
+          (profileImage as UploadedFile).tempFilePath,
+          { resource_type: 'image', folder: 'trainer_profile_images' }
+        )
+        updateFields.profileImage = uploadResult.secure_url
+      } catch (error: unknown) {
+        logger.error('Cloudinary profile image upload error:', error)
+        throw new AppError(
+          'Failed to upload profile image',
+          STATUS_CODE.INTERNAL_SERVER_ERROR
+        )
+      }
+    }
+
+    const updatedTrainer = await this._trainerRepo.updateStatus(
+      trainerId,
+      updateFields
+    )
+    if (!updatedTrainer) {
+      throw new AppError(
+        'Failed to update profile',
+        STATUS_CODE.INTERNAL_SERVER_ERROR
+      )
+    }
+
+    return this.mapToResponseDto(updatedTrainer)
+  }
+
+  async changePassword(
+    trainerId: string,
+    currentPass: string,
+    newPass: string
+  ): Promise<void> {
+    const trainer = await this._trainerRepo.findById(trainerId)
+    if (!trainer) {
+      throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    }
+
+    const isMatch = await bcrypt.compare(currentPass, trainer.password)
+    if (!isMatch) {
+      throw new AppError('Incorrect current password', STATUS_CODE.BAD_REQUEST)
+    }
+
+    const hashed = await bcrypt.hash(newPass, 10)
+    await this._trainerRepo.updateStatus(trainerId, { password: hashed })
+  }
+
+  async updateAvailability(
     trainerId: string,
     isAvailable: boolean,
     unavailableReason?: string
@@ -428,7 +509,7 @@ export class TrainerService implements ITrainerService {
     await this._trainerRepo.updateStatus(trainerId, updateData)
   }
 
-  private mapToResponseDto (trainer: ITrainer): TrainerResponseDto {
+  private mapToResponseDto(trainer: ITrainer): TrainerResponseDto {
     return {
       _id: trainer._id.toString(),
       name: trainer.name,

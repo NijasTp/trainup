@@ -9,14 +9,17 @@ import { INotification } from '../models/notification.model';
 import { NOTIFICATION_MESSAGES, NOTIFICATION_TYPES } from '../constants/notification.constants';
 import { logger } from '../utils/logger.util';
 
+import { IQueueService } from '../core/interfaces/services/IQueueService';
+
 @injectable()
 export class NotificationService implements INotificationService {
   constructor(
     @inject(TYPES.INotificationRepository) private _notificationRepo: INotificationRepository,
     @inject(TYPES.IUserRepository) private _userRepo: IUserRepository,
     @inject(TYPES.ITrainerRepository) private _trainerRepo: ITrainerRepository,
-    @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository
-  ) {}
+    @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository,
+    @inject(TYPES.IQueueService) private _queueService: IQueueService
+  ) { }
 
   async createNotification(data: CreateNotificationDto): Promise<INotification> {
     return await this._notificationRepo.create({
@@ -47,9 +50,9 @@ export class NotificationService implements INotificationService {
   }
 
   async getNotifications(
-    recipientId: string, 
-    recipientRole: string, 
-    page: number, 
+    recipientId: string,
+    recipientRole: string,
+    page: number,
     limit: number
   ): Promise<{
     notifications: INotification[];
@@ -71,29 +74,39 @@ export class NotificationService implements INotificationService {
     await this._notificationRepo.delete(notificationId, recipientId);
   }
 
-  async sendWorkoutReminder(userId: string, workoutName: string): Promise<void> {
+  async sendWorkoutReminder(userId: string, workoutName: string, scheduledAt?: Date): Promise<void> {
+    const delay = scheduledAt ? scheduledAt.getTime() - Date.now() : 0;
     const message = NOTIFICATION_MESSAGES.USER.WORKOUT_TIME.replace('{workoutName}', workoutName);
-    await this.createNotification({
-      recipientId: userId,
-      recipientRole: 'user',
-      type: NOTIFICATION_TYPES.USER.WORKOUT_TIME,
-      title: 'Workout Time!',
-      message,
-      priority: 'high',
-      category: 'info'
+
+    await this._queueService.addJob("notifications", {
+      id: `workout-reminder-${userId}-${Date.now()}`,
+      type: "reminder",
+      data: {
+        recipientId: userId,
+        recipientRole: "user",
+        type: NOTIFICATION_TYPES.USER.WORKOUT_TIME,
+        title: "Workout Time!",
+        message,
+      },
+      delay: delay > 0 ? delay : 0,
     });
   }
 
-  async sendMealReminder(userId: string, mealName: string): Promise<void> {
+  async sendMealReminder(userId: string, mealName: string, scheduledAt?: Date): Promise<void> {
+    const delay = scheduledAt ? scheduledAt.getTime() - Date.now() : 0;
     const message = NOTIFICATION_MESSAGES.USER.MEAL_TIME.replace('{mealName}', mealName);
-    await this.createNotification({
-      recipientId: userId,
-      recipientRole: 'user',
-      type: NOTIFICATION_TYPES.USER.MEAL_TIME,
-      title: 'Meal Time!',
-      message,
-      priority: 'medium',
-      category: 'info'
+
+    await this._queueService.addJob("notifications", {
+      id: `meal-reminder-${userId}-${Date.now()}`,
+      type: "reminder",
+      data: {
+        recipientId: userId,
+        recipientRole: "user",
+        type: NOTIFICATION_TYPES.USER.MEAL_TIME,
+        title: "Meal Time!",
+        message,
+      },
+      delay: delay > 0 ? delay : 0,
     });
   }
 
@@ -139,11 +152,11 @@ export class NotificationService implements INotificationService {
   }
 
   async sendSessionResponseNotification(userId: string, trainerName: string, accepted: boolean, reason?: string): Promise<void> {
-    const baseMessage = accepted 
+    const baseMessage = accepted
       ? NOTIFICATION_MESSAGES.USER.SESSION_ACCEPTED.replace('{trainerName}', trainerName)
       : NOTIFICATION_MESSAGES.USER.SESSION_REJECTED
-          .replace('{trainerName}', trainerName)
-          .replace('{reason}', reason || 'No reason provided');
+        .replace('{trainerName}', trainerName)
+        .replace('{reason}', reason || 'No reason provided');
 
     await this.createNotification({
       recipientId: userId,
@@ -159,18 +172,18 @@ export class NotificationService implements INotificationService {
   async sendWeightReminderNotifications(): Promise<void> {
     try {
       const today = new Date();
-      today.setHours(16, 0, 0, 0); 
+      today.setHours(16, 0, 0, 0);
 
-      const users = await this._userRepo.findAll(0, 1000); 
-      
+      const users = await this._userRepo.findAll(0, 1000);
+
       for (const user of users) {
-        const lastWeightDate = user.weightHistory?.length > 0 
-          ? user.weightHistory[user.weightHistory.length - 1].date 
+        const lastWeightDate = user.weightHistory?.length > 0
+          ? user.weightHistory[user.weightHistory.length - 1].date
           : null;
-        
+
         const todayString = today.toDateString();
         const lastWeightString = lastWeightDate?.toDateString();
-        
+
         if (lastWeightString !== todayString) {
           await this.createNotification({
             recipientId: user._id,
@@ -205,7 +218,7 @@ export class NotificationService implements INotificationService {
       if (!gym) return;
 
       const members = await this._gymRepo.getGymMembers(gymId);
-      const notifications: CreateNotificationDto[] = members.map((member: any) => ({
+      const notifications: CreateNotificationDto[] = (members as unknown as { _id: { toString: () => string } }[]).map((member) => ({
         recipientId: member._id.toString(),
         recipientRole: 'user' as const,
         type: NOTIFICATION_TYPES.USER.GYM_ANNOUNCEMENT,

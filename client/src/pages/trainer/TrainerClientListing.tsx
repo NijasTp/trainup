@@ -12,17 +12,8 @@ import API from "@/lib/axios"
 import { toast } from "sonner"
 import { Link, useNavigate } from "react-router-dom"
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader"
+import { SiteFooter } from "@/components/user/home/UserSiteFooter"
 import type { PaginatedClients } from "@/interfaces/trainer/iTrainerDashboard"
-
-interface Client {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  subscriptionStartDate?: string;
-  profileImage?: string;
-  trainerPlan?: 'basic' | 'premium' | 'pro';
-}
 
 export default function TrainerClients() {
   const navigate = useNavigate()
@@ -48,7 +39,7 @@ export default function TrainerClients() {
       })
       setClients(response.data)
       setIsLoading(false)
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch clients:", err)
       setError("Failed to load clients")
       toast.error("Failed to load clients")
@@ -126,10 +117,10 @@ export default function TrainerClients() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <TrainerSiteHeader/>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
+      <TrainerSiteHeader />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-      <main className="relative container mx-auto px-4 py-12 space-y-8">
+      <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
         <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
           <CardHeader className="space-y-4">
             <div className="flex items-center justify-between">
@@ -162,69 +153,69 @@ export default function TrainerClients() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {clients.clients.map((client) => (
-               <Link key={client._id} to={`/trainer/user/${client._id}`}>
-                <Card
-                  className="bg-background/50 border-border/50 hover:shadow-md transition-all duration-200 cursor-pointer"
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={client.profileImage || "/placeholder.svg"} alt={client.name} />
-                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                            {getClientInitials(client.name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-foreground">{client.name}</h3>
-                          <p className="text-sm text-muted-foreground">Client</p>
+                <Link key={client._id} to={`/trainer/user/${client._id}`}>
+                  <Card
+                    className="bg-background/50 border-border/50 hover:shadow-md transition-all duration-200 cursor-pointer"
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={client.profileImage || "/placeholder.svg"} alt={client.name} />
+                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                              {getClientInitials(client.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h3 className="font-semibold text-foreground">{client.name}</h3>
+                            <p className="text-sm text-muted-foreground">Client</p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleViewClient(client._id);
+                          }}
+                          className="h-8 w-8 p-0 border-border/50 hover:bg-primary/5"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {/* Plan Badge */}
+                        {client.trainerPlan && (
+                          <div className="mb-3">
+                            <Badge className={`${getPlanColor(client.trainerPlan)} font-medium`}>
+                              {client.trainerPlan.charAt(0).toUpperCase() + client.trainerPlan.slice(1)} Plan
+                            </Badge>
+                          </div>
+                        )}
+
+                        <div className="flex items-center space-x-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground truncate">{client.email}</span>
+                        </div>
+
+                        <div className="flex items-center space-x-2 text-sm">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">{client.phone}</span>
+                        </div>
+
+                        <div className="flex items-center space-x-2 text-sm">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            Started:{" "}
+                            {client.subscriptionStartDate
+                              ? new Date(client.subscriptionStartDate).toLocaleDateString()
+                              : "N/A"}
+                          </span>
                         </div>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewClient(client._id);
-                        }}
-                        className="h-8 w-8 p-0 border-border/50 hover:bg-primary/5"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {/* Plan Badge */}
-                      {(client as any).trainerPlan && (
-                        <div className="mb-3">
-                          <Badge className={`${getPlanColor((client as any).trainerPlan)} font-medium`}>
-                            {(client as any).trainerPlan.charAt(0).toUpperCase() + (client as any).trainerPlan.slice(1)} Plan
-                          </Badge>
-                        </div>
-                      )}
-
-                      <div className="flex items-center space-x-2 text-sm">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground truncate">{client.email}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-2 text-sm">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{client.phone}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-2 text-sm">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          Started:{" "}
-                          {client.subscriptionStartDate
-                            ? new Date(client.subscriptionStartDate).toLocaleDateString()
-                            : "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
                 </Link>
               ))}
             </div>
@@ -269,6 +260,7 @@ export default function TrainerClients() {
           </CardContent>
         </Card>
       </main>
+      <SiteFooter />
     </div>
   )
 }

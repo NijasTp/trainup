@@ -1,3 +1,45 @@
+import { ITrainer } from '../models/trainer.model';
+import { IUser } from '../models/user.model';
+
+export class TrainerDto {
+  static toResponse(trainer: ITrainer): TrainerResponseDto {
+    return {
+      _id: trainer._id.toString(),
+      name: trainer.name,
+      email: trainer.email,
+      phone: trainer.phone,
+      price: trainer.price,
+      isBanned: trainer.isBanned,
+      role: trainer.role,
+      gymId: trainer.gymId?.toString(),
+      clients: Array.isArray(trainer.clients)
+        ? trainer.clients.map(c => c.toString())
+        : [],
+      bio: trainer.bio,
+      location: trainer.location,
+      specialization: trainer.specialization,
+      experience: trainer.experience,
+      rating: trainer.rating,
+      certificate: trainer.certificate,
+      profileImage: trainer.profileImage,
+      profileStatus: trainer.profileStatus,
+      rejectReason: trainer.rejectReason,
+      createdAt: trainer.createdAt,
+      updatedAt: trainer.updatedAt
+    };
+  }
+
+  static toClientDto(client: IUser): ClientDto {
+    return {
+      _id: client._id.toString(),
+      name: client.name,
+      email: client.email,
+      phone: client.phone,
+      subscriptionStartDate: client.subscriptionStartDate
+    };
+  }
+}
+
 export class TrainerLoginDto {
   email: string;
   password: string;
@@ -14,7 +56,11 @@ export class TrainerResponseDto {
   name: string;
   email: string;
   phone: string;
-  price: string;
+  price: {
+    basic: number;
+    premium: number;
+    pro: number;
+  };
   isBanned: boolean;
   role: string;
   gymId?: string;
@@ -59,7 +105,11 @@ export class TrainerApplyDto {
   email: string;
   password: string;
   phone: string;
-  price: string;
+  price: {
+    basic: number;
+    premium: number;
+    pro: number;
+  };
   location: string;
   experience: string;
   specialization: string;
@@ -71,7 +121,11 @@ export class TrainerReapplyDto {
   email: string
   password: string
   phone: string
-  price: string
+  price: {
+    basic: number;
+    premium: number;
+    pro: number;
+  };
   location: string
   experience: string
   specialization: string
@@ -96,7 +150,7 @@ export class ClientDto {
   name: string;
   email: string;
   phone?: string;
-  subscriptionStartDate?: Date|null;
+  subscriptionStartDate?: Date | null;
 }
 
 export class GetClientParamsDto {

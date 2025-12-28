@@ -9,5 +9,14 @@ export type AdminLoginResult = {
 export interface IAdminService {
   login(dto: AdminLoginRequestDto): Promise<AdminLoginResponseDto>
   updateTokenVersion(adminId: string): Promise<void>
-  getDashboardStats(): Promise<any>
+  getDashboardStats(): Promise<unknown>;
+  getAllTransactions(
+    page: number,
+    limit: number,
+    search: string,
+    status: string,
+    sort: string
+  ): Promise<{ transactions: unknown[]; totalPages: number }>;
+  getExportTransactions(): Promise<unknown[]>;
+  getGraphData(filter: 'day' | 'week' | 'month' | 'year', type: 'revenue' | 'users' | 'trainers'): Promise<unknown[]>;
 }

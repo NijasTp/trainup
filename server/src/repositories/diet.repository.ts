@@ -35,7 +35,7 @@ export class DietDayRepository implements IDietDayRepository {
   }
 
   async updateMeal(userId: string, date: string, mealId: string, update: Partial<IMeal>): Promise<IDietDay | null> {
-    const set: any = {};
+    const set: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(update)) {
       set[`meals.$.${k}`] = v;
     }

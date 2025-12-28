@@ -1,4 +1,5 @@
 import { injectable } from 'inversify';
+import { FilterQuery } from 'mongoose';
 import WorkoutSessionModel, { IWorkoutSession } from '../models/workout.model';
 import { IWorkoutSessionRepository } from '../core/interfaces/repositories/IWorkoutSessionRepository';
 
@@ -30,7 +31,7 @@ export class WorkoutSessionRepository implements IWorkoutSessionRepository {
   }
 
   async findAdminTemplates(page: number = 1, limit: number = 5, search: string = '') {
-    const query: Record<string, any> = { date: { $exists: false }, givenBy: 'admin' };
+    const query: FilterQuery<IWorkoutSession> = { date: { $exists: false }, givenBy: 'admin' };
 
     if (search) {
       query.name = { $regex: search, $options: 'i' };
@@ -48,15 +49,15 @@ export class WorkoutSessionRepository implements IWorkoutSessionRepository {
     return { templates, total, page, totalPages: Math.ceil(total / limit) };
   }
 
-  async findAll(filter: any = {}) {
+  async findAll(filter: FilterQuery<IWorkoutSession> = {}) {
     return WorkoutSessionModel.find(filter).lean().exec();
   }
 
-  async count(filter: any = {}) {
+  async count(filter: FilterQuery<IWorkoutSession> = {}) {
     return WorkoutSessionModel.countDocuments(filter).exec();
   }
 
-  async findSessions(query: any, page: number = 1, limit: number = 10) {
+  async findSessions(query: FilterQuery<IWorkoutSession>, page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
     const [sessions, total] = await Promise.all([
       WorkoutSessionModel.find(query)

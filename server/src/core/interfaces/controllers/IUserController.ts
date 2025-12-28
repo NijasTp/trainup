@@ -37,4 +37,10 @@ export interface IUserController {
   getProfile(req: Request, res: Response, next: NextFunction): Promise<void>;
   getTrainer(req: Request, res: Response, next: NextFunction): Promise<void>;
   getTrainerRatings(req: Request, res: Response, next: NextFunction): Promise<void>;
+  editReview(req: Request, res: Response, next: NextFunction): Promise<void>;
+  deleteReview(req: Request, res: Response, next: NextFunction): Promise<void>;
+  uploadChatFile(req: Request, res: Response, next: NextFunction): Promise<void>;
+  addProgress(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getProgress(req: Request, res: Response, next: NextFunction): Promise<void>;
+  compareProgress(req: Request, res: Response, next: NextFunction): Promise<void>;
 }

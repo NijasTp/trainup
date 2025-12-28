@@ -46,7 +46,7 @@ export class PaymentService implements IPaymentService {
         created_at: order.created_at,
       };
       return response;
-    } catch (error) {
+    } catch (_error) {
       throw new AppError(MESSAGES.PAYMENT_CREATION_FAILED, STATUS_CODE.INTERNAL_SERVER_ERROR);
     }
   }
@@ -77,8 +77,8 @@ export class PaymentService implements IPaymentService {
     signature: string,
     userId: string,
     trainerId: string,
-    planType: 'basic' | 'premium' | 'pro',
-    amount: number
+    _planType: 'basic' | 'premium' | 'pro',
+    _amount: number
   ): Promise<boolean> {
     const isValid = await this.verifyPayment(orderId, paymentId, signature);
     if (!isValid) {

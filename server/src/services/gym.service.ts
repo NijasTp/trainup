@@ -29,12 +29,12 @@ import { STATUS_CODE } from '../constants/status'
 
 @injectable()
 export class GymService implements IGymService {
-  constructor (
+  constructor(
     @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository,
     @inject(TYPES.IJwtService) private _jwtService: IJwtService
-  ) {}
+  ) { }
 
-  async registerGym (
+  async registerGym(
     data: Partial<IGym>,
     files: {
       certificate?: UploadedFile
@@ -59,7 +59,7 @@ export class GymService implements IGymService {
     if (typeof data.geoLocation === 'string') {
       try {
         geoLocationObj = JSON.parse(data.geoLocation)
-      } catch (e) {
+      } catch (_e) {
         throw new AppError(
           'Invalid geoLocation JSON format',
           STATUS_CODE.BAD_REQUEST
@@ -119,15 +119,15 @@ export class GymService implements IGymService {
     if (files?.images) {
       const uploadPromises = Array.isArray(files.images)
         ? files.images.map(img =>
-            cloudinary.uploader.upload(img.tempFilePath, {
-              folder: 'trainup/gyms/gallery'
-            })
-          )
+          cloudinary.uploader.upload(img.tempFilePath, {
+            folder: 'trainup/gyms/gallery'
+          })
+        )
         : [
-            cloudinary.uploader.upload(files.images.tempFilePath, {
-              folder: 'trainup/gyms/gallery'
-            })
-          ]
+          cloudinary.uploader.upload(files.images.tempFilePath, {
+            folder: 'trainup/gyms/gallery'
+          })
+        ]
 
       const results = await Promise.all(uploadPromises)
       results.forEach(res => imageUrls.push(res.secure_url))
@@ -161,7 +161,7 @@ export class GymService implements IGymService {
     }
   }
 
-  async loginGym (
+  async loginGym(
     email: string,
     password: string
   ): Promise<GymLoginResponseDto> {
@@ -189,7 +189,7 @@ export class GymService implements IGymService {
     }
   }
 
-  async getAllGyms (
+  async getAllGyms(
     page: number,
     limit: number,
     searchQuery: string
@@ -197,22 +197,22 @@ export class GymService implements IGymService {
     return await this._gymRepo.findGyms(page, limit, searchQuery)
   }
 
-  async updateGymStatus (
+  async updateGymStatus(
     id: string,
     updateData: Partial<IGym>
   ): Promise<IGym | null> {
     return await this._gymRepo.updateStatus(id, updateData)
   }
 
-  async getGymById (id: string): Promise<IGym | null> {
+  async getGymById(id: string): Promise<IGym | null> {
     return await this._gymRepo.findById(id)
   }
 
-  async getGymData (gymId: string): Promise<GymDataResponseDto> {
+  async getGymData(gymId: string): Promise<GymDataResponseDto> {
     const gymDetails = await this._gymRepo.getGymById(gymId)
     if (!gymDetails)
       throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND)
-    
+
     const trainers = await this._gymRepo.getGymTrainers(gymId)
     const members = await this._gymRepo.getGymMembers(gymId)
     const announcements = await this._gymRepo.getGymAnnouncements(gymId)
@@ -230,15 +230,15 @@ export class GymService implements IGymService {
     }
   }
 
-  async getGymApplication (id: string): Promise<GymResponseDto | null> {
+  async getGymApplication(id: string): Promise<GymResponseDto | null> {
     return await this._gymRepo.findApplicationById(id)
   }
 
-  async addTrainer (dto: AddTrainerDto, gymId: string): Promise<ITrainer> {
+  async addTrainer(dto: AddTrainerDto, gymId: string): Promise<ITrainer> {
     return await this._gymRepo.addTrainer(gymId, dto)
   }
 
-  async updateTrainer (
+  async updateTrainer(
     dto: UpdateTrainerDto,
     trainerId: string,
     gymId: string
@@ -267,12 +267,12 @@ export class GymService implements IGymService {
     return await this._gymRepo.getActiveSubscriptionPlans(gymId)
   }
 
-async getMyGymDetails(
-  gymId: string,
-  userId: string
-): Promise<MyGymResponseDto | null> {
-  return await this._gymRepo.getMyGymDetails(gymId, userId);
-}
+  async getMyGymDetails(
+    gymId: string,
+    userId: string
+  ): Promise<MyGymResponseDto | null> {
+    return await this._gymRepo.getMyGymDetails(gymId, userId);
+  }
 
   async getGymAnnouncementsForUser(
     gymId: string,
@@ -341,7 +341,7 @@ async getMyGymDetails(
     await this._gymRepo.deleteAnnouncement(announcementId, gymId)
   }
 
-  private mapToResponseDto (gym: IGym): GymResponseDto {
+  private mapToResponseDto(gym: IGym): GymResponseDto {
     return {
       _id: gym._id.toString(),
       role: gym.role,
@@ -390,8 +390,8 @@ async getMyGymDetails(
     const normalizedUnit = (rawCreateUnit === 'days'
       ? 'day'
       : rawCreateUnit === 'months'
-      ? 'month'
-      : (rawCreateUnit as 'day' | 'month' | 'year')) as 'day' | 'month' | 'year'
+        ? 'month'
+        : (rawCreateUnit as 'day' | 'month' | 'year')) as 'day' | 'month' | 'year'
     const plan = await this._gymRepo.createSubscriptionPlan(gymId, {
       name: dto.name,
       duration: dto.duration,
@@ -453,8 +453,8 @@ async getMyGymDetails(
     const rawUpdateUnit = ((dto as { durationUnit?: string }).durationUnit as string | undefined)
     const normalizedUnit = rawUpdateUnit
       ? ((rawUpdateUnit === 'days'
-          ? 'day'
-          : rawUpdateUnit === 'months'
+        ? 'day'
+        : rawUpdateUnit === 'months'
           ? 'month'
           : (rawUpdateUnit as 'day' | 'month' | 'year')) as 'day' | 'month' | 'year')
       : undefined
@@ -489,7 +489,7 @@ async getMyGymDetails(
     if (typeof data.geoLocation === 'string') {
       try {
         geoLocationObj = JSON.parse(data.geoLocation)
-      } catch (e) {
+      } catch (_e) {
         throw new AppError('Invalid geoLocation JSON format', STATUS_CODE.BAD_REQUEST)
       }
     } else if (data.geoLocation && typeof data.geoLocation === 'object') {

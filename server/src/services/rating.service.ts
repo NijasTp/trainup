@@ -18,7 +18,7 @@ export class RatingService implements IRatingService {
         message: string,
         subscriptionPlan?: string
     ): Promise<ITrainer | null> {
-        return this._ratingRepository.addTrainerRating(trainerId, userId, rating, message, subscriptionPlan)
+        return this._ratingRepository.addTrainerRating(trainerId, userId, rating, message, subscriptionPlan) as Promise<ITrainer | null>
     }
 
     async addGymRating(
@@ -28,14 +28,14 @@ export class RatingService implements IRatingService {
         message: string,
         subscriptionPlan?: string
     ): Promise<IGym | null> {
-        return this._ratingRepository.addGymRating(gymId, userId, rating, message, subscriptionPlan)
+        return this._ratingRepository.addGymRating(gymId, userId, rating, message, subscriptionPlan) as Promise<IGym | null>
     }
 
-    async getTrainerRatings(trainerId: string, page?: number, limit?: number): Promise<{ ratings: any[], totalPages: number, totalCount: number }> {
+    async getTrainerRatings(trainerId: string, page?: number, limit?: number): Promise<{ ratings: unknown[], totalPages: number, totalCount: number }> {
         return this._ratingRepository.getTrainerRatings(trainerId, page, limit)
     }
 
-    async getGymRatings(gymId: string, page?: number, limit?: number): Promise<{ ratings: any[], totalPages: number, totalCount: number }> {
+    async getGymRatings(gymId: string, page?: number, limit?: number): Promise<{ ratings: unknown[], totalPages: number, totalCount: number }> {
         return this._ratingRepository.getGymRatings(gymId, page, limit)
     }
 }

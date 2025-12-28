@@ -6,7 +6,11 @@ export interface ITrainer extends Document {
   email: string
   password: string
   phone: string
-  price: string
+  price: {
+    basic: number;
+    premium: number;
+    pro: number;
+  }
   isBanned: boolean
   role: 'trainer'
   gymId?: mongoose.Types.ObjectId
@@ -34,7 +38,11 @@ const TrainerSchema: Schema<ITrainer> = new Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     phone: { type: String, required: true },
-    price: { type: String, required: true },
+    price: {
+      basic: { type: Number, required: true },
+      premium: { type: Number, required: true },
+      pro: { type: Number, required: true }
+    },
     isBanned: { type: Boolean, default: false },
     isAvailable: { type: Boolean, default: true },
     role: { type: String, default: 'trainer' },

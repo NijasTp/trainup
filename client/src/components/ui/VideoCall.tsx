@@ -32,7 +32,9 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const [callDuration, setCallDuration] = useState(0);
     const [retryCount, setRetryCount] = useState(0);
     const [hasPermissions, setHasPermissions] = useState(false);
-    
+    const [streamReady, setStreamReady] = useState(false);
+    const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const socketRef = useRef<Socket | null>(null);
@@ -100,9 +102,9 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 video: true,
                 audio: true
             });
-            
+
             stream.getTracks().forEach(track => track.stop());
-            
+
             setHasPermissions(true);
             if (!initializationRef.current) {
                 initializeVideoCall();
@@ -125,7 +127,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             await API.post(`/video-call/room/${roomId}/join`);
         } catch (error: any) {
             console.error(`Join call attempt ${attempt} failed:`, error);
-            
+
             if (attempt < 3 && error.response?.status !== 403) {
                 console.log(`Retrying join call... (${attempt + 1}/3)`);
                 setRetryCount(attempt);
@@ -168,17 +170,21 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             }
 
             localStreamRef.current = stream;
-            
+
             if (localVideoRef.current) {
+                console.log('Assigning local stream to video element', stream.id);
                 localVideoRef.current.srcObject = stream;
                 localVideoRef.current.muted = true;
-                
-                const playPromise = localVideoRef.current.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(e => {
-                        console.error('Failed to play local video:', e);
-                    });
+                setStreamReady(true);
+
+                try {
+                    await localVideoRef.current.play();
+                    console.log('Local video playing successfully');
+                } catch (e) {
+                    console.error('Failed to play local video:', e);
                 }
+            } else {
+                console.error('localVideoRef.current is null when assigning stream');
             }
 
             if (peerConnectionRef.current) {
@@ -196,13 +202,11 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
             peerConnectionRef.current.ontrack = (event) => {
                 console.log('Received remote stream');
-                if (remoteVideoRef.current && event.streams[0]) {
-                    remoteVideoRef.current.srcObject = event.streams[0];
-                    const playPromise = remoteVideoRef.current.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(e => {
-                            console.error('Failed to play remote video:', e);
-                        });
+                if (event.streams[0]) {
+                    setRemoteStream(event.streams[0]);
+                    if (remoteVideoRef.current) {
+                        remoteVideoRef.current.srcObject = event.streams[0];
+                        remoteVideoRef.current.play().catch(e => console.error('Remote play error:', e));
                     }
                 }
             };
@@ -220,7 +224,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             peerConnectionRef.current.onconnectionstatechange = () => {
                 if (peerConnectionRef.current) {
                     console.log('Connection state:', peerConnectionRef.current.connectionState);
-                    
+
                     if (peerConnectionRef.current.connectionState === 'failed') {
                         console.log('Connection failed, attempting to restart ICE');
                         peerConnectionRef.current.restartIce();
@@ -250,10 +254,10 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
         try {
             console.log('Handling offer, current state:', peerConnectionRef.current.signalingState);
-            
+
             if (peerConnectionRef.current.signalingState === 'stable') {
                 await peerConnectionRef.current.setRemoteDescription(offer);
-                
+
                 const answer = await peerConnectionRef.current.createAnswer();
                 await peerConnectionRef.current.setLocalDescription(answer);
 
@@ -279,7 +283,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
         try {
             console.log('Handling answer, current state:', peerConnectionRef.current.signalingState);
-            
+
             if (peerConnectionRef.current.signalingState === 'have-local-offer') {
                 await peerConnectionRef.current.setRemoteDescription(answer);
             } else {
@@ -291,7 +295,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     };
 
     const handleIceCandidate = async (candidate: RTCIceCandidateInit) => {
-        if (!peerConnectionRef.current || 
+        if (!peerConnectionRef.current ||
             peerConnectionRef.current.signalingState === 'closed' ||
             !peerConnectionRef.current.remoteDescription) {
             console.log('Peer connection not ready for ICE candidate');
@@ -327,20 +331,20 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const initializeVideoCall = async () => {
         if (initializationRef.current) return;
         initializationRef.current = true;
-        
+
         try {
             setIsLoading(true);
             setError(null);
-            
+
             cleanup();
-        
-            
+
+
             await joinCallWithRetry();
-            
+
             await initializeSocket();
-            
+
             await setupMediaAndPeerConnection();
-            
+
             setIsLoading(false);
         } catch (error) {
             console.error('Error initializing video call:', error);
@@ -369,7 +373,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 console.log('Socket connected successfully');
                 setIsConnected(true);
                 callStartTimeRef.current = new Date();
-                
+
                 socketRef.current!.emit('join_video_room', { roomId });
                 resolve();
             });
@@ -414,6 +418,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = null;
             }
+            setRemoteStream(null);
         });
 
         socketRef.current.on('disconnect', () => {
@@ -464,7 +469,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
     const cleanup = () => {
         console.log('Cleaning up video call resources');
-        
+
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
             localStreamRef.current = null;
@@ -480,7 +485,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             socketRef.current.disconnect();
             socketRef.current = null;
         }
-        
+
         if (localVideoRef.current) {
             localVideoRef.current.srcObject = null;
         }
@@ -504,10 +509,10 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 <div className="text-center space-y-4">
                     <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto"></div>
                     <p className="text-white text-lg">
-                        {!hasPermissions 
+                        {!hasPermissions
                             ? 'Requesting camera and microphone access...'
-                            : retryCount > 0 
-                                ? `Retrying connection... (${retryCount}/3)` 
+                            : retryCount > 0
+                                ? `Retrying connection... (${retryCount}/3)`
                                 : 'Connecting to video call...'
                         }
                     </p>
@@ -523,7 +528,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                     <AlertCircle className="h-16 w-16 text-red-500 mx-auto" />
                     <h2 className="text-2xl font-bold text-white">Connection Failed</h2>
                     <p className="text-white/80 text-lg">{error}</p>
-                    
+
                     <div className="space-y-3">
                         {error.includes('permission') && (
                             <div className="p-4 bg-amber-500/20 border border-amber-500/40 rounded-lg">
@@ -540,16 +545,16 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                                 </div>
                             </div>
                         )}
-                        
+
                         {retryCount < 3 && (
-                            <Button 
+                            <Button
                                 onClick={retryConnection}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
                             >
                                 Try Again
                             </Button>
                         )}
-                        <Button 
+                        <Button
                             onClick={onLeave}
                             variant="outline"
                             className="border-white/30 text-white hover:bg-white/10 px-6 py-2"
@@ -583,36 +588,46 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 </div>
             </div>
 
-            <div className="relative w-full h-full flex">
+            <div className="relative w-full h-full flex bg-gray-900">
                 <div className="flex-1 relative">
-                    <video
-                        ref={remoteVideoRef}
-                        autoPlay
-                        playsInline
-                        className="w-full h-full object-cover"
-                    />
-                    {!remoteVideoRef.current?.srcObject && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                            <div className="text-center text-white">
+                    {remoteStream ? (
+                        <video
+                            ref={remoteVideoRef}
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-cover border-2 border-red-500" // Debug border
+                            // Re-assign srcObject on render if ref is current
+                            onLoadedMetadata={(e) => {
+                                console.log('Remote video metadata loaded');
+                                const video = e.target as HTMLVideoElement;
+                                video.play().catch(e => console.error('Remote video play failed on metadata load:', e));
+                            }}
+                        />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="text-center text-white/50 bg-black/40 p-6 rounded-xl backdrop-blur-sm">
                                 <Users className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                                <p className="text-lg">Waiting for other participant...</p>
+                                <p className="text-lg font-medium">Waiting for other participant...</p>
                             </div>
                         </div>
                     )}
                 </div>
 
-                <div className="absolute top-20 right-4 w-64 h-48 bg-gray-800 rounded-lg overflow-hidden border-2 border-white/20">
+                {/* Local Video - Bottom Right Positioning */}
+                {/* Local Video - Fixed Positioning */}
+                <div className="absolute top-24 right-4 w-32 h-24 md:w-64 md:h-48 z-50 bg-gray-800 rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl transition-all hover:scale-105">
                     <video
                         ref={localVideoRef}
                         autoPlay
                         playsInline
                         muted
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover border-2 border-green-500" // Debug border
                         style={{ transform: 'scaleX(-1)' }}
+                        onLoadedMetadata={() => console.log('Local video metadata loaded')}
                     />
                     {!isVideoEnabled && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                            <VideoOff className="h-8 w-8 text-white/50" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800/90 backdrop-blur-sm">
+                            <VideoOff className="h-10 w-10 text-white/50" />
                         </div>
                     )}
                 </div>
@@ -649,7 +664,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 </div>
 
                 <div className="text-center mt-4">
-                    <Badge 
+                    <Badge
                         variant={isConnected ? "secondary" : "destructive"}
                         className={isConnected ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}
                     >

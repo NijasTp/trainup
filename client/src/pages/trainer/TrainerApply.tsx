@@ -21,7 +21,11 @@ export default function TrainerApplyPage() {
     experience: "",
     specialization: "",
     bio: "",
-    price: '',
+    price: {
+      basic: '',
+      premium: '',
+      pro: '',
+    },
     certificate: null as File | null,
     profileImage: null as File | null,
   });
@@ -56,7 +60,10 @@ export default function TrainerApplyPage() {
 
       navigate("/trainer/verify-otp", {
         state: {
-          formData,
+          formData: {
+            ...formData,
+            price: JSON.stringify(formData.price)
+          },
           email: formData.email,
         },
       });
@@ -185,22 +192,57 @@ export default function TrainerApplyPage() {
                     />
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="phone" className="text-white">
-                    Monthly Fee (₹)
-                  </Label>
-                  <div className="relative mt-2">
-                    <FaRupeeSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="price"
-                      name="price"
-                      type="number"
-                      placeholder="Enter your monthly fee in ₹"
-                      value={formData.price}
-                      onChange={handleInputChange}
-                      className="bg-gray-700 border-gray-600 text-white pl-10"
-                      required
-                    />
+                <div className="md:col-span-2 space-y-4">
+                  <Label className="text-white">Monthly Subscriptions Pricing (₹)</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="price-basic" className="text-gray-400 text-xs">Basic Plan</Label>
+                      <div className="relative mt-1">
+                        <FaRupeeSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="price-basic"
+                          name="price-basic"
+                          type="number"
+                          placeholder="Basic"
+                          value={formData.price.basic}
+                          onChange={(e) => setFormData({ ...formData, price: { ...formData.price, basic: e.target.value } })}
+                          className="bg-gray-700 border-gray-600 text-white pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="price-premium" className="text-gray-400 text-xs">Premium Plan</Label>
+                      <div className="relative mt-1">
+                        <FaRupeeSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="price-premium"
+                          name="price-premium"
+                          type="number"
+                          placeholder="Premium"
+                          value={formData.price.premium}
+                          onChange={(e) => setFormData({ ...formData, price: { ...formData.price, premium: e.target.value } })}
+                          className="bg-gray-700 border-gray-600 text-white pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="price-pro" className="text-gray-400 text-xs">Pro Plan</Label>
+                      <div className="relative mt-1">
+                        <FaRupeeSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="price-pro"
+                          name="price-pro"
+                          type="number"
+                          placeholder="Pro"
+                          value={formData.price.pro}
+                          onChange={(e) => setFormData({ ...formData, price: { ...formData.price, pro: e.target.value } })}
+                          className="bg-gray-700 border-gray-600 text-white pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

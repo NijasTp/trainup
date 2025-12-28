@@ -29,11 +29,8 @@ import {
   ResendOtpDto,
   GetTrainersQueryDto,
   GetTrainersResponseDto,
-  GetIndividualTrainerParamsDto,
   GetIndividualTrainerResponseDto,
   GetMyTrainerResponseDto,
-  GetProfileResponseDto,
-  UpdateUserRequestDto,
   RefreshTokenResponseDto,
   AddWeightDto
 } from '../dtos/user.dto'
@@ -41,8 +38,8 @@ import { MESSAGES } from '../constants/messages.constants'
 import { AppError } from '../utils/appError.util'
 import { IGymService } from '../core/interfaces/services/IGymService'
 import { UploadedFile } from 'express-fileupload'
-import { IRatingService } from '../core/interfaces/services/IRatingService'
 import { IProgressService } from '../core/interfaces/services/IProgressService'
+import { IReviewService } from '../core/interfaces/services/IReviewService'
 
 @injectable()
 export class UserController implements IUserController {
@@ -56,7 +53,7 @@ export class UserController implements IUserController {
     @inject(TYPES.IMessageService) private _messageService: IMessageService,
     @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
     @inject(TYPES.IGymService) private _gymService: IGymService,
-    @inject(TYPES.IRatingService) private _ratingService: IRatingService,
+    @inject(TYPES.IReviewService) private _reviewService: IReviewService,
     @inject(TYPES.IProgressService) private _progressService: IProgressService
   ) { }
 
@@ -334,7 +331,19 @@ export class UserController implements IUserController {
   ): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id
-      const dto = req.body as Record<string, any>
+      const dto = req.body as {
+        name?: string;
+        phone?: string;
+        height?: string | number;
+        age?: string | number;
+        todaysWeight?: string | number;
+        goalWeight?: string | number;
+        goals?: string;
+        activityLevel?: string;
+        gender?: string;
+        equipment?: string | boolean;
+        isPrivate?: string | boolean;
+      };
 
       const updateData = {
         name: dto.name?.trim(),
@@ -343,14 +352,14 @@ export class UserController implements IUserController {
         age: dto.age ? Number(dto.age) : undefined,
         todaysWeight: dto.todaysWeight ? Number(dto.todaysWeight) : undefined,
         goalWeight: dto.goalWeight ? Number(dto.goalWeight) : undefined,
-        goals: dto.goals ? JSON.parse(dto.goals as string) : undefined,
+        goals: dto.goals ? JSON.parse(dto.goals) : undefined,
         activityLevel: dto.activityLevel || undefined,
         gender: dto.gender || undefined,
         equipment: dto.equipment === true || dto.equipment === 'true',
         isPrivate: dto.isPrivate === true || dto.isPrivate === 'true'
       }
 
-      console.log('Update Profile Files:', req.files);
+      logger.info(`Update Profile Files: ${req.files ? Object.keys(req.files).join(', ') : 'none'}`);
       const updatedUser = await this._userService.updateProfile(
         userId,
         updateData,
@@ -597,7 +606,7 @@ export class UserController implements IUserController {
 
       res.status(STATUS_CODE.OK).json({ gym })
     } catch (err) {
-      console.log('Error getting gym by ID:', err)
+      logger.error('Error getting gym by ID:', err)
       next(err)
     }
   }
@@ -680,7 +689,7 @@ export class UserController implements IUserController {
       const { id } = req.params
       const page = parseInt(req.query.page as string) || 1
       const limit = parseInt(req.query.limit as string) || 5
-      const result = await this._ratingService.getGymRatings(id, page, limit)
+      const result = await this._reviewService.getReviews(id, page, limit)
       res.status(STATUS_CODE.OK).json(result)
     } catch (err) {
       next(err)
@@ -692,9 +701,10 @@ export class UserController implements IUserController {
       const { id } = req.params
       const { rating, message, subscriptionPlan } = req.body
       const userId = (req.user as JwtPayload).id
-      const newRating = await this._ratingService.addTrainerRating(
-        id,
+      const newRating = await this._reviewService.addReview(
         userId,
+        id,
+        'Trainer',
         rating,
         message,
         subscriptionPlan
@@ -710,9 +720,10 @@ export class UserController implements IUserController {
       const { id } = req.params
       const { rating, message, subscriptionPlan } = req.body
       const userId = (req.user as JwtPayload).id
-      const newRating = await this._ratingService.addGymRating(
-        id,
+      const newRating = await this._reviewService.addReview(
         userId,
+        id,
+        'Gym',
         rating,
         message,
         subscriptionPlan
@@ -722,6 +733,30 @@ export class UserController implements IUserController {
       next(err)
     }
   }
+
+  async editReview(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id
+      const { id } = req.params
+      const { rating, comment } = req.body
+      const result = await this._reviewService.editReview(userId, id, rating, comment)
+      res.status(STATUS_CODE.OK).json(result)
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async deleteReview(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id
+      const { id } = req.params
+      await this._reviewService.deleteReview(userId, id)
+      res.status(STATUS_CODE.OK).json({ message: 'Review deleted successfully' })
+    } catch (err) {
+      next(err)
+    }
+  }
+
   async getProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = (req.user as JwtPayload).id
@@ -753,12 +788,13 @@ export class UserController implements IUserController {
       const { id } = req.params
       const page = parseInt(req.query.page as string) || 1
       const limit = parseInt(req.query.limit as string) || 5
-      const result = await this._ratingService.getTrainerRatings(id, page, limit)
+      const result = await this._reviewService.getReviews(id, page, limit)
       res.status(STATUS_CODE.OK).json(result)
     } catch (err) {
       next(err)
     }
   }
+
   async uploadChatFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.files || !req.files.file) {
@@ -813,6 +849,7 @@ export class UserController implements IUserController {
       next(err)
     }
   }
+
 
   async compareProgress(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

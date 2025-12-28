@@ -88,6 +88,7 @@ export class TrainerCreateSessionRequestDto {
   name: string;
   date: string;
   time: string;
+  exercises: ExerciseDto[];
   goal?: string;
   notes?: string;
 }

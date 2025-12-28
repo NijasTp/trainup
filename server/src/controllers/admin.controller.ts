@@ -97,7 +97,7 @@ export class AdminController {
       }
       res.status(STATUS_CODE.OK).json(application);
     } catch (err) {
-      console.log(err)
+      logger.error('Error in getTrainerApplication:', err);
       next(err);
     }
   }
@@ -235,6 +235,41 @@ export class AdminController {
     try {
       const stats = await this._adminService.getDashboardStats();
       res.status(STATUS_CODE.OK).json(stats);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getAllTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+      const search = String(req.query.search || '');
+      const status = String(req.query.status || '');
+      const sort = String(req.query.sort || '');
+
+      const result = await this._adminService.getAllTransactions(page, limit, search, status, sort);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getExportTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await this._adminService.getExportTransactions();
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getDashboardGraphData(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const filter = req.query.filter as 'day' | 'week' | 'month' | 'year';
+      const type = req.query.type as 'revenue' | 'users' | 'trainers' || 'revenue';
+      const result = await this._adminService.getGraphData(filter, type);
+      res.status(STATUS_CODE.OK).json(result);
     } catch (err) {
       next(err);
     }

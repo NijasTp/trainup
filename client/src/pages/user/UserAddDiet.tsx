@@ -15,51 +15,9 @@ import { deleteMeal, getMealsByDate } from "@/services/dietServices";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 
-export interface Meal {
-  _id?: string;
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-  time: string;
-  source: "user" | "trainer";
-  description?: string;
-}
+import type { Meal } from "@/interfaces/user/IUserAddDiet";
 
-interface USDAFood {
-  fdcId: number;
-  description: string;
-  ingredients?: string;
-  foodNutrients: {
-    nutrientId: number;
-    nutrientName: string;
-    unitName: string;
-    value: number;
-  }[];
-  foodAttributes?: {
-    id: number;
-    name: string;
-    value: string;
-  }[];
-}
-
-interface USDAResponse {
-  totalHits: number;
-  currentPage: number;
-  totalPages: number;
-  foods: USDAFood[];
-}
-
-export interface AddMealResponse {
-  _id: string;
-  user: string;
-  date: string;
-  meals: Meal[] | null;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
+import type { USDAFood, USDAResponse } from "@/interfaces/common/IUSDA";
 
 const mealSchema = z.object({
   name: z.string().min(1, "Meal name is required"),

@@ -17,22 +17,23 @@ import {
 } from '../models/gymAnnouncement.model'
 import { GymResponseDto, AnnouncementDto, GymListingDto, MyGymResponseDto, UserSubscription, GymSummary, MemberSummary } from '../dtos/gym.dto'
 import { GymTransactionModel } from '../models/gymTransaction.model'
+import { IUser } from '../models/user.model'
 
 @injectable()
 export class GymRepository implements IGymRepository {
-  async findByEmail (email: string): Promise<IGym | null> {
+  async findByEmail(email: string): Promise<IGym | null> {
     return GymModel.findOne({ email })
   }
 
-  async createGym (data: Partial<IGym>): Promise<IGym> {
+  async createGym(data: Partial<IGym>): Promise<IGym> {
     return GymModel.create(data)
   }
 
-  async updateGym (_id: string, data: Partial<IGym>): Promise<IGym | null> {
+  async updateGym(_id: string, data: Partial<IGym>): Promise<IGym | null> {
     return GymModel.findByIdAndUpdate(_id, data, { new: true })
   }
 
-  async findGyms (
+  async findGyms(
     page: number,
     limit: number,
     searchQuery: string
@@ -64,14 +65,14 @@ export class GymRepository implements IGymRepository {
     }
   }
 
-  async findApplicationById (id: string): Promise<GymResponseDto | null> {
+  async findApplicationById(id: string): Promise<GymResponseDto | null> {
     const gym = await GymModel.findById(id)
       .select('name email password geoLocation certificate profileImage images')
       .lean()
     return gym ? this.mapToResponseDto(gym as IGym) : null
   }
 
-  async updateStatus (
+  async updateStatus(
     id: string,
     updateData: Partial<IGym>
   ): Promise<IGym | null> {
@@ -85,16 +86,16 @@ export class GymRepository implements IGymRepository {
     return GymModel.findByIdAndUpdate(id, updateData, { new: true })
   }
 
-  async findById (_id: string): Promise<IGym | null> {
+  async findById(_id: string): Promise<IGym | null> {
     return GymModel.findById(_id)
   }
 
-  async getGymById (gymId: string): Promise<GymResponseDto | null> {
+  async getGymById(gymId: string): Promise<GymResponseDto | null> {
     const gym = await GymModel.findById(gymId).select('-password')
     return gym ? this.mapToResponseDto(gym) : null
   }
 
-  async getGymTrainers (gymId: string): Promise<ITrainer[]> {
+  async getGymTrainers(gymId: string): Promise<ITrainer[]> {
     const result = await GymModel.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(gymId) } },
       {
@@ -110,7 +111,7 @@ export class GymRepository implements IGymRepository {
     return result[0]?.trainers || []
   }
 
-  async getGymMembers (gymId: string): Promise<unknown[]> {
+  async getGymMembers(gymId: string): Promise<IUser[]> {
     const result = await GymModel.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(gymId) } },
       {
@@ -123,21 +124,21 @@ export class GymRepository implements IGymRepository {
       },
       { $project: { members: 1 } }
     ])
-    return result[0]?.members || []
+    return (result[0]?.members as IUser[]) || []
   }
 
-  async getGymAnnouncements (gymId: string): Promise<AnnouncementDto[]> {
+  async getGymAnnouncements(gymId: string): Promise<AnnouncementDto[]> {
     const gym = await GymModel.findById(gymId).select('announcements')
     return gym
       ? gym.announcements.map(a => ({
-          title: a.title,
-          message: a.message,
-          date: a.date
-        }))
+        title: a.title,
+        message: a.message,
+        date: a.date
+      }))
       : []
   }
 
-  async createSubscriptionPlan (
+  async createSubscriptionPlan(
     gymId: string,
     data: Partial<ISubscriptionPlan>
   ): Promise<ISubscriptionPlan> {
@@ -147,7 +148,7 @@ export class GymRepository implements IGymRepository {
     })
   }
 
-  async listSubscriptionPlans (
+  async listSubscriptionPlans(
     gymId: string,
     page: number,
     limit: number,
@@ -183,24 +184,24 @@ export class GymRepository implements IGymRepository {
     }
   }
 
-  async getSubscriptionPlanById (
+  async getSubscriptionPlanById(
     planId: string
   ): Promise<ISubscriptionPlan | null> {
     return SubscriptionPlanModel.findById(planId).lean()
   }
 
-  async updateSubscriptionPlan (
+  async updateSubscriptionPlan(
     planId: string,
     data: Partial<ISubscriptionPlan>
   ): Promise<ISubscriptionPlan | null> {
     return SubscriptionPlanModel.findByIdAndUpdate(planId, data, { new: true })
   }
 
-  async deleteSubscriptionPlan (planId: string): Promise<void> {
+  async deleteSubscriptionPlan(planId: string): Promise<void> {
     await SubscriptionPlanModel.findByIdAndDelete(planId)
   }
 
-  async addTrainer (gymId: string, data: Partial<ITrainer>): Promise<ITrainer> {
+  async addTrainer(gymId: string, data: Partial<ITrainer>): Promise<ITrainer> {
     const trainer = await TrainerModel.create({
       ...data,
       gym: new Types.ObjectId(gymId)
@@ -211,14 +212,14 @@ export class GymRepository implements IGymRepository {
     return trainer
   }
 
-  async updateTrainer (
+  async updateTrainer(
     trainerId: string,
     data: Partial<ITrainer>
   ): Promise<ITrainer | null> {
     return TrainerModel.findByIdAndUpdate(trainerId, data, { new: true })
   }
 
-  async updateMember (
+  async updateMember(
     membershipId: string,
     data: Partial<IUserGymMembership>
   ): Promise<IUserGymMembership | null> {
@@ -227,13 +228,13 @@ export class GymRepository implements IGymRepository {
     })
   }
 
-  async addMemberToGym (gymId: string, userId: string): Promise<void> {
+  async addMemberToGym(gymId: string, userId: string): Promise<void> {
     await GymModel.findByIdAndUpdate(gymId, {
       $addToSet: { members: new Types.ObjectId(userId) }
     })
   }
 
-  async createAnnouncement (
+  async createAnnouncement(
     gymId: string,
     data: Partial<IGymAnnouncement>
   ): Promise<IGymAnnouncement> {
@@ -247,7 +248,7 @@ export class GymRepository implements IGymRepository {
     return announcement
   }
 
-  async getAnnouncementsByGym (
+  async getAnnouncementsByGym(
     gymId: string,
     page: number,
     limit: number,
@@ -285,7 +286,7 @@ export class GymRepository implements IGymRepository {
     }
   }
 
-  async updateAnnouncement (
+  async updateAnnouncement(
     announcementId: string,
     gymId: string,
     data: Partial<IGymAnnouncement>
@@ -297,7 +298,7 @@ export class GymRepository implements IGymRepository {
     )
   }
 
-  async deleteAnnouncement (
+  async deleteAnnouncement(
     announcementId: string,
     gymId: string
   ): Promise<void> {
@@ -310,7 +311,7 @@ export class GymRepository implements IGymRepository {
     })
   }
 
-  async getGymsForUser (
+  async getGymsForUser(
     page: number,
     limit: number,
     search: string,
@@ -429,14 +430,14 @@ export class GymRepository implements IGymRepository {
     }
   }
 
-  async getGymForUser (gymId: string): Promise<IGym | null> {
+  async getGymForUser(gymId: string): Promise<IGym | null> {
     return GymModel.findById(gymId)
       .select('-password')
       .populate('trainers')
       .lean()
   }
 
-  async getActiveSubscriptionPlans (
+  async getActiveSubscriptionPlans(
     gymId: string
   ): Promise<ISubscriptionPlan[]> {
     return SubscriptionPlanModel.find({
@@ -445,7 +446,7 @@ export class GymRepository implements IGymRepository {
     }).lean()
   }
 
-  async getMyGymDetails (
+  async getMyGymDetails(
     gymId: string,
     userId: string
   ): Promise<MyGymResponseDto | null> {
@@ -492,7 +493,7 @@ export class GymRepository implements IGymRepository {
       images: gym.images ?? null,
       certificate: gym.certificate ?? null,
       memberCount: gym.members?.length ?? 0,
-      rating: (gym as any).avgRating ?? 0
+      rating: (gym as unknown as { avgRating?: number }).avgRating ?? 0
     }
 
     const members: MemberSummary[] =
@@ -511,7 +512,7 @@ export class GymRepository implements IGymRepository {
     }
   }
 
-  async getGymAnnouncementsForUser (
+  async getGymAnnouncementsForUser(
     gymId: string,
     page: number,
     limit: number,
@@ -550,7 +551,7 @@ export class GymRepository implements IGymRepository {
     }
   }
 
-  async getGymTotalRevenue (gymId: string): Promise<number> {
+  async getGymTotalRevenue(gymId: string): Promise<number> {
     const result = await GymTransactionModel.aggregate([
       { $match: { gymId: new Types.ObjectId(gymId), status: 'completed' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
@@ -558,7 +559,7 @@ export class GymRepository implements IGymRepository {
     return result[0]?.total ?? 0
   }
 
-  async getRecentMembers (
+  async getRecentMembers(
     gymId: string,
     limit: number
   ): Promise<IUserGymMembership[]> {
@@ -569,7 +570,7 @@ export class GymRepository implements IGymRepository {
       .lean() as Promise<IUserGymMembership[]>
   }
 
-  mapToResponseDto (gym: IGym): GymResponseDto {
+  mapToResponseDto(gym: IGym): GymResponseDto {
     return {
       _id: gym._id.toString(),
       role: gym.role,
