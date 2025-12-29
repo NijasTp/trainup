@@ -32,9 +32,9 @@ export class SlotService implements ISlotService {
     const end = new Date(`${date.toISOString().split('T')[0]}T${endTime}`)
     const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
 
-    if (diffHours !== 1) {
+    if (diffHours <= 0) {
       throw new AppError(
-        'Session must be exactly 1 hour long',
+        'End time must be after start time',
         STATUS_CODE.BAD_REQUEST
       )
     }
@@ -96,7 +96,7 @@ export class SlotService implements ISlotService {
 
   async bookSession(slotId: string, userId: string): Promise<void> {
     const slot = await this._slotRepository.findById(slotId)
-    
+
     if (!slot) {
       throw new AppError('Slot not found', STATUS_CODE.NOT_FOUND)
     }

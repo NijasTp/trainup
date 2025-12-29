@@ -19,7 +19,8 @@ import {
   User,
   Settings,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  MessageSquare
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -49,6 +50,7 @@ export const SiteHeader: React.FC = () => {
 
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [chatUnreadCount, setChatUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentStreak, setCurrentStreak] = useState(user?.streak ?? 0)
@@ -82,6 +84,16 @@ export const SiteHeader: React.FC = () => {
       console.error("Failed to load notifications")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchChatUnread = async () => {
+    try {
+      const { data } = await API.get<{ counts: { senderId: string; count: number }[] }>("/user/chat/unread-counts")
+      const totalUnread = data.counts.reduce((acc, curr) => acc + curr.count, 0)
+      setChatUnreadCount(totalUnread)
+    } catch (err) {
+      console.error("Failed to load chat unread counts")
     }
   }
 
@@ -142,6 +154,10 @@ export const SiteHeader: React.FC = () => {
       }
     })
 
+    socket.on("new_message", () => {
+      setChatUnreadCount(prev => prev + 1);
+    });
+
     return () => {
       console.log("Disconnecting socket");
       socket.disconnect()
@@ -154,9 +170,13 @@ export const SiteHeader: React.FC = () => {
       return
     }
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, 30_000)
+    fetchChatUnread()
+    const interval = setInterval(() => {
+      fetchNotifications();
+      fetchChatUnread();
+    }, 30_000)
     return () => clearInterval(interval)
-  }, [user, navigate])
+  }, [user, navigate, location.pathname])
 
   const handleSignOut = async () => {
     dispatch(logout())
@@ -176,6 +196,7 @@ export const SiteHeader: React.FC = () => {
     })
 
   const navLinks = [
+    { name: "My Trainer", path: "/my-trainer/profile", icon: MessageSquare },
     { name: "Trainers", path: "/trainers", icon: Users },
     { name: "Workouts", path: "/workouts", icon: Dumbbell },
     { name: "Diet", path: "/diets", icon: Utensils },
@@ -219,7 +240,13 @@ export const SiteHeader: React.FC = () => {
                 )}
               >
                 <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4" />
                 {link.name}
+                {link.name === "My Trainer" && chatUnreadCount > 0 && (
+                  <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                    {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
+                  </span>
+                )}
               </Link>
             )
           })}
@@ -456,7 +483,13 @@ export const SiteHeader: React.FC = () => {
                   )}
                 >
                   <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5" />
                   {link.name}
+                  {link.name === "My Trainer" && chatUnreadCount > 0 && (
+                    <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                      {chatUnreadCount}
+                    </span>
+                  )}
                 </Link>
               )
             })}

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, Mail, Phone, Calendar, Filter } from "lucide-react"
+import { Eye, Mail, Phone, Calendar, Filter, MessageSquare } from "lucide-react"
 import API from "@/lib/axios"
 import { toast } from "sonner"
 import { Link, useNavigate } from "react-router-dom"
@@ -23,11 +23,14 @@ export default function TrainerClients() {
   const [search, setSearch] = useState("")
   const [planFilter, setPlanFilter] = useState("all")
   const [page, setPage] = useState(1)
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
   const limit = 10
 
   useEffect(() => {
     document.title = "TrainUp - My Clients"
+    document.title = "TrainUp - My Clients"
     fetchClients()
+    fetchUnreadCounts()
   }, [page, search, planFilter])
 
   const fetchClients = async () => {
@@ -44,6 +47,19 @@ export default function TrainerClients() {
       setError("Failed to load clients")
       toast.error("Failed to load clients")
       setIsLoading(false)
+    }
+  }
+
+  const fetchUnreadCounts = async () => {
+    try {
+      const { data } = await API.get<{ counts: { senderId: string; count: number }[] }>("/trainer/chat/unread-counts");
+      const countsMap: Record<string, number> = {};
+      data.counts.forEach(item => {
+        countsMap[item.senderId] = item.count;
+      });
+      setUnreadCounts(countsMap);
+    } catch (err) {
+      console.error("Failed to fetch unread counts");
     }
   }
 
@@ -214,6 +230,25 @@ export default function TrainerClients() {
                           </span>
                         </div>
                       </div>
+
+                      {/* Chat Button */}
+                      <Button
+                        variant="secondary"
+                        className="w-full mt-2 relative"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(`/trainer/chat/${client._id}`);
+                        }}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Chat with Client
+                        {unreadCounts[client._id] > 0 && (
+                          <Badge variant="destructive" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center absolute -top-2 -right-2">
+                            {unreadCounts[client._id]}
+                          </Badge>
+                        )}
+                      </Button>
+
                     </CardContent>
                   </Card>
                 </Link>
@@ -261,6 +296,6 @@ export default function TrainerClients() {
         </Card>
       </main>
       <SiteFooter />
-    </div>
+    </div >
   )
 }

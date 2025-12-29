@@ -13,6 +13,8 @@ import { ISlotService } from '../core/interfaces/services/ISlotService'
 import { IMessageService } from '../core/interfaces/services/IMessageService'
 import { IUserPlanService } from '../core/interfaces/services/IUserPlanService'
 import { IUserController } from '../core/interfaces/controllers/IUserController'
+import { INotificationService } from '../core/interfaces/services/INotificationService'
+import { NOTIFICATION_TYPES, NOTIFICATION_MESSAGES } from '../constants/notification.constants'
 import { STATUS_CODE } from '../constants/status'
 import { logger } from '../utils/logger.util'
 import {
@@ -54,7 +56,8 @@ export class UserController implements IUserController {
     @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
     @inject(TYPES.IGymService) private _gymService: IGymService,
     @inject(TYPES.IReviewService) private _reviewService: IReviewService,
-    @inject(TYPES.IProgressService) private _progressService: IProgressService
+    @inject(TYPES.IProgressService) private _progressService: IProgressService,
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService
   ) { }
 
   async requestOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -807,6 +810,56 @@ export class UserController implements IUserController {
       next(err)
     }
   }
+
+  async sendSessionRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id
+      const { trainerId } = req.body
+
+      if (!trainerId) throw new AppError('Trainer ID is required', STATUS_CODE.BAD_REQUEST)
+
+      const user = await this._userService.getUserById(userId)
+      if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+
+      await this._notificationService.sendSessionRequestNotification(trainerId, user.name)
+
+      
+      await this._messageService.createMessage({
+        senderId: userId,
+        receiverId: trainerId,
+        message: "Requested a video call session",
+        senderType: 'user',
+        messageType: 'text',
+        readStatus: false
+      })
+
+      res.status(STATUS_CODE.OK).json({ message: 'Session request sent successfully' })
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async getUnreadCounts(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id
+      const counts = await this._messageService.getUnreadCountsBySender(userId)
+      res.status(STATUS_CODE.OK).json({ counts })
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async markMessagesAsRead(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id
+      const { senderId } = req.params
+      await this._messageService.markMessagesAsRead(senderId, userId)
+      res.status(STATUS_CODE.OK).json({ message: 'Messages marked as read' })
+    } catch (err) {
+      next(err)
+    }
+  }
+
 
   async addProgress(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

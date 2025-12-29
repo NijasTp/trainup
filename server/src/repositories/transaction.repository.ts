@@ -231,9 +231,6 @@ export class TransactionRepository implements ITransactionRepository {
       });
     }
 
-    // Keep the plan distribution from transaction repo for now as fallback or remove if not used by service anymore
-    // logic moved to TrainerRepo based on active users, but method contract calculates it.
-    // We will leave the old logic here but Service will effectively ignore it by overwriting with TrainerRepo call.
     const planDistribution = await TransactionModel.aggregate([
       {
         $match: {

@@ -10,7 +10,6 @@ import {
     Users,
     Clock,
     AlertCircle,
-    Settings,
     Loader2
 } from "lucide-react";
 import io, { Socket } from 'socket.io-client';

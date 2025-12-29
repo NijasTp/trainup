@@ -28,7 +28,7 @@ export interface TrainerApplyData {
   experience?: string
   specialization?: string
   certificate: UploadedFile
-  profileImage: UploadedFile
+  profileImage?: UploadedFile
 }
 
 export interface DashboardStats {

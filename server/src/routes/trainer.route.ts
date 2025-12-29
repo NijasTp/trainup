@@ -24,7 +24,7 @@ router.get('/get-clients', authMiddleware, roleMiddleware(['trainer']), trainerC
 router.get('/get-client/:id', authMiddleware, roleMiddleware(['trainer']), trainerController.getClient.bind(trainerController));
 
 router.get('/dashboard-stats', authMiddleware, (req, res, next) =>
-    container.get<TrainerController>(TYPES.TrainerController).getDashboardStats(req, res, next)
+    container.get<TrainerController>(TYPES.TrainerController).getDashboard(req, res, next)
 )
 router.patch('/availability', authMiddleware, (req, res, next) =>
     container.get<TrainerController>(TYPES.TrainerController).updateAvailability(req, res, next)
@@ -54,6 +54,8 @@ router.post('/session-requests/:requestId/reject/:userId', authMiddleware, roleM
 
 router.get('/client/:clientId', authMiddleware, roleMiddleware(['trainer']), trainerController.getClientDetails.bind(trainerController));
 router.get('/chat/messages/:clientId', authMiddleware, roleMiddleware(['trainer']), trainerController.getChatMessages.bind(trainerController));
+router.get('/chat/unread-counts', authMiddleware, roleMiddleware(['trainer']), trainerController.getUnreadCounts.bind(trainerController));
+router.put('/chat/read/:clientId', authMiddleware, roleMiddleware(['trainer']), trainerController.markMessagesAsRead.bind(trainerController));
 router.get('/user-plan/:id', authMiddleware, roleMiddleware(['trainer']), trainerController.getUserPlan.bind(trainerController));
 router.post('/chat/upload', authMiddleware, roleMiddleware(['trainer']), trainerController.uploadChatFile.bind(trainerController));
 

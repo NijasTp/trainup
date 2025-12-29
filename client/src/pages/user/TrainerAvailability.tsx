@@ -35,10 +35,12 @@ export default function TrainerAvailability() {
     const [error, setError] = useState<string | null>(null);
     const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
     const [selectedDay, setSelectedDay] = useState<string>("all");
+    const [userPlan, setUserPlan] = useState<any | null>(null);
 
     useEffect(() => {
         document.title = "TrainUp - Trainer Availability";
         fetchAvailability();
+        fetchUserPlan();
     }, []);
 
     const fetchAvailability = async () => {
@@ -54,6 +56,14 @@ export default function TrainerAvailability() {
             setError("Failed to load availability");
             toast.error("Failed to load availability");
             setIsLoading(false);
+        }
+    };
+    const fetchUserPlan = async () => {
+        try {
+            const response = await API.get("/user/plan");
+            setUserPlan(response.data.plan);
+        } catch (err) {
+            console.error("Failed to fetch user plan:", err);
         }
     };
 
@@ -183,7 +193,12 @@ export default function TrainerAvailability() {
                             </div>
                         </div>
                         <p className="text-muted-foreground">
-                            Book a video call session with your trainer. Each session is 1 hour long.
+                            Book a video call session with your trainer.
+                            {userPlan && (
+                                <span className="ml-2 font-medium text-primary">
+                                    You have {userPlan.videoCallsLeft} sessions remaining this month.
+                                </span>
+                            )}
                         </p>
                     </CardHeader>
                     <CardContent>
@@ -286,14 +301,19 @@ export default function TrainerAvailability() {
                                                                     ) : (
                                                                         <Button
                                                                             onClick={() => handleBookSlot(slot._id)}
-                                                                            disabled={bookingSlotId === slot._id}
-                                                                            className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
+                                                                            disabled={bookingSlotId === slot._id || (userPlan && userPlan.videoCallsLeft <= 0)}
+                                                                            className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
                                                                             size="sm"
                                                                         >
                                                                             {bookingSlotId === slot._id ? (
                                                                                 <>
                                                                                     <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                                                                                     Booking...
+                                                                                </>
+                                                                            ) : (userPlan && userPlan.videoCallsLeft <= 0) ? (
+                                                                                <>
+                                                                                    <Video className="h-4 w-4 mr-2" />
+                                                                                    Limit Reached
                                                                                 </>
                                                                             ) : (
                                                                                 <>

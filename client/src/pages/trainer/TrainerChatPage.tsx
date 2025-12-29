@@ -111,6 +111,9 @@ export default function TrainerChatPage() {
             const messagesResponse = await API.get(`/trainer/chat/messages/${clientId}`);
             setMessages(messagesResponse.data.messages);
 
+            // Mark messages as read
+            await API.put(`/trainer/chat/read/${clientId}`);
+
             socketRef.current = io(import.meta.env.VITE_API_URL, {
                 withCredentials: true,
                 transports: ['websocket', 'polling']

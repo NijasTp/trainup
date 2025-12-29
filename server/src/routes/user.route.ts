@@ -94,6 +94,9 @@ router.post('/book-session', roleMiddleware(['user']), userController.bookSessio
 router.get('/sessions', roleMiddleware(['user']), userController.getUserSessions.bind(userController))
 router.get('/plan', roleMiddleware(['user']), userController.getUserPlan.bind(userController))
 router.get('/trainer/:trainerId', roleMiddleware(['user']), userController.getTrainer.bind(userController))
+router.post('/chat/session-request', roleMiddleware(['user']), userController.sendSessionRequest.bind(userController))
+router.get('/chat/unread-counts', roleMiddleware(['user']), userController.getUnreadCounts.bind(userController))
+router.put('/chat/read/:senderId', roleMiddleware(['user']), userController.markMessagesAsRead.bind(userController))
 router.get('/chat/messages/:trainerId', roleMiddleware(['user']), userController.getChatMessages.bind(userController))
 router.get('/me', roleMiddleware(['user']), userController.getProfile.bind(userController))
 

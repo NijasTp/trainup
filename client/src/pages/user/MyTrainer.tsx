@@ -39,12 +39,14 @@ export default function MyTrainerProfile() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [imageLoaded, setImageLoaded] = useState(false);
+    const [userPlan, setUserPlan] = useState<any | null>(null);
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
         document.title = "TrainUp - My Trainer Profile";
         fetchMyTrainer();
         fetchUser();
+        fetchUserPlan();
     }, []);
 
     const fetchMyTrainer = async () => {
@@ -69,6 +71,14 @@ export default function MyTrainerProfile() {
         } catch (err: any) {
             console.error("Failed to fetch user:", err);
             toast.error("Failed to load user data");
+        }
+    };
+    const fetchUserPlan = async () => {
+        try {
+            const response = await API.get("/user/plan");
+            setUserPlan(response.data.plan);
+        } catch (err) {
+            console.error("Failed to fetch user plan:", err);
         }
     };
 
@@ -458,13 +468,13 @@ export default function MyTrainerProfile() {
                                     {user.trainerPlan !== 'basic' && (
                                         <div className="flex items-center gap-2 text-green-600">
                                             <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                            Chat with trainer {user.trainerPlan === 'premium' ? '(200 msgs/month)' : '(unlimited)'}
+                                            Chat with trainer {user.trainerPlan === 'premium' ? `(${userPlan?.messagesLeft ?? 0} msgs left)` : '(unlimited)'}
                                         </div>
                                     )}
                                     {user.trainerPlan === 'pro' && (
                                         <div className="flex items-center gap-2 text-green-600">
                                             <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                            Video calls (5 per month)
+                                            Video calls ({userPlan?.videoCallsLeft ?? 0} left)
                                         </div>
                                     )}
                                 </div>

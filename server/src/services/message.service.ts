@@ -8,7 +8,7 @@ import TYPES from '../core/types/types';
 export class MessageService implements IMessageService {
   constructor(
     @inject(TYPES.IMessageRepository) private _messageRepository: IMessageRepository
-  ) {}
+  ) { }
 
   async createMessage(messageData: Partial<IMessage>): Promise<IMessage> {
     return await this._messageRepository.create(messageData);
@@ -22,7 +22,15 @@ export class MessageService implements IMessageService {
     await this._messageRepository.markAsRead(messageId);
   }
 
+  async markMessagesAsRead(senderId: string, receiverId: string): Promise<void> {
+    await this._messageRepository.markMessagesAsRead(senderId, receiverId);
+  }
+
   async getUnreadCount(userId: string): Promise<number> {
     return await this._messageRepository.getUnreadCount(userId);
+  }
+
+  async getUnreadCountsBySender(receiverId: string): Promise<{ senderId: string; count: number }[]> {
+    return await this._messageRepository.getUnreadCountsBySender(receiverId);
   }
 }

@@ -13,6 +13,7 @@ import {
     CheckCircle,
     Wallet,
     LayoutDashboard,
+    MessageSquare
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ export default function TrainerSiteHeader() {
 
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
+    const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
     const fetchTrainerProfile = async () => {
         try {
@@ -51,6 +53,16 @@ export default function TrainerSiteHeader() {
             toast.error("Failed to load notifications");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchChatUnread = async () => {
+        try {
+            const { data } = await API.get<{ counts: { senderId: string; count: number }[] }>("/trainer/chat/unread-counts");
+            const total = data.counts.reduce((acc, curr) => acc + curr.count, 0);
+            setChatUnreadCount(total);
+        } catch {
+            console.error("Failed to fetch chat unread counts");
         }
     };
 
@@ -88,8 +100,13 @@ export default function TrainerSiteHeader() {
 
     useEffect(() => {
         fetchTrainerProfile();
+        fetchTrainerProfile();
         fetchNotifications();
-        const int = setInterval(fetchNotifications, 30_000);
+        fetchChatUnread();
+        const int = setInterval(() => {
+            fetchNotifications();
+            fetchChatUnread();
+        }, 30_000);
         return () => clearInterval(int);
     }, []);
 
@@ -125,6 +142,23 @@ export default function TrainerSiteHeader() {
                             {i.label}
                         </Button>
                     ))}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-primary/10 hover:text-primary relative"
+                        onClick={() => navigate("/trainer/clients")}
+                    >
+                        <MessageSquare className="h-4 w-4 mr-1.5" />
+                        Messages
+                        {chatUnreadCount > 0 && (
+                            <Badge
+                                variant="destructive"
+                                className="ml-1 h-4 min-w-[1rem] px-1 text-[10px] flex items-center justify-center rounded-full"
+                            >
+                                {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
+                            </Badge>
+                        )}
+                    </Button>
                     <Button
                         variant="ghost"
                         size="sm"
@@ -243,6 +277,21 @@ export default function TrainerSiteHeader() {
                                     </Link>
                                 </DropdownMenu.Item>
                             ))}
+                            <DropdownMenu.Item
+                                key="/trainer/clients-msg"
+                                asChild
+                                className="cursor-pointer"
+                            >
+                                <Link to="/trainer/clients" className="flex items-center gap-2 px-3 py-2 text-sm">
+                                    <MessageSquare className="h-4 w-4" />
+                                    Messages
+                                    {chatUnreadCount > 0 && (
+                                        <Badge variant="destructive" className="ml-auto h-4 px-1 text-[10px]">
+                                            {chatUnreadCount}
+                                        </Badge>
+                                    )}
+                                </Link>
+                            </DropdownMenu.Item>
                             <DropdownMenu.Separator className="h-px bg-muted" />
                             <DropdownMenu.Item
                                 className="text-destructive cursor-pointer px-3 py-2 text-sm"

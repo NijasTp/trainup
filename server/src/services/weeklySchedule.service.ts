@@ -115,8 +115,8 @@ export class WeeklyScheduleService implements IWeeklyScheduleService {
           const end = new Date(`2000-01-01T${slot.endTime}`);
           const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
 
-          if (diffHours !== 1) {
-            throw new AppError('Each session must be exactly 1 hour', STATUS_CODE.BAD_REQUEST);
+          if (diffHours <= 0) {
+            throw new AppError('End time must be after start time', STATUS_CODE.BAD_REQUEST);
           }
         }
 

@@ -605,6 +605,27 @@ export class TrainerController {
     }
   }
 
+  async getUnreadCounts(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id
+      const counts = await this._messageService.getUnreadCountsBySender(trainerId)
+      res.status(STATUS_CODE.OK).json({ counts })
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async markMessagesAsRead(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = (req.user as JwtPayload).id
+      const { clientId } = req.params
+      await this._messageService.markMessagesAsRead(clientId, trainerId)
+      res.status(STATUS_CODE.OK).json({ message: 'Messages marked as read' })
+    } catch (err) {
+      next(err)
+    }
+  }
+
   async getUserPlan(
     req: Request,
     res: Response,
@@ -653,7 +674,12 @@ export class TrainerController {
     try {
       const trainerId = (req.user as JwtPayload).id
       const updateData = req.body
-      const profileImage = req.files?.profileImage
+      let profileImage: UploadedFile | undefined;
+      if (req.files?.profileImage) {
+        profileImage = Array.isArray(req.files.profileImage)
+          ? req.files.profileImage[0]
+          : (req.files.profileImage as UploadedFile);
+      }
 
       const result = await this._trainerService.updateProfile(trainerId, updateData, profileImage)
       res.status(STATUS_CODE.OK).json({ trainer: result, message: 'Profile updated successfully' })

@@ -20,7 +20,8 @@ import {
     MoreHorizontal,
     Trash2,
     Paperclip,
-    Mic
+    Mic,
+    Video
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -116,6 +117,9 @@ export default function ChatPage() {
 
             const messagesResponse = await API.get(`/user/chat/messages/${fetchedTrainerId}`);
             setMessages(messagesResponse.data.messages);
+
+            // Mark messages as read
+            await API.put(`/user/chat/read/${fetchedTrainerId}`);
 
             socketRef.current = io(import.meta.env.VITE_API_URL, {
                 withCredentials: true,
@@ -301,6 +305,17 @@ export default function ChatPage() {
         }
     };
 
+    const handleRequestSession = async () => {
+        if (!trainer) return;
+        try {
+            await API.post('/user/chat/session-request', { trainerId: trainer._id });
+            toast.success("Session request sent to trainer!");
+        } catch (err: any) {
+            console.error("Failed to send session request:", err);
+            toast.error("Failed to send session request");
+        }
+    };
+
     const deleteMessage = async (messageId: string) => {
         try {
             await API.delete(`/user/chat/message/${messageId}`);
@@ -435,6 +450,17 @@ export default function ChatPage() {
                                 </Badge>
                             )}
                         </div>
+                    )}
+                    {userPlan?.planType === 'pro' && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="ml-2"
+                            onClick={handleRequestSession}
+                        >
+                            <Video className="h-4 w-4 mr-2" />
+                            Request Session
+                        </Button>
                     )}
                 </div>
             </div>

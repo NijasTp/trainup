@@ -30,15 +30,14 @@ import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { format, addDays } from "date-fns";
 
-// --- Interfaces ---
 
-import type { TimeSlot, DaySchedule, WeeklyScheduleData, UserProfile, RequestItem, SlotItem } from "@/interfaces/trainer/IWeeklySchedule";
+import type { TimeSlot, WeeklyScheduleData, SlotItem } from "@/interfaces/trainer/IWeeklySchedule";
 
 const getNext7Days = () => {
     const today = new Date();
     const days = [];
     for (let i = 0; i < 7; i++) {
-        days.push(format(addDays(today, i), 'EEEE')); // 'EEEE' gives full day name (Monday, Tuesday...)
+        days.push(format(addDays(today, i), 'EEEE')); 
     }
     return days;
 };
@@ -50,9 +49,6 @@ const ITEMS_PER_PAGE = 5;
 export default function WeeklySchedule() {
     const navigate = useNavigate();
 
-    // --- State ---
-
-    // Weekly Schedule State
     const [schedule, setSchedule] = useState<WeeklyScheduleData>({
         trainerId: '',
         weekStart: '',
@@ -61,19 +57,15 @@ export default function WeeklySchedule() {
     const [isSavingSchedule, setIsSavingSchedule] = useState(false);
     const [isScheduleSaved, setIsScheduleSaved] = useState(false);
 
-    // Slots & Requests State
     const [slots, setSlots] = useState<SlotItem[]>([]);
 
-    // Pagination State
     const [upcomingPage, setUpcomingPage] = useState(1);
     const [requestsPage, setRequestsPage] = useState(1);
 
-    // Joint State
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
-    // Modals
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectionReason, setRejectionReason] = useState('');
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
@@ -83,8 +75,6 @@ export default function WeeklySchedule() {
         document.title = "TrainUp - Schedule & Requests";
         fetchAllData();
     }, []);
-
-    // --- Data Fetching ---
 
     const getTodayDate = () => {
         return format(new Date(), 'yyyy-MM-dd');
@@ -128,7 +118,7 @@ export default function WeeklySchedule() {
                 });
             }
 
-            // Fetch Slots
+
             try {
                 const slotsRes = await API.get("/trainer/slots");
                 setSlots(slotsRes.data.slots || []);
@@ -190,7 +180,7 @@ export default function WeeklySchedule() {
         }
 
         if (startHour > 23) {
-            toast.error("It is too late to add a 1-hour session for today.");
+            toast.error("It is too late to add a session for today.");
             return;
         }
 
@@ -300,8 +290,8 @@ export default function WeeklySchedule() {
                 }
                 const start = new Date(`2000-01-01T${slot.startTime}`);
                 const end = new Date(`2000-01-01T${slot.endTime}`);
-                if ((end.getTime() - start.getTime()) / 36e5 !== 1) {
-                    toast.error(`Sessions must be exactly 1 hour (${day.day})`);
+                if ((end.getTime() - start.getTime()) <= 0) {
+                    toast.error(`End time must be after start time (${day.day})`);
                     return false;
                 }
 
@@ -507,7 +497,7 @@ export default function WeeklySchedule() {
                                         Starting From: {schedule.weekStart ? format(new Date(schedule.weekStart), 'dd/MM/yyyy') : format(new Date(), 'dd/MM/yyyy')}
                                     </Badge>
                                 </div>
-                                <span>Define your availability by adding 1-hour slots for each day.</span>
+                                <span>Define your availability by adding slots for each day.</span>
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
