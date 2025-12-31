@@ -1,39 +1,49 @@
 import express from 'express'
 import container from '../core/di/inversify.config'
-import { UserController } from '../controllers/user.controller'
 import TYPES from '../core/types/types'
+import { UserAuthController } from '../controllers/user.auth.controller'
+import { UserProfileController } from '../controllers/user.profile.controller'
+import { UserTrainerController } from '../controllers/user.trainer.controller'
+import { UserGymController } from '../controllers/user.gym.controller'
+import { UserReviewController } from '../controllers/user.review.controller'
+import { UserChatController } from '../controllers/user.chat.controller'
 import { authMiddleware, roleMiddleware } from '../middlewares/auth.middleware'
 import { checkSubscriptionExpiry } from '../middlewares/checkSubscription.middleware'
 
 const router = express.Router()
 
-const userController = container.get<UserController>(TYPES.UserController)
+const userAuthController = container.get<UserAuthController>(TYPES.UserAuthController)
+const userProfileController = container.get<UserProfileController>(TYPES.UserProfileController)
+const userTrainerController = container.get<UserTrainerController>(TYPES.UserTrainerController)
+const userGymController = container.get<UserGymController>(TYPES.UserGymController)
+const userReviewController = container.get<UserReviewController>(TYPES.UserReviewController)
+const userChatController = container.get<UserChatController>(TYPES.UserChatController)
 
 router.post(
   '/refresh-token',
-  userController.refreshAccessToken.bind(userController)
+  userAuthController.refreshAccessToken.bind(userAuthController)
 )
 
-router.post('/login', userController.login.bind(userController))
-router.post('/request-otp', userController.requestOtp.bind(userController))
-router.post('/verify-otp', userController.verifyOtp.bind(userController))
+router.post('/login', userAuthController.login.bind(userAuthController))
+router.post('/request-otp', userAuthController.requestOtp.bind(userAuthController))
+router.post('/verify-otp', userAuthController.verifyOtp.bind(userAuthController))
 router.post(
   '/check-username',
-  userController.checkUsername.bind(userController)
+  userAuthController.checkUsername.bind(userAuthController)
 )
-router.post('/google-login', userController.googleLogin.bind(userController))
-router.post('/resend-otp', userController.resendOtp.bind(userController))
+router.post('/google-login', userAuthController.googleLogin.bind(userAuthController))
+router.post('/resend-otp', userAuthController.resendOtp.bind(userAuthController))
 router.post(
   '/forgot-password',
-  userController.forgotPassword.bind(userController)
+  userAuthController.forgotPassword.bind(userAuthController)
 )
 router.post(
   '/verify-forgot-password-otp',
-  userController.verifyForgotPasswordOtp.bind(userController)
+  userAuthController.verifyForgotPasswordOtp.bind(userAuthController)
 )
 router.post(
   '/reset-password',
-  userController.resetPassword.bind(userController)
+  userAuthController.resetPassword.bind(userAuthController)
 )
 
 router.use(authMiddleware)
@@ -42,82 +52,82 @@ router.use(checkSubscriptionExpiry)
 router.post(
   '/logout',
   roleMiddleware(['user']),
-  userController.logout.bind(userController)
+  userAuthController.logout.bind(userAuthController)
 )
 
-router.get('/session', userController.checkSession.bind(userController))
+router.get('/session', userAuthController.checkSession.bind(userAuthController))
 
 router.get(
   '/get-profile',
   roleMiddleware(['user']),
-  userController.getProfile.bind(userController)
+  userProfileController.getProfile.bind(userProfileController)
 )
 router.put(
   '/update-profile',
   authMiddleware,
   roleMiddleware(['user']),
-  userController.updateProfile.bind(userController)
+  userProfileController.updateProfile.bind(userProfileController)
 )
 
-router.post('/change-password', authMiddleware, userController.changePassword.bind(userController))
+router.post('/change-password', authMiddleware, userAuthController.changePassword.bind(userAuthController))
 
 router
   .post(
     '/weight',
     roleMiddleware(['user']),
-    userController.addWeight.bind(userController)
+    userProfileController.addWeight.bind(userProfileController)
   )
   .get(
     '/weight',
     roleMiddleware(['user']),
-    userController.getWeightHistory.bind(userController)
+    userProfileController.getWeightHistory.bind(userProfileController)
   )
 
 router.get(
   '/trainers',
   roleMiddleware(['user']),
-  userController.getTrainers.bind(userController)
+  userTrainerController.getTrainers.bind(userTrainerController)
 )
 router.get(
   '/trainers/:id',
   roleMiddleware(['user']),
-  userController.getIndividualTrainer.bind(userController)
+  userTrainerController.getIndividualTrainer.bind(userTrainerController)
 )
-router.get('/my-trainer', userController.getMyTrainer.bind(userController))
+router.get('/my-trainer', userTrainerController.getMyTrainer.bind(userTrainerController))
 router.post(
   '/cancel-subscription',
-  userController.cancelSubscription.bind(userController)
+  userTrainerController.cancelSubscription.bind(userTrainerController)
 )
 
-router.get('/trainer-availability', roleMiddleware(['user']), userController.getTrainerAvailability.bind(userController))
-router.post('/book-session', roleMiddleware(['user']), userController.bookSession.bind(userController))
-router.get('/sessions', roleMiddleware(['user']), userController.getUserSessions.bind(userController))
-router.get('/plan', roleMiddleware(['user']), userController.getUserPlan.bind(userController))
-router.get('/trainer/:trainerId', roleMiddleware(['user']), userController.getTrainer.bind(userController))
-router.post('/chat/session-request', roleMiddleware(['user']), userController.sendSessionRequest.bind(userController))
-router.get('/chat/unread-counts', roleMiddleware(['user']), userController.getUnreadCounts.bind(userController))
-router.put('/chat/read/:senderId', roleMiddleware(['user']), userController.markMessagesAsRead.bind(userController))
-router.get('/chat/messages/:trainerId', roleMiddleware(['user']), userController.getChatMessages.bind(userController))
-router.get('/me', roleMiddleware(['user']), userController.getProfile.bind(userController))
+router.get('/trainer-availability', roleMiddleware(['user']), userTrainerController.getTrainerAvailability.bind(userTrainerController))
+router.post('/book-session', roleMiddleware(['user']), userTrainerController.bookSession.bind(userTrainerController))
+router.get('/sessions', roleMiddleware(['user']), userTrainerController.getUserSessions.bind(userTrainerController))
+router.get('/plan', roleMiddleware(['user']), userTrainerController.getUserPlan.bind(userTrainerController))
+router.get('/trainer/:trainerId', roleMiddleware(['user']), userTrainerController.getTrainer.bind(userTrainerController))
+router.post('/chat/session-request', roleMiddleware(['user']), userTrainerController.sendSessionRequest.bind(userTrainerController))
+router.get('/chat/unread-counts', roleMiddleware(['user']), userChatController.getUnreadCounts.bind(userChatController))
+router.put('/chat/read/:senderId', roleMiddleware(['user']), userChatController.markMessagesAsRead.bind(userChatController))
+router.get('/chat/messages/:trainerId', roleMiddleware(['user']), userChatController.getChatMessages.bind(userChatController))
+router.get('/me', roleMiddleware(['user']), userProfileController.getProfile.bind(userProfileController))
 
-router.get("/gyms", authMiddleware, userController.getGyms.bind(userController));
-router.get("/gyms/:id", authMiddleware, userController.getGymById.bind(userController));
-router.get("/gyms/:gymId/subscription-plans", authMiddleware, userController.getGymSubscriptionPlans.bind(userController));
-router.get("/my-gym", authMiddleware, userController.getMyGym.bind(userController));
-router.get("/gym-announcements", authMiddleware, userController.getGymAnnouncements.bind(userController));
+router.get("/gyms", authMiddleware, userGymController.getGyms.bind(userGymController));
+router.get("/gyms/:id", authMiddleware, userGymController.getGymById.bind(userGymController));
+router.get("/gyms/:gymId/subscription-plans", authMiddleware, userGymController.getGymSubscriptionPlans.bind(userGymController));
+router.get("/my-gym", authMiddleware, userGymController.getMyGym.bind(userGymController));
+router.get("/gym-announcements", authMiddleware, userGymController.getGymAnnouncements.bind(userGymController));
 
-router.post('/trainer/rating/:id', authMiddleware, userController.addTrainerRating.bind(userController))
-router.post('/gym/rating/:id', authMiddleware, userController.addGymRating.bind(userController))
-router.get('/trainer/ratings/:id', authMiddleware, userController.getTrainerRatings.bind(userController))
-router.get('/gym/ratings/:id', authMiddleware, userController.getGymRatings.bind(userController))
+router.post('/trainer/rating/:id', authMiddleware, userReviewController.addTrainerRating.bind(userReviewController))
+router.post('/gym/rating/:id', authMiddleware, userReviewController.addGymRating.bind(userReviewController))
+router.get('/trainer/ratings/:id', authMiddleware, userReviewController.getTrainerRatings.bind(userReviewController))
+router.get('/gym/ratings/:id', authMiddleware, userReviewController.getGymRatings.bind(userReviewController))
 
-router.put('/review/:id', authMiddleware, userController.editReview.bind(userController))
-router.delete('/review/:id', authMiddleware, userController.deleteReview.bind(userController))
+router.put('/review/:id', authMiddleware, userReviewController.editReview.bind(userReviewController))
+router.delete('/review/:id', authMiddleware, userReviewController.deleteReview.bind(userReviewController))
 
-router.post('/chat/upload', authMiddleware, userController.uploadChatFile.bind(userController))
+router.post('/chat/upload', authMiddleware, userChatController.uploadChatFile.bind(userChatController))
 
-router.post('/progress', authMiddleware, userController.addProgress.bind(userController))
-router.get('/progress', authMiddleware, userController.getProgress.bind(userController))
-router.get('/progress/compare', authMiddleware, userController.compareProgress.bind(userController))
+router.post('/progress', authMiddleware, userProfileController.addProgress.bind(userProfileController))
+router.get('/progress', authMiddleware, userProfileController.getProgress.bind(userProfileController))
+router.get('/progress/compare', authMiddleware, userProfileController.compareProgress.bind(userProfileController))
 
 export default router

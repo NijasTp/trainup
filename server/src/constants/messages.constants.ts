@@ -12,6 +12,7 @@ export const MESSAGES = {
   MAIL_DELIVERY_FAILED: "Failed to deliver email",
   EMAIL_NOT_FOUND: "Email not found",
   LOGOUT_SUCCESS: "Logged out successfully",
+  SUCCESS: "Operation successful",
   USER_UPDATED: "User updated successfully",
   INVALID_PASSWORD: "Invalid password",
   INVALID_CREDENTIALS: "Invalid credentials",
@@ -68,7 +69,7 @@ export const MESSAGES = {
   GYM_PAYMENT_FAILED: "Gym payment failed",
   ALREADY_SUBSCRIBED_TO_THIS_GYM: "You are already subscribed to this gym",
   GO_TO_GYM_DASHBOARD: "Go to My Gym",
-  
+
   // Video Call Messages
   VIDEO_CALL_NOT_FOUND: "Video call session not found",
   VIDEO_CALL_NOT_ACTIVE: "Video call session is not active",
@@ -98,7 +99,7 @@ export const MESSAGES = {
   WORKOUT_ASSIGNED_SUCCESS: "Workout assigned to user successfully",
 
   // Diet Template Messages
-  DIET_TEMPLATE_CREATED: "Diet template created successfully", 
+  DIET_TEMPLATE_CREATED: "Diet template created successfully",
   DIET_TEMPLATE_UPDATED: "Diet template updated successfully",
   DIET_TEMPLATE_DELETED: "Diet template deleted successfully",
   DIET_TEMPLATE_NOT_FOUND: "Diet template not found",
@@ -112,7 +113,7 @@ export const MESSAGES = {
 
   // Subscription Messages
   TRAINER_SUBSCRIPTION_SUCCESS: "Trainer subscription successful",
-  GYM_SUBSCRIPTION_SUCCESS: "Gym subscription successful", 
+  GYM_SUBSCRIPTION_SUCCESS: "Gym subscription successful",
   SUBSCRIPTION_CANCELLED: "Subscription cancelled successfully",
 
   // Session Messages

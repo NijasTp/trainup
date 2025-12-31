@@ -7,6 +7,7 @@ import { IReview } from '../models/review.model';
 import { IGym } from '../models/gym.model';
 import { AppError } from '../utils/appError.util';
 import { Types } from 'mongoose';
+import { STATUS_CODE } from '../constants/status';
 
 import { IReviewService } from '../core/interfaces/services/IReviewService'
 
@@ -21,7 +22,7 @@ export class ReviewService implements IReviewService {
     async addReview(userId: string, targetId: string, targetModel: 'Trainer' | 'Gym', rating: number, comment: string, subscriptionPlan?: string): Promise<IReview> {
         const existingReview = await this.reviewRepository.findOne({ userId, targetId });
         if (existingReview) {
-            throw new AppError('You have already reviewed this.', 400);
+            throw new AppError('You have already reviewed this.', STATUS_CODE.BAD_REQUEST);
         }
 
         const reviewData: Partial<IReview> = {
@@ -64,11 +65,11 @@ export class ReviewService implements IReviewService {
     async editReview(userId: string, reviewId: string, rating: number, comment: string): Promise<IReview> {
         const review = await this.reviewRepository.findOne({ _id: reviewId, userId });
         if (!review) {
-            throw new AppError('Review not found or you do not have permission to edit it.', 404);
+            throw new AppError('Review not found or you do not have permission to edit it.', STATUS_CODE.NOT_FOUND);
         }
 
         const updatedReview = await this.reviewRepository.update(reviewId, { rating, comment });
-        if (!updatedReview) throw new AppError('Failed to update review', 500);
+        if (!updatedReview) throw new AppError('Failed to update review', STATUS_CODE.INTERNAL_SERVER_ERROR);
 
         await this.updateEntityRating(updatedReview.targetId.toString(), updatedReview.targetModel);
         await updatedReview.populate('userId', 'name profilePicture');
@@ -78,7 +79,7 @@ export class ReviewService implements IReviewService {
     async deleteReview(userId: string, reviewId: string): Promise<void> {
         const review = await this.reviewRepository.findOne({ _id: reviewId, userId });
         if (!review) {
-            throw new AppError('Review not found or you do not have permission to delete it.', 404);
+            throw new AppError('Review not found or you do not have permission to delete it.', STATUS_CODE.NOT_FOUND);
         }
 
         await this.reviewRepository.delete(reviewId);

@@ -19,9 +19,9 @@ api.interceptors.response.use(
     const status = error.response?.status;
 
     if (status === 404) {
-      toast.error("Requested resource not found (404)");
+      toast.error("Requested resource not found");
     } else if (status === 500) {
-      toast.error("Internal server error (500). Please try again later.");
+      toast.error("Internal server error. Please try again later.");
     }
 
     if (status === 403) {

@@ -6,6 +6,12 @@ const TYPES = {
   IUserService: Symbol.for("IUserService"),
   IUserRepository: Symbol.for("IUserRepository"),
   UserController: Symbol.for("UserController"),
+  UserAuthController: Symbol.for("UserAuthController"),
+  UserProfileController: Symbol.for("UserProfileController"),
+  UserTrainerController: Symbol.for("UserTrainerController"),
+  UserGymController: Symbol.for("UserGymController"),
+  UserReviewController: Symbol.for("UserReviewController"),
+  UserChatController: Symbol.for("UserChatController"),
 
   IUserPlanRepository: Symbol.for("IUserPlanRepository"),
   IUserPlanService: Symbol.for("IUserPlanService"),
@@ -33,6 +39,8 @@ const TYPES = {
   StreakController: Symbol.for("StreakController"),
 
   PaymentController: Symbol.for("PaymentController"),
+  PaymentTrainerController: Symbol.for("PaymentTrainerController"),
+  PaymentGymController: Symbol.for("PaymentGymController"),
   IPaymentRepository: Symbol.for("IPaymentRepository"),
   IPaymentService: Symbol.for("IPaymentService"),
 
@@ -40,6 +48,10 @@ const TYPES = {
   ITransactionService: Symbol.for("ITransactionService"),
 
   TrainerController: Symbol.for("TrainerController"),
+  TrainerAuthController: Symbol.for("TrainerAuthController"),
+  TrainerScheduleController: Symbol.for("TrainerScheduleController"),
+  TrainerClientController: Symbol.for("TrainerClientController"),
+  TrainerDashboardController: Symbol.for("TrainerDashboardController"),
 
   IGymRepository: Symbol.for('IGymRepository'),
   IGymService: Symbol.for("IGymService"),

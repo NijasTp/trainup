@@ -8,6 +8,7 @@ import { IGymRepository } from "../core/interfaces/repositories/IGymRepository";
 import TYPES from "../core/types/types";
 import { Role } from "../constants/role";
 import { MESSAGES } from "../constants/messages.constants";
+import { STATUS_CODE } from "../constants/status";
 import { logger } from "../utils/logger.util";
 
 export const roleMiddleware = (allowedRoles: string[]) => {
@@ -16,18 +17,18 @@ export const roleMiddleware = (allowedRoles: string[]) => {
       const user = req.user as { id: string; role: string };
 
       if (!user) {
-        res.status(401).json({ error: "Not authenticated" });
+        res.status(STATUS_CODE.UNAUTHORIZED).json({ error: "Not authenticated" });
         return
       }
       if (!allowedRoles.includes(user.role)) {
-        res.status(403).json({ error: `You've already logged in as ${user.role}` });
+        res.status(STATUS_CODE.FORBIDDEN).json({ error: `You've already logged in as ${user.role}` });
         return
       }
 
       next();
     } catch (err) {
       const error = err as Error;
-      res.status(500).json({ error: error.message || MESSAGES.SERVER_ERROR });
+      res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: error.message || MESSAGES.SERVER_ERROR });
     }
   };
 }
@@ -39,7 +40,7 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
       req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      res.status(401).json({ error: "No token" });
+      res.status(STATUS_CODE.UNAUTHORIZED).json({ error: "No token" });
       return
     }
 
@@ -68,12 +69,12 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
     }
 
     if (!account || decoded.tokenVersion !== account.tokenVersion) {
-      res.status(401).json({ error: "Invalid session" });
+      res.status(STATUS_CODE.UNAUTHORIZED).json({ error: "Invalid session" });
       return
     }
 
     if (account.isBanned) {
-      res.status(403).json({ error: "Banned" });
+      res.status(STATUS_CODE.FORBIDDEN).json({ error: "Banned" });
       return
     }
 
@@ -82,6 +83,6 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
   } catch (err) {
     const error = err as Error;
     logger.error("Token error:", error);
-    res.status(401).json({ error: "Invalid token" });
+    res.status(STATUS_CODE.UNAUTHORIZED).json({ error: "Invalid token" });
   }
 };

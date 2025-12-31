@@ -51,11 +51,21 @@ import { OtpService } from "../../services/otp.service";
 import { OtpRepository } from "../../repositories/otp.repository";
 import { JwtService } from "../../utils/jwt";
 import { UserController } from "../../controllers/user.controller";
+import { UserAuthController } from "../../controllers/user.auth.controller";
+import { UserProfileController } from "../../controllers/user.profile.controller";
+import { UserTrainerController } from "../../controllers/user.trainer.controller";
+import { UserGymController } from "../../controllers/user.gym.controller";
+import { UserReviewController } from "../../controllers/user.review.controller";
+import { UserChatController } from "../../controllers/user.chat.controller";
 import { AdminController } from "../../controllers/admin.controller";
 import { MailService } from "../../services/mail.service";
 import { TrainerRepository } from "../../repositories/trainer.repository";
 import { TrainerService } from "../../services/trainer.service";
 import { TrainerController } from "../../controllers/trainer.controller";
+import { TrainerAuthController } from "../../controllers/trainer.auth.controller";
+import { TrainerScheduleController } from "../../controllers/trainer.schedule.controller";
+import { TrainerClientController } from "../../controllers/trainer.client.controller";
+import { TrainerDashboardController } from "../../controllers/trainer.dashboard.controller";
 import { GymController } from "../../controllers/gym.controller";
 import { GymRepository } from "../../repositories/gym.repository";
 import { GymService } from "../../services/gym.service";
@@ -72,6 +82,8 @@ import { DietController } from "../../controllers/diet.controller";
 import { PaymentRepository } from "../../repositories/payment.repository";
 import { PaymentService } from "../../services/payment.service";
 import { PaymentController } from "../../controllers/payment.controller";
+import { PaymentTrainerController } from "../../controllers/payment.trainer.controller";
+import { PaymentGymController } from "../../controllers/payment.gym.controller";
 import { StreakService } from "../../services/streak.service";
 import { StreakRepository } from "../../repositories/streak.repository";
 import { TransactionRepository } from "../../repositories/transaction.repository";
@@ -123,6 +135,12 @@ const container = new Container();
 
 // Bindings
 container.bind<UserController>(TYPES.UserController).to(UserController);
+container.bind<UserAuthController>(TYPES.UserAuthController).to(UserAuthController);
+container.bind<UserProfileController>(TYPES.UserProfileController).to(UserProfileController);
+container.bind<UserTrainerController>(TYPES.UserTrainerController).to(UserTrainerController);
+container.bind<UserGymController>(TYPES.UserGymController).to(UserGymController);
+container.bind<UserReviewController>(TYPES.UserReviewController).to(UserReviewController);
+container.bind<UserChatController>(TYPES.UserChatController).to(UserChatController);
 container.bind<IUserService>(TYPES.IUserService).to(UserService);
 container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepository);
 
@@ -160,8 +178,14 @@ container.bind<IStreakRepository>(TYPES.IStreakRepository).to(StreakRepository);
 container.bind<IPaymentRepository>(TYPES.IPaymentRepository).to(PaymentRepository);
 container.bind<IPaymentService>(TYPES.IPaymentService).to(PaymentService);
 container.bind<PaymentController>(TYPES.PaymentController).to(PaymentController);
+container.bind<PaymentTrainerController>(TYPES.PaymentTrainerController).to(PaymentTrainerController);
+container.bind<PaymentGymController>(TYPES.PaymentGymController).to(PaymentGymController);
 
 container.bind<TrainerController>(TYPES.TrainerController).to(TrainerController)
+container.bind<TrainerAuthController>(TYPES.TrainerAuthController).to(TrainerAuthController)
+container.bind<TrainerScheduleController>(TYPES.TrainerScheduleController).to(TrainerScheduleController)
+container.bind<TrainerClientController>(TYPES.TrainerClientController).to(TrainerClientController)
+container.bind<TrainerDashboardController>(TYPES.TrainerDashboardController).to(TrainerDashboardController)
 container.bind<ITrainerRepository>(TYPES.ITrainerRepository).to(TrainerRepository);
 container.bind<ITrainerService>(TYPES.ITrainerService).to(TrainerService);
 

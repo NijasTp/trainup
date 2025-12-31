@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { logger } from '../utils/logger.util'
 import { AppError } from '../utils/appError.util'
 import { MESSAGES } from '../constants/messages.constants'
+import { STATUS_CODE } from '../constants/status'
 
 export const errorHandler = (
   err: Error | AppError,
@@ -17,8 +18,7 @@ export const errorHandler = (
     return
   }
   logger.error('Unexpected Error:', err)
-  // logger.error('Unexpected Error:', { err })
-  res.status(500).json({
+  res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
     error: MESSAGES.SERVER_ERROR
   })
 }

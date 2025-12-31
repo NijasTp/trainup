@@ -216,7 +216,7 @@ export const SiteHeader: React.FC = () => {
           className="flex items-center gap-2 group"
         >
           <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#4B8B9B] to-[#2E5C6E] text-white shadow-lg group-hover:shadow-[#4B8B9B]/20 transition-all duration-300">
-            <Dumbbell className="h-5 w-5" />
+            <Dumbbell className="h-5 w-5" />  
           </div>
           <div className="flex flex-col leading-none">
             <span className="font-bold text-lg tracking-tight">TRAIN<span className="text-[#4B8B9B]">UP</span></span>
@@ -240,13 +240,8 @@ export const SiteHeader: React.FC = () => {
                 )}
               >
                 <Icon className="h-4 w-4" />
-                <Icon className="h-4 w-4" />
                 {link.name}
-                {link.name === "My Trainer" && chatUnreadCount > 0 && (
-                  <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                    {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
-                  </span>
-                )}
+              
               </Link>
             )
           })}
