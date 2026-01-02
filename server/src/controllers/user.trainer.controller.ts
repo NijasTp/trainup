@@ -158,7 +158,7 @@ export class UserTrainerController {
 
     async sendSessionRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { trainerId, slotId } = req.body
+            const { slotId } = req.body
             const userId = (req.user as JwtPayload).id
             // This logic seems duplicate with bookSession in the original controller, 
             // but I will keep it as it was in the original.

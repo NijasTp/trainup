@@ -26,6 +26,7 @@ import {
 import { MESSAGES } from '../constants/messages.constants'
 import { AppError } from '../utils/appError.util'
 import { STATUS_CODE } from '../constants/status'
+import { logger } from '../utils/logger.util'
 
 @injectable()
 export class GymService implements IGymService {
@@ -59,7 +60,8 @@ export class GymService implements IGymService {
     if (typeof data.geoLocation === 'string') {
       try {
         geoLocationObj = JSON.parse(data.geoLocation)
-      } catch (_e) {
+      } catch (e) {
+        logger.error(e)
         throw new AppError(
           'Invalid geoLocation JSON format',
           STATUS_CODE.BAD_REQUEST
@@ -489,7 +491,8 @@ export class GymService implements IGymService {
     if (typeof data.geoLocation === 'string') {
       try {
         geoLocationObj = JSON.parse(data.geoLocation)
-      } catch (_e) {
+      } catch (e) {
+        logger.error(e)
         throw new AppError('Invalid geoLocation JSON format', STATUS_CODE.BAD_REQUEST)
       }
     } else if (data.geoLocation && typeof data.geoLocation === 'object') {

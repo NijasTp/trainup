@@ -10,6 +10,7 @@ import { STATUS_CODE } from '../constants/status';
 import { IGymTransaction, GymTransactionModel } from '../models/gymTransaction.model';
 import TYPES from '../core/types/types';
 import { ITransactionService } from '../core/interfaces/services/ITransactionService';
+import { logger } from '../utils/logger.util';
 
 dotenv.config();
 
@@ -46,7 +47,8 @@ export class PaymentService implements IPaymentService {
         created_at: order.created_at,
       };
       return response;
-    } catch (_error) {
+    } catch (error) {
+      logger.error(error)
       throw new AppError(MESSAGES.PAYMENT_CREATION_FAILED, STATUS_CODE.INTERNAL_SERVER_ERROR);
     }
   }

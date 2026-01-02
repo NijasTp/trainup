@@ -5,7 +5,6 @@ import { IMessageService } from '../core/interfaces/services/IMessageService'
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService'
 import { STATUS_CODE } from '../constants/status'
 import { logger } from '../utils/logger.util'
-import { UploadedFile } from 'express-fileupload'
 
 @injectable()
 export class UserChatController {
@@ -28,19 +27,6 @@ export class UserChatController {
 
     async uploadChatFile(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const files = req.files as { [key: string]: UploadedFile }
-            // The original controller just had a placeholder for this or handled it via a service.
-            // Based on the original UserController.uploadChatFile:
-            /*
-            async uploadChatFile(req: Request, res: Response, next: NextFunction): Promise<void> {
-              try {
-                // implementation was missing or very short
-                res.status(STATUS_CODE.OK).json({ message: 'File uploaded' })
-              } catch (err) {
-                next(err)
-              }
-            }
-            */
             res.status(STATUS_CODE.OK).json({ message: 'File uploaded' })
         } catch (err) {
             next(err)

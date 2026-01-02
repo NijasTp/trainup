@@ -14,7 +14,6 @@ import { IMessageService } from '../core/interfaces/services/IMessageService'
 import { IUserPlanService } from '../core/interfaces/services/IUserPlanService'
 import { IUserController } from '../core/interfaces/controllers/IUserController'
 import { INotificationService } from '../core/interfaces/services/INotificationService'
-import { NOTIFICATION_TYPES, NOTIFICATION_MESSAGES } from '../constants/notification.constants'
 import { STATUS_CODE } from '../constants/status'
 import { logger } from '../utils/logger.util'
 import {

@@ -1,6 +1,6 @@
 import { injectable } from 'inversify'
 import { SlotModel, ISlot } from '../models/slot.model'
-import { IUser, UserModel } from '../models/user.model'
+import { UserModel } from '../models/user.model'
 import { ISlotRepository } from '../core/interfaces/repositories/ISlotRepository'
 import { Types, UpdateQuery, QueryOptions, FilterQuery } from 'mongoose'
 

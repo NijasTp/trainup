@@ -95,8 +95,8 @@ export class UserProfileController {
     async addProgress(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = (req.user as JwtPayload).id
-            const { weight, notes } = req.body
-            const files = req.files as any // Depending on how files are structured in req
+            const { notes } = req.body
+            const files = req.files as { photo?: UploadedFile[] } // Depending on how files are structured in req
             const photoArray = files ? Object.values(files).flat() as UploadedFile[] : []
 
             const progress = await this._progressService.addProgress(
