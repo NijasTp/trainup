@@ -39,6 +39,10 @@ export class UserDto {
       height: user.height,
       age: user.age,
       gender: user.gender,
+      activeWorkoutTemplate: user.activeWorkoutTemplate?.toString(),
+      workoutTemplateStartDate: user.workoutTemplateStartDate || undefined,
+      activeDietTemplate: user.activeDietTemplate?.toString(),
+      dietTemplateStartDate: user.dietTemplateStartDate || undefined,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
     };
@@ -122,6 +126,10 @@ export class UserResponseDto {
   age?: number;
   trainerPlan?: 'basic' | 'premium' | 'pro';
   gender?: string;
+  activeWorkoutTemplate?: string;
+  workoutTemplateStartDate?: Date;
+  activeDietTemplate?: string;
+  dietTemplateStartDate?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

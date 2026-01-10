@@ -21,12 +21,6 @@ import {
   TrainerCreateSessionRequestDto,
   GetDayParamsDto,
   TrainerGetDayQueryDto,
-  CreateAdminTemplateRequestDto,
-  GetAdminTemplatesQueryDto,
-  GetAdminTemplatesResponseDto,
-  UpdateAdminTemplateRequestDto,
-  UpdateAdminTemplateParamsDto,
-  DeleteAdminTemplateParamsDto
 } from '../dtos/workout.dto';
 import { AppError } from '../utils/appError.util';
 
@@ -211,65 +205,6 @@ export class WorkoutController {
         throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND);
       }
       res.status(STATUS_CODE.OK).json(day);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async createAdminTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const jwtUser = req.user as JwtPayload;
-      if (jwtUser?.role !== Role.ADMIN) {
-        throw new AppError(MESSAGES.ADMIN_REQUIRED, STATUS_CODE.UNAUTHORIZED);
-      }
-      const dto: CreateAdminTemplateRequestDto = req.body;
-      const template: WorkoutSessionResponseDto = await this._workoutService.createAdminTemplate(dto);
-      res.status(STATUS_CODE.CREATED).json(template);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async getAdminTemplates(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const dto: GetAdminTemplatesQueryDto = req.query;
-      const page = Number(dto.page) || 1;
-      const limit = Number(dto.limit) || 5;
-      const search = String(dto.search || '');
-      const result: GetAdminTemplatesResponseDto = await this._workoutService.getAdminTemplates(page, limit, search);
-      res.status(STATUS_CODE.OK).json(result);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async updateAdminTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const jwtUser = req.user as JwtPayload;
-      if (jwtUser?.role !== Role.ADMIN) {
-        throw new AppError(MESSAGES.ADMIN_REQUIRED, STATUS_CODE.UNAUTHORIZED);
-      }
-      const paramsDto: UpdateAdminTemplateParamsDto = { id: req.params.id };
-      const dto: UpdateAdminTemplateRequestDto = req.body;
-      const updated: WorkoutSessionResponseDto = await this._workoutService.updateAdminTemplate(paramsDto.id, dto);
-      if (!updated) {
-        throw new AppError(MESSAGES.SESSION_NOT_FOUND, STATUS_CODE.NOT_FOUND);
-      }
-      res.status(STATUS_CODE.OK).json(updated);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async deleteAdminTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const jwtUser = req.user as JwtPayload;
-      if (jwtUser?.role !== Role.ADMIN) {
-        throw new AppError(MESSAGES.ADMIN_REQUIRED, STATUS_CODE.UNAUTHORIZED);
-      }
-      const dto: DeleteAdminTemplateParamsDto = { id: req.params.id };
-      await this._workoutService.deleteSession(dto.id);
-      res.status(STATUS_CODE.NO_CONTENT).end();
     } catch (err) {
       next(err);
     }

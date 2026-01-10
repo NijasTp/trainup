@@ -146,10 +146,10 @@ export default function TrainerSiteHeader() {
                         variant="ghost"
                         size="sm"
                         className="hover:bg-primary/10 hover:text-primary relative"
-                        onClick={() => navigate("/trainer/clients")}
+                        onClick={() => navigate("/trainer/chats")}
                     >
                         <MessageSquare className="h-4 w-4 mr-1.5" />
-                        Messages
+                        Chats
                         {chatUnreadCount > 0 && (
                             <Badge
                                 variant="destructive"
@@ -278,13 +278,13 @@ export default function TrainerSiteHeader() {
                                 </DropdownMenu.Item>
                             ))}
                             <DropdownMenu.Item
-                                key="/trainer/clients-msg"
+                                key="/trainer/chats-msg"
                                 asChild
                                 className="cursor-pointer"
                             >
-                                <Link to="/trainer/clients" className="flex items-center gap-2 px-3 py-2 text-sm">
+                                <Link to="/trainer/chats" className="flex items-center gap-2 px-3 py-2 text-sm">
                                     <MessageSquare className="h-4 w-4" />
-                                    Messages
+                                    Chats
                                     {chatUnreadCount > 0 && (
                                         <Badge variant="destructive" className="ml-auto h-4 px-1 text-[10px]">
                                             {chatUnreadCount}

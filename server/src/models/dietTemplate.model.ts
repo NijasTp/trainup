@@ -1,27 +1,34 @@
 import { Schema, model, Document, Types } from "mongoose";
 
-export interface TemplateMeal {
+export interface IDietTemplateMeal {
   name: string;
   calories: number;
   protein?: number;
   carbs?: number;
   fats?: number;
   time: string; // HH:mm
-  nutritions?: { label: string; value: number; unit?: string }[];
   notes?: string;
 }
 
-export interface ITemplate extends Document {
+export interface IDietTemplateDay {
+  dayNumber: number;
+  meals: IDietTemplateMeal[];
+}
+
+export interface IDietTemplate extends Document {
   _id: Types.ObjectId | string;
   title: string;
   description?: string;
-  createdBy: Types.ObjectId | string; 
-  meals: TemplateMeal[];
+  duration: number; // e.g., 7 or 14
+  goal: string;
+  bodyType: string;
+  days: IDietTemplateDay[];
+  createdBy: Types.ObjectId | string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const TemplateMealSchema = new Schema<TemplateMeal>(
+const MealSchema = new Schema<IDietTemplateMeal>(
   {
     name: { type: String, required: true },
     calories: { type: Number, required: true },
@@ -29,20 +36,30 @@ const TemplateMealSchema = new Schema<TemplateMeal>(
     carbs: Number,
     fats: Number,
     time: { type: String, required: true },
-    nutritions: { type: [{ label: String, value: Number, unit: String }], default: [] },
     notes: String,
   },
-  { _id: true }
+  { _id: false }
 );
 
-const TemplateSchema = new Schema<ITemplate>(
+const DaySchema = new Schema<IDietTemplateDay>(
+  {
+    dayNumber: { type: Number, required: true },
+    meals: { type: [MealSchema], default: [] },
+  },
+  { _id: false }
+);
+
+const DietTemplateSchema = new Schema<IDietTemplate>(
   {
     title: { type: String, required: true },
     description: String,
+    duration: { type: Number, required: true },
+    goal: { type: String, required: true },
+    bodyType: { type: String, required: true },
+    days: { type: [DaySchema], default: [] },
     createdBy: { type: Schema.Types.ObjectId, ref: "Admin", required: true },
-    meals: { type: [TemplateMealSchema], default: [] },
   },
   { timestamps: true }
 );
 
-export const TemplateModel = model<ITemplate>("DietTemplate", TemplateSchema);
+export const DietTemplateModel = model<IDietTemplate>("DietTemplate", DietTemplateSchema);

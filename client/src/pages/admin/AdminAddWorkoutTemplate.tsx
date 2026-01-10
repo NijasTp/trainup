@@ -4,23 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Plus, Trash, Save, X, FileText, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Plus, Trash, Save, X, FileText, Loader2, Dumbbell, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "@/lib/axios";
 import { toast } from "react-toastify";
 import type { IExercise, IWorkoutTemplate, WgerExercise } from "@/interfaces/admin/adminAddTemplates";
-
+import { Badge } from "@/components/ui/badge";
 
 const WorkoutTemplateForm = () => {
     const { id } = useParams<{ id?: string }>();
-    const type = 'workout'
     const navigate = useNavigate();
     const [formData, setFormData] = useState<IWorkoutTemplate>({
-        name: "",
+        title: "",
+        description: "",
+        duration: 7,
         goal: "",
-        notes: "",
-        exercises: [],
+        equipment: false,
+        bodyType: "",
+        days: [],
+        difficulty: 'Intermediate'
     });
     const [searchQuery, setSearchQuery] = useState("");
     const [allSearchResults, setAllSearchResults] = useState<WgerExercise[]>([]);
@@ -28,13 +32,14 @@ const WorkoutTemplateForm = () => {
     const [searchLoading, setSearchLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [page, setPage] = useState<number>(1);
-    const [perPage] = useState<number>(8);
+    const [perPage] = useState<number>(5);
+    const [activeDayIndex, setActiveDayIndex] = useState<number | null>(null);
 
     useEffect(() => {
-        if (id && type === "workout") {
+        if (id) {
             const fetchTemplate = async () => {
                 try {
-                    const response = await API.get(`/workout/admin/workout-templates/${id}`);
+                    const response = await API.get(`/template/workout/${id}`);
                     setFormData(response.data);
                 } catch (error) {
                     console.error("Error fetching template:", error);
@@ -43,42 +48,36 @@ const WorkoutTemplateForm = () => {
             };
             fetchTemplate();
         }
-    }, [id, type]);
+    }, [id]);
 
     useEffect(() => {
-        if (searchQuery && type === "workout") {
+        if (searchQuery) {
             const fetchExercises = async () => {
                 setSearchLoading(true);
                 try {
                     const response = await fetch(
                         `https://wger.de/api/v2/exercise/search/?term=${encodeURIComponent(searchQuery)}&language=2`,
                         {
-                            headers: {
-                                Accept: "application/json",
-                            },
+                            headers: { Accept: "application/json" },
                         }
                     );
-
                     if (!response.ok) throw new Error("Failed to fetch exercises");
-
                     const data = await response.json();
                     setAllSearchResults(data.suggestions || []);
                     setPage(1);
                 } catch (error) {
                     console.error("Error fetching WGER exercises:", error);
-                    toast.error("Failed to search exercises");
                 } finally {
                     setSearchLoading(false);
                 }
             };
-
             const debounce = setTimeout(fetchExercises, 300);
             return () => clearTimeout(debounce);
         } else {
             setAllSearchResults([]);
             setDisplayedSearchResults([]);
         }
-    }, [searchQuery, type]);
+    }, [searchQuery]);
 
     useEffect(() => {
         const start = (page - 1) * perPage;
@@ -91,326 +90,368 @@ const WorkoutTemplateForm = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleExerciseChange = (index: number, field: keyof IExercise, value: string | number) => {
-        setFormData((prev) => {
-            const exercises = [...prev.exercises];
-            exercises[index] = { ...exercises[index], [field]: value };
-            return { ...prev, exercises };
+    const addDay = () => {
+        setFormData(prev => ({
+            ...prev,
+            days: [
+                ...prev.days,
+                { dayNumber: prev.days.length + 1, exercises: [] }
+            ]
+        }));
+        setActiveDayIndex(formData.days.length);
+    };
+
+    const removeDay = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            days: prev.days.filter((_, i) => i !== index).map((day, i) => ({ ...day, dayNumber: i + 1 }))
+        }));
+        if (activeDayIndex === index) setActiveDayIndex(null);
+    };
+
+    const addExerciseToDay = (dayIndex: number, exercise: WgerExercise) => {
+        setFormData(prev => {
+            const newDays = [...prev.days];
+            newDays[dayIndex].exercises.push({
+                exerciseId: exercise.data.id.toString(),
+                name: exercise.value,
+                image: exercise.data.image_thumbnail ? `https://wger.de${exercise.data.image_thumbnail}` : undefined,
+                sets: 3,
+                reps: "10-12",
+                allowWeight: true
+            });
+            return { ...prev, days: newDays };
+        });
+        setSearchQuery("");
+        setAllSearchResults([]);
+    };
+
+    const removeExerciseFromDay = (dayIndex: number, exerciseIndex: number) => {
+        setFormData(prev => {
+            const newDays = [...prev.days];
+            newDays[dayIndex].exercises = newDays[dayIndex].exercises.filter((_, i) => i !== exerciseIndex);
+            return { ...prev, days: newDays };
         });
     };
 
-    const addExercise = (exercise: WgerExercise) => {
-        setFormData((prev) => ({
-            ...prev,
-            exercises: [
-                ...prev.exercises,
-                {
-                    id: exercise.data.id,
-                    name: exercise.value,
-                    image: exercise.data.image,
-                    sets: 1,
-                    reps: "10-12",
-                    weight: "bodyweight",
-                },
-            ],
-        }));
-        setSearchQuery("");
-        setAllSearchResults([]);
-        setDisplayedSearchResults([]);
-    };
-
-    const removeExercise = (index: number) => {
-        setFormData((prev) => ({
-            ...prev,
-            exercises: prev.exercises.filter((_, i) => i !== index),
-        }));
+    const updateExercise = (dayIndex: number, exIndex: number, field: keyof IExercise, value: any) => {
+        setFormData(prev => {
+            const newDays = [...prev.days];
+            newDays[dayIndex].exercises[exIndex] = { ...newDays[dayIndex].exercises[exIndex], [field]: value };
+            return { ...prev, days: newDays };
+        });
     };
 
     const handleSave = async () => {
-        if (type !== "workout") {
-            toast.error("Diet template creation is not supported");
+        if (!formData.title || !formData.goal || !formData.bodyType) {
+            toast.error("Please fill in all required fields");
             return;
         }
-        if (!formData.name) {
-            toast.error("Template name is required");
-            return;
-        }
-        if (formData.exercises.some((ex) => !ex.name || ex.sets < 1 || !ex.reps || !ex.weight)) {
-            toast.error("All exercises must have a name, at least 1 set, reps, and weight");
+        if (formData.days.length === 0) {
+            toast.error("Add at least one day to the template");
             return;
         }
 
         setSaving(true);
         try {
             if (id) {
-                await API.patch(`/workout/admin/workout-templates/${id}`, {
-                    ...formData,
-                    givenBy: "admin",
-                });
+                await API.patch(`/template/workout/${id}`, formData);
                 toast.success("Template updated successfully");
             } else {
-                await API.post("/workout/admin/workout-templates", {
-                    ...formData,
-                    givenBy: "admin",
-                });
+                await API.post("/template/workout", formData);
                 toast.success("Template created successfully");
             }
             navigate("/admin/templates");
         } catch (error) {
-            console.error("Error saving template:", error);
             toast.error("Failed to save template");
         } finally {
             setSaving(false);
         }
     };
 
-    const handleCancel = () => {
-        navigate("/admin/templates");
-    };
-
-    if (type !== "workout") {
-        return (
-            <AdminLayout>
-                <div className="p-8">
-                    <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-                        <CardHeader>
-                            <CardTitle className="text-white">Unsupported Template Type</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-gray-400">Diet template creation is not supported in this form.</p>
-                            <Button
-                                onClick={handleCancel}
-                                className="mt-4 bg-[#4B8B9B] hover:bg-[#4B8B9B]/80"
-                            >
-                                Back to Templates
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
-            </AdminLayout>
-        );
-    }
-    const totalPages = Math.ceil(allSearchResults.length / perPage);
-
     return (
         <AdminLayout>
-            <div className="p-8">
-                <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-                    <CardHeader>
-                        <CardTitle className="text-white flex items-center">
-                            <FileText className="mr-3 h-8 w-8 text-[#4B8B9B]" />
-                            {id ? "Edit Workout Template" : "Add Workout Template"}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-6">
-                            {/* Template Name */}
-                            <div>
-                                <label className="text-gray-300 font-medium">Template Name</label>
-                                <Input
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter template name"
-                                    className="mt-1 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
-                                />
-                            </div>
+            <div className="p-8 max-w-6xl mx-auto space-y-8">
+                <header className="flex justify-between items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center text-primary">
+                            <Dumbbell className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">{id ? "Edit Workout Template" : "New Workout Template"}</h1>
+                            <p className="text-slate-500 text-sm">Configure multi-day training programs</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-3">
+                        <Button variant="outline" onClick={() => navigate("/admin/templates")} className="border-slate-800 text-slate-400">Cancel</Button>
+                        <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/90 text-white">
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                            Save Template
+                        </Button>
+                    </div>
+                </header>
 
-                            {/* Goal */}
-                            <div>
-                                <label className="text-gray-300 font-medium">Goal</label>
-                                <Input
-                                    name="goal"
-                                    value={formData.goal}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter goal (e.g., Build strength)"
-                                    className="mt-1 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
-                                />
-                            </div>
+                <div className="grid lg:grid-cols-[1fr_400px] gap-8">
+                    <div className="space-y-8">
+                        <Card className="bg-slate-900 border-slate-800 rounded-3xl overflow-hidden shadow-lg">
+                            <CardHeader className="border-b border-slate-800">
+                                <CardTitle className="text-white text-lg flex items-center gap-2">
+                                    <FileText className="h-5 w-5 text-primary" /> Basic Information
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-6">
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-400">Template Title</label>
+                                        <Input
+                                            name="title"
+                                            value={formData.title}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g., Ultimate Hypertrophy"
+                                            className="bg-slate-950 border-slate-800 text-white focus:ring-primary"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-400">Goal</label>
+                                        <Select value={formData.goal} onValueChange={(v) => setFormData(p => ({ ...p, goal: v }))}>
+                                            <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
+                                                <SelectValue placeholder="Select Goal" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                                                <SelectItem value="Weight Loss">Weight Loss</SelectItem>
+                                                <SelectItem value="Muscle Gain">Muscle Gain</SelectItem>
+                                                <SelectItem value="Strength">Strength</SelectItem>
+                                                <SelectItem value="Endurance">Endurance</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
 
-                            {/* Notes */}
-                            <div>
-                                <label className="text-gray-300 font-medium">Notes</label>
-                                <Textarea
-                                    name="notes"
-                                    value={formData.notes}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter additional notes"
-                                    className="mt-1 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
-                                />
-                            </div>
+                                <div className="grid md:grid-cols-3 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-400">Body Type</label>
+                                        <Select value={formData.bodyType} onValueChange={(v) => setFormData(p => ({ ...p, bodyType: v }))}>
+                                            <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
+                                                <SelectValue placeholder="Select Type" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                                                <SelectItem value="Ectomorph">Ectomorph</SelectItem>
+                                                <SelectItem value="Mesomorph">Mesomorph</SelectItem>
+                                                <SelectItem value="Endomorph">Endomorph</SelectItem>
+                                                <SelectItem value="General">General</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-400">Difficulty</label>
+                                        <Select value={formData.difficulty} onValueChange={(v: any) => setFormData(p => ({ ...p, difficulty: v }))}>
+                                            <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
+                                                <SelectValue placeholder="Difficulty" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                                                <SelectItem value="Beginner">Beginner</SelectItem>
+                                                <SelectItem value="Intermediate">Intermediate</SelectItem>
+                                                <SelectItem value="Advanced">Advanced</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-400">Cycle Duration (Days)</label>
+                                        <Input
+                                            type="number"
+                                            name="duration"
+                                            value={formData.duration}
+                                            onChange={handleInputChange}
+                                            className="bg-slate-950 border-slate-800 text-white"
+                                        />
+                                    </div>
+                                </div>
 
-                            {/* Exercise Search */}
-                            <div>
-                                <label className="text-gray-300 font-medium">Add Exercises</label>
-                                <div className="relative mt-1">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#4B8B9B]" />
-                                    <Input
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search exercises (via WGER API)"
-                                        className="pl-10 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white placeholder:text-gray-500 focus:border-[#4B8B9B]"
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-400">Description</label>
+                                    <Textarea
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleInputChange}
+                                        placeholder="Briefly describe this program..."
+                                        className="bg-slate-950 border-slate-800 text-white min-h-[100px]"
                                     />
                                 </div>
-                                {searchLoading && (
-                                    <div className="flex items-center justify-center py-4">
-                                        <Loader2 className="h-6 w-6 animate-spin text-[#4B8B9B]" />
-                                        <span className="ml-2 text-gray-400">Searching...</span>
-                                    </div>
-                                )}
-                                {displayedSearchResults.length > 0 && (
-                                    <Card className="group relative overflow-hidden bg-card/40 backdrop-blur-sm border-border/50 hover:border-border transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 max-h-60 overflow-y-auto">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                            </CardContent>
+                        </Card>
 
-                                        <CardContent className="p-2 space-y-2">
-                                            {displayedSearchResults.map((exercise) => (
-                                                <div
-                                                    key={exercise.data.id}
-                                                    className="flex items-center justify-between p-2 rounded-md bg-background/20 hover:bg-background/30 transition-colors cursor-pointer"
-                                                    onClick={() => addExercise(exercise)}
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <Calendar className="h-5 w-5 text-primary" /> Training Days
+                                </h3>
+                                <Button onClick={addDay} variant="outline" className="border-primary/50 text-primary hover:bg-primary/10 rounded-xl">
+                                    <Plus className="h-4 w-4 mr-2" /> Add Training Day
+                                </Button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {formData.days.map((day, dIdx) => (
+                                    <div key={dIdx} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-md">
+                                        <div
+                                            className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-800/50 transition-colors"
+                                            onClick={() => setActiveDayIndex(activeDayIndex === dIdx ? null : dIdx)}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <Badge className="bg-primary h-8 w-8 rounded-lg flex items-center justify-center font-black p-0">
+                                                    {day.dayNumber}
+                                                </Badge>
+                                                <h4 className="text-white font-bold">Training Day {day.dayNumber}</h4>
+                                                <span className="text-slate-500 text-sm">({day.exercises.length} Exercises)</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="text-slate-400 hover:text-red-500 hover:bg-red-500/10"
+                                                    onClick={(e) => { e.stopPropagation(); removeDay(dIdx); }}
                                                 >
-                                                    {/* Left: Image and Name */}
-                                                    <div className="flex items-center gap-2">
-                                                        <img
-                                                            src={
-                                                                exercise.data.image_thumbnail
-                                                                    ? `https://wger.de${exercise.data.image_thumbnail}`
-                                                                    : "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
-                                                            }
-                                                            alt={exercise.value}
-                                                            className="w-10 h-10 rounded object-cover"
-                                                        />
-                                                        <div className="flex flex-col">
-                                                            <span className="text-foreground font-medium">{exercise.value}</span>
-                                                            <span className="text-xs text-muted-foreground">{exercise.data.category}</span>
-                                                        </div>
-                                                    </div>
+                                                    <Trash className="h-4 w-4" />
+                                                </Button>
+                                                {activeDayIndex === dIdx ? <ChevronUp className="text-slate-500" /> : <ChevronDown className="text-slate-500" />}
+                                            </div>
+                                        </div>
 
-                                                    {/* Add Button */}
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow hover:shadow-lg hover:from-primary/80 hover:to-primary rounded-lg border-0 transition-all duration-300"
-                                                    >
-                                                        <Plus className="h-4 w-4" />
-                                                    </Button>
+                                        {activeDayIndex === dIdx && (
+                                            <div className="p-6 border-t border-slate-800 space-y-4">
+                                                {day.exercises.length === 0 ? (
+                                                    <div className="text-center py-8 border-2 border-dashed border-slate-800 rounded-2xl text-slate-500">
+                                                        No exercises added for this day yet.
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-3">
+                                                        {day.exercises.map((ex, eIdx) => (
+                                                            <div key={eIdx} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-wrap lg:grid lg:grid-cols-[200px_1fr_120px_120px_120px_40px] gap-4 items-center">
+                                                                <div className="font-medium text-white line-clamp-1">{ex.name}</div>
+                                                                <div className="flex-1">
+                                                                    <Input
+                                                                        placeholder="Notes/Reps"
+                                                                        value={ex.reps}
+                                                                        onChange={(e) => updateExercise(dIdx, eIdx, 'reps', e.target.value)}
+                                                                        className="h-8 bg-slate-900 border-slate-800 text-xs text-slate-300"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-xs text-slate-500">Sets:</span>
+                                                                    <Input
+                                                                        type="number"
+                                                                        value={ex.sets}
+                                                                        onChange={(e) => updateExercise(dIdx, eIdx, 'sets', parseInt(e.target.value))}
+                                                                        className="w-16 h-8 bg-slate-900 border-slate-800"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-xs text-slate-500">Time:</span>
+                                                                    <Input
+                                                                        placeholder="30s"
+                                                                        value={ex.time}
+                                                                        onChange={(e) => updateExercise(dIdx, eIdx, 'time', e.target.value)}
+                                                                        className="w-20 h-8 bg-slate-900 border-slate-800"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={ex.allowWeight}
+                                                                        onChange={(e) => updateExercise(dIdx, eIdx, 'allowWeight', e.target.checked)}
+                                                                        className="h-4 w-4 rounded accent-primary"
+                                                                    />
+                                                                    <span className="text-xs text-slate-500">Weight</span>
+                                                                </div>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-slate-500 hover:text-red-500"
+                                                                    onClick={() => removeExerciseFromDay(dIdx, eIdx)}
+                                                                >
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                <div className="relative pt-4 border-t border-slate-800">
+                                                    <Search className="absolute left-3 top-7 h-4 w-4 text-slate-500" />
+                                                    <Input
+                                                        placeholder="Add exercise by name..."
+                                                        className="pl-10 bg-slate-950 border-slate-800 text-sm h-10 rounded-xl"
+                                                        value={activeDayIndex === dIdx ? searchQuery : ''}
+                                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                                    />
+
+                                                    {searchLoading && (
+                                                        <div className="flex items-center justify-center p-4">
+                                                            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                                                        </div>
+                                                    )}
+                                                    {activeDayIndex === dIdx && searchQuery && displayedSearchResults.length > 0 && (
+                                                        <div className="absolute z-50 w-full mt-2 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto">
+                                                            {displayedSearchResults.map((suggestion) => (
+                                                                <div
+                                                                    key={suggestion.data.id}
+                                                                    className="p-3 hover:bg-slate-800 cursor-pointer flex items-center gap-3 border-b border-slate-800 last:border-0"
+                                                                    onClick={() => addExerciseToDay(dIdx, suggestion)}
+                                                                >
+                                                                    <img
+                                                                        src={suggestion.data.image_thumbnail ? `https://wger.de${suggestion.data.image_thumbnail}` : "https://via.placeholder.com/40"}
+                                                                        className="w-10 h-10 rounded object-cover"
+                                                                        alt=""
+                                                                    />
+                                                                    <div className="flex-1">
+                                                                        <p className="text-white text-sm font-medium">{suggestion.value}</p>
+                                                                        <p className="text-slate-500 text-xs">{suggestion.data.category}</p>
+                                                                    </div>
+                                                                    <Plus className="h-4 w-4 text-primary" />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            ))}
-                                        </CardContent>
-                                    </Card>
-                                )}
-                                {allSearchResults.length > 0 && (
-                                    <div className="flex justify-between items-center mt-4">
-                                        <Button
-                                            variant="outline"
-                                            disabled={page === 1 || searchLoading}
-                                            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                                        >
-                                            Previous
-                                        </Button>
-                                        <span className="text-muted-foreground">
-                                            Page {page} of {totalPages}
-                                        </span>
-                                        <Button
-                                            variant="outline"
-                                            disabled={page >= totalPages || searchLoading}
-                                            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-                                        >
-                                            Next
-                                        </Button>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-
-                            {/* Exercise List */}
-                            <div>
-                                <h3 className="text-lg font-semibold text-white mb-2">Exercises</h3>
-                                {formData.exercises.length === 0 ? (
-                                    <p className="text-gray-400">No exercises added</p>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {formData.exercises.map((exercise, index) => (
-                                            <Card className="bg-[#1F2A44]/50 border-[#4B8B9B]/30">
-                                                <CardContent className="p-4">
-                                                    <div className="flex justify-between items-center mb-2">
-                                                        <h4 className="text-white font-medium">{exercise.name}</h4>
-                                                        <Button
-                                                            variant="destructive"
-                                                            size="sm"
-                                                            onClick={() => removeExercise(index)}
-                                                        >
-                                                            <Trash className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                    <div className="grid grid-cols-3 gap-4">
-                                                        <div>
-                                                            <label className="text-gray-300 text-sm">Sets</label>
-                                                            <Input
-                                                                type="number"
-                                                                value={exercise.sets}
-                                                                onChange={(e) =>
-                                                                    handleExerciseChange(index, "sets", Number(e.target.value))
-                                                                }
-                                                                min="1"
-                                                                className="mt-1 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-gray-300 text-sm">Reps</label>
-                                                            <Input
-                                                                value={exercise.reps}
-                                                                onChange={(e) =>
-                                                                    handleExerciseChange(index, "reps", e.target.value)
-                                                                }
-                                                                placeholder="e.g., 10-12"
-                                                                className="mt-1 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-gray-300 text-sm">Weight</label>
-                                                            <Input
-                                                                value={exercise.weight}
-                                                                onChange={(e) =>
-                                                                    handleExerciseChange(index, "weight", e.target.value)
-                                                                }
-                                                                placeholder="e.g., 10kg or bodyweight"
-                                                                className="mt-1 bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Form Actions */}
-                            <div className="flex justify-end gap-4">
-                                <Button
-                                    variant="outline"
-                                    onClick={handleCancel}
-                                    className="flex items-center gap-2 text-white border-[#4B8B9B]/30"
-                                >
-                                    <X className="h-4 w-4" />
-                                    Cancel
-                                </Button>
-                                <Button
-                                    onClick={handleSave}
-                                    disabled={saving}
-                                    className="flex items-center gap-2 bg-[#4B8B9B] hover:bg-[#4B8B9B]/80"
-                                >
-                                    {saving ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <Save className="h-4 w-4" />
-                                    )}
-                                    Save Template
-                                </Button>
+                                ))}
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+
+                    <div className="space-y-6">
+                        <Card className="bg-slate-900 border-slate-800 rounded-3xl p-6 shadow-lg sticky top-8">
+                            <h3 className="text-lg font-bold text-white mb-4">Summary</h3>
+                            <div className="space-y-4">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-400">Total Days</span>
+                                    <span className="text-white font-bold">{formData.days.length}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-400">Total Exercises</span>
+                                    <span className="text-white font-bold">
+                                        {formData.days.reduce((acc, day) => acc + day.exercises.length, 0)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-400">Target Type</span>
+                                    <span className="text-primary font-bold">{formData.bodyType || 'Not set'}</span>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 pt-8 border-t border-slate-800 space-y-4">
+                                <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Quick Tips</h4>
+                                <ul className="text-xs text-slate-400 space-y-2 list-disc pl-4">
+                                    <li>Templates with 3-5 days are most popular.</li>
+                                    <li>Add notes to guide the user's form.</li>
+                                    <li>Cycle duration defines how long the plan repeats.</li>
+                                </ul>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
             </div>
         </AdminLayout>
     );

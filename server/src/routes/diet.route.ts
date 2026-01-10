@@ -13,9 +13,6 @@ router.post("/", authMiddleware, dietController.createOrGetDay.bind(dietControll
 
 router.post("/trainer-create-diet", authMiddleware, dietController.trainerCreateOrGetDay.bind(dietController));
 router.post("/trainer-create-diet-session", authMiddleware, dietController.createDietSession.bind(dietController))
-router.post('/admin/templates', authMiddleware, dietController.createTemplate.bind(dietController));
-router.get('/admin/templates', authMiddleware, dietController.listTemplates.bind(dietController));
-
 router.post("/:date/meals", authMiddleware, dietController.addMeal.bind(dietController));
 router.patch("/:date/meals/:mealId", authMiddleware, dietController.updateMeal.bind(dietController));
 router.delete("/:date/meals/:mealId", authMiddleware, dietController.removeMeal.bind(dietController));

@@ -21,6 +21,7 @@ export interface IWorkoutTemplate {
 }
 
 export interface TemplateMeal {
+  _id?: string;
   name: string;
   calories: number;
   protein?: number;
@@ -31,12 +32,20 @@ export interface TemplateMeal {
   notes?: string;
 }
 
+export interface IDietTemplateDay {
+  dayNumber: number;
+  meals: TemplateMeal[];
+}
+
 export interface IDietTemplate {
   _id: string;
   title: string;
   description?: string;
+  duration: number;
+  goal: string;
+  bodyType: string;
+  days: IDietTemplateDay[];
   createdBy: string;
-  meals: TemplateMeal[];
   createdAt: string;
   updatedAt: string;
 }

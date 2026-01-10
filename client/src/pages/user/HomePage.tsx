@@ -117,13 +117,20 @@ export default function HomePage() {
   };
 
   const calculateDietProgress = () => {
-    if (!diet?.meals || !Array.isArray(diet.meals)) return { consumed: 0, total: 0, percentage: 0 };
+    const manualMeals = diet?.meals || [];
+    const templateMeals = diet?.templateMeals || [];
 
-    const consumed = diet.meals.reduce((sum, meal) => sum + (meal.isEaten ? meal.calories : 0), 0);
-    const total = diet.meals.reduce((sum, meal) => sum + meal.calories, 0);
+    const consumed = manualMeals.reduce((sum, meal) => sum + (meal.isEaten ? meal.calories : 0), 0);
+
+    // If we have manual meals, use them for total. Otherwise use template total.
+    let total = manualMeals.reduce((sum, meal) => sum + meal.calories, 0);
+    if (total === 0 && templateMeals.length > 0) {
+      total = templateMeals.reduce((sum, meal) => sum + meal.calories, 0);
+    }
+
     const percentage = total > 0 ? (consumed / total) * 100 : 0;
 
-    return { consumed, total, percentage };
+    return { consumed, total, percentage, hasTemplate: !!diet?.templateName };
   };
 
   const calculateWorkoutProgress = () => {
@@ -197,7 +204,14 @@ export default function HomePage() {
                 {dietProgress.consumed}/{dietProgress.total} cal
               </div>
               <Progress value={dietProgress.percentage} className="mt-2" />
-              <p className="text-xs text-muted-foreground mt-1">{Math.round(dietProgress.percentage)}% completed</p>
+              <div className="flex justify-between items-center mt-1">
+                <p className="text-xs text-muted-foreground">{Math.round(dietProgress.percentage)}% completed</p>
+                {dietProgress.hasTemplate && (
+                  <Badge variant="outline" className="text-[10px] h-4 border-green-500/30 text-green-600">
+                    Template: Day {diet?.templateDay}
+                  </Badge>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -387,8 +401,8 @@ export default function HomePage() {
               </div>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {diet.meals.slice(0, 6).map((meal) => (
-                  <div key={meal._id} className="p-4 bg-secondary/30 rounded-lg border border-border/30">
+                {(diet.meals.length > 0 ? diet.meals : (diet.templateMeals || [])).slice(0, 6).map((meal) => (
+                  <div key={meal._id} className={`p-4 rounded-lg border border-border/30 ${meal._id.startsWith('template-') ? 'bg-orange-500/5' : 'bg-secondary/30'}`}>
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-medium text-sm">{meal.name}</h4>
                       <div className={`w-2 h-2 rounded-full ${meal.isEaten ? "bg-green-500" : "bg-gray-400"}`} />
@@ -411,6 +425,11 @@ export default function HomePage() {
                       <Badge variant="secondary" className="text-xs mt-2">
                         <Users className="h-3 w-3 mr-1" />
                         Trainer
+                      </Badge>
+                    )}
+                    {meal._id.startsWith('template-') && (
+                      <Badge variant="outline" className="text-[10px] mt-2 border-orange-500/30 text-orange-500">
+                        From Template
                       </Badge>
                     )}
                   </div>

@@ -32,10 +32,10 @@ export const VideoCallSchema = new Schema<IVideoCall>({
     leftAt: { type: Date },
     isActive: { type: Boolean, default: true }
   }],
-  status: { 
-    type: String, 
-    enum: ['scheduled', 'active', 'ended'], 
-    default: 'scheduled' 
+  status: {
+    type: String,
+    enum: ['scheduled', 'active', 'ended'],
+    default: 'scheduled'
   },
   scheduledStartTime: { type: Date, required: true },
   scheduledEndTime: { type: Date, required: true },
@@ -43,8 +43,6 @@ export const VideoCallSchema = new Schema<IVideoCall>({
   actualEndTime: { type: Date },
 }, { timestamps: true });
 
-VideoCallSchema.index({ slotId: 1 });
-VideoCallSchema.index({ roomId: 1 });
 VideoCallSchema.index({ status: 1 });
 
 export const VideoCallModel = model<IVideoCall>('VideoCall', VideoCallSchema);

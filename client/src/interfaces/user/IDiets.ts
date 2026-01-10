@@ -8,7 +8,7 @@ export interface Meal {
   fats: number;
   time: string;
   isEaten: boolean;
-  source: "trainer" | "user";
+  source: "trainer" | "user" | "admin";
   usedBy: string;
   sourceId: string;
   createdAt: string;
@@ -24,6 +24,10 @@ export interface ApiResponse {
   user: string;
   date: string;
   meals: Meal[];
+  templateDay?: number;
+  templateName?: string;
+  templateDuration?: number;
+  templateMeals?: Meal[];
   createdAt: string;
   updatedAt: string;
   __v: number;

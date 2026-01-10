@@ -416,6 +416,16 @@ export default function WorkoutPage() {
 
               <FilterButtons filter={filter} setFilter={setFilter} />
             </div>
+
+            {dailyWorkouts.find(dw => dw.date === format(selectedDate, "yyyy-MM-dd"))?.templateName && (
+              <div className="flex items-center gap-3 p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
+                <CalendarIcon className="h-5 w-5 text-orange-500" />
+                <div>
+                  <p className="text-sm font-bold text-orange-500">Active Template: {dailyWorkouts.find(dw => dw.date === format(selectedDate, "yyyy-MM-dd"))?.templateName}</p>
+                  <p className="text-xs text-orange-400/80">Day {dailyWorkouts.find(dw => dw.date === format(selectedDate, "yyyy-MM-dd"))?.templateDay} of {dailyWorkouts.find(dw => dw.date === format(selectedDate, "yyyy-MM-dd"))?.templateDuration}</p>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

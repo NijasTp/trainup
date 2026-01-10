@@ -9,6 +9,8 @@ import { IStreakService } from '../core/interfaces/services/IStreakService';
 import { WorkoutSessionResponseDto, WorkoutDayResponseDto, GetAdminTemplatesResponseDto } from '../dtos/workout.dto'
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status'
+import { IUserRepository } from '../core/interfaces/repositories/IUserRepository';
+import { IWorkoutTemplateRepository } from '../core/interfaces/repositories/IWorkoutTemplateRepository';
 import { MESSAGES } from '../constants/messages.constants'
 
 @injectable()
@@ -19,7 +21,9 @@ export class WorkoutService implements IWorkoutService {
     @inject(TYPES.WorkoutDayRepository)
     private _workoutDayRepo: IWorkoutDayRepository,
     @inject(TYPES.IStreakService) private _streakService: IStreakService,
-    @inject(TYPES.INotificationService) private _notificationService: INotificationService
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService,
+    @inject(TYPES.IUserRepository) private _userRepo: IUserRepository,
+    @inject(TYPES.WorkoutTemplateRepository) private _workoutTemplateRepo: IWorkoutTemplateRepository
   ) { }
 
   async createSession(payload: Partial<IWorkoutSession>): Promise<WorkoutSessionResponseDto> {
@@ -219,48 +223,88 @@ export class WorkoutService implements IWorkoutService {
   }
 
   async getDay(userId: string, date: string): Promise<WorkoutDayResponseDto | null> {
-    const day = await this._workoutDayRepo.findByUserAndDate(userId, date)
-    return day ? this.mapToDayResponseDto(day) : null
-  }
+    const user = await this._userRepo.findById(userId);
+    let day = await this._workoutDayRepo.findByUserAndDate(userId, date);
 
-  async createAdminTemplate(payload: Partial<IWorkoutSession>): Promise<WorkoutSessionResponseDto> {
-    const template = await this._sessionRepo.create({
-      ...payload,
-      givenBy: 'admin',
-      date: undefined,
-      userId: undefined,
-      trainerId: undefined,
-      time: undefined,
-      isDone: false,
-    });
-    return this.mapToSessionResponseDto(template);
-  }
+    let templateInfo: Partial<WorkoutDayResponseDto> = {};
+    let virtualSession: WorkoutSessionResponseDto | null = null;
 
-  async getAdminTemplates(page: number, limit: number, search: string): Promise<GetAdminTemplatesResponseDto> {
-    const result = await this._sessionRepo.findAdminTemplates(page, limit, search);
-    return {
-      templates: result.templates.map(template => this.mapToSessionResponseDto(template as IWorkoutSession)),
-      total: result.total,
-      page: result.page,
-      totalPages: result.totalPages
-    };
-  }
+    if (user?.activeWorkoutTemplate && user.workoutTemplateStartDate) {
+      const template = await this._workoutTemplateRepo.findById(user.activeWorkoutTemplate.toString());
+      if (template) {
+        const startDate = new Date(user.workoutTemplateStartDate);
+        startDate.setHours(0, 0, 0, 0);
+        const currentDate = new Date(date);
+        currentDate.setHours(0, 0, 0, 0);
 
-  async updateAdminTemplate(id: string, payload: Partial<IWorkoutSession>): Promise<WorkoutSessionResponseDto> {
-    const session = await this._sessionRepo.findById(id);
-    if (!session || session.givenBy !== 'admin') {
-      throw new AppError('Template not found or not an admin template', STATUS_CODE.NOT_FOUND);
+        const diffTime = currentDate.getTime() - startDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays >= 0) {
+          const dayNumber = (diffDays % template.duration) + 1;
+          const templateDay = template.days.find(d => d.dayNumber === dayNumber);
+
+          templateInfo = {
+            templateDay: dayNumber,
+            templateName: template.title,
+            templateDuration: template.duration
+          };
+
+          if (templateDay && templateDay.exercises.length > 0) {
+            // Check if there's already an admin session or template session for today
+            const hasExistingAdminSession = day?.sessions?.some(s =>
+              typeof s !== 'string' && (s as IWorkoutSession).givenBy === 'admin'
+            );
+
+            if (!hasExistingAdminSession) {
+              virtualSession = {
+                _id: `template-${template._id}-${dayNumber}-${date}`,
+                name: `${template.title} - Day ${dayNumber}`,
+                givenBy: 'admin',
+                date: date,
+                time: "08:00", // Default virtual time
+                exercises: templateDay.exercises.map(ex => ({
+                  id: ex.exerciseId,
+                  name: ex.name,
+                  image: ex.image,
+                  sets: ex.sets,
+                  reps: ex.reps,
+                  time: ex.time
+                })),
+                goal: template.goal,
+                notes: `From active template: ${template.title}`,
+                isDone: false,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              };
+            }
+          }
+        }
+      }
     }
-    const updated = await this._sessionRepo.update(id, {
-      ...payload,
-      date: undefined,
-      userId: undefined,
-      trainerId: undefined,
-      time: undefined,
-    });
-    if (!updated) throw new AppError('Failed to update template', STATUS_CODE.INTERNAL_SERVER_ERROR)
-    return this.mapToSessionResponseDto(updated);
+
+    if (!day) {
+      if (!templateInfo.templateDay) return null;
+
+      return {
+        _id: "",
+        userId,
+        date,
+        sessions: virtualSession ? [virtualSession] : [],
+        ...templateInfo,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as unknown as WorkoutDayResponseDto;
+    }
+
+    const response = this.mapToDayResponseDto(day);
+    if (virtualSession) {
+      response.sessions.push(virtualSession);
+    }
+    return { ...response, ...templateInfo };
   }
+
+
 
   private mapToSessionResponseDto(session: IWorkoutSession): WorkoutSessionResponseDto {
     return {

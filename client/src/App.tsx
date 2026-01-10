@@ -64,7 +64,9 @@ import TrainerProfile from './pages/trainer/TrainerProfile';
 import TrainerDashboard from './pages/trainer/TrainerDashboard';
 import WeeklySchedule from './pages/trainer/WeeklySchedule';
 import TrainerClients from './pages/trainer/TrainerClientListing';
+import TrainerChats from './pages/trainer/TrainerChats';
 import TrainerEditProfile from './pages/trainer/TrainerEditProfile';
+import ProfileCompletion from './pages/user/ProfileCompletion';
 
 import UserNotifications from './pages/user/UserNotifications';
 import TrainerNotifications from './pages/trainer/TrainerNotifications';
@@ -91,6 +93,7 @@ function App() {
         <Route path={ROUTES.USER_TRANSACTIONS} element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
         <Route path={ROUTES.USER_DASHBOARD} element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
         <Route path={ROUTES.USER_VERIFY_OTP} element={<PreventLoggedIn><VerifyOtp /></PreventLoggedIn>} />
+        <Route path={ROUTES.USER_COMPLETE_PROFILE} element={<ProtectedRoute><ProfileCompletion /></ProtectedRoute>} />
         <Route path={ROUTES.USER_TRAINER_PAGE} element={<ProtectedRoute><Trainers /></ProtectedRoute>} />
         <Route path={ROUTES.USER_INDIVIDUAL_TRAINER} element={<ProtectedRoute><TrainerPage /></ProtectedRoute>} />
         <Route path={ROUTES.MY_TRAINER_PROFILE} element={<ProtectedRoute><MyTrainerProfile /></ProtectedRoute>} />
@@ -136,6 +139,7 @@ function App() {
         <Route path={ROUTES.TRAINER_CLIENT_WORKOUT} element={<TrainerProtectedRoute><TrainerAddWorkoutPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_SESSION} element={<TrainerProtectedRoute><TrainerAddSessionPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_DIET} element={<TrainerProtectedRoute><TrainerUserDietPage /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_CHATS} element={<TrainerProtectedRoute><TrainerChats /></TrainerProtectedRoute>} />
 
         {/* Admin Routes */}
         <Route path={ROUTES.ADMIN_LOGIN} element={<AdminPreventLoggedIn><AdminLogin /></AdminPreventLoggedIn>} />

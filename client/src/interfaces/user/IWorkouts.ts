@@ -26,4 +26,7 @@ export interface WorkoutDay {
     userId: string;
     date: string;
     sessions: WorkoutSession[];
+    templateDay?: number;
+    templateName?: string;
+    templateDuration?: number;
 }

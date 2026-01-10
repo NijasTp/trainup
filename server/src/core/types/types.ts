@@ -65,6 +65,7 @@ const TYPES = {
   AttendanceController: Symbol.for("AttendanceController"),
 
 
+  WorkoutTemplateRepository: Symbol.for("WorkoutTemplateRepository"),
   WorkoutSessionRepository: Symbol.for("WorkoutSessionRepository"),
   WorkoutDayRepository: Symbol.for("WorkoutDayRepository"),
   WorkoutService: Symbol.for("WorkoutService"),
@@ -79,6 +80,7 @@ const TYPES = {
   ITemplateRepository: Symbol.for("ITemplateRepository"),
   TemplateService: Symbol.for("TemplateService"),
   ITemplateService: Symbol.for("ITemplateService"),
+  TemplateController: Symbol.for("TemplateController"),
   DietController: Symbol.for("DietController"),
 
   IAdminService: Symbol.for("IAdminService"),

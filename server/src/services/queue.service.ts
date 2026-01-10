@@ -13,7 +13,7 @@ export class QueueService implements IQueueService {
         this._redisConnection = new IORedis(process.env.REDIS_URL || "redis://127.0.0.1:6379", {
             maxRetriesPerRequest: null,
             retryStrategy: (times) => {
-                if (times % 10 === 0) {
+                if (times % 100 === 0) {
                     logger.warn("Redis connection failing. Notification queue will be inactive.");
                 }
                 return Math.min(times * 100, 15000); // Retry with backoff
@@ -21,8 +21,16 @@ export class QueueService implements IQueueService {
         });
 
         this._redisConnection.on("error", (_err) => {
-            // Silently catch to prevent process flood, logger will handle via retryStrategy warning
+            // Root listener
         });
+
+        // Override duplicate for BullMQ internal clones
+        const originalDuplicate = this._redisConnection.duplicate.bind(this._redisConnection);
+        this._redisConnection.duplicate = (...args: any[]) => {
+            const duplicate = originalDuplicate(...args);
+            duplicate.on("error", () => { });
+            return duplicate;
+        };
     }
 
     private _getQueue(name: string): Queue {
@@ -30,7 +38,10 @@ export class QueueService implements IQueueService {
             const queueOptions: QueueOptions = {
                 connection: this._redisConnection,
             };
-            this._queues.set(name, new Queue(name, queueOptions));
+            const queue = new Queue(name, queueOptions);
+            queue.on("error", (error) => {
+            });
+            this._queues.set(name, queue);
         }
         return this._queues.get(name)!;
     }

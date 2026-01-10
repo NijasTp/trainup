@@ -196,11 +196,11 @@ export const SiteHeader: React.FC = () => {
     })
 
   const navLinks = [
-    { name: "My Trainer", path: "/my-trainer/profile", icon: MessageSquare },
-    { name: "Trainers", path: "/trainers", icon: Users },
-    { name: "Workouts", path: "/workouts", icon: Dumbbell },
-    { name: "Diet", path: "/diets", icon: Utensils },
-  ]
+    { name: "My Trainer", path: "/my-trainer/profile", icon: MessageSquare, show: !!user?.assignedTrainer },
+    { name: "Trainers", path: "/trainers", icon: Users, show: true },
+    { name: "Workouts", path: "/workouts", icon: Dumbbell, show: true },
+    { name: "Diet", path: "/diets", icon: Utensils, show: true },
+  ].filter(link => link.show)
 
   return (
     <header
@@ -216,7 +216,7 @@ export const SiteHeader: React.FC = () => {
           className="flex items-center gap-2 group"
         >
           <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#4B8B9B] to-[#2E5C6E] text-white shadow-lg group-hover:shadow-[#4B8B9B]/20 transition-all duration-300">
-            <Dumbbell className="h-5 w-5" />  
+            <Dumbbell className="h-5 w-5" />
           </div>
           <div className="flex flex-col leading-none">
             <span className="font-bold text-lg tracking-tight">TRAIN<span className="text-[#4B8B9B]">UP</span></span>
@@ -241,7 +241,7 @@ export const SiteHeader: React.FC = () => {
               >
                 <Icon className="h-4 w-4" />
                 {link.name}
-              
+
               </Link>
             )
           })}
@@ -477,7 +477,6 @@ export const SiteHeader: React.FC = () => {
                       : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                   )}
                 >
-                  <Icon className="h-5 w-5" />
                   <Icon className="h-5 w-5" />
                   {link.name}
                   {link.name === "My Trainer" && chatUnreadCount > 0 && (

@@ -32,7 +32,8 @@ export default function Diets() {
   const [currentView, setCurrentView] = useState<'trainer' | 'self'>('trainer');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [confirmingMeal, setConfirmingMeal] = useState<{ id: string; isTrainer: boolean } | null>(null);
+  const [confirmingMeal, setConfirmingMeal] = useState<{ id: string; isTrainer: boolean; isTemplate?: boolean } | null>(null);
+  const [templateInfo, setTemplateInfo] = useState<{ name: string; day: number; duration: number } | null>(null);
 
 
   const isMealMissed = (meal: Meal) => {
@@ -54,16 +55,35 @@ export default function Diets() {
         });
 
         const data = response.data;
-        console.log('data', response.data);
         const meals = data.meals || [];
+        const templateMeals = data.templateMeals || [];
+
+        if (data.templateName) {
+          setTemplateInfo({
+            name: data.templateName,
+            day: data.templateDay || 1,
+            duration: data.templateDuration || 7
+          });
+        }
 
         const trainerMeals = meals
-          .filter((meal) => meal.source === 'trainer')
+          .filter((meal) => meal.source === 'trainer' || meal.source === 'admin')
           .map((meal) => ({
             ...meal,
             image: meal.image || 'https://worldfoodtour.co.uk/wp-content/uploads/2013/06/neptune-placeholder-48.jpg',
             description: meal.description || 'No description available.',
           }));
+
+        // If no trainer meals, and we have template meals, use them
+        if (trainerMeals.length === 0 && templateMeals.length > 0) {
+          trainerMeals.push(...templateMeals.map(m => ({
+            ...m,
+            image: m.image || 'https://worldfoodtour.co.uk/wp-content/uploads/2013/06/neptune-placeholder-48.jpg',
+            description: m.description || `From template: ${data.templateName}`,
+            isTemplate: true
+          })));
+        }
+
         const userMeals = meals
           .filter((meal) => meal.source === 'user')
           .map((meal) => ({
@@ -186,6 +206,16 @@ export default function Diets() {
           <p className="my-5 text-lg text-muted-foreground max-w-2xl mx-auto">
             View your trainer-assigned and self-assigned meals for today. Mark meals as eaten to track your intake.
           </p>
+
+          {templateInfo && (
+            <div className="inline-flex items-center gap-3 p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl mb-8">
+              <CheckCircle2 className="h-5 w-5 text-orange-500" />
+              <div className="text-left">
+                <p className="text-sm font-bold text-orange-500">Active Template: {templateInfo.name}</p>
+                <p className="text-xs text-orange-400/80">Day {templateInfo.day} of {templateInfo.duration}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Switch Buttons */}

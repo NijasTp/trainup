@@ -14,23 +14,90 @@ import { IUserService } from '../core/interfaces/services/IUserService';
 import { INotificationService } from '../core/interfaces/services/INotificationService';
 import { NOTIFICATION_MESSAGES, NOTIFICATION_TYPES } from '../constants/notification.constants';
 
+import { ITemplateRepository as IDietTemplateRepository } from '../core/interfaces/repositories/IDietTemplateRepository';
+
 @injectable()
 export class DietService implements IDietService {
   constructor(
     @inject(TYPES.IDietDayRepository) private _dietRepo: IDietDayRepository,
     @inject(TYPES.IStreakService) private _streakService: IStreakService,
     @inject(TYPES.IUserService) private _userService: IUserService,
-    @inject(TYPES.INotificationService) private _notificationService: INotificationService
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService,
+    @inject(TYPES.ITemplateRepository) private _dietTemplateRepo: IDietTemplateRepository
   ) { }
 
   async createOrGetDay(userId: string, date: string): Promise<CreateOrGetDayResponseDto> {
     const day = await this._dietRepo.createOrGet(userId, date);
-    return this.mapToResponseDto(day);
+    const templateInfo = await this.getTemplateInfo(userId, date);
+    return { ...this.mapToResponseDto(day), ...templateInfo };
   }
 
   async getDay(userId: string, date: string): Promise<CreateOrGetDayResponseDto | null> {
     const day = await this._dietRepo.getByUserAndDate(userId, date);
-    return day ? this.mapToResponseDto(day) : null;
+    const templateInfo = await this.getTemplateInfo(userId, date);
+
+    if (!day) {
+      if (templateInfo.templateDay) {
+        return {
+          _id: "",
+          user: userId,
+          date: date,
+          meals: [],
+          ...templateInfo,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        } as unknown as CreateOrGetDayResponseDto;
+      }
+      return null;
+    }
+
+    return { ...this.mapToResponseDto(day), ...templateInfo };
+  }
+
+  private async getTemplateInfo(userId: string, date: string): Promise<Partial<CreateOrGetDayResponseDto>> {
+    const user = await this._userService.getUserById(userId);
+    if (user?.activeDietTemplate && user.dietTemplateStartDate) {
+      const template = await this._dietTemplateRepo.getById(user.activeDietTemplate.toString());
+      if (template) {
+        const startDate = new Date(user.dietTemplateStartDate);
+        startDate.setHours(0, 0, 0, 0);
+        const currentDate = new Date(date);
+        currentDate.setHours(0, 0, 0, 0);
+
+        const diffTime = currentDate.getTime() - startDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays >= 0) {
+          const dayNumber = (diffDays % template.duration) + 1;
+          const templateDay = template.days.find(d => d.dayNumber === dayNumber);
+
+          const virtualMeals = templateDay ? templateDay.meals.map(m => ({
+            _id: `template-${template._id}-${dayNumber}-${m.name}`,
+            name: m.name,
+            calories: m.calories,
+            protein: m.protein,
+            carbs: m.carbs,
+            fats: m.fats,
+            time: m.time,
+            isEaten: false,
+            usedBy: userId,
+            source: Role.ADMIN,
+            sourceId: template._id.toString(),
+            notes: m.notes || `From active template: ${template.title}`,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })) : [];
+
+          return {
+            templateDay: dayNumber,
+            templateName: template.title,
+            templateDuration: template.duration,
+            templateMeals: virtualMeals as unknown as MealDto[]
+          };
+        }
+      }
+    }
+    return {};
   }
 
   async addMeal(

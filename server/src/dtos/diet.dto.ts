@@ -7,6 +7,10 @@ export class CreateOrGetDayResponseDto {
   user: string;
   date: string;
   meals: MealDto[];
+  templateDay?: number;
+  templateName?: string;
+  templateDuration?: number;
+  templateMeals?: MealDto[];
   createdAt: Date;
   updatedAt: Date;
 }

@@ -13,6 +13,7 @@ export const ROUTES = {
   USER_TRANSACTIONS: '/transactions',
   USER_DASHBOARD: '/dashboard',
   USER_VERIFY_OTP: "/verify-otp",
+  USER_COMPLETE_PROFILE: "/complete-profile",
   USER_TRAINER_PAGE: '/trainers',
   USER_INDIVIDUAL_TRAINER: '/trainers/:id',
   MY_TRAINER_PROFILE: '/my-trainer/profile',
@@ -61,6 +62,7 @@ export const ROUTES = {
   TRAINER_CLIENT_WORKOUT: "/trainer/workout/:clientId",
   TRAINER_CLIENT_SESSION: "/trainer/workout/add-session/:clientId",
   TRAINER_CLIENT_DIET: "/trainer/diet/:clientId",
+  TRAINER_CHATS: "/trainer/chats",
 
 
   // Admin Routes

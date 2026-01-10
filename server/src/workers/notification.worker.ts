@@ -14,6 +14,9 @@ export class NotificationWorker {
         this._redisConnection = new IORedis(process.env.REDIS_URL || "redis://127.0.0.1:6379", {
             maxRetriesPerRequest: null,
             retryStrategy: (times) => {
+                if (times % 100 === 0) {
+                    logger.warn("Redis connection failing (Worker). Notification queue will be inactive.");
+                }
                 return Math.min(times * 500, 30000);
             }
         });
@@ -21,6 +24,14 @@ export class NotificationWorker {
         this._redisConnection.on("error", () => {
             // Catching to prevent unhandled rejection/flood
         });
+
+        // Override duplicate for BullMQ internal clones
+        const originalDuplicate = this._redisConnection.duplicate.bind(this._redisConnection);
+        this._redisConnection.duplicate = (...args: any[]) => {
+            const duplicate = originalDuplicate(...args);
+            duplicate.on("error", () => { });
+            return duplicate;
+        };
 
         this._worker = new Worker(
             "notifications",
@@ -38,6 +49,10 @@ export class NotificationWorker {
 
         this._worker.on("failed", (job, err) => {
             logger.error(`Notification job ${job?.id} failed:`, err);
+        });
+
+        this._worker.on("error", (error) => {
+            // Silently catch to prevent process flood/raw logs
         });
     }
 

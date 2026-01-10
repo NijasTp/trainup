@@ -13,6 +13,7 @@ import paymentRoutes from './routes/payment.route'
 import videoCallRoutes from './routes/videoCall.route'
 import gymAttendanceRoutes from './routes/gymAttendance.route'
 import notificationRoutes from './routes/notification.route'
+import templateRoutes from './routes/template.route'
 import dotenv from "dotenv";
 import cookieParser from 'cookie-parser';
 import BASE_ROUTE from "./constants/baseRoute";
@@ -74,6 +75,7 @@ app.use(BASE_ROUTE.PAYMENT, paymentRoutes);
 app.use(BASE_ROUTE.VIDEO_CALL, videoCallRoutes);
 app.use(BASE_ROUTE.ATTENDANCE, gymAttendanceRoutes);
 app.use(BASE_ROUTE.NOTIFICATION, notificationRoutes)
+app.use(BASE_ROUTE.TEMPLATE, templateRoutes);
 
 app.use(errorHandler);
 

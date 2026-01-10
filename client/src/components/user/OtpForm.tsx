@@ -40,22 +40,22 @@ const OtpForm = ({ userState, setError }: OtpFormProps) => {
     }
   }, [resendDisabled]);
 
-const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-async function handleSubmit(e: React.FormEvent) {
-  e.preventDefault();
-  try {
-    const res =await signupApi(userState.name,userState.email,userState.password,otp)
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      const res = await signupApi(userState.name, userState.email, userState.password, otp)
 
-    // dispatch user data to redux
-   dispatch(login(res.data.user));
+      // dispatch user data to redux
+      dispatch(login(res.data.user));
 
-    toast.success("OTP verified successfully");
-    navigate("/home");
-  } catch (err: any) {
-    setError(err.response?.data?.message || "OTP verification failed");
+      toast.success("OTP verified successfully");
+      navigate("/complete-profile");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "OTP verification failed");
+    }
   }
-}
 
 
   const handleResend = async () => {
@@ -89,10 +89,10 @@ async function handleSubmit(e: React.FormEvent) {
       </div>
 
       <div className="pt-2">
-        <ActionButton 
-          type="submit" 
-          text="VERIFY & CONTINUE" 
-          icon={<FaLock className="mr-2" />} 
+        <ActionButton
+          type="submit"
+          text="VERIFY & CONTINUE"
+          icon={<FaLock className="mr-2" />}
         />
       </div>
 
@@ -105,9 +105,8 @@ async function handleSubmit(e: React.FormEvent) {
           type="button"
           onClick={handleResend}
           disabled={resendDisabled}
-          className={`mt-2 flex items-center justify-center mx-auto text-[#176B87] hover:text-[#64CCC5] transition-colors ${
-            resendDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-          }`}
+          className={`mt-2 flex items-center justify-center mx-auto text-[#176B87] hover:text-[#64CCC5] transition-colors ${resendDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            }`}
         >
           <FaRedo className="mr-2" />
           Resend {resendDisabled && <span className="ml-1">in {countdown}s</span>}

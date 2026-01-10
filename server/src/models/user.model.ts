@@ -42,6 +42,10 @@ export interface IUser extends Document {
   age?: number;
   gender?: string;
   profileImage?: string;
+  activeWorkoutTemplate?: Types.ObjectId | string | null;
+  workoutTemplateStartDate?: Date | null;
+  activeDietTemplate?: Types.ObjectId | string | null;
+  dietTemplateStartDate?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -88,6 +92,10 @@ const userSchema: Schema<IUser> = new Schema(
     age: { type: Number, default: null },
     gender: { type: String, enum: ["male", "female", "other"] },
     profileImage: { type: String },
+    activeWorkoutTemplate: { type: Schema.Types.ObjectId, ref: "WorkoutTemplate", default: null },
+    workoutTemplateStartDate: { type: Date, default: null },
+    activeDietTemplate: { type: Schema.Types.ObjectId, ref: "DietTemplate", default: null },
+    dietTemplateStartDate: { type: Date, default: null },
   },
   { timestamps: true }
 );

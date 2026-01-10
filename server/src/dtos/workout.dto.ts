@@ -71,6 +71,9 @@ export class WorkoutDayResponseDto {
   userId: string;
   date: string;
   sessions: WorkoutSessionResponseDto[];
+  templateDay?: number;
+  templateName?: string;
+  templateDuration?: number;
   createdAt: Date;
   updatedAt: Date;
 }

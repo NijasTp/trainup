@@ -1,23 +1,37 @@
 import { injectable } from "inversify";
 import { FilterQuery } from "mongoose";
-import { TemplateModel, ITemplate } from "../models/dietTemplate.model";
+import { DietTemplateModel, IDietTemplate } from "../models/dietTemplate.model";
 
 @injectable()
 export class TemplateRepository {
-  async create(template: Partial<ITemplate>): Promise<ITemplate> {
-    const doc = new TemplateModel(template);
+  async create(template: Partial<IDietTemplate>): Promise<IDietTemplate> {
+    const doc = new DietTemplateModel(template);
     return doc.save();
   }
 
-  async list(filter: FilterQuery<ITemplate> = {}): Promise<ITemplate[]> {
-    return TemplateModel.find(filter).lean().exec();
+  async find(query: FilterQuery<IDietTemplate>, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+    const [templates, total] = await Promise.all([
+      DietTemplateModel.find(query)
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+      DietTemplateModel.countDocuments(query).exec(),
+    ]);
+
+    return { templates, total, page, totalPages: Math.ceil(total / limit) };
   }
 
-  async getById(id: string): Promise<ITemplate | null> {
-    return TemplateModel.findById(id).exec();
+  async getById(id: string): Promise<IDietTemplate | null> {
+    return DietTemplateModel.findById(id).lean().exec();
+  }
+
+  async update(id: string, update: Partial<IDietTemplate>) {
+    return DietTemplateModel.findByIdAndUpdate(id, update, { new: true }).exec();
   }
 
   async delete(id: string): Promise<void> {
-    await TemplateModel.findByIdAndDelete(id).exec();
+    await DietTemplateModel.findByIdAndDelete(id).exec();
   }
 }

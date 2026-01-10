@@ -257,50 +257,65 @@ const TransformationWidget: React.FC<TransformationWidgetProps> = () => {
 const RecentWorkouts: React.FC<RecentWorkoutsProps> = ({ workouts }) => {
   return (
     <Card className="bg-card/40 backdrop-blur-sm border-border/50">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Dumbbell className="h-5 w-5 text-primary" />
           Recent Workouts
         </CardTitle>
+        <Link to={ROUTES.USER_WORKOUTS_PAGE}>
+          <Button variant="outline" size="sm">View All</Button>
+        </Link>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          {workouts.map((workout) => (
-            <div key={workout.id} className="p-4 bg-secondary/30 rounded-lg border border-border/30">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h4 className="font-medium">{workout.name}</h4>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {format(new Date(workout.date), "MMM dd")}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {workout.duration} min
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Target className="h-3 w-3" />
-                      {workout.exercises} exercises
-                    </span>
+        {workouts.length > 0 ? (
+          <div className="space-y-3">
+            {workouts.map((workout) => (
+              <div key={workout.id} className="p-4 bg-secondary/30 rounded-lg border border-border/30">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h4 className="font-medium">{workout.name}</h4>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {format(new Date(workout.date), "MMM dd")}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {workout.duration} min
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Target className="h-3 w-3" />
+                        {workout.exercises} exercises
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {workout.completed ? (
+                      <Badge variant="secondary" className="bg-green-100 text-green-700 mb-1">
+                        Completed
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="mb-1">
+                        Pending
+                      </Badge>
+                    )}
                   </div>
                 </div>
-                <div className="text-right">
-                  {workout.completed ? (
-                    <Badge variant="secondary" className="bg-green-100 text-green-700 mb-1">
-                      Completed
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="mb-1">
-                      Pending
-                    </Badge>
-                  )}
-
-                </div>
               </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
+            <Dumbbell className="h-12 w-12 text-muted-foreground/30" />
+            <div>
+              <h3 className="font-medium">No workouts yet</h3>
+              <p className="text-sm text-muted-foreground">Start your fitness journey by adding your first workout.</p>
             </div>
-          ))}
-        </div>
+            <Link to={ROUTES.USER_ADD_WORKOUT}>
+              <Button size="sm">Add Workout</Button>
+            </Link>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -381,7 +396,7 @@ const UserDashboard: React.FC = () => {
         const recentWorkoutsData = await getRecentWorkouts();
         // Map backend workout data to frontend interface
 
-        const mappedWorkouts = recentWorkoutsData.sessions.map((session: IBackendSession) => {
+        const mappedWorkouts = (recentWorkoutsData?.sessions || []).map((session: IBackendSession) => {
           // Calculate duration from exercises if possible, or use time, or default
           // Assuming time is start time, we don't have end time easily here unless traversing exercises timeTaken
           const totalDuration = session.exercises.reduce((acc: number, ex) => acc + (ex.timeTaken || 0), 0) / 60; // Convert seconds to minutes if timeTaken is in seconds, need to verify unit. 

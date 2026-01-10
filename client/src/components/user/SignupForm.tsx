@@ -96,12 +96,13 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       });
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to send OTP");
+      console.log('err', err)
     }
   }
 
   const handleGoogleSuccess = (user: string) => {
     dispatch(login(user));
-    navigate("/home");
+    navigate("/complete-profile");
   };
 
   const handleGoogleError = (error: any) => {
