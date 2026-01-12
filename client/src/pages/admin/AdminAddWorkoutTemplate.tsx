@@ -41,7 +41,7 @@ const WorkoutTemplateForm = () => {
                 try {
                     const response = await API.get(`/template/workout/${id}`);
                     setFormData(response.data);
-                } catch (error) {
+                } catch (error: unknown) {
                     console.error("Error fetching template:", error);
                     toast.error("Failed to load template");
                 }
@@ -134,7 +134,7 @@ const WorkoutTemplateForm = () => {
         });
     };
 
-    const updateExercise = (dayIndex: number, exIndex: number, field: keyof IExercise, value: any) => {
+    const updateExercise = <K extends keyof IExercise>(dayIndex: number, exIndex: number, field: K, value: IExercise[K]) => {
         setFormData(prev => {
             const newDays = [...prev.days];
             newDays[dayIndex].exercises[exIndex] = { ...newDays[dayIndex].exercises[exIndex], [field]: value };
@@ -162,7 +162,7 @@ const WorkoutTemplateForm = () => {
                 toast.success("Template created successfully");
             }
             navigate("/admin/templates");
-        } catch (error) {
+        } catch (error: unknown) {
             toast.error("Failed to save template");
         } finally {
             setSaving(false);
@@ -244,7 +244,10 @@ const WorkoutTemplateForm = () => {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-slate-400">Difficulty</label>
-                                        <Select value={formData.difficulty} onValueChange={(v: any) => setFormData(p => ({ ...p, difficulty: v }))}>
+                                        <Select
+                                            value={formData.difficulty}
+                                            onValueChange={(v: 'Beginner' | 'Intermediate' | 'Advanced') => setFormData(p => ({ ...p, difficulty: v }))}
+                                        >
                                             <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
                                                 <SelectValue placeholder="Difficulty" />
                                             </SelectTrigger>

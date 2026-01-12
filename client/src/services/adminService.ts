@@ -126,3 +126,13 @@ export const getDashboardGraphData = async (filter: 'day' | 'week' | 'month' | '
   const res = await API.get(`/admin/dashboard-graph?filter=${filter}&type=${type}`);
   return res.data;
 };
+
+export const getTrainerReviews = async (trainerId: string, page: number = 1, limit: number = 8, search: string = "") => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    search
+  });
+  const res = await API.get(`/admin/trainers/${trainerId}/reviews?${params.toString()}`);
+  return res.data;
+};

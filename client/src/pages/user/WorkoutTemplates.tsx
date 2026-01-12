@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -10,16 +10,18 @@ import { getWorkoutTemplates, startWorkoutTemplate, stopWorkoutTemplate } from "
 import { toast } from "react-toastify";
 import { useSelector, useDispatch } from "react-redux";
 import { updateUser } from "@/redux/slices/userAuthSlice";
+import type { IWorkoutTemplate } from "@/interfaces/template/IWorkoutTemplate";
+import type { RootState } from "@/redux/store";
 
 export default function WorkoutTemplates() {
-  const [templates, setTemplates] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<IWorkoutTemplate[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<IWorkoutTemplate | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
 
-  const user = useSelector((state: any) => state.userAuth.user);
+  const user = useSelector((state: RootState) => state.userAuth.user);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -160,11 +162,11 @@ export default function WorkoutTemplates() {
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent z-10"></div>
                   <img
                     src={template.image || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"}
-                    alt={template.name}
+                    alt={template.title || template.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute bottom-6 left-6 z-20">
-                    <h3 className="text-2xl font-bold text-white mb-1">{template.name}</h3>
+                    <h3 className="text-2xl font-bold text-white mb-1">{template.title || template.name}</h3>
                     <div className="flex items-center gap-4 text-slate-300 text-sm">
                       <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {template.duration} Days</span>
                       <span className="flex items-center gap-1"><Target className="h-3.5 w-3.5" /> {template.goal}</span>
@@ -310,7 +312,7 @@ export default function WorkoutTemplates() {
           <DialogHeader>
             <DialogTitle>Start Program?</DialogTitle>
             <DialogDescription className="text-slate-400">
-              This will set <strong>{selectedTemplate?.name}</strong> as your active training plan.
+              This will set <strong>{selectedTemplate?.title || selectedTemplate?.name}</strong> as your active training plan.
               {user?.activeWorkoutTemplate && " Your current active program will be stopped."}
             </DialogDescription>
           </DialogHeader>

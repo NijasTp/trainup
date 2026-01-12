@@ -4,7 +4,7 @@ import { useState } from "react"
 import {
     Dumbbell, LayoutDashboard, Settings,
     Shield,
-    FileText, Menu, X, Users, UserCheck, LogOut, DollarSign
+    FileText, Menu, X, Users, UserCheck, LogOut, DollarSign, Star
 } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useDispatch } from "react-redux"
@@ -36,6 +36,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { icon: Users, label: "Users", path: "/admin/users" },
         { icon: UserCheck, label: "Trainers", path: "/admin/trainers" },
         { icon: DollarSign, label: "Transactions", path: "/admin/transactions" },
+        { icon: Star, label: "Ratings", path: "/admin/ratings" },
         { icon: FileText, label: "Templates", path: "/admin/templates" },
     ]
 

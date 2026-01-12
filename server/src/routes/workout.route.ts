@@ -8,20 +8,23 @@ import { authMiddleware, roleMiddleware } from "../middlewares/auth.middleware";
 const router = Router();
 const workoutController = container.get<WorkoutController>(TYPES.WorkoutController);
 
-router.post("/sessions", authMiddleware, workoutController.createSession.bind(workoutController));
+router.post("/sessions", authMiddleware, (req, res, next) => workoutController.createSession(req, res, next));
 router
-  .get("/sessions/:id", authMiddleware, workoutController.getSession.bind(workoutController))
-  .patch("/sessions/:id", authMiddleware, workoutController.updateSession.bind(workoutController))
-  .delete("/sessions/:id", authMiddleware, workoutController.deleteSession.bind(workoutController))
-router.get("/get-sessions", authMiddleware, workoutController.getSessions.bind(workoutController));
+  .get("/sessions/:id", authMiddleware, (req, res, next) => workoutController.getSession(req, res, next))
+  .patch("/sessions/:id", authMiddleware, (req, res, next) => workoutController.updateSession(req, res, next))
+  .delete("/sessions/:id", authMiddleware, (req, res, next) => workoutController.deleteSession(req, res, next))
+router.get("/get-sessions", authMiddleware, (req, res, next) => workoutController.getSessions(req, res, next));
 
-router.post("/days", authMiddleware, workoutController.createOrGetDay.bind(workoutController));
-router.post("/days/:date/sessions", authMiddleware, workoutController.addSessionToDay.bind(workoutController));
-router.get("/days/:date", authMiddleware, workoutController.getDay.bind(workoutController));
-router.get("/trainer-get-days/:date", authMiddleware, workoutController.trainerGetDay.bind(workoutController));
+router.post("/days", authMiddleware, (req, res, next) => workoutController.createOrGetDay(req, res, next));
+router.post("/days/:date/sessions", authMiddleware, (req, res, next) => workoutController.addSessionToDay(req, res, next));
+router.get("/days/:date", authMiddleware, (req, res, next) => workoutController.getDay(req, res, next));
+router.get("/trainer-get-days/:date", authMiddleware, (req, res, next) => workoutController.trainerGetDay(req, res, next));
 
 router.post(
-  "/trainer-create-workout-session", authMiddleware, roleMiddleware(["trainer"]), workoutController.trainerCreateSession.bind(workoutController)
+  "/trainer-create-workout-session",
+  authMiddleware,
+  roleMiddleware(["trainer"]),
+  (req, res, next) => workoutController.trainerCreateSession(req, res, next)
 );
 
 export default router;

@@ -135,8 +135,9 @@ export default function Diets() {
     try {
       await markEaten(now.toISOString().split('T')[0], mealId)
       toast.success("Meal marked as eaten!");
-    } catch (error: any) {
-      toast.error(error.response.data.error || 'Failed to mark meal as eaten');
+    } catch (error: unknown) {
+      const err = error as any;
+      toast.error(err.response?.data?.error || 'Failed to mark meal as eaten');
     }
   };
 

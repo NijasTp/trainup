@@ -4,7 +4,7 @@ import { format } from 'date-fns'
 import type { IWorkoutSession } from '@/pages/user/UserWorkoutEdit'
 
 export const createWorkoutSession = async (
-  sessionData: any
+  sessionData: Partial<IWorkoutSession>
 ) => {
   const res = await API.post('/workout/sessions', sessionData)
   return res.data
@@ -35,7 +35,7 @@ export const fetchAdminWorkoutSessions = async () => {
   return res.data
 }
 
-export const getAllSessions = async () => { 
+export const getAllSessions = async () => {
   const res = await API.get('/workout/get-sessions', {
     params: {
       limit: 1000

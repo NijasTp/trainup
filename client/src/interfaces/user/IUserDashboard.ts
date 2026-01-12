@@ -34,7 +34,17 @@ export interface WeightChartProps {
     weightData: WeightEntry[];
 }
 
-export interface TransformationWidgetProps { }
+export interface ProgressData {
+    photos: string[];
+    date: string;
+}
+
+export interface TransformationData {
+    first: ProgressData | null;
+    latest: ProgressData | null;
+}
+
+export type TransformationWidgetProps = object;
 
 export interface RecentWorkoutsProps {
     workouts: Workout[];

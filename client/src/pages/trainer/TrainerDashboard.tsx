@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users,
@@ -53,25 +53,25 @@ export default function TrainerDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    document.title = "TrainUp - Dashboard";
-    fetchDashboardStats();
-  }, []);
-
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await API.get("/trainer/dashboard");
       setStats(response.data);
       setIsLoading(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to fetch dashboard stats:", err);
       setError("Failed to load dashboard data");
       toast.error("Failed to load dashboard data");
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    document.title = "TrainUp - Dashboard";
+    fetchDashboardStats();
+  }, [fetchDashboardStats]);
 
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {

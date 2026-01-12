@@ -1,6 +1,6 @@
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,14 +26,8 @@ export default function TrainerClients() {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
   const limit = 10
 
-  useEffect(() => {
-    document.title = "TrainUp - My Clients"
-    document.title = "TrainUp - My Clients"
-    fetchClients()
-    fetchUnreadCounts()
-  }, [page, search, planFilter])
 
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
@@ -48,9 +42,9 @@ export default function TrainerClients() {
       toast.error("Failed to load clients")
       setIsLoading(false)
     }
-  }
+  }, [page, search, planFilter])
 
-  const fetchUnreadCounts = async () => {
+  const fetchUnreadCounts = useCallback(async () => {
     try {
       const { data } = await API.get<{ counts: { senderId: string; count: number }[] }>("/trainer/chat/unread-counts");
       const countsMap: Record<string, number> = {};
@@ -61,7 +55,13 @@ export default function TrainerClients() {
     } catch (err) {
       console.error("Failed to fetch unread counts");
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    document.title = "TrainUp - My Clients"
+    fetchClients()
+    fetchUnreadCounts()
+  }, [fetchClients, fetchUnreadCounts])
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)

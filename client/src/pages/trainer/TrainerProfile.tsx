@@ -135,7 +135,7 @@ export default function TrainerProfile() {
 
                     <div className="flex items-center space-x-2">
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span>₹{profile.price}/month</span>
+                      <span>₹{profile.price.basic}/month</span>
                     </div>
                   </div>
                 </div>
@@ -193,8 +193,8 @@ export default function TrainerProfile() {
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground">Monthly Rate</p>
-                <p className="font-medium text-foreground">₹{profile.price}</p>
+                <p className="text-sm text-muted-foreground">Monthly Rate (Basic)</p>
+                <p className="font-medium text-foreground">₹{profile.price.basic}</p>
               </div>
 
               <div>

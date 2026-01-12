@@ -21,6 +21,7 @@ router.get("/trainers", authMiddleware, roleMiddleware(['admin']), adminControll
 router.patch("/trainers/:id/status", authMiddleware, roleMiddleware(['admin']), adminController.updateTrainer.bind(adminController));
 router.get("/trainers/:id", authMiddleware, roleMiddleware(['admin']), adminController.getTrainerById.bind(adminController));
 router.get("/trainers/:id/application", authMiddleware, roleMiddleware(['admin']), adminController.getTrainerApplication.bind(adminController));
+router.get("/trainers/:id/reviews", authMiddleware, roleMiddleware(['admin']), adminController.getTrainerReviews.bind(adminController));
 
 
 router.get("/users", authMiddleware, roleMiddleware(['admin']), adminController.getAllUsers.bind(adminController));

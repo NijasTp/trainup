@@ -78,4 +78,5 @@ export const ROUTES = {
   ADMIN_ADD_DIET_TEMPLATE: "/admin/templates/new/diet",
   ADMIN_EDIT_TEMPLATE: "/admin/templates/:id/:template/edit",
   ADMIN_TRANSACTIONS: "/admin/transactions",
+  ADMIN_RATINGS: "/admin/ratings",
 };

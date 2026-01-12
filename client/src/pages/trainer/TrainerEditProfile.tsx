@@ -69,9 +69,26 @@ export default function TrainerEditProfile() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-    const { register, handleSubmit, setValue, formState: { errors } } = useForm<ProfileFormData>({
+    const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<ProfileFormData>({
         resolver: zodResolver(profileSchema),
+        defaultValues: {
+            name: "",
+            phone: "",
+            bio: "",
+            location: "",
+            specialization: "",
+            experience: "",
+            price: {
+                basic: "",
+                premium: "",
+                pro: "",
+            }
+        }
     });
+
+    const specializationValue = watch("specialization");
+    const [isOtherSpecialization, setIsOtherSpecialization] = useState(false);
+    const [otherSpecializationValue, setOtherSpecializationValue] = useState("");
 
     useEffect(() => {
         fetchProfile();
@@ -82,21 +99,48 @@ export default function TrainerEditProfile() {
             const data = await getTrainerDetails();
             const trainer = data.trainer;
 
-            setValue("name", trainer.name);
-            setValue("phone", trainer.phone);
-            setValue("bio", trainer.bio || "");
-            setValue("location", trainer.location || "");
-            setValue("specialization", trainer.specialization || "");
-            setValue("experience", trainer.experience || "");
-            setValue("price.basic", trainer.price?.basic?.toString() || "");
-            setValue("price.premium", trainer.price?.premium?.toString() || "");
-            setValue("price.pro", trainer.price?.pro?.toString() || "");
+            if (!trainer) {
+                toast.error("Trainer data not found");
+                return;
+            }
 
-            setProfileImagePreview(trainer.profileImage || "");
+            // Robust reset with string conversion for numeric values
+            reset({
+                name: trainer.name || "",
+                phone: trainer.phone || "",
+                bio: trainer.bio || "",
+                location: trainer.location || "",
+                specialization: trainer.specialization || "",
+                experience: trainer.experience ? String(trainer.experience).replace(/[^0-9]/g, '') : "",
+                price: {
+                    basic: trainer.price?.basic != null ? String(trainer.price.basic) : "",
+                    premium: trainer.price?.premium != null ? String(trainer.price.premium) : "",
+                    pro: trainer.price?.pro != null ? String(trainer.price.pro) : "",
+                }
+            });
+
+            // Handle "Other" specialization logic
+            const predefinedSpecializations = [
+                "Weight Training", "Yoga", "Pilates", "Cardio",
+                "CrossFit", "Martial Arts", "Zumba"
+            ];
+
+            if (trainer.specialization && !predefinedSpecializations.includes(trainer.specialization)) {
+                setValue("specialization", "Other");
+                setIsOtherSpecialization(true);
+                setOtherSpecializationValue(trainer.specialization);
+            } else {
+                setIsOtherSpecialization(false);
+                setOtherSpecializationValue("");
+            }
+
+            if (trainer.profileImage) {
+                setProfileImagePreview(trainer.profileImage);
+            }
             setIsLoading(false);
         } catch (error) {
             console.error("Error fetching profile:", error);
-            toast.error("Failed to load profile");
+            toast.error("Failed to load profile details");
             setIsLoading(false);
         }
     };
@@ -151,13 +195,23 @@ export default function TrainerEditProfile() {
         setIsSaving(true);
         try {
             const formData = new FormData();
-            Object.entries(data).forEach(([key, value]) => {
-                if (key === 'price') {
-                    formData.append(key, JSON.stringify(value));
-                } else if (value) {
-                    formData.append(key, value as string);
-                }
-            });
+
+            // Explicitly append fields to match TrainerApply structure expectations
+            formData.append("name", data.name);
+            formData.append("phone", data.phone);
+            formData.append("bio", data.bio || "");
+            formData.append("location", data.location);
+
+            // Handle specialization submission
+            const finalSpecialization = data.specialization === "Other" ? otherSpecializationValue : data.specialization;
+            formData.append("specialization", finalSpecialization);
+
+            formData.append("experience", data.experience);
+            formData.append("price", JSON.stringify({
+                basic: Number(data.price.basic),
+                premium: Number(data.price.premium),
+                pro: Number(data.price.pro)
+            }));
 
             if (profileImageFile) {
                 formData.append("profileImage", profileImageFile);
@@ -337,27 +391,56 @@ export default function TrainerEditProfile() {
                             <CardContent className="grid gap-6 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label>Specialization</Label>
-                                    <div className="relative">
-                                        <Award className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input {...register("specialization")} className="pl-9" placeholder="e.g. Yoga, HIIT" />
-                                    </div>
+                                    <Select
+                                        onValueChange={(val) => {
+                                            setValue("specialization", val, { shouldValidate: true });
+                                            setIsOtherSpecialization(val === "Other");
+                                        }}
+                                        value={specializationValue}
+                                    >
+                                        <SelectTrigger>
+                                            <div className="flex items-center">
+                                                <Award className="mr-2 h-4 w-4 text-muted-foreground" />
+                                                <SelectValue placeholder="Select specialization" />
+                                            </div>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Weight Training">Weight Training</SelectItem>
+                                            <SelectItem value="Yoga">Yoga</SelectItem>
+                                            <SelectItem value="Pilates">Pilates</SelectItem>
+                                            <SelectItem value="Cardio">Cardio</SelectItem>
+                                            <SelectItem value="CrossFit">CrossFit</SelectItem>
+                                            <SelectItem value="Martial Arts">Martial Arts</SelectItem>
+                                            <SelectItem value="Zumba">Zumba</SelectItem>
+                                            <SelectItem value="Other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+
+                                    {isOtherSpecialization && (
+                                        <div className="mt-2 relative">
+                                            <Award className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                value={otherSpecializationValue}
+                                                onChange={(e) => setOtherSpecializationValue(e.target.value)}
+                                                placeholder="Enter your specialization"
+                                                className="pl-9"
+                                            />
+                                        </div>
+                                    )}
                                     {errors.specialization && <p className="text-xs text-destructive">{errors.specialization.message}</p>}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>Experience</Label>
-                                    <Select onValueChange={(val) => setValue("experience", val)} defaultValue={undefined}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select experience" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Less than 1 year">Less than 1 year</SelectItem>
-                                            <SelectItem value="1–3 years">1–3 years</SelectItem>
-                                            <SelectItem value="3–5 years">3–5 years</SelectItem>
-                                            <SelectItem value="5–10 years">5–10 years</SelectItem>
-                                            <SelectItem value="10+ years">10+ years</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <Label>Experience (Years)</Label>
+                                    <div className="relative">
+                                        <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            {...register("experience")}
+                                            type="number"
+                                            className="pl-9"
+                                            placeholder="e.g. 5"
+                                        />
+                                    </div>
                                     {errors.experience && <p className="text-xs text-destructive">{errors.experience.message}</p>}
                                 </div>
 

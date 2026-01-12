@@ -7,7 +7,11 @@ export interface TrainerProfile {
     location: string;
     specialization: string;
     experience: string;
-    price: string;
+    price: {
+        basic: number;
+        premium: number;
+        pro: number;
+    };
     rating: number;
     profileImage: string;
     certificate: string;

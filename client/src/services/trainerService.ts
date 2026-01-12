@@ -24,7 +24,12 @@ export const updateTrainerProfile = async (data: FormData) => {
   return res.data;
 };
 
-export const changeTrainerPassword = async (data: any) => {
+export interface ITrainerPasswordData {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export const changeTrainerPassword = async (data: ITrainerPasswordData) => {
   const res = await API.post('/trainer/change-password', data);
   return res.data;
 };

@@ -190,7 +190,16 @@ export class TrainerAuthController {
     async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const trainerId = (req.user as JwtPayload).id
-            const updateData = req.body
+            const updateData = { ...req.body }
+
+            if (typeof updateData.price === 'string') {
+                try {
+                    updateData.price = JSON.parse(updateData.price)
+                } catch (err) {
+                    logger.error('Error parsing price in updateProfile:', err)
+                }
+            }
+
             let profileImage: UploadedFile | undefined
             if (req.files?.profileImage) {
                 profileImage = Array.isArray(req.files.profileImage) ? req.files.profileImage[0] : (req.files.profileImage as UploadedFile)

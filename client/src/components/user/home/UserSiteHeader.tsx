@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useCallback } from "react"
 import { logout } from "@/redux/slices/userAuthSlice"
 import type { RootState } from "@/redux/store"
 import { useDispatch, useSelector } from "react-redux"
@@ -70,7 +70,7 @@ export const SiteHeader: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true)
       const { data } = await API.get<{
@@ -85,9 +85,9 @@ export const SiteHeader: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchChatUnread = async () => {
+  const fetchChatUnread = useCallback(async () => {
     try {
       const { data } = await API.get<{ counts: { senderId: string; count: number }[] }>("/user/chat/unread-counts")
       const totalUnread = data.counts.reduce((acc, curr) => acc + curr.count, 0)
@@ -95,7 +95,7 @@ export const SiteHeader: React.FC = () => {
     } catch (err) {
       console.error("Failed to load chat unread counts")
     }
-  }
+  }, [])
 
   const markAsRead = async (id: string) => {
     try {
@@ -176,7 +176,7 @@ export const SiteHeader: React.FC = () => {
       fetchChatUnread();
     }, 30_000)
     return () => clearInterval(interval)
-  }, [user, navigate, location.pathname])
+  }, [user, navigate, fetchNotifications, fetchChatUnread])
 
   const handleSignOut = async () => {
     dispatch(logout())

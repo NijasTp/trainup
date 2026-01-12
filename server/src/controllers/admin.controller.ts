@@ -7,6 +7,7 @@ import { IUserService } from '../core/interfaces/services/IUserService';
 import { PaginatedTrainers } from '../core/interfaces/services/ITrainerService';
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService';
 import { IGymService } from '../core/interfaces/services/IGymService';
+import { IReviewService } from '../core/interfaces/services/IReviewService';
 import { STATUS_CODE } from '../constants/status';
 import {
   AdminLoginRequestDto,
@@ -30,7 +31,8 @@ export class AdminController {
     @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
     @inject(TYPES.IUserService) private _userService: IUserService,
     @inject(TYPES.IJwtService) private _jwtService: IJwtService,
-    @inject(TYPES.IGymService) private _gymService: IGymService
+    @inject(TYPES.IGymService) private _gymService: IGymService,
+    @inject(TYPES.IReviewService) private _reviewService: IReviewService
   ) { }
 
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -98,6 +100,20 @@ export class AdminController {
       res.status(STATUS_CODE.OK).json(application);
     } catch (err) {
       logger.error('Error in getTrainerApplication:', err);
+      next(err);
+    }
+  }
+
+  async getTrainerReviews(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const trainerId = req.params.id;
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 8;
+      const search = String(req.query.search || '');
+
+      const result = await this._reviewService.getReviews(trainerId, page, limit, search);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
       next(err);
     }
   }

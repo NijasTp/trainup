@@ -43,9 +43,10 @@ export default function Transactions() {
       const response = await API.get(`/payment/transactions?${params}`);
       setTransactions(response.data.transactions || []);
       setTotalPages(response.data.totalPages || 1);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to fetch transactions:", err);
-      toast.error("Failed to load transactions");
+      const errorMessage = err instanceof Error ? (err as any).response?.data?.error || err.message : "Failed to load transactions";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

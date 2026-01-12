@@ -125,4 +125,15 @@ export class TrainerClientController {
             next(err)
         }
     }
+
+    async getConversations(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const trainerId = (req.user as JwtPayload).id
+            const conversations = await this._messageService.getConversations(trainerId)
+            res.status(STATUS_CODE.OK).json({ conversations })
+        } catch (err) {
+            logger.error('Error fetching conversations:', err)
+            next(err)
+        }
+    }
 }

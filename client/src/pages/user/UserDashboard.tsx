@@ -192,8 +192,10 @@ import { Image as ImageIcon } from "lucide-react";
 
 
 
+import type { TransformationData } from "@/interfaces/user/IUserDashboard";
+
 const TransformationWidget: React.FC<TransformationWidgetProps> = () => {
-  const [data, setData] = useState<{ first: any, latest: any } | null>(null);
+  const [data, setData] = useState<TransformationData | null>(null);
 
   useEffect(() => {
     compareProgress().then(setData).catch(console.error);
@@ -347,7 +349,7 @@ const UserDashboard: React.FC = () => {
         const weightHistory = weightHistoryResponse.weightHistory || [];
 
         const validHistory = weightHistory.filter(
-          (entry: any) => entry && typeof entry.weight === "number" && entry.date && !isNaN(new Date(entry.date).getTime())
+          (entry: { weight: number; date: string }) => entry && typeof entry.weight === "number" && entry.date && !isNaN(new Date(entry.date).getTime())
         );
 
         const aggregatedHistory: { [key: string]: { weight: number; date: string } } = {};
@@ -414,9 +416,10 @@ const UserDashboard: React.FC = () => {
           };
         });
         setRecentWorkouts(mappedWorkouts);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error fetching data:", error);
-        toast.error(error.response?.data?.error || "Failed to load dashboard data");
+        const errorMessage = error instanceof Error ? (error as any).response?.data?.error || error.message : "Failed to load dashboard data";
+        toast.error(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -446,9 +449,10 @@ const UserDashboard: React.FC = () => {
       setIsWeightLoggedToday(true);
       toast.success(response.message || "Weight logged successfully!");
       setNewWeight("");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error logging weight:", error);
-      toast.error(error.response?.data?.error || "Failed to log weight");
+      const errorMessage = error instanceof Error ? (error as any).response?.data?.error || error.message : "Failed to log weight";
+      toast.error(errorMessage);
     }
   };
 

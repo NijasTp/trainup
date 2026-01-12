@@ -31,10 +31,12 @@ export interface UserType {
   gender?: string | null;
   height?: number | null;
   weight?: number | null;
-  goalWeight?: number | null; 
+  goalWeight?: number | null;
   isBanned?: boolean;
   isPrivate?: boolean;
   assignedTrainer?: string;
+  activeWorkoutTemplate?: string | null;
+  activeDietTemplate?: string | null;
   isVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -76,11 +78,13 @@ export const userAuthSlice = createSlice({
         goals: payload.goals || [],
         age: payload.age || null,
         height: payload.height || null,
-        weight: payload.todaysWeight || null, 
-        goalWeight: payload.goalWeight || null, 
+        weight: payload.todaysWeight || null,
+        goalWeight: payload.goalWeight || null,
         isBanned: payload.isBanned || false,
         isPrivate: payload.isPrivate || false,
         isVerified: payload.isVerified || false,
+        activeWorkoutTemplate: payload.activeWorkoutTemplate || null,
+        activeDietTemplate: payload.activeDietTemplate || null,
         createdAt: payload.createdAt,
         updatedAt: payload.updatedAt,
       };

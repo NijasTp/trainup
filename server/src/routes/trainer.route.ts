@@ -1,4 +1,4 @@
-   import { Router } from "express";
+import { Router } from "express";
 import container from "../core/di/inversify.config";
 import TYPES from "../core/types/types";
 import { TrainerAuthController } from "../controllers/trainer.auth.controller";
@@ -64,5 +64,6 @@ router.get('/chat/unread-counts', authMiddleware, roleMiddleware(['trainer']), t
 router.put('/chat/read/:clientId', authMiddleware, roleMiddleware(['trainer']), trainerClientController.markMessagesAsRead.bind(trainerClientController));
 router.get('/user-plan/:id', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getUserPlan.bind(trainerClientController));
 router.post('/chat/upload', authMiddleware, roleMiddleware(['trainer']), trainerClientController.uploadChatFile.bind(trainerClientController));
+router.get('/chats', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getConversations.bind(trainerClientController));
 
 export default router;

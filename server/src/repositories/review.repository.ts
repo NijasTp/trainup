@@ -9,17 +9,25 @@ export class ReviewRepository {
         return review;
     }
 
-    async findByTargetId(targetId: string, skip: number, limit: number): Promise<IReview[]> {
-        return await Review.find({ targetId })
-            .populate('userId', 'name profilePicture')
+    async findByTargetId(targetId: string, skip: number, limit: number, search: string = ''): Promise<IReview[]> {
+        const query: FilterQuery<IReview> = { targetId: new mongoose.Types.ObjectId(targetId) };
+        if (search) {
+            query.comment = { $regex: search, $options: 'i' };
+        }
+        return await Review.find(query)
+            .populate('userId', 'name profilePicture firstName lastName')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
     }
 
-    async countByTargetId(targetId: string): Promise<number> {
-        return await Review.countDocuments({ targetId });
+    async countByTargetId(targetId: string, search: string = ''): Promise<number> {
+        const query: FilterQuery<IReview> = { targetId: new mongoose.Types.ObjectId(targetId) };
+        if (search) {
+            query.comment = { $regex: search, $options: 'i' };
+        }
+        return await Review.countDocuments(query);
     }
 
     async findOne(filter: FilterQuery<IReview>): Promise<IReview | null> {

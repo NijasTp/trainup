@@ -53,13 +53,14 @@ const TrainerManagement = () => {
         );
         setResponse(res as TrainerResponse);
         setError(null);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as any;
         console.error("Error fetching trainers:", {
-          error: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
+          error: err.message,
+          response: err.response?.data,
+          status: err.response?.status,
         });
-        setError(error.response?.data?.message || "Failed to fetch trainers. Please try again.");
+        setError(err.response?.data?.message || "Failed to fetch trainers. Please try again.");
         setResponse({ trainers: [], total: 0, page: 1, totalPages: 1 });
       } finally {
         setLoading(false);

@@ -75,4 +75,79 @@ export class MessageRepository implements IMessageRepository {
       count: item.count
     }));
   }
+
+  async getConversations(userId: string): Promise<any[]> {
+    const userObjectId = new Types.ObjectId(userId);
+
+    return await MessageModel.aggregate([
+      {
+        $match: {
+          $or: [
+            { senderId: userObjectId },
+            { receiverId: userObjectId }
+          ]
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $eq: ["$senderId", userObjectId] },
+              "$receiverId",
+              "$senderId"
+            ]
+          },
+          lastMessage: { $first: "$$ROOT" }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "userDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$userDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: "messages",
+          let: { partnerId: "$_id", currentUserId: userObjectId },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$senderId", "$$partnerId"] },
+                    { $eq: ["$receiverId", "$$currentUserId"] },
+                    { $eq: ["$readStatus", false] }
+                  ]
+                }
+              }
+            },
+            { $count: "count" }
+          ],
+          as: "unreadDetails"
+        }
+      },
+      {
+        $project: {
+          partnerId: "$_id",
+          lastMessage: 1,
+          unreadCount: { $ifNull: [{ $arrayElemAt: ["$unreadDetails.count", 0] }, 0] },
+          "userDetails.name": 1,
+          "userDetails.profileImage": { $ifNull: ["$userDetails.profileImage", "/placeholder.svg"] }
+        }
+      },
+      { $sort: { "lastMessage.createdAt": -1 } }
+    ]);
+  }
 }

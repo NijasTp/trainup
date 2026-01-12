@@ -1,4 +1,4 @@
-import { BrowserRouter as _, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { ROUTES } from './constants/routes';
 import Login from './pages/user/Login';
 import Signup from './pages/user/Signup';
@@ -72,6 +72,7 @@ import UserNotifications from './pages/user/UserNotifications';
 import TrainerNotifications from './pages/trainer/TrainerNotifications';
 import ProgressPage from './pages/user/Progress';
 import AdminTransactions from './pages/admin/AdminTransactions';
+import AdminRatingManagement from './pages/admin/AdminRatingManagement';
 
 function App() {
   return (
@@ -151,6 +152,7 @@ function App() {
         <Route path={ROUTES.ADMIN_USERS} element={<AdminProtectedRoute><UserManagement /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_USER_DETAILS} element={<AdminProtectedRoute><IndividualUser /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_TEMPLATE_MANAGEMENT} element={<AdminProtectedRoute><TemplateManagement /></AdminProtectedRoute>} />
+        <Route path={ROUTES.ADMIN_RATINGS} element={<AdminProtectedRoute><AdminRatingManagement /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_ADD_WORKOUT_TEMPLATE} element={<AdminProtectedRoute><WorkoutTemplateForm /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_ADD_DIET_TEMPLATE} element={<AdminProtectedRoute><NewDietTemplate /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_EDIT_TEMPLATE} element={<AdminProtectedRoute><EditTemplate /></AdminProtectedRoute>} />
