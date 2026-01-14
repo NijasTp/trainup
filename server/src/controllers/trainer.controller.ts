@@ -277,7 +277,16 @@ export class TrainerController {
           STATUS_CODE.BAD_REQUEST
         )
 
-      const priceData = typeof dto.price === 'string' ? JSON.parse(dto.price) : dto.price;
+      let priceData = typeof dto.price === 'string' ? JSON.parse(dto.price) : dto.price;
+
+      // Ensure price values are numbers
+      if (priceData && typeof priceData === 'object') {
+        priceData = {
+          basic: Number(priceData.basic) || 0,
+          premium: Number(priceData.premium) || 0,
+          pro: Number(priceData.pro) || 0
+        };
+      }
 
       const trainerData = {
         name: dto.fullName,
@@ -323,7 +332,16 @@ export class TrainerController {
           STATUS_CODE.BAD_REQUEST
         )
 
-      const priceData = typeof dto.price === 'string' ? JSON.parse(dto.price) : dto.price;
+      let priceData = typeof dto.price === 'string' ? JSON.parse(dto.price) : dto.price;
+
+      // Ensure price values are numbers
+      if (priceData && typeof priceData === 'object') {
+        priceData = {
+          basic: Number(priceData.basic) || 0,
+          premium: Number(priceData.premium) || 0,
+          pro: Number(priceData.pro) || 0
+        };
+      }
 
       const data = {
         name: dto.fullName,

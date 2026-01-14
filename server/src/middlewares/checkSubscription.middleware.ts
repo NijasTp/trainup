@@ -30,22 +30,28 @@ export const checkSubscriptionExpiry = async (
     if (!user.assignedTrainer) return next();
 
     const trainerId = user.assignedTrainer.toString();
-    const trainer = await trainerService.getTrainerById(trainerId);
-
+    let trainer = null;
     let shouldCancel = false;
     let reason = "";
 
-    if (!trainer) {
+    try {
+      trainer = await trainerService.getTrainerById(trainerId);
+    } catch (error) {
+      logger.error(`Trainer ${trainerId} not found for user ${userId} during subscription check`);
       shouldCancel = true;
       reason = "Trainer no longer exists";
-    } else if (trainer.isBanned) {
-      shouldCancel = true;
-      reason = "Trainer has been banned";
-    } else {
-      const userPlan = await UserPlanModel.findOne({ userId, trainerId });
-      if (userPlan && userPlan.expiryDate && new Date() > userPlan.expiryDate) {
+    }
+
+    if (!shouldCancel) {
+      if (trainer && trainer.isBanned) {
         shouldCancel = true;
-        reason = "Subscription has expired";
+        reason = "Trainer has been banned";
+      } else {
+        const userPlan = await UserPlanModel.findOne({ userId, trainerId });
+        if (userPlan && userPlan.expiryDate && new Date() > userPlan.expiryDate) {
+          shouldCancel = true;
+          reason = "Subscription has expired";
+        }
       }
     }
 

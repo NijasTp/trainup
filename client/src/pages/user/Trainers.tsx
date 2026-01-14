@@ -368,7 +368,7 @@ function TrainerCard({ trainer, index }: { trainer: Trainer; index: number }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-lg font-bold text-primary">₹{trainer.price.basic}</span>
+              <span className="text-lg font-bold text-primary">₹{trainer.price?.basic || '0'}</span>
             </div>
             <Button
               size="sm"

@@ -588,18 +588,64 @@ export default function TrainerPage() {
                 </div>
 
                 <div className="space-y-6">
-                    {/* Pricing Card */}
-                    <SpotlightCard className="p-6">
-                        <div className="space-y-6">
-                            <h3 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                                <Crown className="h-6 w-6 text-primary" />
-                                Plans Starting From
-                            </h3>
-                            <div className="text-center p-6 bg-gradient-to-br from-primary/5 via-primary/3 to-accent/5 rounded-xl border border-primary/10">
-                                <div className="text-4xl font-bold text-primary mb-2">₹{trainer.price.basic.toLocaleString()}</div>
-                                <p className="text-muted-foreground font-medium">per month</p>
-                                <p className="text-sm text-muted-foreground/70 mt-2">Transform your fitness journey</p>
-                            </div>
+                    {/* Pricing Section */}
+                    <div className="space-y-6">
+                        <h3 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                            <Crown className="h-6 w-6 text-primary" />
+                            Subscription Plans
+                        </h3>
+
+                        <div className="space-y-4">
+                            {[
+                                { type: 'basic', label: 'Basic', price: trainer.price?.basic, color: 'blue' },
+                                { type: 'premium', label: 'Premium', price: trainer.price?.premium, color: 'amber', popular: true },
+                                { type: 'pro', label: 'Pro', price: trainer.price?.pro, color: 'purple' }
+                            ].map((plan) => (
+                                <div
+                                    key={plan.type}
+                                    className={`relative p-5 rounded-xl border transition-all duration-300 ${plan.popular
+                                        ? 'bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-primary/30 shadow-lg shadow-primary/5'
+                                        : 'bg-card border-border/50 hover:border-primary/20'
+                                        }`}
+                                >
+                                    {plan.popular && (
+                                        <div className="absolute -top-3 right-4 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full shadow-lg">
+                                            MOST POPULAR
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <h4 className="font-bold text-lg">{plan.label}</h4>
+                                            <p className="text-xs text-muted-foreground">Per month subscription</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-2xl font-bold text-primary">₹{(Number(plan.price) || 0).toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                    <ul className="space-y-2 mt-4">
+                                        {plan.type === 'basic' && (
+                                            <>
+                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Personal workout plans</li>
+                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Custom diet plans</li>
+                                            </>
+                                        )}
+                                        {plan.type === 'premium' && (
+                                            <>
+                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Everything in Basic</li>
+                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Limited chat support</li>
+                                            </>
+                                        )}
+                                        {plan.type === 'pro' && (
+                                            <>
+                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Everything in Premium</li>
+                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Unlimited chat & calls</li>
+                                            </>
+                                        )}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="pt-2">
                             {isSameTrainer ? (
                                 <Button
                                     disabled
@@ -630,7 +676,7 @@ export default function TrainerPage() {
                                 </Button>
                             )}
                         </div>
-                    </SpotlightCard>
+                    </div>
 
                     <SpotlightCard className="p-6">
                         <div className="space-y-6">

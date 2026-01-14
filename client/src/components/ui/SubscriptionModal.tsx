@@ -43,7 +43,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
       title: "Basic",
       subtitle: "Kickstart your journey",
       icon: <Zap className="h-6 w-6 text-blue-500" />,
-      basePrice: prices.basic,
+      basePrice: prices?.basic || 0,
       features: [
         "Personal workout plans",
         "Custom diet plans",
@@ -66,7 +66,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
       title: "Premium",
       subtitle: "Most popular choice",
       icon: <Crown className="h-6 w-6 text-amber-500" />,
-      basePrice: prices.premium,
+      basePrice: prices?.premium || 0,
       features: [
         "Everything in Basic",
         "Limited chat (200 msgs/mo)",
@@ -89,7 +89,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
       title: "Pro",
       subtitle: "Ultimate experience",
       icon: <Star className="h-6 w-6 text-purple-500" />,
-      basePrice: prices.pro,
+      basePrice: prices?.pro || 0,
       features: [
         "Everything in Premium",
         "Unlimited chat access",

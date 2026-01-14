@@ -117,7 +117,17 @@ export class TrainerAuthController {
 
             if (!certificate) throw new AppError(MESSAGES.CERTIFICATE_REQUIRED, STATUS_CODE.BAD_REQUEST)
 
-            const priceData = typeof dto.price === 'string' ? JSON.parse(dto.price) : dto.price
+            let priceData = typeof dto.price === 'string' ? JSON.parse(dto.price) : dto.price
+
+            // Ensure price values are numbers
+            if (priceData && typeof priceData === 'object') {
+                priceData = {
+                    basic: Number(priceData.basic) || 0,
+                    premium: Number(priceData.premium) || 0,
+                    pro: Number(priceData.pro) || 0
+                };
+            }
+
             const trainerData = {
                 name: dto.fullName,
                 email: dto.email,
@@ -153,7 +163,17 @@ export class TrainerAuthController {
             }
             if (!certificate) throw new AppError(MESSAGES.CERTIFICATE_REQUIRED, STATUS_CODE.BAD_REQUEST)
 
-            const priceData = typeof dto.price === 'string' ? JSON.parse(dto.price) : dto.price
+            let priceData = typeof dto.price === 'string' ? JSON.parse(dto.price) : dto.price
+
+            // Ensure price values are numbers
+            if (priceData && typeof priceData === 'object') {
+                priceData = {
+                    basic: Number(priceData.basic) || 0,
+                    premium: Number(priceData.premium) || 0,
+                    pro: Number(priceData.pro) || 0
+                };
+            }
+
             const data = {
                 name: dto.fullName,
                 email: dto.email,
@@ -192,11 +212,22 @@ export class TrainerAuthController {
             const trainerId = (req.user as JwtPayload).id
             const updateData = { ...req.body }
 
-            if (typeof updateData.price === 'string') {
-                try {
-                    updateData.price = JSON.parse(updateData.price)
-                } catch (err) {
-                    logger.error('Error parsing price in updateProfile:', err)
+            if (updateData.price) {
+                if (typeof updateData.price === 'string') {
+                    try {
+                        updateData.price = JSON.parse(updateData.price);
+                    } catch (err) {
+                        logger.error('Error parsing price in updateProfile:', err);
+                    }
+                }
+
+                // Ensure price values are numbers
+                if (updateData.price && typeof updateData.price === 'object') {
+                    updateData.price = {
+                        basic: Number(updateData.price.basic) || 0,
+                        premium: Number(updateData.price.premium) || 0,
+                        pro: Number(updateData.price.pro) || 0
+                    };
                 }
             }
 

@@ -35,9 +35,9 @@ import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 const profileSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     phone: z.string().regex(/^\d{10}$/, "Phone number must be 10 digits"),
-    bio: z.string().min(10, "Bio must be at least 10 characters").optional(),
+    bio: z.string().optional().or(z.literal("")),
     location: z.string().min(2, "Location is required"),
-    specialization: z.string().min(2, "Specialization is required"),
+    specialization: z.string().min(1, "Specialization is required"),
     experience: z.string().min(1, "Experience is required"),
     price: z.object({
         basic: z.string().min(1, "Basic price is required"),

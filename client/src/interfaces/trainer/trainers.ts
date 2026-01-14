@@ -4,9 +4,9 @@ export type Trainer = {
     specialty: string;
     location: string;
     price: {
-        basic: string;
-        premium: string;
-        pro: string;
+        basic: number;
+        premium: number;
+        pro: number;
     };
     rating: number;
     bio: string;
