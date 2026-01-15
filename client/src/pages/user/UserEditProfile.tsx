@@ -762,19 +762,31 @@ export default function EditProfile() {
             <Button
               type="button"
               variant="outline"
-              onClick={currentStep === 1 ? () => navigate('/profile') : prevStep}
+              onClick={(e) => {
+                e.preventDefault();
+                currentStep === 1 ? navigate('/profile') : prevStep();
+              }}
               className="hover:bg-muted/5"
             >
               {currentStep === 1 ? 'Cancel' : 'Previous'}
             </Button>
 
             {currentStep < totalSteps ? (
-              <Button type="button" onClick={nextStep} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button
+                type="button"
+                key="next-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  nextStep();
+                }}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
                 Next <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
               <Button
                 type="submit"
+                key="submit-btn"
                 disabled={isSaving}
                 className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-8"
               >
