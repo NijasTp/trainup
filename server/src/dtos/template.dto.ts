@@ -4,8 +4,6 @@ export class WorkoutTemplateExerciseDto {
     image?: string;
     sets: number;
     reps?: string;
-    time?: string;
-    allowWeight: boolean;
 }
 
 export class WorkoutTemplateDayDto {
@@ -19,7 +17,6 @@ export class CreateWorkoutTemplateRequestDto {
     duration: number;
     goal: string;
     equipment: boolean;
-    bodyType: string;
     days: WorkoutTemplateDayDto[];
 }
 
@@ -67,7 +64,6 @@ export class TemplateQueryDto {
     search?: string;
     goal?: string;
     equipment?: boolean;
-    bodyType?: string;
 }
 
 export class PaginatedWorkoutTemplatesDto {

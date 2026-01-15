@@ -22,7 +22,7 @@ const WorkoutTemplateForm = () => {
         duration: 7,
         goal: "",
         equipment: false,
-        bodyType: "",
+
         days: [],
         difficulty: 'Intermediate'
     });
@@ -117,8 +117,7 @@ const WorkoutTemplateForm = () => {
                 name: exercise.value,
                 image: exercise.data.image_thumbnail ? `https://wger.de${exercise.data.image_thumbnail}` : undefined,
                 sets: 3,
-                reps: "10-12",
-                allowWeight: true
+                reps: "10-12"
             });
             return { ...prev, days: newDays };
         });
@@ -143,7 +142,7 @@ const WorkoutTemplateForm = () => {
     };
 
     const handleSave = async () => {
-        if (!formData.title || !formData.goal || !formData.bodyType) {
+        if (!formData.title || !formData.goal) {
             toast.error("Please fill in all required fields");
             return;
         }
@@ -229,18 +228,19 @@ const WorkoutTemplateForm = () => {
 
                                 <div className="grid md:grid-cols-3 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-400">Body Type</label>
-                                        <Select value={formData.bodyType} onValueChange={(v) => setFormData(p => ({ ...p, bodyType: v }))}>
-                                            <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
-                                                <SelectValue placeholder="Select Type" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                                                <SelectItem value="Ectomorph">Ectomorph</SelectItem>
-                                                <SelectItem value="Mesomorph">Mesomorph</SelectItem>
-                                                <SelectItem value="Endomorph">Endomorph</SelectItem>
-                                                <SelectItem value="General">General</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                        <label className="text-sm font-medium text-slate-400">Equipment</label>
+                                        <div className="flex items-center gap-2 h-10">
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.equipment}
+                                                    onChange={(e) => setFormData(p => ({ ...p, equipment: e.target.checked }))}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                <span className="ms-3 text-sm font-medium text-white">{formData.equipment ? "Required" : "None"}</span>
+                                            </label>
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-slate-400">Difficulty</label>
@@ -295,7 +295,7 @@ const WorkoutTemplateForm = () => {
 
                             <div className="space-y-4">
                                 {formData.days.map((day, dIdx) => (
-                                    <div key={dIdx} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-md">
+                                    <div key={dIdx} className="bg-slate-900 border border-slate-800 rounded-3xl shadow-md">
                                         <div
                                             className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-800/50 transition-colors"
                                             onClick={() => setActiveDayIndex(activeDayIndex === dIdx ? null : dIdx)}
@@ -348,24 +348,7 @@ const WorkoutTemplateForm = () => {
                                                                         className="w-16 h-8 bg-slate-900 border-slate-800"
                                                                     />
                                                                 </div>
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="text-xs text-slate-500">Time:</span>
-                                                                    <Input
-                                                                        placeholder="30s"
-                                                                        value={ex.time}
-                                                                        onChange={(e) => updateExercise(dIdx, eIdx, 'time', e.target.value)}
-                                                                        className="w-20 h-8 bg-slate-900 border-slate-800"
-                                                                    />
-                                                                </div>
-                                                                <div className="flex items-center gap-2">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={ex.allowWeight}
-                                                                        onChange={(e) => updateExercise(dIdx, eIdx, 'allowWeight', e.target.checked)}
-                                                                        className="h-4 w-4 rounded accent-primary"
-                                                                    />
-                                                                    <span className="text-xs text-slate-500">Weight</span>
-                                                                </div>
+
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="icon"
@@ -439,8 +422,8 @@ const WorkoutTemplateForm = () => {
                                     </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-400">Target Type</span>
-                                    <span className="text-primary font-bold">{formData.bodyType || 'Not set'}</span>
+                                    <span className="text-slate-400">Equipment</span>
+                                    <span className="text-primary font-bold">{formData.equipment ? 'Required' : 'None'}</span>
                                 </div>
                             </div>
 

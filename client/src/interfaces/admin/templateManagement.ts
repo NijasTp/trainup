@@ -11,9 +11,11 @@ export interface IExercise {
 
 export interface IWorkoutTemplate {
   _id: string;
-  name: string;
+  title: string;
   givenBy: "admin";
-  exercises: IExercise[];
+  days: { dayNumber: number; exercises: IExercise[] }[];
+  // keeping exercises for compatibility if backend flattens it not seen in the dump
+  exercises?: IExercise[];
   goal?: string;
   notes?: string;
   createdAt: string;

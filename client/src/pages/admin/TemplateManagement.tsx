@@ -27,8 +27,8 @@ const TemplateManagement = () => {
     const fetchTemplates = async () => {
       setLoading(true);
       try {
-        const endpoint = templateType === "workout" 
-          ? '/workout/admin/workout-templates' 
+        const endpoint = templateType === "workout"
+          ? '/workout/admin/workout-templates'
           : '/diet/admin/templates';
         const apiResponse = await API.get(endpoint, {
           params: {
@@ -37,9 +37,9 @@ const TemplateManagement = () => {
             search: searchQuery,
           },
         });
-        console.log('response:',apiResponse)
+        console.log('response:', apiResponse)
         setResponse({
-          templates: apiResponse.data.templates|| apiResponse.data.meals,
+          templates: apiResponse.data.templates || apiResponse.data.meals,
           total: apiResponse.data.total,
           page: apiResponse.data.page,
           totalPages: apiResponse.data.totalPages,
@@ -80,14 +80,14 @@ const TemplateManagement = () => {
 
   const handleDeleteTemplate = async (id: string) => {
     try {
-      const endpoint = templateType === "workout" 
-        ? `/workout/admin/workout-templates/${id}` 
+      const endpoint = templateType === "workout"
+        ? `/workout/admin/workout-templates/${id}`
         : `/diet/admin/templates/${id}`;
       await API.delete(endpoint);
       setCurrentPage(1);
       // Refetch templates after deletion
-      const apiResponse = await API.get(templateType === "workout" 
-        ? '/workout/admin/workout-templates' 
+      const apiResponse = await API.get(templateType === "workout"
+        ? '/workout/admin/workout-templates'
         : '/diet/admin/templates', {
         params: {
           page: 1,
@@ -197,12 +197,12 @@ const TemplateManagement = () => {
                       {response.templates.map((template) => (
                         <tr key={template._id} className="border-b border-gray-800 hover:bg-[#1F2A44]/30">
                           <td className="py-4 px-4 text-white font-medium">
-                            {templateType === "workout" ? (template as IWorkoutTemplate).name : (template as IDietTemplate).title}
+                            {templateType === "workout" ? (template as IWorkoutTemplate).title : (template as IDietTemplate).title}
                           </td>
                           {templateType === "workout" ? (
                             <>
                               <td className="py-4 px-4 text-gray-300">
-                                {(template as IWorkoutTemplate).exercises?.length}
+                                {(template as IWorkoutTemplate).days?.reduce((acc, day) => acc + day.exercises.length, 0) || 0}
                               </td>
                               <td className="py-4 px-4 text-gray-300">
                                 {(template as IWorkoutTemplate).goal || "N/A"}
@@ -211,10 +211,10 @@ const TemplateManagement = () => {
                           ) : (
                             <>
                               <td className="py-4 px-4 text-gray-300">
-                                {(template as IDietTemplate).meals?.length ?? 0}
+                                {(template as IDietTemplate).days?.reduce((acc, day) => acc + day.meals.length, 0) || 0}
                               </td>
                               <td className="py-4 px-4 text-gray-300">
-                                {(template as IDietTemplate).meals?.reduce((sum, meal) => sum + meal.calories, 0) ?? 0}
+                                {(template as IDietTemplate).days?.reduce((acc, day) => acc + day.meals.reduce((sum, meal) => sum + meal.calories, 0), 0) || 0}
                               </td>
                             </>
                           )}
@@ -293,12 +293,12 @@ const TemplateManagement = () => {
               <DialogHeader>
                 <DialogTitle>
                   {templateType === "workout"
-                    ? (selectedTemplate as IWorkoutTemplate).name
+                    ? (selectedTemplate as IWorkoutTemplate).title
                     : (selectedTemplate as IDietTemplate).title}
                 </DialogTitle>
                 <DialogClose className="text-gray-400 hover:text-white" />
               </DialogHeader>
-              <div className="mt-4">
+              <div className="mt-4 max-h-[70vh] overflow-y-auto pr-2">
                 {templateType === "workout" ? (
                   <div>
                     <p className="text-gray-300 mb-2">
@@ -309,47 +309,51 @@ const TemplateManagement = () => {
                       <span className="font-medium">Notes:</span>{" "}
                       {(selectedTemplate as IWorkoutTemplate).notes || "N/A"}
                     </p>
-                    <h3 className="text-lg font-semibold text-white mb-2">Exercises</h3>
-                    {(selectedTemplate as IWorkoutTemplate).exercises.length === 0 ? (
-                      <p className="text-gray-400">No exercises added</p>
+                    <h3 className="text-lg font-semibold text-white mb-2">Structure</h3>
+                    {!(selectedTemplate as IWorkoutTemplate).days || (selectedTemplate as IWorkoutTemplate).days.length === 0 ? (
+                      <p className="text-gray-400">No days added</p>
                     ) : (
-                      <div className="space-y-4">
-                        {(selectedTemplate as IWorkoutTemplate).exercises.map((exercise) => (
-                          <Card key={exercise.id} className="bg-[#1F2A44]/50 border-[#4B8B9B]/30">
-                            <CardContent className="p-4">
-                              <h4 className="text-white font-medium">{exercise.name}</h4>
-                              <p className="text-gray-300 text-sm">
-                                <span className="font-medium">Sets:</span> {exercise.sets}
-                              </p>
-                              {exercise.reps && (
-                                <p className="text-gray-300 text-sm">
-                                  <span className="font-medium">Reps:</span> {exercise.reps}
-                                </p>
-                              )}
-                              {exercise.time && (
-                                <p className="text-gray-300 text-sm">
-                                  <span className="font-medium">Time:</span> {exercise.time}
-                                </p>
-                              )}
-                              {exercise.rest && (
-                                <p className="text-gray-300 text-sm">
-                                  <span className="font-medium">Rest:</span> {exercise.rest}
-                                </p>
-                              )}
-                              {exercise.notes && (
-                                <p className="text-gray-300 text-sm">
-                                  <span className="font-medium">Notes:</span> {exercise.notes}
-                                </p>
-                              )}
-                              {exercise.image && (
-                                <img
-                                  src={exercise.image}
-                                  alt={exercise.name}
-                                  className="mt-2 w-24 h-24 object-cover rounded"
-                                />
-                              )}
-                            </CardContent>
-                          </Card>
+                      <div className="space-y-6">
+                        {(selectedTemplate as IWorkoutTemplate).days.map((day, dIdx) => (
+                          <div key={dIdx} className="space-y-2">
+                            <h4 className="text-[#4B8B9B] font-bold">Day {day.dayNumber || dIdx + 1}</h4>
+                            <div className="space-y-3">
+                              {day.exercises.map((exercise, eIdx) => (
+                                <Card key={eIdx} className="bg-[#1F2A44]/50 border-[#4B8B9B]/30">
+                                  <CardContent className="p-4">
+                                    <h5 className="text-white font-medium">{exercise.name}</h5>
+                                    <div className="grid grid-cols-2 gap-2 mt-2">
+                                      <p className="text-gray-300 text-sm">
+                                        <span className="font-medium">Sets:</span> {exercise.sets}
+                                      </p>
+                                      {exercise.reps && (
+                                        <p className="text-gray-300 text-sm">
+                                          <span className="font-medium">Reps:</span> {exercise.reps}
+                                        </p>
+                                      )}
+                                      {exercise.rest && (
+                                        <p className="text-gray-300 text-sm">
+                                          <span className="font-medium">Rest:</span> {exercise.rest}
+                                        </p>
+                                      )}
+                                      {exercise.notes && (
+                                        <p className="text-gray-300 text-sm col-span-2">
+                                          <span className="font-medium">Notes:</span> {exercise.notes}
+                                        </p>
+                                      )}
+                                    </div>
+                                    {exercise.image && (
+                                      <img
+                                        src={exercise.image}
+                                        alt={exercise.name}
+                                        className="mt-2 w-24 h-24 object-cover rounded"
+                                      />
+                                    )}
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -360,54 +364,53 @@ const TemplateManagement = () => {
                       <span className="font-medium">Description:</span>{" "}
                       {(selectedTemplate as IDietTemplate).description || "N/A"}
                     </p>
-                    <h3 className="text-lg font-semibold text-white mb-2">Meals</h3>
-                    {(selectedTemplate as IDietTemplate).meals.length === 0 ? (
-                      <p className="text-gray-400">No meals added</p>
+                    <h3 className="text-lg font-semibold text-white mb-2">Structure</h3>
+                    {!(selectedTemplate as IDietTemplate).days || (selectedTemplate as IDietTemplate).days.length === 0 ? (
+                      <p className="text-gray-400">No days added</p>
                     ) : (
-                      <div className="space-y-4">
-                        {(selectedTemplate as IDietTemplate).meals.map((meal, index) => (
-                          <Card key={index} className="bg-[#1F2A44]/50 border-[#4B8B9B]/30">
-                            <CardContent className="p-4">
-                              <h4 className="text-white font-medium">{meal.name}</h4>
-                              <p className="text-gray-300 text-sm">
-                                <span className="font-medium">Time:</span> {meal.time}
-                              </p>
-                              <p className="text-gray-300 text-sm">
-                                <span className="font-medium">Calories:</span> {meal.calories} kcal
-                              </p>
-                              {meal.protein && (
-                                <p className="text-gray-300 text-sm">
-                                  <span className="font-medium">Protein:</span> {meal.protein}g
-                                </p>
-                              )}
-                              {meal.carbs && (
-                                <p className="text-gray-300 text-sm">
-                                  <span className="font-medium">Carbs:</span> {meal.carbs}g
-                                </p>
-                              )}
-                              {meal.fats && (
-                                <p className="text-gray-300 text-sm">
-                                  <span className="font-medium">Fats:</span> {meal.fats}g
-                                </p>
-                              )}
-                              {meal.nutritions && meal.nutritions.length > 0 && (
-                                <div className="mt-2">
-                                  <p className="text-gray-300 text-sm font-medium">Additional Nutrition:</p>
-                                  {meal.nutritions.map((nutrition, idx) => (
-                                    <p key={idx} className="text-gray-300 text-sm">
-                                      {nutrition.label}: {nutrition.value}
-                                      {nutrition.unit && ` ${nutrition.unit}`}
+                      <div className="space-y-6">
+                        {(selectedTemplate as IDietTemplate).days.map((day, dIdx) => (
+                          <div key={dIdx} className="space-y-2">
+                            <h4 className="text-[#4B8B9B] font-bold">Day {day.dayNumber || dIdx + 1}</h4>
+                            <div className="space-y-3">
+                              {day.meals.map((meal, mIdx) => (
+                                <Card key={mIdx} className="bg-[#1F2A44]/50 border-[#4B8B9B]/30">
+                                  <CardContent className="p-4">
+                                    <div className="flex justify-between">
+                                      <h5 className="text-white font-medium">{meal.name}</h5>
+                                      <span className="text-xs text-[#4B8B9B] bg-[#4B8B9B]/10 px-2 py-1 rounded">{meal.time}</span>
+                                    </div>
+                                    <p className="text-gray-300 text-sm mt-1">
+                                      <span className="font-medium">Calories:</span> {meal.calories} kcal
                                     </p>
-                                  ))}
-                                </div>
-                              )}
-                              {meal.notes && (
-                                <p className="text-gray-300 text-sm">
-                                  <span className="font-medium">Notes:</span> {meal.notes}
-                                </p>
-                              )}
-                            </CardContent>
-                          </Card>
+
+                                    <div className="grid grid-cols-3 gap-2 mt-2 text-xs text-gray-400">
+                                      {meal.protein && <div>Protein: {meal.protein}g</div>}
+                                      {meal.carbs && <div>Carbs: {meal.carbs}g</div>}
+                                      {meal.fats && <div>Fats: {meal.fats}g</div>}
+                                    </div>
+
+                                    {meal.nutritions && meal.nutritions.length > 0 && (
+                                      <div className="mt-2">
+                                        <p className="text-gray-300 text-sm font-medium">Additional Nutrition:</p>
+                                        {meal.nutritions.map((nutrition, idx) => (
+                                          <p key={idx} className="text-gray-300 text-sm max-w-full truncate">
+                                            {nutrition.label}: {nutrition.value}
+                                            {nutrition.unit && ` ${nutrition.unit}`}
+                                          </p>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {meal.notes && (
+                                      <p className="text-gray-300 text-sm mt-2">
+                                        <span className="font-medium">Notes:</span> {meal.notes}
+                                      </p>
+                                    )}
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     )}

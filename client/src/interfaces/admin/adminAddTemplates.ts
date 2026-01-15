@@ -4,8 +4,6 @@ export interface IExercise {
     image?: string;
     sets: number;
     reps?: string;
-    time?: string;
-    allowWeight: boolean;
 }
 
 export interface IWorkoutTemplateDay {
@@ -20,7 +18,6 @@ export interface IWorkoutTemplate {
     duration: number;
     goal: string;
     equipment: boolean;
-    bodyType: string;
     days: IWorkoutTemplateDay[];
     difficulty?: 'Beginner' | 'Intermediate' | 'Advanced';
     image?: string;

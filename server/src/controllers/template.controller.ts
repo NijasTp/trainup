@@ -53,7 +53,6 @@ export class TemplateController {
                 search: req.query.search as string,
                 goal: req.query.goal as string,
                 equipment: req.query.equipment === "true" ? true : req.query.equipment === "false" ? false : undefined,
-                bodyType: req.query.bodyType as string,
             };
             const result = await this._templateService.listWorkoutTemplates(query);
             res.status(STATUS_CODE.OK).json(result);
@@ -135,7 +134,6 @@ export class TemplateController {
                 limit: parseInt(req.query.limit as string) || 10,
                 search: req.query.search as string,
                 goal: req.query.goal as string,
-                bodyType: req.query.bodyType as string,
             };
             const result = await this._templateService.listDietTemplates(query);
             res.status(STATUS_CODE.OK).json(result);
