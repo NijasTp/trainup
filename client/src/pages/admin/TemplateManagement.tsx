@@ -75,7 +75,7 @@ const TemplateManagement = () => {
   };
 
   const handleEditTemplate = (template: IWorkoutTemplate | IDietTemplate) => {
-    navigate(`/admin/templates/edit/${template._id}/${templateType}`);
+    navigate(`/admin/templates/${template._id}/${templateType}/edit`);
   };
 
   const handleDeleteTemplate = async (id: string) => {
@@ -306,8 +306,8 @@ const TemplateManagement = () => {
                       {(selectedTemplate as IWorkoutTemplate).goal || "N/A"}
                     </p>
                     <p className="text-gray-300 mb-4">
-                      <span className="font-medium">Notes:</span>{" "}
-                      {(selectedTemplate as IWorkoutTemplate).notes || "N/A"}
+                      <span className="font-medium">Description:</span>{" "}
+                      {(selectedTemplate as IWorkoutTemplate).description || "N/A"}
                     </p>
                     <h3 className="text-lg font-semibold text-white mb-2">Structure</h3>
                     {!(selectedTemplate as IWorkoutTemplate).days || (selectedTemplate as IWorkoutTemplate).days.length === 0 ? (

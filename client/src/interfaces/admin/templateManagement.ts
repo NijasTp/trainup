@@ -18,6 +18,7 @@ export interface IWorkoutTemplate {
   exercises?: IExercise[];
   goal?: string;
   notes?: string;
+  description?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,5 +1,6 @@
 export interface Exercise {
-  id: string;
+  id?: string;
+  exerciseId?: string;
   name: string;
   sets: number;
   reps?: string;
@@ -25,17 +26,37 @@ export interface Meal {
   }>;
 }
 
+export interface TemplateDay {
+  dayNumber: number;
+  exercises: Exercise[]; // For workout
+  meals: Meal[]; // For diet
+}
+
 export interface WorkoutTemplate {
   _id: string;
-  name: string;
+  title: string;
+  description?: string;
+  duration?: number;
   goal?: string;
+  difficulty?: string;
+  equipment?: boolean;
   notes?: string;
-  exercises: Exercise[];
+  days: TemplateDay[];
+
+  // Legacy/Flat support if needed temporarily, but main structure is days
+  exercises?: Exercise[];
+  name?: string; // handling legacy 'name' vs 'title'
 }
 
 export interface DietTemplate {
   _id: string;
   title: string;
   description?: string;
-  meals: Meal[];
+  duration?: number;
+  goal?: string;
+  bodyType?: string;
+  days: TemplateDay[];
+
+  // Legacy
+  meals?: Meal[];
 }

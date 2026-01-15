@@ -1,31 +1,39 @@
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Edit, Trash2, Dumbbell, Utensils, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Dumbbell, Utensils, Save, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { toast } from "sonner";
 import API from "@/lib/axios";
-import type { DietTemplate, Exercise, Meal, WorkoutTemplate } from "@/interfaces/admin/iAdminEditTemplate";
+import type { DietTemplate, Exercise, Meal, WorkoutTemplate, TemplateDay } from "@/interfaces/admin/iAdminEditTemplate";
+import { Badge } from "@/components/ui/badge";
 
 
 const EditTemplate = () => {
-  const { id, templateType } = useParams<{ id: string; templateType: "workout" | "diet" }>();
+  const { id, template: templateType } = useParams<{ id: string; template: "workout" | "diet" }>();
   const navigate = useNavigate();
+
+  // We'll use a union type for state, but initialize null
   const [template, setTemplate] = useState<WorkoutTemplate | DietTemplate | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Modals
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [showMealModal, setShowMealModal] = useState(false);
-  const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
-  const [editingMealIndex, setEditingMealIndex] = useState<number | null>(null);
+
+  // Tracking which item is being edited
+  const [activeDayIndex, setActiveDayIndex] = useState<number | null>(null);
+  const [editingDayIndex, setEditingDayIndex] = useState<number | null>(null); // For modal context
+  const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null); // Index within the day's array
 
   const [exerciseForm, setExerciseForm] = useState<Exercise>({
-    id: '',
     name: '',
     sets: 3,
     reps: '10-12',
@@ -33,7 +41,6 @@ const EditTemplate = () => {
     rest: '60s',
     notes: ''
   });
-
 
   const [mealForm, setMealForm] = useState<Meal>({
     name: '',
@@ -54,11 +61,19 @@ const EditTemplate = () => {
   const fetchTemplate = async () => {
     try {
       setLoading(true);
-      const endpoint = templateType === "workout" 
-        ? `/workout/admin/workout-templates/${id}` 
-        : `/diet/admin/templates/${id}`;
+      const endpoint = templateType === "workout"
+        ? `/template/workout/${id}`
+        : `/template/diet/${id}`;
       const response = await API.get(endpoint);
-      setTemplate(response.data.template || response.data);
+      const data = response.data;
+
+      // Ensure days array exists
+      if (!data.days) data.days = [];
+
+      // Normalize 'name' to 'title' (legacy support)
+      if (!data.title && data.name) data.title = data.name;
+
+      setTemplate(data);
     } catch (error: any) {
       console.error("Error fetching template:", error);
       toast.error("Failed to load template");
@@ -69,13 +84,14 @@ const EditTemplate = () => {
   };
 
   const handleSave = async () => {
+    if (!template) return;
     try {
       setSaving(true);
-      const endpoint = templateType === "workout" 
-        ? `/workout/admin/workout-templates/${id}` 
-        : `/diet/admin/templates/${id}`;
-      
-      await API.put(endpoint, template);
+      const endpoint = templateType === "workout"
+        ? `/template/workout/${id}`
+        : `/template/diet/${id}`;
+
+      await API.patch(endpoint, template);
       toast.success("Template updated successfully!");
       navigate('/admin/templates');
     } catch (error: any) {
@@ -86,10 +102,31 @@ const EditTemplate = () => {
     }
   };
 
-  const handleAddExercise = () => {
-    setEditingExerciseIndex(null);
+  // --- Day Management ---
+  const addDay = () => {
+    if (!template) return;
+    const newDay: TemplateDay = {
+      dayNumber: (template.days?.length || 0) + 1,
+      exercises: [],
+      meals: []
+    };
+    const updatedDays = [...(template.days || []), newDay];
+    setTemplate({ ...template, days: updatedDays } as any);
+    setActiveDayIndex(updatedDays.length - 1);
+  };
+
+  const removeDay = (index: number) => {
+    if (!template) return;
+    const updatedDays = template.days.filter((_, i) => i !== index).map((d, i) => ({ ...d, dayNumber: i + 1 }));
+    setTemplate({ ...template, days: updatedDays } as any);
+    if (activeDayIndex === index) setActiveDayIndex(null);
+  };
+
+  // --- Exercise Management ---
+  const handleAddExercise = (dayIndex: number) => {
+    setEditingDayIndex(dayIndex);
+    setEditingItemIndex(null);
     setExerciseForm({
-      id: Date.now().toString(),
       name: '',
       sets: 3,
       reps: '10-12',
@@ -100,39 +137,46 @@ const EditTemplate = () => {
     setShowExerciseModal(true);
   };
 
-  const handleEditExercise = (index: number) => {
-    const exercise = (template as WorkoutTemplate).exercises[index];
-    setEditingExerciseIndex(index);
-    setExerciseForm(exercise);
+  const handleEditExercise = (dayIndex: number, exIndex: number) => {
+    if (!template) return;
+    const exercise = template.days[dayIndex].exercises[exIndex];
+    setEditingDayIndex(dayIndex);
+    setEditingItemIndex(exIndex);
+    setExerciseForm({ ...exercise });
     setShowExerciseModal(true);
   };
 
   const handleSaveExercise = () => {
-    if (!template || templateType !== 'workout') return;
-    
-    const workoutTemplate = template as WorkoutTemplate;
-    const updatedExercises = [...workoutTemplate.exercises];
-    
-    if (editingExerciseIndex !== null) {
-      updatedExercises[editingExerciseIndex] = exerciseForm;
+    if (!template || editingDayIndex === null) return;
+
+    const updatedDays = [...template.days];
+    const day = { ...updatedDays[editingDayIndex] };
+    const exercises = [...day.exercises];
+
+    if (editingItemIndex !== null) {
+      exercises[editingItemIndex] = exerciseForm;
     } else {
-      updatedExercises.push(exerciseForm);
+      exercises.push(exerciseForm);
     }
-    
-    setTemplate({ ...workoutTemplate, exercises: updatedExercises });
+
+    day.exercises = exercises;
+    updatedDays[editingDayIndex] = day;
+
+    setTemplate({ ...template, days: updatedDays } as any);
     setShowExerciseModal(false);
   };
 
-  const handleDeleteExercise = (index: number) => {
-    if (!template || templateType !== 'workout') return;
-    
-    const workoutTemplate = template as WorkoutTemplate;
-    const updatedExercises = workoutTemplate.exercises.filter((_, i) => i !== index);
-    setTemplate({ ...workoutTemplate, exercises: updatedExercises });
+  const handleDeleteExercise = (dayIndex: number, exIndex: number) => {
+    if (!template) return;
+    const updatedDays = [...template.days];
+    updatedDays[dayIndex].exercises = updatedDays[dayIndex].exercises.filter((_, i) => i !== exIndex);
+    setTemplate({ ...template, days: updatedDays } as any);
   };
 
-  const handleAddMeal = () => {
-    setEditingMealIndex(null);
+  // --- Meal Management ---
+  const handleAddMeal = (dayIndex: number) => {
+    setEditingDayIndex(dayIndex);
+    setEditingItemIndex(null);
     setMealForm({
       name: '',
       time: '',
@@ -145,36 +189,42 @@ const EditTemplate = () => {
     setShowMealModal(true);
   };
 
-  const handleEditMeal = (index: number) => {
-    const meal = (template as DietTemplate).meals[index];
-    setEditingMealIndex(index);
-    setMealForm(meal);
+  const handleEditMeal = (dayIndex: number, mealIndex: number) => {
+    if (!template) return;
+    const meal = template.days[dayIndex].meals[mealIndex];
+    setEditingDayIndex(dayIndex);
+    setEditingItemIndex(mealIndex);
+    setMealForm({ ...meal });
     setShowMealModal(true);
   };
 
   const handleSaveMeal = () => {
-    if (!template || templateType !== 'diet') return;
-    
-    const dietTemplate = template as DietTemplate;
-    const updatedMeals = [...dietTemplate.meals];
-    
-    if (editingMealIndex !== null) {
-      updatedMeals[editingMealIndex] = mealForm;
+    if (!template || editingDayIndex === null) return;
+
+    const updatedDays = [...template.days];
+    const day = { ...updatedDays[editingDayIndex] };
+    const meals = [...day.meals];
+
+    if (editingItemIndex !== null) {
+      meals[editingItemIndex] = mealForm;
     } else {
-      updatedMeals.push(mealForm);
+      meals.push(mealForm);
     }
-    
-    setTemplate({ ...dietTemplate, meals: updatedMeals });
+
+    day.meals = meals;
+    updatedDays[editingDayIndex] = day;
+
+    setTemplate({ ...template, days: updatedDays } as any);
     setShowMealModal(false);
   };
 
-  const handleDeleteMeal = (index: number) => {
-    if (!template || templateType !== 'diet') return;
-    
-    const dietTemplate = template as DietTemplate;
-    const updatedMeals = dietTemplate.meals.filter((_, i) => i !== index);
-    setTemplate({ ...dietTemplate, meals: updatedMeals });
+  const handleDeleteMeal = (dayIndex: number, mealIndex: number) => {
+    if (!template) return;
+    const updatedDays = [...template.days];
+    updatedDays[dayIndex].meals = updatedDays[dayIndex].meals.filter((_, i) => i !== mealIndex);
+    setTemplate({ ...template, days: updatedDays } as any);
   };
+
 
   if (loading) {
     return (
@@ -252,53 +302,92 @@ const EditTemplate = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             {templateType === 'workout' ? (
+              // Workout Template Details
               <>
                 <div>
-                  <Label htmlFor="name" className="text-white">Template Name</Label>
+                  <Label htmlFor="title" className="text-white">Template Title</Label>
                   <Input
-                    id="name"
-                    value={(template as WorkoutTemplate).name || ''}
-                    onChange={(e) => setTemplate({ ...template, name: e.target.value } as WorkoutTemplate)}
+                    id="title"
+                    value={template.title || ''}
+                    onChange={(e) => setTemplate({ ...template, title: e.target.value } as any)}
                     className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="goal" className="text-white">Goal</Label>
-                  <Input
-                    id="goal"
-                    value={(template as WorkoutTemplate).goal || ''}
-                    onChange={(e) => setTemplate({ ...template, goal: e.target.value } as WorkoutTemplate)}
-                    className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
-                  />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="goal" className="text-white">Goal</Label>
+                    <Input
+                      id="goal"
+                      value={(template as WorkoutTemplate).goal || ''}
+                      onChange={(e) => setTemplate({ ...template, goal: e.target.value } as any)}
+                      className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="equipment" className="text-white">Equipment</Label>
+                    <div className="flex items-center gap-2 h-10">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={(template as WorkoutTemplate).equipment || false}
+                          onChange={(e) => setTemplate({ ...template, equipment: e.target.checked } as any)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4B8B9B]"></div>
+                        <span className="ms-3 text-sm font-medium text-white">{(template as WorkoutTemplate).equipment ? "Required" : "None"}</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="notes" className="text-white">Notes</Label>
+                  <Label htmlFor="description" className="text-white">Description</Label>
                   <Textarea
-                    id="notes"
-                    value={(template as WorkoutTemplate).notes || ''}
-                    onChange={(e) => setTemplate({ ...template, notes: e.target.value } as WorkoutTemplate)}
+                    id="description"
+                    value={(template as WorkoutTemplate).description || ''}
+                    onChange={(e) => setTemplate({ ...template, description: e.target.value } as any)}
                     className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                     rows={3}
                   />
                 </div>
               </>
             ) : (
+              // Diet Template Details
               <>
                 <div>
                   <Label htmlFor="title" className="text-white">Template Title</Label>
                   <Input
                     id="title"
-                    value={(template as DietTemplate).title || ''}
-                    onChange={(e) => setTemplate({ ...template, title: e.target.value } as DietTemplate)}
+                    value={template.title || ''}
+                    onChange={(e) => setTemplate({ ...template, title: e.target.value } as any)}
                     className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                   />
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="goal" className="text-white">Goal</Label>
+                    <Input
+                      id="goal"
+                      value={(template as DietTemplate).goal || ''}
+                      onChange={(e) => setTemplate({ ...template, goal: e.target.value } as any)}
+                      className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="bodyType" className="text-white">Body Type</Label>
+                    <Input
+                      id="bodyType"
+                      value={(template as DietTemplate).bodyType || ''}
+                      onChange={(e) => setTemplate({ ...template, bodyType: e.target.value } as any)}
+                      className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="description" className="text-white">Description</Label>
                   <Textarea
                     id="description"
                     value={(template as DietTemplate).description || ''}
-                    onChange={(e) => setTemplate({ ...template, description: e.target.value } as DietTemplate)}
+                    onChange={(e) => setTemplate({ ...template, description: e.target.value } as any)}
                     className="bg-[#1F2A44]/50 border-[#4B8B9B]/30 text-white"
                     rows={3}
                   />
@@ -308,106 +397,124 @@ const EditTemplate = () => {
           </CardContent>
         </Card>
 
-        {/* Content Section */}
-        <Card className="bg-[#111827] border border-[#4B8B9B]/30">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-white">
-              {templateType === 'workout' ? 'Exercises' : 'Meals'}
-            </CardTitle>
-            <Button
-              onClick={templateType === 'workout' ? handleAddExercise : handleAddMeal}
-              className="bg-[#4B8B9B] hover:bg-[#4B8B9B]/80"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add {templateType === 'workout' ? 'Exercise' : 'Meal'}
+        {/* Structure Section (Days) */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              {templateType === 'workout' ? <Dumbbell className="h-5 w-5" /> : <Utensils className="h-5 w-5" />}
+              Structure
+            </h3>
+            <Button onClick={addDay} variant="outline" className="border-[#4B8B9B]/50 text-[#4B8B9B] hover:bg-[#4B8B9B]/10 rounded-xl">
+              <Plus className="h-4 w-4 mr-2" /> Add Day
             </Button>
-          </CardHeader>
-          <CardContent>
-            {templateType === 'workout' ? (
-              <div className="space-y-4">
-                {(template as WorkoutTemplate).exercises.map((exercise, index) => (
-                  <Card key={exercise.id} className="bg-[#1F2A44]/50 border-[#4B8B9B]/30">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="text-white font-medium">{exercise.name}</h4>
-                          <p className="text-gray-400 text-sm">
-                            {exercise.sets} sets • {exercise.reps || exercise.time}
-                            {exercise.weight ? ` • ${exercise.weight}kg` : ''}
-                            {exercise.rest && ` • Rest: ${exercise.rest}`}
-                          </p>
+          </div>
+
+          <div className="space-y-4">
+            {(template.days || []).map((day, dIdx) => (
+              <div key={dIdx} className="bg-[#111827] border border-[#4B8B9B]/30 rounded-3xl overflow-hidden shadow-md">
+                <div
+                  className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#1F2A44]/50 transition-colors"
+                  onClick={() => setActiveDayIndex(activeDayIndex === dIdx ? null : dIdx)}
+                >
+                  <div className="flex items-center gap-4">
+                    <Badge className="bg-[#4B8B9B] h-8 w-8 rounded-lg flex items-center justify-center font-black p-0">
+                      {day.dayNumber}
+                    </Badge>
+                    <h4 className="text-white font-bold">Day {day.dayNumber}</h4>
+                    <span className="text-gray-500 text-sm">
+                      {templateType === 'workout'
+                        ? `(${day.exercises?.length || 0} Exercises)`
+                        : `(${day.meals?.length || 0} Meals)`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-gray-400 hover:text-red-500"
+                      onClick={(e) => { e.stopPropagation(); removeDay(dIdx); }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    {activeDayIndex === dIdx ? <ChevronUp className="text-gray-500" /> : <ChevronDown className="text-gray-500" />}
+                  </div>
+                </div>
+
+                {activeDayIndex === dIdx && (
+                  <div className="p-6 border-t border-[#4B8B9B]/30 space-y-4">
+                    {/* Workout View */}
+                    {templateType === 'workout' && (
+                      <>
+                        <div className="space-y-3">
+                          {(day.exercises || []).map((ex, eIdx) => (
+                            <div key={eIdx} className="bg-[#1F2A44]/50 p-4 rounded-2xl border border-[#4B8B9B]/30 flex justify-between items-center">
+                              <div>
+                                <h5 className="text-white font-medium">{ex.name}</h5>
+                                <p className="text-gray-400 text-sm">
+                                  {ex.sets} sets • {ex.reps} • {ex.weight}kg
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button variant="ghost" size="icon" className="text-[#4B8B9B] hover:bg-[#4B8B9B]/10" onClick={() => handleEditExercise(dIdx, eIdx)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="text-red-400 hover:bg-red-500/10" onClick={() => handleDeleteExercise(dIdx, eIdx)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditExercise(index)}
-                            className="border-[#4B8B9B]/30 text-white hover:bg-[#4B8B9B]/20"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteExercise(index)}
-                            className="border-red-500/30 text-red-400 hover:bg-red-500/20"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <Button onClick={() => handleAddExercise(dIdx)} className="w-full border-dashed border-2 border-[#4B8B9B]/30 bg-transparent hover:bg-[#4B8B9B]/10 text-[#4B8B9B]">
+                          <Plus className="h-4 w-4 mr-2" /> Add Exercise
+                        </Button>
+                      </>
+                    )}
+
+                    {/* Diet View */}
+                    {templateType === 'diet' && (
+                      <>
+                        <div className="space-y-3">
+                          {(day.meals || []).map((meal, mIdx) => (
+                            <div key={mIdx} className="bg-[#1F2A44]/50 p-4 rounded-2xl border border-[#4B8B9B]/30 flex justify-between items-center">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[#4B8B9B] font-bold text-xs">{meal.time}</span>
+                                  <h5 className="text-white font-medium">{meal.name}</h5>
+                                </div>
+                                <p className="text-gray-400 text-sm">
+                                  {meal.calories} kcal
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button variant="ghost" size="icon" className="text-[#4B8B9B] hover:bg-[#4B8B9B]/10" onClick={() => handleEditMeal(dIdx, mIdx)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="text-red-400 hover:bg-red-500/10" onClick={() => handleDeleteMeal(dIdx, mIdx)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <Button onClick={() => handleAddMeal(dIdx)} className="w-full border-dashed border-2 border-[#4B8B9B]/30 bg-transparent hover:bg-[#4B8B9B]/10 text-[#4B8B9B]">
+                          <Plus className="h-4 w-4 mr-2" /> Add Meal
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="space-y-4">
-                {(template as DietTemplate).meals.map((meal, index) => (
-                  <Card key={index} className="bg-[#1F2A44]/50 border-[#4B8B9B]/30">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="text-white font-medium">{meal.name}</h4>
-                          <p className="text-gray-400 text-sm">
-                            {meal.time} • {meal.calories} kcal
-                            {meal.protein && ` • ${meal.protein}g protein`}
-                            {meal.carbs && ` • ${meal.carbs}g carbs`}
-                            {meal.fats && ` • ${meal.fats}g fats`}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditMeal(index)}
-                            className="border-[#4B8B9B]/30 text-white hover:bg-[#4B8B9B]/20"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteMeal(index)}
-                            className="border-red-500/30 text-red-400 hover:bg-red-500/20"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        </div>
 
         {/* Exercise Modal */}
         <Dialog open={showExerciseModal} onOpenChange={setShowExerciseModal}>
           <DialogContent className="bg-[#111827] border-[#4B8B9B]/30 text-white max-w-2xl">
             <DialogHeader>
               <DialogTitle>
-                {editingExerciseIndex !== null ? 'Edit Exercise' : 'Add Exercise'}
+                {editingItemIndex !== null ? 'Edit Exercise' : 'Add Exercise'}
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -488,7 +595,7 @@ const EditTemplate = () => {
           <DialogContent className="bg-[#111827] border-[#4B8B9B]/30 text-white max-w-2xl">
             <DialogHeader>
               <DialogTitle>
-                {editingMealIndex !== null ? 'Edit Meal' : 'Add Meal'}
+                {editingItemIndex !== null ? 'Edit Meal' : 'Add Meal'}
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
