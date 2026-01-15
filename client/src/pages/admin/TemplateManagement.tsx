@@ -28,8 +28,8 @@ const TemplateManagement = () => {
       setLoading(true);
       try {
         const endpoint = templateType === "workout"
-          ? '/workout/admin/workout-templates'
-          : '/diet/admin/templates';
+          ? '/template/workout'
+          : '/template/diet';
         const apiResponse = await API.get(endpoint, {
           params: {
             page: currentPage,
@@ -81,14 +81,14 @@ const TemplateManagement = () => {
   const handleDeleteTemplate = async (id: string) => {
     try {
       const endpoint = templateType === "workout"
-        ? `/workout/admin/workout-templates/${id}`
-        : `/diet/admin/templates/${id}`;
+        ? `/template/workout/${id}`
+        : `/template/diet/${id}`;
       await API.delete(endpoint);
       setCurrentPage(1);
       // Refetch templates after deletion
       const apiResponse = await API.get(templateType === "workout"
-        ? '/workout/admin/workout-templates'
-        : '/diet/admin/templates', {
+        ? '/template/workout'
+        : '/template/diet', {
         params: {
           page: 1,
           limit: templatesPerPage,
