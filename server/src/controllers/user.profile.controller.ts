@@ -34,6 +34,30 @@ export class UserProfileController {
         }
     }
 
+    async getProfilePage(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = (req.user as JwtPayload).id
+            const user = await this._userService.getUserById(userId)
+            if (!user) {
+                throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+            }
+
+            const weight =
+                user.weightHistory && user.weightHistory.length > 0
+                    ? user.weightHistory[user.weightHistory.length - 1].weight
+                    : user.currentWeight
+
+            res.status(STATUS_CODE.OK).json({
+                user: {
+                    ...user,
+                    weight
+                }
+            })
+        } catch (err) {
+            next(err)
+        }
+    }
+
     async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = (req.user as JwtPayload).id

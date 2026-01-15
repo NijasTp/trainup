@@ -94,7 +94,17 @@ export default function Trainers() {
         minPrice,
         maxPrice
       );
-      setTrainers(response.trainers.trainers);
+      const trainersData = response.trainers.trainers.map((t: any) => {
+        if (t.price && typeof t.price === "string") {
+          try {
+            t.price = JSON.parse(t.price);
+          } catch (e) {
+            console.error("Failed to parse trainer price:", e);
+          }
+        }
+        return t;
+      });
+      setTrainers(trainersData);
       console.log("Fetched trainers:", response);
       setTotalPages(response.trainers.totalPages || 1); // Ensure at least 1 page
     } catch (err) {

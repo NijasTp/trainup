@@ -62,6 +62,12 @@ router.get(
   roleMiddleware(['user']),
   userProfileController.getProfile.bind(userProfileController)
 )
+
+router.get(
+  '/profile-page',
+  roleMiddleware(['user']),
+  userProfileController.getProfilePage.bind(userProfileController)
+)
 router.put(
   '/update-profile',
   authMiddleware,

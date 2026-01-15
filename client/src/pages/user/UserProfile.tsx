@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Award, Calendar, Flame, Lock, Mail, Phone, Ruler, Scale, Trophy, User, Shield, CreditCard, ArrowRight, Eye } from "lucide-react";
 import { toast } from "sonner";
-import { getProfile } from "@/services/userService";
+import { getProfilePageData } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import type { UserProfile } from "@/interfaces/user/profileInterface";
 import { useNavigate } from "react-router-dom";
@@ -31,7 +31,7 @@ export default function Profile() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await getProfile();
+      const response = await getProfilePageData();
       console.log(response)
       setProfile(response.user);
     } catch (err) {

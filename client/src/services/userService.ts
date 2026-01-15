@@ -31,6 +31,11 @@ export const getProfile = async () => {
   return res.data
 }
 
+export const getProfilePageData = async () => {
+  const res = await API.get('/user/profile-page')
+  return res.data
+}
+
 export const getIndividualTrainer = async (id: string) => {
   const res = await API.get(`/user/trainers/${id}`)
   return res.data

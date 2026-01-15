@@ -766,7 +766,17 @@ export class UserController implements IUserController {
       if (!user) {
         throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
       }
-      res.status(STATUS_CODE.OK).json({ user })
+      const weight =
+        user.weightHistory && user.weightHistory.length > 0
+          ? user.weightHistory[user.weightHistory.length - 1].weight
+          : user.currentWeight
+
+      res.status(STATUS_CODE.OK).json({
+        user: {
+          ...user,
+          weight
+        }
+      })
     } catch (err) {
       next(err)
     }
@@ -822,7 +832,7 @@ export class UserController implements IUserController {
 
       await this._notificationService.sendSessionRequestNotification(trainerId, user.name)
 
-      
+
       await this._messageService.createMessage({
         senderId: userId,
         receiverId: trainerId,

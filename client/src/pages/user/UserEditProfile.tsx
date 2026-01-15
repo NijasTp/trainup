@@ -38,7 +38,7 @@ import { getProfile, updateProfile } from "@/services/userService";
 import { z } from "zod";
 import { toast } from "react-toastify";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import API from "@/lib/axios";
 
 const profileSchema = z.object({
@@ -642,54 +642,7 @@ export default function EditProfile() {
         );
       case 4:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            {/* Crop Dialog */}
-            <Dialog open={isCropping} onOpenChange={(open) => !open && closeCrop()}>
-              <DialogContent className="sm:max-w-xl">
-                <DialogHeader>
-                  <DialogTitle>Adjust Image</DialogTitle>
-                  <DialogDescription>
-                    Drag to position and use the slider to zoom.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="relative w-full h-96 bg-black/5 rounded-lg overflow-hidden my-4">
-                  {tempImage && (
-                    <Cropper
-                      image={tempImage}
-                      crop={crop}
-                      zoom={zoom}
-                      aspect={1}
-                      onCropChange={setCrop}
-                      onCropComplete={onCropComplete}
-                      onZoomChange={setZoom}
-                      showGrid={false}
-                    />
-                  )}
-                </div>
-                <div className="flex items-center gap-4 px-4">
-                  <ZoomOut className="h-4 w-4 text-muted-foreground" />
-                  <Slider
-                    value={[zoom]}
-                    min={1}
-                    max={3}
-                    step={0.1}
-                    onValueChange={(value) => setZoom(value[0])}
-                    className="flex-1"
-                  />
-                  <ZoomIn className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <DialogFooter className="flex justify-between gap-2 sm:justify-between">
-                  <Button variant="ghost" onClick={closeCrop}>
-                    Cancel
-                  </Button>
-                  <Button onClick={showCroppedImage}>
-                    <Check className="w-4 h-4 mr-2" />
-                    Apply Crop
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
+          <div className="space-y-6">
             {/* Privacy Settings */}
             <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
               <CardHeader>
@@ -724,50 +677,10 @@ export default function EditProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Dialog open={open} onOpenChange={setOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="hover:bg-primary/5">
-                      <Key className="h-4 w-4 mr-2" />
-                      Change Password
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Change Password</DialogTitle>
-                      <DialogDescription>
-                        Make sure your new password is strong and unique.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleChangePassword} className="space-y-4">
-                      <Input
-                        type="password"
-                        placeholder="Current password"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        required
-                      />
-                      <Input
-                        type="password"
-                        placeholder="New password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        required
-                      />
-                      <Input
-                        type="password"
-                        placeholder="Confirm new password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                      />
-                      <DialogFooter>
-                        <Button type="submit" disabled={loading}>
-                          {loading ? "Changing..." : "Change Password"}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <Button variant="outline" className="hover:bg-primary/5" onClick={() => setOpen(true)} type="button">
+                  <Key className="h-4 w-4 mr-2" />
+                  Change Password
+                </Button>
                 <p className="text-sm text-muted-foreground mt-2">
                   Update your account password for better security
                 </p>
@@ -881,6 +794,94 @@ export default function EditProfile() {
           </div>
         </form>
       </main>
+
+      {/* Crop Dialog */}
+      <Dialog open={isCropping} onOpenChange={(open) => !open && closeCrop()}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Adjust Image</DialogTitle>
+            <DialogDescription>
+              Drag to position and use the slider to zoom.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="relative w-full h-96 bg-black/5 rounded-lg overflow-hidden my-4">
+            {tempImage && (
+              <Cropper
+                image={tempImage}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+                showGrid={false}
+              />
+            )}
+          </div>
+          <div className="flex items-center gap-4 px-4">
+            <ZoomOut className="h-4 w-4 text-muted-foreground" />
+            <Slider
+              value={[zoom]}
+              min={1}
+              max={3}
+              step={0.1}
+              onValueChange={(value) => setZoom(value[0])}
+              className="flex-1"
+            />
+            <ZoomIn className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <DialogFooter className="flex justify-between gap-2 sm:justify-between">
+            <Button variant="ghost" onClick={closeCrop}>
+              Cancel
+            </Button>
+            <Button onClick={showCroppedImage}>
+              <Check className="w-4 h-4 mr-2" />
+              Apply Crop
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Make sure your new password is strong and unique.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <Input
+              type="password"
+              placeholder="Current password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              required
+            />
+            <Input
+              type="password"
+              placeholder="New password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
+            <Input
+              type="password"
+              placeholder="Confirm new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+            <DialogFooter>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Changing..." : "Change Password"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

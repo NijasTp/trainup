@@ -119,7 +119,18 @@ export default function TrainerPage() {
         setError(null);
         try {
             const response = await getIndividualTrainer(id);
-            setTrainer(response.trainer);
+            const trainerData = response.trainer;
+
+            // Robust parsing for stringified price data
+            if (trainerData && typeof trainerData.price === "string") {
+                try {
+                    trainerData.price = JSON.parse(trainerData.price);
+                } catch (e) {
+                    console.error("Failed to parse price:", e);
+                }
+            }
+
+            setTrainer(trainerData);
             setIsLoading(false);
         } catch (err) {
             console.error("Failed to fetch trainer:", err);

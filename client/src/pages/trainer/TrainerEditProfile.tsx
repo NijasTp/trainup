@@ -104,6 +104,15 @@ export default function TrainerEditProfile() {
                 return;
             }
 
+            // Robust parsing for stringified price data
+            if (trainer.price && typeof trainer.price === "string") {
+                try {
+                    trainer.price = JSON.parse(trainer.price);
+                } catch (e) {
+                    console.error("Failed to parse price:", e);
+                }
+            }
+
             // Robust reset with string conversion for numeric values
             reset({
                 name: trainer.name || "",
