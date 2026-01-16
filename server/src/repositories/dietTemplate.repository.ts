@@ -13,6 +13,7 @@ export class TemplateRepository {
     const skip = (page - 1) * limit;
     const [templates, total] = await Promise.all([
       DietTemplateModel.find(query)
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean()

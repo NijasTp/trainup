@@ -4,7 +4,6 @@ import { Types } from 'mongoose';
 import TYPES from '../core/types/types';
 import { STATUS_CODE as STATUS } from '../constants/status';
 import { MESSAGES } from '../constants/messages.constants';
-// 7: import { DietTemplateService } from '../services/dietTemplate.service'; - Unused
 
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import {

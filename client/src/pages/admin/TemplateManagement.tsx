@@ -202,7 +202,7 @@ const TemplateManagement = () => {
                           {templateType === "workout" ? (
                             <>
                               <td className="py-4 px-4 text-gray-300">
-                                {(template as IWorkoutTemplate).days?.reduce((acc, day) => acc + day.exercises.length, 0) || 0}
+                                {((template as IWorkoutTemplate).days || []).reduce((acc, day) => acc + (day.exercises?.length || 0), 0)}
                               </td>
                               <td className="py-4 px-4 text-gray-300">
                                 {(template as IWorkoutTemplate).goal || "N/A"}
@@ -211,10 +211,10 @@ const TemplateManagement = () => {
                           ) : (
                             <>
                               <td className="py-4 px-4 text-gray-300">
-                                {(template as IDietTemplate).days?.reduce((acc, day) => acc + day.meals.length, 0) || 0}
+                                {((template as IDietTemplate).days || []).reduce((acc, day) => acc + (day.meals?.length || 0), 0)}
                               </td>
                               <td className="py-4 px-4 text-gray-300">
-                                {(template as IDietTemplate).days?.reduce((acc, day) => acc + day.meals.reduce((sum, meal) => sum + meal.calories, 0), 0) || 0}
+                                {((template as IDietTemplate).days || []).reduce((acc, day) => acc + (day.meals || []).reduce((sum, meal) => sum + (meal.calories || 0), 0), 0)}
                               </td>
                             </>
                           )}
