@@ -11,6 +11,11 @@ interface WeightLog {
   date: string;
 }
 
+export interface ActiveTemplate {
+  templateId: string;
+  startDate: string;
+}
+
 export interface UserType {
   _id: string;
   name: string;
@@ -36,6 +41,7 @@ export interface UserType {
   isPrivate?: boolean;
   assignedTrainer?: string;
   activeWorkoutTemplate?: string | null;
+  activeWorkoutTemplates?: ActiveTemplate[];
   activeDietTemplate?: string | null;
   isVerified?: boolean;
   createdAt?: string;
@@ -84,6 +90,7 @@ export const userAuthSlice = createSlice({
         isPrivate: payload.isPrivate || false,
         isVerified: payload.isVerified || false,
         activeWorkoutTemplate: payload.activeWorkoutTemplate || null,
+        activeWorkoutTemplates: payload.activeWorkoutTemplates || [],
         activeDietTemplate: payload.activeDietTemplate || null,
         createdAt: payload.createdAt,
         updatedAt: payload.updatedAt,

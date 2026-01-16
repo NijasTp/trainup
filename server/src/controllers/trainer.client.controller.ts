@@ -6,6 +6,7 @@ import { IUserService } from '../core/interfaces/services/IUserService'
 import { IMessageService } from '../core/interfaces/services/IMessageService'
 import { IUserPlanService } from '../core/interfaces/services/IUserPlanService'
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService'
+import { IProgressService } from '../core/interfaces/services/IProgressService'
 import { STATUS_CODE } from '../constants/status'
 import { logger } from '../utils/logger.util'
 import { AppError } from '../utils/appError.util'
@@ -25,7 +26,8 @@ export class TrainerClientController {
         @inject(TYPES.IUserService) private _userService: IUserService,
         @inject(TYPES.IMessageService) private _messageService: IMessageService,
         @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
-        @inject(TYPES.IJwtService) private _JwtService: IJwtService
+        @inject(TYPES.IJwtService) private _JwtService: IJwtService,
+        @inject(TYPES.IProgressService) private _progressService: IProgressService
     ) { }
 
     async getClients(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -65,6 +67,16 @@ export class TrainerClientController {
         } catch (err) {
             logger.error('Error fetching client details:', err)
             next(err)
+        }
+    }
+
+    async getClientProgress(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { clientId } = req.params;
+            const progress = await this._progressService.getAllProgress(clientId);
+            res.status(STATUS_CODE.OK).json({ progress });
+        } catch (err) {
+            next(err);
         }
     }
 

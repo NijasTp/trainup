@@ -17,3 +17,13 @@ export interface UserPlan {
     planType: 'basic' | 'premium' | 'pro';
     expiryDate: string;
 }
+
+export interface Progress {
+    _id: string;
+    userId: string;
+    date: string;
+    photos: string[];
+    notes?: string;
+    createdAt: string;
+    updatedAt: string;
+}

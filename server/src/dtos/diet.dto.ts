@@ -100,10 +100,19 @@ export class RemoveMealParamsDto {
   userId?: string;
 }
 
+
+export class TemplateDayDto {
+  dayNumber: number;
+  meals: TemplateMealDto[];
+}
+
 export class CreateTemplateRequestDto {
   title: string;
   description?: string;
-  meals: TemplateMealDto[];
+  duration: number;
+  goal: string;
+  bodyType: string;
+  days: TemplateDayDto[];
 }
 
 export class TemplateMealDto {
@@ -121,8 +130,11 @@ export class TemplateResponseDto {
   _id: string;
   title: string;
   description?: string;
+  duration: number;
+  goal: string;
+  bodyType: string;
   createdBy: string;
-  meals: TemplateMealDto[];
+  days: TemplateDayDto[];
   createdAt: Date;
   updatedAt: Date;
 }

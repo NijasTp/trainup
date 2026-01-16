@@ -11,6 +11,11 @@ export interface IWeightLog {
   date: Date;
 }
 
+export interface IActiveTemplate {
+  templateId: Types.ObjectId | string;
+  startDate: Date;
+}
+
 export interface IUser extends Document {
   _id: Types.ObjectId;
   name: string;
@@ -42,8 +47,9 @@ export interface IUser extends Document {
   age?: number;
   gender?: string;
   profileImage?: string;
-  activeWorkoutTemplate?: Types.ObjectId | string | null;
-  workoutTemplateStartDate?: Date | null;
+  activeWorkoutTemplates: IActiveTemplate[];
+  activeWorkoutTemplate?: Types.ObjectId | string | null; // Deprecated
+  workoutTemplateStartDate?: Date | null; // Deprecated
   activeDietTemplate?: Types.ObjectId | string | null;
   dietTemplateStartDate?: Date | null;
   createdAt: Date;
@@ -92,6 +98,13 @@ const userSchema: Schema<IUser> = new Schema(
     age: { type: Number, default: null },
     gender: { type: String, enum: ["male", "female", "other"] },
     profileImage: { type: String },
+    activeWorkoutTemplates: {
+      type: [{
+        templateId: { type: Schema.Types.ObjectId, ref: "WorkoutTemplate" },
+        startDate: { type: Date }
+      }],
+      default: []
+    },
     activeWorkoutTemplate: { type: Schema.Types.ObjectId, ref: "WorkoutTemplate", default: null },
     workoutTemplateStartDate: { type: Date, default: null },
     activeDietTemplate: { type: Schema.Types.ObjectId, ref: "DietTemplate", default: null },

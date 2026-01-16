@@ -29,6 +29,11 @@ export const stopWorkoutTemplate = async () => {
     return res.data;
 };
 
+export const toggleWorkoutTemplate = async (templateId: string) => {
+    const res = await API.put('/user/workout-template/toggle', { templateId });
+    return res.data;
+};
+
 export const getDietTemplates = async (query: TemplateQuery = {}) => {
     const res = await API.get('/template/diet', { params: query });
     return res.data;

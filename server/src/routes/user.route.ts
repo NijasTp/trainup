@@ -75,6 +75,12 @@ router.put(
   userProfileController.updateProfile.bind(userProfileController)
 )
 
+router.put(
+  '/workout-template/toggle',
+  roleMiddleware(['user']),
+  userProfileController.toggleWorkoutTemplate.bind(userProfileController)
+)
+
 router.post('/change-password', authMiddleware, userAuthController.changePassword.bind(userAuthController))
 
 router

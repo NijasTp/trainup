@@ -28,6 +28,7 @@ router.get('/application/:id', authMiddleware, roleMiddleware(['admin']), traine
 router.get('/get-details', authMiddleware, roleMiddleware(['trainer']), trainerAuthController.getData.bind(trainerAuthController));
 router.get('/get-clients', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getClients.bind(trainerClientController));
 router.get('/get-client/:id', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getClient.bind(trainerClientController));
+router.get('/client-progress/:clientId', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getClientProgress.bind(trainerClientController));
 
 router.get('/dashboard-stats', authMiddleware, (req, res, next) =>
     trainerDashboardController.getDashboard(req, res, next)

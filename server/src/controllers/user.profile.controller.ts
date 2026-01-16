@@ -155,4 +155,16 @@ export class UserProfileController {
             next(err)
         }
     }
+    async toggleWorkoutTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = (req.user as JwtPayload).id;
+            const { templateId } = req.body;
+            if (!templateId) throw new AppError(MESSAGES.INVALID_REQUEST, STATUS_CODE.BAD_REQUEST);
+
+            const added = await this._userService.toggleWorkoutTemplate(userId, templateId);
+            res.status(STATUS_CODE.OK).json({ added, message: added ? "Template started" : "Template stopped" });
+        } catch (err) {
+            next(err);
+        }
+    }
 }

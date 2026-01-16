@@ -373,6 +373,52 @@ export class UserService implements IUserService {
         return user.assignedTrainer.toString()
     }
 
+    async toggleWorkoutTemplate(userId: string, templateId: string): Promise<boolean> {
+        const user = await this._userRepo.findById(userId);
+        if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+
+        // Ensure array exists
+        if (!user.activeWorkoutTemplates) user.activeWorkoutTemplates = [];
+
+        const index = user.activeWorkoutTemplates.findIndex(
+            t => t.templateId.toString() === templateId
+        );
+
+        let added = false;
+        if (index > -1) {
+            // Remove
+            user.activeWorkoutTemplates.splice(index, 1);
+        } else {
+            // Add
+            user.activeWorkoutTemplates.push({ templateId, startDate: new Date() });
+            added = true;
+        }
+
+        // Sync legacy fields
+        if (added) {
+            user.activeWorkoutTemplate = templateId;
+            user.workoutTemplateStartDate = new Date();
+        } else {
+            if (user.activeWorkoutTemplate?.toString() === templateId) {
+                user.activeWorkoutTemplate = null;
+                user.workoutTemplateStartDate = null;
+                // Fallback to first available if any
+                if (user.activeWorkoutTemplates.length > 0) {
+                    user.activeWorkoutTemplate = user.activeWorkoutTemplates[0].templateId;
+                    user.workoutTemplateStartDate = user.activeWorkoutTemplates[0].startDate;
+                }
+            }
+        }
+
+        await this._userRepo.updateUser(userId, {
+            activeWorkoutTemplates: user.activeWorkoutTemplates,
+            activeWorkoutTemplate: user.activeWorkoutTemplate,
+            workoutTemplateStartDate: user.workoutTemplateStartDate
+        });
+
+        return added;
+    }
+
     private mapToResponseDto(user: IUser): UserResponseDto {
         return {
             _id: user._id.toString(),
@@ -409,6 +455,11 @@ export class UserService implements IUserService {
             height: user.height,
             age: user.age,
             gender: user.gender,
+            activeWorkoutTemplates: user.activeWorkoutTemplates?.map(t => ({
+                templateId: t.templateId.toString(),
+                startDate: t.startDate
+            })) || [],
+            activeWorkoutTemplate: user.activeWorkoutTemplate?.toString(),
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         }

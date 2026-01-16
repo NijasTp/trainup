@@ -60,4 +60,5 @@ export interface IUserService {
   removeUserTrainer(userId: string): Promise<void>
   getAssignedTrainerId(userId: string): Promise<string | null>
   uploadChatFile(file: unknown): Promise<string>
+  toggleWorkoutTemplate(userId: string, templateId: string): Promise<boolean>
 }

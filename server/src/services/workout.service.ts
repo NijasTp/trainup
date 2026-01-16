@@ -227,56 +227,91 @@ export class WorkoutService implements IWorkoutService {
     let day = await this._workoutDayRepo.findByUserAndDate(userId, date);
 
     let templateInfo: Partial<WorkoutDayResponseDto> = {};
-    let virtualSession: WorkoutSessionResponseDto | null = null;
+    const virtualSessions: WorkoutSessionResponseDto[] = [];
 
+    // Consolidate active templates (new array + legacy field)
+    const activeTemplates = [...(user?.activeWorkoutTemplates || [])];
     if (user?.activeWorkoutTemplate && user.workoutTemplateStartDate) {
-      const template = await this._workoutTemplateRepo.findById(user.activeWorkoutTemplate.toString());
-      if (template) {
-        const startDate = new Date(user.workoutTemplateStartDate);
-        startDate.setHours(0, 0, 0, 0);
-        const currentDate = new Date(date);
-        currentDate.setHours(0, 0, 0, 0);
+      // Avoid duplicates if legacy is actively migrated (though simplified here)
+      if (!activeTemplates.some(t => t.templateId.toString() === user.activeWorkoutTemplate!.toString())) {
+        activeTemplates.push({
+          templateId: user.activeWorkoutTemplate,
+          startDate: user.workoutTemplateStartDate
+        });
+      }
+    }
 
-        const diffTime = currentDate.getTime() - startDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    if (activeTemplates.length > 0) {
+      for (const activeDetails of activeTemplates) {
+        const template = await this._workoutTemplateRepo.findById(activeDetails.templateId.toString());
+        if (template) {
+          const startDate = new Date(activeDetails.startDate);
+          startDate.setHours(0, 0, 0, 0);
+          const currentDate = new Date(date);
+          currentDate.setHours(0, 0, 0, 0);
 
-        if (diffDays >= 0) {
-          const dayNumber = (diffDays % template.duration) + 1;
-          const templateDay = template.days.find(d => d.dayNumber === dayNumber);
+          const diffTime = currentDate.getTime() - startDate.getTime();
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-          templateInfo = {
-            templateDay: dayNumber,
-            templateName: template.title,
-            templateDuration: template.duration
-          };
+          if (diffDays >= 0) {
+            const dayNumber = (diffDays % template.duration) + 1;
+            const templateDay = template.days.find(d => d.dayNumber === dayNumber);
 
-          if (templateDay && templateDay.exercises.length > 0) {
-            // Check if there's already an admin session or template session for today
-            const hasExistingAdminSession = day?.sessions?.some(s =>
-              typeof s !== 'string' && (s as IWorkoutSession).givenBy === 'admin'
-            );
+            // Set template info (Last one wins, or maybe we should aggregate? 
+            // For now, let's just set it so the UI shows something)
+            templateInfo = {
+              templateDay: dayNumber,
+              templateName: template.title,
+              templateDuration: template.duration
+            };
 
-            if (!hasExistingAdminSession) {
-              virtualSession = {
-                _id: `template-${template._id}-${dayNumber}-${date}`,
-                name: `${template.title} - Day ${dayNumber}`,
-                givenBy: 'admin',
-                date: date,
-                time: "08:00", // Default virtual time
-                exercises: templateDay.exercises.map(ex => ({
-                  id: ex.exerciseId,
-                  name: ex.name,
-                  image: ex.image,
-                  sets: ex.sets,
-                  reps: ex.reps,
-                  time: ex.time
-                })),
-                goal: template.goal,
-                notes: `From active template: ${template.title}`,
-                isDone: false,
-                createdAt: new Date(),
-                updatedAt: new Date()
-              };
+            if (templateDay && templateDay.exercises.length > 0) {
+              // Check if there's already an admin session or template session for today FROM THIS TEMPLATE?
+              // The original logic checked if ANY admin session existed. 
+              // With multiple templates, we want to allow multiple virtual sessions.
+              // We should check if a session from THIS template exists. 
+              // However, sessions don't store templateId explicitely, just 'givenBy: admin' and maybe notes.
+              // To prevent duplicates, we can check if a session with same name exists? 
+              // Or maybe just let it be virtual until 'started'.
+              // Original logic: "if (!hasExistingAdminSession) { create virtual }"
+              // With multiple templates, this blocks the 2nd template if 1st created a session.
+              // We should probably rely on `_id` generation or check names. 
+              // Let's rely on checking if any session in `day.sessions` matches the virtual ID we are about to generate.
+
+              const virtualId = `template-${template._id}-${dayNumber}-${date}`;
+              const alreadyExists = day?.sessions?.some(s => {
+                const session = s as IWorkoutSession;
+                // Session IDs are ObjectIds usually, but virtual ones are strings. 
+                // However, once saved, they become ObjectIds.
+                // If the user "started" it, it's a real session in DB.
+                // We need a way to link real session to template. 
+                // Notes has "From active template: TITLE". 
+                return typeof s !== 'string' && session.notes?.includes(template.title);
+              });
+
+
+              if (!alreadyExists) {
+                virtualSessions.push({
+                  _id: virtualId,
+                  name: `${template.title} - Day ${dayNumber}`,
+                  givenBy: 'admin',
+                  date: date,
+                  time: "08:00", // Default virtual time
+                  exercises: templateDay.exercises.map(ex => ({
+                    id: ex.exerciseId,
+                    name: ex.name,
+                    image: ex.image,
+                    sets: ex.sets,
+                    reps: ex.reps,
+                    // removed time
+                  })),
+                  goal: template.goal,
+                  notes: `From active template: ${template.title}`,
+                  isDone: false,
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                });
+              }
             }
           }
         }
@@ -284,13 +319,13 @@ export class WorkoutService implements IWorkoutService {
     }
 
     if (!day) {
-      if (!templateInfo.templateDay) return null;
+      if (virtualSessions.length === 0 && !templateInfo.templateDay) return null;
 
       return {
         _id: "",
         userId,
         date,
-        sessions: virtualSession ? [virtualSession] : [],
+        sessions: virtualSessions,
         ...templateInfo,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -298,13 +333,11 @@ export class WorkoutService implements IWorkoutService {
     }
 
     const response = this.mapToDayResponseDto(day);
-    if (virtualSession) {
-      response.sessions.push(virtualSession);
+    if (virtualSessions.length > 0) {
+      response.sessions.push(...virtualSessions);
     }
     return { ...response, ...templateInfo };
   }
-
-
 
   private mapToSessionResponseDto(session: IWorkoutSession): WorkoutSessionResponseDto {
     return {

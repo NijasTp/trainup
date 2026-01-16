@@ -39,6 +39,10 @@ export class UserDto {
       height: user.height,
       age: user.age,
       gender: user.gender,
+      activeWorkoutTemplates: user.activeWorkoutTemplates?.map(t => ({
+        templateId: t.templateId.toString(),
+        startDate: t.startDate
+      })) || [],
       activeWorkoutTemplate: user.activeWorkoutTemplate?.toString(),
       workoutTemplateStartDate: user.workoutTemplateStartDate || undefined,
       activeDietTemplate: user.activeDietTemplate?.toString(),
@@ -98,6 +102,11 @@ export class LoginResponseDto {
   streak?: unknown;
 }
 
+export class ActiveTemplateDto {
+  templateId: string;
+  startDate: Date;
+}
+
 export class UserResponseDto {
   _id: string;
   name: string;
@@ -126,6 +135,7 @@ export class UserResponseDto {
   age?: number;
   trainerPlan?: 'basic' | 'premium' | 'pro';
   gender?: string;
+  activeWorkoutTemplates?: ActiveTemplateDto[];
   activeWorkoutTemplate?: string;
   workoutTemplateStartDate?: Date;
   activeDietTemplate?: string;
