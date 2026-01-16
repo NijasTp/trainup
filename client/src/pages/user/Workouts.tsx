@@ -41,6 +41,14 @@ function FilterButtons({ filter, setFilter }: { filter: "trainer" | "user" | "ad
       >
         My Sessions
       </Button>
+      <Link to="/workouts/browse">
+        <Button
+          variant="outline"
+          className="bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"
+        >
+          Browse Templates
+        </Button>
+      </Link>
       <Link to="/workouts/add">
         <Button className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300">
           <Plus className="h-4 w-4 mr-2" /> Add Session
