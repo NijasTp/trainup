@@ -425,15 +425,33 @@ export default function WorkoutPage() {
               <FilterButtons filter={filter} setFilter={setFilter} />
             </div>
 
-            {dailyWorkouts.find(dw => dw.date === format(selectedDate, "yyyy-MM-dd"))?.templateName && (
-              <div className="flex items-center gap-3 p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
-                <CalendarIcon className="h-5 w-5 text-orange-500" />
-                <div>
-                  <p className="text-sm font-bold text-orange-500">Active Template: {dailyWorkouts.find(dw => dw.date === format(selectedDate, "yyyy-MM-dd"))?.templateName}</p>
-                  <p className="text-xs text-orange-400/80">Day {dailyWorkouts.find(dw => dw.date === format(selectedDate, "yyyy-MM-dd"))?.templateDay} of {dailyWorkouts.find(dw => dw.date === format(selectedDate, "yyyy-MM-dd"))?.templateDuration}</p>
-                </div>
-              </div>
-            )}
+            {/* Banner for Active Templates */}
+            {(() => {
+              const dw = dailyWorkouts.find(dw => dw.date === format(selectedDate, "yyyy-MM-dd"));
+              // Check virtual sessions to find unique template names if not explicitly in templateName
+              // Actually, backend now returns virtual sessions. 
+              // We can infer active templates from virtual sessions notes or just rely on what we have.
+              // But 'templateName' field in response is singular.
+              // Let's rely on finding sessions with "Given By Admin" (which are typically templates) or the singular banner.
+              // Ideally, backend should return an array of active template names.
+              // For now, let's keep the singular banner but maybe make it generic if multiple?
+              // Or check the virtual sessions.
+
+              if (dw?.templateName) {
+                return (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3 p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
+                      <CalendarIcon className="h-5 w-5 text-orange-500" />
+                      <div>
+                        <p className="text-sm font-bold text-orange-500">Active Template: {dw.templateName}</p>
+                        <p className="text-xs text-orange-400/80">Day {dw.templateDay} of {dw.templateDuration}</p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+              return null;
+            })()}
           </div>
         </section>
 
@@ -477,6 +495,11 @@ export default function WorkoutPage() {
                 <p>
                   No {filter === "trainer" ? "trainer-assigned" : "user-created or admin-assigned"} workouts scheduled for this day.
                 </p>
+                {filter === "trainer" && dailyWorkouts.some(dw => dw.templateName || dw.sessions.some(s => s.givenBy === 'admin')) && (
+                  <Button variant="link" onClick={() => setFilter('user')} className="mt-2 text-primary">
+                    Check "My Sessions" for active template workouts
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )

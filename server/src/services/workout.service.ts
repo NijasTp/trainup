@@ -279,14 +279,24 @@ export class WorkoutService implements IWorkoutService {
               // Let's rely on checking if any session in `day.sessions` matches the virtual ID we are about to generate.
 
               const virtualId = `template-${template._id}-${dayNumber}-${date}`;
+              // Check for existing session from this template.
+              // We check populated sessions for matching notes/name.
+              // For unpopulated sessions (IDs), we must assume they might be duplicates but we can't be sure without fetching.
+              // However, getDay usually populates sessions in the repo. 
+              // If it failed to populate (e.g. session deleted but ID remains), `session` might be string.
+              // But mapToDayResponseDto handles strings by making light objects.
+              // The main issue is if `day.sessions` contains ObjectIds (if not populated) it won't have notes.
+              // But WorkouDayRepo uses `.populate('sessions')`. 
+              // So sessions should be objects.
+
               const alreadyExists = day?.sessions?.some(s => {
+                // If s is a string ID, we can't check content. But it should be populated.
+                // If s is an object, check notes.
                 const session = s as IWorkoutSession;
-                // Session IDs are ObjectIds usually, but virtual ones are strings. 
-                // However, once saved, they become ObjectIds.
-                // If the user "started" it, it's a real session in DB.
-                // We need a way to link real session to template. 
-                // Notes has "From active template: TITLE". 
-                return typeof s !== 'string' && session.notes?.includes(template.title);
+                if (typeof s === 'string') return false;
+                // Also check if name matches "TEMPLATE_TITLE - Day X" pattern?
+                // Notes is safer as user might rename session.
+                return session.notes?.includes(`From active template: ${template.title}`) || session.name === `${template.title} - Day ${dayNumber}`;
               });
 
 
