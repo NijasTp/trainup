@@ -74,6 +74,20 @@ import ProgressPage from './pages/user/Progress';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import AdminRatingManagement from './pages/admin/AdminRatingManagement';
 
+import CreateSubscriptionPlan from './pages/gym/CreateSubscriptionPlan';
+import GymDashboard from './pages/gym/GymDashboard';
+import GymEmployeeDetails from './pages/gym/GymEmployeeDetails';
+import GymEmployees from './pages/gym/GymEmployees';
+import GymProfile from './pages/gym/GymProfile';
+import GymStore from './pages/gym/GymStore';
+import PostTrainerHiring from './pages/gym/PostTrainerHiring';
+import GymLogin from "./pages/gym/GymLogin";
+import GymSignup from "./pages/gym/GymSignup";
+import GymVerifyOtp from "./pages/gym/GymVerifyOtp";
+import GymForgotPassword from "./pages/gym/GymForgotPassword";
+import GymResetPassword from "./pages/gym/GymResetPassword";
+import { GymPreventLoggedIn, GymProtectedRoute } from "./redirects/GymRedirects";
+
 function App() {
   return (
     <>
@@ -156,6 +170,22 @@ function App() {
         <Route path={ROUTES.ADMIN_ADD_WORKOUT_TEMPLATE} element={<AdminProtectedRoute><WorkoutTemplateForm /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_ADD_DIET_TEMPLATE} element={<AdminProtectedRoute><NewDietTemplate /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_EDIT_TEMPLATE} element={<AdminProtectedRoute><EditTemplate /></AdminProtectedRoute>} />
+
+        {/* Gym Management Routes */}
+        <Route path={ROUTES.GYM_DASHBOARD} element={<GymProtectedRoute><GymDashboard /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_POST_HIRING} element={<GymProtectedRoute><PostTrainerHiring /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_STORE} element={<GymProtectedRoute><GymStore /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_EMPLOYEES} element={<GymProtectedRoute><GymEmployees /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_EMPLOYEE_DETAILS} element={<GymProtectedRoute><GymEmployeeDetails /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_PROFILE} element={<GymProtectedRoute><GymProfile /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_CREATE_SUBSCRIPTION} element={<GymProtectedRoute><CreateSubscriptionPlan /></GymProtectedRoute>} />
+
+        {/* Gym Auth Routes */}
+        <Route path={ROUTES.GYM_LOGIN} element={<GymPreventLoggedIn><GymLogin /></GymPreventLoggedIn>} />
+        <Route path={ROUTES.GYM_SIGNUP} element={<GymPreventLoggedIn><GymSignup /></GymPreventLoggedIn>} />
+        <Route path={ROUTES.GYM_VERIFY_OTP} element={<GymPreventLoggedIn><GymVerifyOtp /></GymPreventLoggedIn>} />
+        <Route path={ROUTES.GYM_FORGOT_PASSWORD} element={<GymPreventLoggedIn><GymForgotPassword /></GymPreventLoggedIn>} />
+        <Route path={ROUTES.GYM_RESET_PASSWORD} element={<GymPreventLoggedIn><GymResetPassword /></GymPreventLoggedIn>} />
       </Routes>
     </>
   );

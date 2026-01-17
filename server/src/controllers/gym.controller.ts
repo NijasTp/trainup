@@ -261,4 +261,24 @@ export class GymController {
 
 
 
+  async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email } = req.body;
+      await this._otpService.requestForgotPasswordOtp(email, Role.GYM);
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_SENT });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email, otp, password } = req.body;
+      await this._otpService.verifyOtp(email, otp);
+      await this._gymService.resetPassword(email, password);
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.PASSWORD_RESET_SUCCESS });
+    } catch (err) {
+      next(err);
+    }
+  }
 }

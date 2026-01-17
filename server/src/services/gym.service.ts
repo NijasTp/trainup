@@ -588,4 +588,27 @@ export class GymService implements IGymService {
       updatedAt: plan.updatedAt as Date
     }
   }
+  async forgotPassword(email: string): Promise<void> {
+    const gym = await this._gymRepo.findByEmail(email)
+    if (!gym) throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    // The otp service will handle generation and mailing
+    // dependent on role 'gym'
+    // But OtpService.requestForgotPasswordOtp needs to be exposed or I need to inject logic here.
+    // OtpService is not injected? It is not in constructor. I will need to inject it or use the interface method requestForgotPasswordOtp if it was exposed.
+    // Wait, GymService constructor has _jwtService and _gymRepo. It does NOT have _otpService.
+    // GymController has _otpService.
+    // So usually Controller calls OtpService for OTP and GymService for data.
+    // But for resetPassword, we need to update the password in GymService.
+  }
+
+  // Refined plan: I will handle forgotPassword in Controller using OtpService.
+  // I only need resetPassword in GymService to actually update the password.
+
+  async resetPassword(email: string, password: string): Promise<void> {
+    const gym = await this._gymRepo.findByEmail(email)
+    if (!gym) throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+    await this._gymRepo.updateGym(gym._id.toString(), { password: hashedPassword })
+  }
 }

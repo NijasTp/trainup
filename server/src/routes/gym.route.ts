@@ -2,7 +2,7 @@ import express from "express";
 import container from "../core/di/inversify.config";
 import { GymController } from "../controllers/gym.controller";
 import TYPES from "../core/types/types";
-import { authMiddleware,roleMiddleware } from "../middlewares/auth.middleware";
+import { authMiddleware, roleMiddleware } from "../middlewares/auth.middleware";
 import fileUpload from "express-fileupload";
 
 const router = express.Router();
@@ -16,25 +16,27 @@ router.post("/login", gymController.login.bind(gymController));
 router.post("/request-otp", gymController.requestOtp.bind(gymController));
 router.post("/verify-otp", gymController.verifyOtp.bind(gymController));
 
-router.post('/logout',gymController.logout.bind(gymController))
+router.post('/logout', gymController.logout.bind(gymController))
+router.post('/forgot-password', gymController.forgotPassword.bind(gymController));
+router.post('/reset-password', gymController.resetPassword.bind(gymController));
 
 // Gym protected
-router.get('/get-details',authMiddleware,roleMiddleware(['gym']), gymController.getData.bind(gymController))
+router.get('/get-details', authMiddleware, roleMiddleware(['gym']), gymController.getData.bind(gymController))
 
 router.get("/announcements", authMiddleware, gymController.getAnnouncements.bind(gymController));
 router.post("/announcements", authMiddleware, fileUpload({ useTempFiles: true }), gymController.createAnnouncement.bind(gymController));
 router.put("/announcements/:id", authMiddleware, fileUpload({ useTempFiles: true }), gymController.updateAnnouncement.bind(gymController));
 router.delete("/announcements/:id", authMiddleware, gymController.deleteAnnouncement.bind(gymController));
 
-router.post('/subscription-plans',authMiddleware,roleMiddleware(['gym']), gymController.createSubscriptionPlan.bind(gymController))
-router.post('/subscription-plan',authMiddleware,roleMiddleware(['gym']), gymController.createSubscriptionPlan.bind(gymController))
-router.get('/subscription-plans',authMiddleware,roleMiddleware(['gym']), gymController.listSubscriptionPlans.bind(gymController))
-router.get('/subscription-plan/:id',authMiddleware,roleMiddleware(['gym']), gymController.getSubscriptionPlan.bind(gymController))
-router.put('/subscription-plan/:id',authMiddleware,roleMiddleware(['gym']), gymController.updateSubscriptionPlan.bind(gymController))
-router.delete('/subscription-plan/:id',authMiddleware,roleMiddleware(['gym']), gymController.deleteSubscriptionPlan.bind(gymController))
+router.post('/subscription-plans', authMiddleware, roleMiddleware(['gym']), gymController.createSubscriptionPlan.bind(gymController))
+router.post('/subscription-plan', authMiddleware, roleMiddleware(['gym']), gymController.createSubscriptionPlan.bind(gymController))
+router.get('/subscription-plans', authMiddleware, roleMiddleware(['gym']), gymController.listSubscriptionPlans.bind(gymController))
+router.get('/subscription-plan/:id', authMiddleware, roleMiddleware(['gym']), gymController.getSubscriptionPlan.bind(gymController))
+router.put('/subscription-plan/:id', authMiddleware, roleMiddleware(['gym']), gymController.updateSubscriptionPlan.bind(gymController))
+router.delete('/subscription-plan/:id', authMiddleware, roleMiddleware(['gym']), gymController.deleteSubscriptionPlan.bind(gymController))
 
 
 // Reapply
-router.post('/reapply',authMiddleware,roleMiddleware(['gym']), gymController.reapply.bind(gymController))
+router.post('/reapply', authMiddleware, roleMiddleware(['gym']), gymController.reapply.bind(gymController))
 
 export default router

@@ -3,8 +3,8 @@ import API from '../lib/axios';
 
 export const login = async (email: string, password: string) => {
 
-    const response = await API.post('/user/login', { email, password });
-    return response.data;
+  const response = await API.post('/user/login', { email, password });
+  return response.data;
 
 
 };
@@ -81,7 +81,7 @@ export const trainerForgotPasswordResendOtp = async (email: string) => {
 }
 
 export const trainerApply = async (formData: FormData) => {
-  const res= await API.post("/trainer/apply", formData, {
+  const res = await API.post("/trainer/apply", formData, {
     headers: {
       "Content-Type": "multipart/form-data"
     }
@@ -116,7 +116,7 @@ export const gymVerifyOtp = async (formData: FormData) => {
   return response.data;
 };
 
-export const gymLogout= async ()=>{
+export const gymLogout = async () => {
   await API.post('/gym/logout')
 }
 
@@ -134,3 +134,12 @@ export const logoutAdmin = async () => {
   await API.post("/admin/logout");
 }
 
+
+export const gymForgotPassword = async (email: string) => {
+  await API.post('/gym/forgot-password', { email })
+}
+
+export const gymResetPassword = async (email: string, password: string, otp: string) => {
+  const res = await API.post('/gym/reset-password', { email, password, otp })
+  return res.data
+}

@@ -79,4 +79,18 @@ export const ROUTES = {
   ADMIN_EDIT_TEMPLATE: "/admin/templates/:id/:template/edit",
   ADMIN_TRANSACTIONS: "/admin/transactions",
   ADMIN_RATINGS: "/admin/ratings",
+
+  // Gym Management Routes (New)
+  GYM_DASHBOARD: "/gym/dashboard",
+  GYM_STORE: "/gym/store",
+  GYM_POST_HIRING: "/gym/hiring",
+  GYM_EMPLOYEES: "/gym/employees",
+  GYM_EMPLOYEE_DETAILS: "/gym/employees/:id",
+  GYM_PROFILE: "/gym/profile",
+  GYM_CREATE_SUBSCRIPTION: "/gym/subscriptions/create",
+  GYM_LOGIN: "/gym/login",
+  GYM_SIGNUP: "/gym/signup",
+  GYM_VERIFY_OTP: "/gym/verify-otp",
+  GYM_FORGOT_PASSWORD: "/gym/forgot-password",
+  GYM_RESET_PASSWORD: "/gym/reset-password",
 };
