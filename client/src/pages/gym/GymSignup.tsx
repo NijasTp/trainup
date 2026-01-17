@@ -1,9 +1,7 @@
-
 import 'leaflet/dist/leaflet.css';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/ui/logo';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import { Building2, Mail, Lock, Upload, MapPin, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { requestGymOtp } from '@/services/authService';
@@ -21,19 +19,6 @@ let DefaultIcon = L.icon({
     iconAnchor: [12, 41]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
-
-// Subcomponent for Location Marker and Map Clicks
-function LocationMarker({ position, setPosition }: { position: [number, number] | null, setPosition: (pos: [number, number]) => void }) {
-    useMapEvents({
-        click(e: L.LeafletMouseEvent) {
-            setPosition([e.latlng.lat, e.latlng.lng]);
-        },
-    });
-
-    return position === null ? null : (
-        <Marker position={position}></Marker>
-    );
-}
 
 export default function GymSignup() {
     const navigate = useNavigate();
@@ -53,6 +38,11 @@ export default function GymSignup() {
 
     const [mapPosition, setMapPosition] = useState<[number, number] | null>(null);
 
+    // Vanilla Leaflet Refs
+    const mapContainerRef = useRef<HTMLDivElement>(null);
+    const mapInstanceRef = useRef<L.Map | null>(null);
+    const markerRef = useRef<L.Marker | null>(null);
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
         if (e.target.files && e.target.files[0]) {
             setFormData({ ...formData, [field]: e.target.files[0] });
@@ -63,11 +53,9 @@ export default function GymSignup() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    setMapPosition([position.coords.latitude, position.coords.longitude]);
-                    setFormData(prev => ({
-                        ...prev,
-                        geoLocation: { type: 'Point', coordinates: [position.coords.latitude, position.coords.longitude] }
-                    }));
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    updateLocation(lat, lng);
                     toast.success("Location detected!");
                 },
                 (error) => {
@@ -80,13 +68,58 @@ export default function GymSignup() {
         }
     };
 
-    const handleMapClick = (pos: [number, number]) => {
-        setMapPosition(pos);
+    const updateLocation = (lat: number, lng: number) => {
+        setMapPosition([lat, lng]);
         setFormData(prev => ({
             ...prev,
-            geoLocation: { type: 'Point', coordinates: [pos[0], pos[1]] }
+            geoLocation: { type: 'Point', coordinates: [lat, lng] } // Note: Backend likely expects [lng, lat] for GeoJSON, but we keep existing logic for consistency unless user requested change. Leaflet needs [lat, lng].
         }));
-    }
+
+        // Update Map View
+        if (mapInstanceRef.current) {
+            mapInstanceRef.current.setView([lat, lng], 13);
+
+            if (markerRef.current) {
+                markerRef.current.setLatLng([lat, lng]);
+            } else {
+                markerRef.current = L.marker([lat, lng]).addTo(mapInstanceRef.current);
+            }
+        }
+    };
+
+
+    useEffect(() => {
+        if (step === 2 && mapContainerRef.current && !mapInstanceRef.current) {
+            const initialPos: [number, number] = mapPosition || [20.5937, 78.9629]; // Default or saved
+
+            const map = L.map(mapContainerRef.current).setView(initialPos, 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            map.on('click', (e: L.LeafletMouseEvent) => {
+                const { lat, lng } = e.latlng;
+                updateLocation(lat, lng);
+            });
+
+            if (mapPosition) {
+                markerRef.current = L.marker(mapPosition).addTo(map);
+            }
+
+            mapInstanceRef.current = map;
+        }
+
+    
+        return () => {
+            if (step !== 2 && mapInstanceRef.current) {
+                mapInstanceRef.current.remove();
+                mapInstanceRef.current = null;
+                markerRef.current = null;
+            }
+        };
+    }, [step]); 
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -200,11 +233,8 @@ export default function GymSignup() {
                                             <MapPin size={12} /> Detect My Location
                                         </button>
                                     </div>
-                                    <div className="h-64 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 z-0">
-                                        <MapContainer center={mapPosition || [20.5937, 78.9629]} zoom={13} style={{ height: '100%', width: '100%' }}>
-                                            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors' />
-                                            <LocationMarker position={mapPosition} setPosition={handleMapClick} />
-                                        </MapContainer>
+                                    <div className="h-64 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 z-0 bg-gray-100 dark:bg-gray-800">
+                                        <div ref={mapContainerRef} style={{ height: '100%', width: '100%' }}></div>
                                     </div>
                                     <p className="text-xs text-gray-500">Tap on the map to manually adjust the pin.</p>
                                 </div>
