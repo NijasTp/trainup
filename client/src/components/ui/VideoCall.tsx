@@ -24,6 +24,7 @@ interface VideoCallProps {
 export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const [isVideoEnabled, setIsVideoEnabled] = useState(true);
     const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+    const [isCameraDenied, setIsCameraDenied] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -37,12 +38,15 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
     const localStreamRef = useRef<MediaStream | null>(null);
     const callStartTimeRef = useRef<Date | null>(null);
+    const makingOfferRef = useRef(false);
 
     const rtcConfiguration = {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-        ]
+            { urls: 'stun:stun2.l.google.com:19302' },
+        ],
+        iceCandidatePoolSize: 10
     };
 
     useEffect(() => {
@@ -54,7 +58,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
-        if (isConnected && callStartTimeRef.current) {
+        if (isRemoteUserConnected && callStartTimeRef.current) {
             interval = setInterval(() => {
                 const now = new Date();
                 const diff = Math.floor((now.getTime() - callStartTimeRef.current!.getTime()) / 1000);
@@ -62,7 +66,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             }, 1000);
         }
         return () => clearInterval(interval);
-    }, [isConnected]);
+    }, [isRemoteUserConnected]);
 
     const formatDuration = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -76,26 +80,34 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             setError(null);
 
             // 1. Get User Media
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-                audio: true
-            });
-            localStreamRef.current = stream;
-
-            if (localVideoRef.current) {
-                localVideoRef.current.srcObject = stream;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: true
+                });
+                localStreamRef.current = stream;
+                if (localVideoRef.current) {
+                    localVideoRef.current.srcObject = stream;
+                }
+                setIsVideoEnabled(true);
+                setIsAudioEnabled(true);
+                setIsCameraDenied(false);
+            } catch (mediaErr: any) {
+                console.warn('Camera/Mic access denied or unavailable:', mediaErr);
+                setIsCameraDenied(true);
+                setIsVideoEnabled(false);
+                setIsAudioEnabled(false);
             }
 
             // 2. Initialize Socket
             socketRef.current = io(import.meta.env.VITE_API_URL, {
                 withCredentials: true,
-                transports: ['websocket']
+                transports: ['websocket', 'polling']
             });
 
             socketRef.current.on('connect', () => {
                 console.log('Socket connected');
                 setIsConnected(true);
-                // Join the video room
                 socketRef.current?.emit('join_video_room', { roomId });
             });
 
@@ -105,23 +117,20 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 setIsLoading(false);
             });
 
-            // 3. Setup Socket Listeners for WebRTC Signaling
+            // 3. Setup Socket Listeners
             setupSocketListeners();
 
-            // 4. API Call to join room (Backend Logic)
+            // 4. API Call to join room
             try {
                 await API.post(`/video-call/room/${roomId}/join`);
             } catch (err) {
                 console.error("Failed to join call via API", err);
-                // Determine if we should block or continue? 
-                // Usually for tracking status in DB.
             }
 
             setIsLoading(false);
-
         } catch (err: any) {
             console.error('Error initializing call:', err);
-            setError(err.message || 'Failed to access camera/microphone');
+            setError(err.message || 'Failed to initialize call');
             setIsLoading(false);
         }
     };
@@ -132,8 +141,8 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         socketRef.current.on('user_joined', async ({ userId }) => {
             console.log('User joined:', userId);
             setIsRemoteUserConnected(true);
-            callStartTimeRef.current = new Date();
-            // The existing user (initiator) creates the offer
+            if (!callStartTimeRef.current) callStartTimeRef.current = new Date();
+            // Start negotiation
             await createOffer();
         });
 
@@ -142,22 +151,17 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             setIsRemoteUserConnected(false);
             setRemoteStream(null);
             if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-            closePeerConnection(); // Reset PC for potential reconnect? Or end call?
-            // Usually we might want to keep local stream active or show "User disconnected"
-            createPeerConnection(); // Re-prepare for potential reconnect
+            // Don't close PC entirely, just wait for reconnect or new join
+            // Transitioning back to waiting state
         });
 
-        socketRef.current.on('webrtc_offer', async ({ offer, fromUserId }) => {
-            console.log('Received offer from:', fromUserId);
-            if (!isRemoteUserConnected) {
-                setIsRemoteUserConnected(true);
-                callStartTimeRef.current = new Date();
-            }
+        socketRef.current.on('webrtc_offer', async ({ offer }) => {
+            console.log('Received WebRTC offer');
             await handleOffer(offer);
         });
 
         socketRef.current.on('webrtc_answer', async ({ answer }) => {
-            console.log('Received answer');
+            console.log('Received WebRTC answer');
             await handleAnswer(answer);
         });
 
@@ -168,9 +172,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     };
 
     const createPeerConnection = () => {
-        if (peerConnectionRef.current) { // prevent duplicates
-            return peerConnectionRef.current;
-        }
+        if (peerConnectionRef.current) return peerConnectionRef.current;
 
         const pc = new RTCPeerConnection(rtcConfiguration);
 
@@ -183,13 +185,13 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
         // Handle remote stream
         pc.ontrack = (event) => {
-            console.log('Received remote track');
-            // Check if we already have the stream set
+            console.log('Received remote track:', event.track.kind);
             if (event.streams && event.streams[0]) {
                 setRemoteStream(event.streams[0]);
                 if (remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = event.streams[0];
                 }
+                setIsRemoteUserConnected(true);
             }
         };
 
@@ -199,18 +201,35 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 socketRef.current.emit('webrtc_ice_candidate', {
                     roomId,
                     candidate: event.candidate,
-                    // targetUserId is handled by server room broadcast or explicit ID
                 });
             }
         };
 
         pc.onconnectionstatechange = () => {
-            console.log('Connection state:', pc.connectionState);
-            if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+            console.log('PeerConnection state:', pc.connectionState);
+            if (pc.connectionState === 'connected') {
+                setIsRemoteUserConnected(true);
+            } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
                 setIsRemoteUserConnected(false);
-                setRemoteStream(null);
             }
-        }
+        };
+
+        // Handle negotiation needed
+        pc.onnegotiationneeded = async () => {
+            console.log('Negotiation needed');
+            try {
+                makingOfferRef.current = true;
+                await pc.setLocalDescription();
+                socketRef.current?.emit('webrtc_offer', {
+                    roomId,
+                    offer: pc.localDescription
+                });
+            } catch (err) {
+                console.error('Error in onnegotiationneeded:', err);
+            } finally {
+                makingOfferRef.current = false;
+            }
+        };
 
         peerConnectionRef.current = pc;
         return pc;
@@ -220,14 +239,17 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         if (peerConnectionRef.current) {
             peerConnectionRef.current.onicecandidate = null;
             peerConnectionRef.current.ontrack = null;
+            peerConnectionRef.current.onnegotiationneeded = null;
+            peerConnectionRef.current.onconnectionstatechange = null;
             peerConnectionRef.current.close();
             peerConnectionRef.current = null;
         }
-    }
+    };
 
     const createOffer = async () => {
         const pc = createPeerConnection();
         try {
+            makingOfferRef.current = true;
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
             socketRef.current?.emit('webrtc_offer', {
@@ -236,12 +258,19 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             });
         } catch (err) {
             console.error('Error creating offer:', err);
+        } finally {
+            makingOfferRef.current = false;
         }
     };
 
     const handleOffer = async (offer: RTCSessionDescriptionInit) => {
-        const pc = createPeerConnection(); // Ensure PC exists
+        const pc = createPeerConnection();
         try {
+            // Glare handling: if we are making an offer and receive one
+            if (makingOfferRef.current || pc.signalingState !== 'stable') {
+                console.warn('Signaling collision detected, handling offer...');
+            }
+
             await pc.setRemoteDescription(new RTCSessionDescription(offer));
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
@@ -257,6 +286,13 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
         const pc = peerConnectionRef.current;
         if (!pc) return;
+
+        // Only apply answer if we are expecting one
+        if (pc.signalingState !== 'have-local-offer') {
+            console.warn('Signaling state is not have-local-offer, ignoring answer. Current state:', pc.signalingState);
+            return;
+        }
+
         try {
             await pc.setRemoteDescription(new RTCSessionDescription(answer));
         } catch (err) {
@@ -270,7 +306,10 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         try {
             await pc.addIceCandidate(new RTCIceCandidate(candidate));
         } catch (err) {
-            console.error('Error adding ICE candidate:', err);
+            // Ignore candidates if remote description is not yet set
+            if (pc.remoteDescription) {
+                console.error('Error adding ICE candidate:', err);
+            }
         }
     };
 
@@ -295,20 +334,16 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     };
 
     const cleanup = async () => {
-        // Leave call in backend
         try {
             await API.post(`/video-call/room/${roomId}/leave`);
         } catch (e) { console.error('Error calling leave API', e) }
 
-        // Stop tracks
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
         }
 
-        // Close Peer Connection
         closePeerConnection();
 
-        // Disconnect Socket
         if (socketRef.current) {
             socketRef.current.emit('leave_video_room', { roomId });
             socketRef.current.disconnect();
@@ -327,7 +362,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-950 text-white">
                 <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
                 <h2 className="text-xl font-semibold">Initializing secure connection...</h2>
-                <p className="text-neutral-400 mt-2">Please ensure camera and microphone permissions are granted.</p>
+                <p className="text-neutral-400 mt-2">Checking camera and audio devices...</p>
             </div>
         );
     }
@@ -339,7 +374,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                     <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold mb-2">Connection Failed</h2>
                     <p className="text-neutral-300 mb-6">{error}</p>
-                    <Button variant="secondary" onClick={onLeave} className="w-full">go Back</Button>
+                    <Button variant="secondary" onClick={onLeave} className="w-full">Go Back</Button>
                 </div>
             </div>
         );
@@ -352,8 +387,8 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             <div className="absolute top-0 left-0 right-0 z-20 p-4 bg-gradient-to-b from-black/80 to-transparent">
                 <div className="flex items-center justify-between max-w-7xl mx-auto">
                     <div className="flex items-center gap-3">
-                        <Badge variant={isRemoteUserConnected ? "default" : "secondary"} className={`${isRemoteUserConnected ? "bg-green-500 hover:bg-green-600" : "bg-neutral-600"} transition-colors`}>
-                            {isRemoteUserConnected ? "Connected" : "Waiting for participant..."}
+                        <Badge variant={isRemoteUserConnected ? "default" : "secondary"} className={`${isRemoteUserConnected ? "bg-green-500 hover:bg-green-600 shadow-[0_0_15px_rgba(34,197,94,0.3)]" : "bg-neutral-600"} transition-all duration-300`}>
+                            {isRemoteUserConnected ? "Active Session" : "Waiting for participant..."}
                         </Badge>
                         <div className="flex items-center px-3 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/10 text-white/90 font-mono text-sm">
                             <Clock className="w-3.5 h-3.5 mr-2 text-blue-400" />
@@ -364,79 +399,101 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             </div>
 
             {/* Main Stage - Remote Video */}
-            <div className="flex-1 relative flex items-center justify-center bg-black">
+            <div className="flex-1 relative flex items-center justify-center bg-neutral-950">
                 {remoteStream ? (
                     <video
                         ref={remoteVideoRef}
                         autoPlay
                         playsInline
-                        className="w-full h-full object-cover"
-                        onLoadedMetadata={(e) => {
-                            (e.target as HTMLVideoElement).play().catch(console.error);
-                        }}
+                        className="w-full h-full object-contain"
                     />
                 ) : (
-                    <div className="flex flex-col items-center justify-center text-neutral-500">
-                        <div className="w-24 h-24 rounded-full bg-neutral-800 flex items-center justify-center mb-6 animate-pulse">
-                            <Users className="w-10 h-10 opacity-50" />
+                    <div className="flex flex-col items-center justify-center text-neutral-500 text-center px-6">
+                        <div className="w-24 h-24 rounded-full bg-neutral-900/50 border border-white/5 flex items-center justify-center mb-6 animate-pulse">
+                            <Users className="w-10 h-10 opacity-30" />
                         </div>
-                        <p className="text-lg font-medium">Waiting for the other person to join...</p>
-                        <p className="text-sm opacity-60 mt-1">Room ID: <span className="font-mono tracking-wider">{roomId}</span></p>
+                        <h3 className="text-xl font-medium text-white/70">Connecting with participant...</h3>
+                        <p className="text-sm opacity-50 mt-2 max-w-xs">The session will start as soon as the trainer or user joins this room.</p>
+                        <Badge variant="outline" className="mt-6 border-white/10 text-white/40 font-mono">ROOM: {roomId}</Badge>
+                    </div>
+                )}
+
+                {/* Remote Connection Loading State */}
+                {isRemoteUserConnected && !remoteStream && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] z-10">
+                        <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
+                        <p className="text-white/80 font-medium">Establishing video stream...</p>
                     </div>
                 )}
             </div>
 
             {/* PIP - Local Video */}
-            <div className="absolute right-4 bottom-24 w-32 md:w-48 aspect-video bg-neutral-800 rounded-xl overflow-hidden shadow-2xl border-2 border-white/10 z-30 transition-all hover:scale-105 hover:border-blue-500/50">
+            <div className="absolute right-4 bottom-24 w-40 md:w-64 aspect-video bg-neutral-800 rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-2 border-white/10 z-30 transition-all hover:scale-105 hover:border-blue-500 group">
                 <video
                     ref={localVideoRef}
                     autoPlay
                     playsInline
                     muted
-                    className={`w-full h-full object-cover ${!isVideoEnabled ? 'hidden' : ''} transform -scale-x-100`}
+                    className={`w-full h-full object-cover transform -scale-x-100 ${(!isVideoEnabled || isCameraDenied) ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
                 />
-                {!isVideoEnabled && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-neutral-800 text-neutral-400">
-                        <VideoOff className="w-8 h-8" />
+
+                {/* Fallback for disabled/denied camera */}
+                {(!isVideoEnabled || isCameraDenied) && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-800/90 text-neutral-400 p-4 text-center">
+                        <div className="p-3 rounded-full bg-white/5 mb-2">
+                            <VideoOff className="w-6 h-6" />
+                        </div>
+                        <span className="text-xs font-medium uppercase tracking-wider">
+                            {isCameraDenied ? 'Permission Denied' : 'Camera Off'}
+                        </span>
                     </div>
                 )}
-                <div className="absolute bottom-2 left-2 text-[10px] font-bold text-white/80 bg-black/50 px-1.5 py-0.5 rounded backdrop-blur-sm">
+
+                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 text-[10px] font-bold text-white/90 bg-black/60 px-2 py-1 rounded-lg backdrop-blur-md border border-white/5 shadow-lg">
+                    <div className={`w-1.5 h-1.5 rounded-full ${(!isVideoEnabled || isCameraDenied) ? 'bg-red-500' : 'bg-green-500'}`}></div>
                     YOU
                 </div>
             </div>
 
 
             {/* Control Bar */}
-            <div className="absolute bottom-0 left-0 right-0 z-40 p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-                <div className="flex items-center justify-center gap-4 md:gap-6">
+            <div className="absolute bottom-0 left-0 right-0 z-40 p-8 pt-12 bg-gradient-to-t from-black via-black/80 to-transparent">
+                <div className="flex items-center justify-center gap-4 md:gap-8">
                     <Button
-                        variant="secondary"
-                        size="lg"
-                        className={`h-14 w-14 rounded-full border shadow-lg transition-all duration-300 ${!isAudioEnabled ? 'bg-red-500/10 border-red-500 text-red-500 hover:bg-red-500/20' : 'bg-white/10 border-white/10 text-white hover:bg-white/20 hover:scale-110'}`}
+                        variant="ghost"
+                        size="icon"
+                        className={`h-14 w-14 rounded-full border shadow-2xl transition-all duration-300 ${!isAudioEnabled ? 'bg-red-500 border-red-500 text-white hover:bg-red-600' : 'bg-white/10 border-white/10 text-white hover:bg-white/20 hover:scale-110'}`}
                         onClick={toggleAudio}
+                        disabled={isCameraDenied && !localStreamRef.current}
                     >
                         {isAudioEnabled ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
                     </Button>
 
                     <Button
                         variant="destructive"
-                        size="lg"
-                        className="h-16 w-16 rounded-full shadow-xl bg-red-600 hover:bg-red-700 hover:scale-110 transition-all duration-300 mx-2 md:mx-4"
+                        size="icon"
+                        className="h-16 w-16 rounded-full shadow-[0_0_30px_rgba(220,38,38,0.4)] bg-red-600 hover:bg-red-700 hover:scale-110 active:scale-95 transition-all duration-300 mx-2 md:mx-4"
                         onClick={handleEndCall}
                     >
-                        <PhoneOff className="w-7 h-7 fill-current" />
+                        <PhoneOff className="w-7 h-7" />
                     </Button>
 
                     <Button
-                        variant="secondary"
-                        size="lg"
-                        className={`h-14 w-14 rounded-full border shadow-lg transition-all duration-300 ${!isVideoEnabled ? 'bg-red-500/10 border-red-500 text-red-500 hover:bg-red-500/20' : 'bg-white/10 border-white/10 text-white hover:bg-white/20 hover:scale-110'}`}
+                        variant="ghost"
+                        size="icon"
+                        className={`h-14 w-14 rounded-full border shadow-2xl transition-all duration-300 ${(!isVideoEnabled || isCameraDenied) ? 'bg-red-500 border-red-500 text-white hover:bg-red-600' : 'bg-white/10 border-white/10 text-white hover:bg-white/20 hover:scale-110'}`}
                         onClick={toggleVideo}
+                        disabled={isCameraDenied}
                     >
-                        {isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+                        {isVideoEnabled && !isCameraDenied ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
                     </Button>
-
                 </div>
+
+                {isCameraDenied && (
+                    <p className="text-center text-red-400 text-xs mt-4 font-medium animate-pulse">
+                        Camera/Microphone access is restricted in your browser settings.
+                    </p>
+                )}
             </div>
 
         </div>

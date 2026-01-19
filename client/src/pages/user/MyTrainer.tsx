@@ -280,6 +280,12 @@ export default function MyTrainerProfile() {
                                                 <Clock className="h-5 w-5 text-accent" />
                                                 <span className="font-medium">{trainer.experience} years experience</span>
                                             </div>
+                                            {user?.trainerPlan === 'pro' && (
+                                                <div className="flex items-center gap-2 text-purple-600">
+                                                    <Video className="h-5 w-5" />
+                                                    <span className="font-semibold">{userPlan?.videoCallsLeft ?? 0} sessions left</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -427,7 +433,7 @@ export default function MyTrainerProfile() {
                     <div className="mt-8">
                         <TrainerReviews
                             trainerId={trainer._id}
-                            onReviewAdded={(newReview) => {
+                            onReviewAdded={() => {
                                 setTrainer(prev => prev ? {
                                     ...prev,
                                 } : null);
