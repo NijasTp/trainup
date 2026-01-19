@@ -32,13 +32,17 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const [callDuration, setCallDuration] = useState(0);
     const [isRemoteUserConnected, setIsRemoteUserConnected] = useState(false);
 
-    const localVideoRef = useRef<HTMLVideoElement>(null);
-    const remoteVideoRef = useRef<HTMLVideoElement>(null);
+    const localVideoRef = useRef<HTMLVideoElement | null>(null);
+    const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
     const socketRef = useRef<Socket | null>(null);
     const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
     const localStreamRef = useRef<MediaStream | null>(null);
     const callStartTimeRef = useRef<Date | null>(null);
+
+    // Perfect Negotiation State
     const makingOfferRef = useRef(false);
+    const ignoreOfferRef = useRef(false);
+    const isPoliteRef = useRef(false);
 
     const rtcConfiguration = {
         iceServers: [
@@ -47,6 +51,14 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             { urls: 'stun:stun2.l.google.com:19302' },
         ],
         iceCandidatePoolSize: 10
+    };
+
+    // Callback ref for local video to ensure it attaches immediately upon mount
+    const setLocalVideoRef = (el: HTMLVideoElement | null) => {
+        localVideoRef.current = el;
+        if (el && localStreamRef.current) {
+            el.srcObject = localStreamRef.current;
+        }
     };
 
     useEffect(() => {
@@ -86,14 +98,11 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                     audio: true
                 });
                 localStreamRef.current = stream;
-                if (localVideoRef.current) {
-                    localVideoRef.current.srcObject = stream;
-                }
                 setIsVideoEnabled(true);
                 setIsAudioEnabled(true);
                 setIsCameraDenied(false);
             } catch (mediaErr: any) {
-                console.warn('Camera/Mic access denied or unavailable:', mediaErr);
+                console.warn('Camera/Mic access denied:', mediaErr);
                 setIsCameraDenied(true);
                 setIsVideoEnabled(false);
                 setIsAudioEnabled(false);
@@ -136,38 +145,80 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     };
 
     const setupSocketListeners = () => {
-        if (!socketRef.current) return;
+        const socket = socketRef.current;
+        if (!socket) return;
 
-        socketRef.current.on('user_joined', async ({ userId }) => {
+        socket.on('room_joined', ({ isInitiator }) => {
+            console.log('Room joined. Initiator?', isInitiator);
+            isPoliteRef.current = !isInitiator;
+            // The impolite peer (initiator) starts the connection
+            if (isInitiator) {
+                createPeerConnection();
+            }
+        });
+
+        socket.on('user_joined', async ({ userId }) => {
             console.log('User joined:', userId);
             setIsRemoteUserConnected(true);
             if (!callStartTimeRef.current) callStartTimeRef.current = new Date();
-            // Start negotiation
-            await createOffer();
+            // Ensure PC exists when user joined
+            createPeerConnection();
         });
 
-        socketRef.current.on('user_left', ({ userId }) => {
-            console.log('User left:', userId);
+        socket.on('user_left', () => {
+            console.log('User left');
             setIsRemoteUserConnected(false);
             setRemoteStream(null);
             if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-            // Don't close PC entirely, just wait for reconnect or new join
-            // Transitioning back to waiting state
         });
 
-        socketRef.current.on('webrtc_offer', async ({ offer }) => {
+        socket.on('webrtc_offer', async ({ offer }) => {
             console.log('Received WebRTC offer');
-            await handleOffer(offer);
+            const pc = createPeerConnection();
+            try {
+                const offerCollision = (makingOfferRef.current || pc.signalingState !== 'stable');
+                ignoreOfferRef.current = !isPoliteRef.current && offerCollision;
+
+                if (ignoreOfferRef.current) {
+                    console.log('Collision: ignoring offer (not polite)');
+                    return;
+                }
+
+                if (offerCollision) {
+                    await pc.setLocalDescription({ type: 'rollback' });
+                }
+
+                await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+
+                socket.emit('webrtc_answer', { roomId, answer });
+            } catch (err) {
+                console.error('Error handling offer:', err);
+            }
         });
 
-        socketRef.current.on('webrtc_answer', async ({ answer }) => {
+        socket.on('webrtc_answer', async ({ answer }) => {
             console.log('Received WebRTC answer');
-            await handleAnswer(answer);
+            const pc = peerConnectionRef.current;
+            if (!pc) return;
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(answer));
+            } catch (err) {
+                console.error('Error handling answer:', err);
+            }
         });
 
-        socketRef.current.on('webrtc_ice_candidate', async ({ candidate }) => {
-            console.log('Received ICE candidate');
-            await handleIceCandidate(candidate);
+        socket.on('webrtc_ice_candidate', async ({ candidate }) => {
+            const pc = peerConnectionRef.current;
+            if (!pc) return;
+            try {
+                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (err) {
+                if (!ignoreOfferRef.current) {
+                    // Ignore errors during collision rollbacks
+                }
+            }
         });
     };
 
@@ -176,47 +227,14 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
 
         const pc = new RTCPeerConnection(rtcConfiguration);
 
-        // Add local tracks
+        // Add tracks
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => {
                 pc.addTrack(track, localStreamRef.current!);
             });
         }
 
-        // Handle remote stream
-        pc.ontrack = (event) => {
-            console.log('Received remote track:', event.track.kind);
-            if (event.streams && event.streams[0]) {
-                setRemoteStream(event.streams[0]);
-                if (remoteVideoRef.current) {
-                    remoteVideoRef.current.srcObject = event.streams[0];
-                }
-                setIsRemoteUserConnected(true);
-            }
-        };
-
-        // Handle ICE candidates
-        pc.onicecandidate = (event) => {
-            if (event.candidate && socketRef.current) {
-                socketRef.current.emit('webrtc_ice_candidate', {
-                    roomId,
-                    candidate: event.candidate,
-                });
-            }
-        };
-
-        pc.onconnectionstatechange = () => {
-            console.log('PeerConnection state:', pc.connectionState);
-            if (pc.connectionState === 'connected') {
-                setIsRemoteUserConnected(true);
-            } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
-                setIsRemoteUserConnected(false);
-            }
-        };
-
-        // Handle negotiation needed
         pc.onnegotiationneeded = async () => {
-            console.log('Negotiation needed');
             try {
                 makingOfferRef.current = true;
                 await pc.setLocalDescription();
@@ -225,9 +243,35 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                     offer: pc.localDescription
                 });
             } catch (err) {
-                console.error('Error in onnegotiationneeded:', err);
+                console.error('onnegotiationneeded error:', err);
             } finally {
                 makingOfferRef.current = false;
+            }
+        };
+
+        pc.onicecandidate = ({ candidate }) => {
+            if (candidate && socketRef.current) {
+                socketRef.current.emit('webrtc_ice_candidate', { roomId, candidate });
+            }
+        };
+
+        // Handle remote stream
+        pc.ontrack = (event) => {
+            console.log('Remote track received:', event.track.kind);
+            if (event.streams && event.streams[0]) {
+                setRemoteStream(event.streams[0]);
+                if (remoteVideoRef.current) {
+                    remoteVideoRef.current.srcObject = event.streams[0];
+                }
+            }
+        };
+
+        pc.onconnectionstatechange = () => {
+            console.log('PC State:', pc.connectionState);
+            if (pc.connectionState === 'connected') {
+                setIsRemoteUserConnected(true);
+            } else if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
+                setIsRemoteUserConnected(false);
             }
         };
 
@@ -235,100 +279,22 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         return pc;
     };
 
-    const closePeerConnection = () => {
-        if (peerConnectionRef.current) {
-            peerConnectionRef.current.onicecandidate = null;
-            peerConnectionRef.current.ontrack = null;
-            peerConnectionRef.current.onnegotiationneeded = null;
-            peerConnectionRef.current.onconnectionstatechange = null;
-            peerConnectionRef.current.close();
-            peerConnectionRef.current = null;
-        }
-    };
-
-    const createOffer = async () => {
-        const pc = createPeerConnection();
-        try {
-            makingOfferRef.current = true;
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            socketRef.current?.emit('webrtc_offer', {
-                roomId,
-                offer
-            });
-        } catch (err) {
-            console.error('Error creating offer:', err);
-        } finally {
-            makingOfferRef.current = false;
-        }
-    };
-
-    const handleOffer = async (offer: RTCSessionDescriptionInit) => {
-        const pc = createPeerConnection();
-        try {
-            // Glare handling: if we are making an offer and receive one
-            if (makingOfferRef.current || pc.signalingState !== 'stable') {
-                console.warn('Signaling collision detected, handling offer...');
-            }
-
-            await pc.setRemoteDescription(new RTCSessionDescription(offer));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            socketRef.current?.emit('webrtc_answer', {
-                roomId,
-                answer
-            });
-        } catch (err) {
-            console.error('Error handling offer:', err);
-        }
-    };
-
-    const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
-        const pc = peerConnectionRef.current;
-        if (!pc) return;
-
-        // Only apply answer if we are expecting one
-        if (pc.signalingState !== 'have-local-offer') {
-            console.warn('Signaling state is not have-local-offer, ignoring answer. Current state:', pc.signalingState);
-            return;
-        }
-
-        try {
-            await pc.setRemoteDescription(new RTCSessionDescription(answer));
-        } catch (err) {
-            console.error('Error handling answer:', err);
-        }
-    };
-
-    const handleIceCandidate = async (candidate: RTCIceCandidateInit) => {
-        const pc = peerConnectionRef.current;
-        if (!pc) return;
-        try {
-            await pc.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (err) {
-            // Ignore candidates if remote description is not yet set
-            if (pc.remoteDescription) {
-                console.error('Error adding ICE candidate:', err);
-            }
-        }
-    };
-
     const toggleVideo = () => {
         if (localStreamRef.current) {
-            const videoTrack = localStreamRef.current.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = !videoTrack.enabled;
-                setIsVideoEnabled(videoTrack.enabled);
+            const track = localStreamRef.current.getVideoTracks()[0];
+            if (track) {
+                track.enabled = !track.enabled;
+                setIsVideoEnabled(track.enabled);
             }
         }
     };
 
     const toggleAudio = () => {
         if (localStreamRef.current) {
-            const audioTrack = localStreamRef.current.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = !audioTrack.enabled;
-                setIsAudioEnabled(audioTrack.enabled);
+            const track = localStreamRef.current.getAudioTracks()[0];
+            if (track) {
+                track.enabled = !track.enabled;
+                setIsAudioEnabled(track.enabled);
             }
         }
     };
@@ -336,13 +302,16 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const cleanup = async () => {
         try {
             await API.post(`/video-call/room/${roomId}/leave`);
-        } catch (e) { console.error('Error calling leave API', e) }
+        } catch (e) { console.error('Error leave API', e) }
 
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
         }
 
-        closePeerConnection();
+        if (peerConnectionRef.current) {
+            peerConnectionRef.current.close();
+            peerConnectionRef.current = null;
+        }
 
         if (socketRef.current) {
             socketRef.current.emit('leave_video_room', { roomId });
@@ -430,7 +399,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             {/* PIP - Local Video */}
             <div className="absolute right-4 bottom-24 w-40 md:w-64 aspect-video bg-neutral-800 rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-2 border-white/10 z-30 transition-all hover:scale-105 hover:border-blue-500 group">
                 <video
-                    ref={localVideoRef}
+                    ref={setLocalVideoRef}
                     autoPlay
                     playsInline
                     muted

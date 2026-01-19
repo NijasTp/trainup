@@ -259,12 +259,22 @@ export class SocketHandler {
         socket.emit('error', { message: 'Room ID is required' })
         return
       }
-      socket.join(`video_${roomId}`)
+
+      const videoRoomName = `video_${roomId}`
+      const room = this.io.sockets.adapter.rooms.get(videoRoomName)
+      const isInitiator = !room || room.size === 0
+
+      socket.join(videoRoomName)
+
+      // Tell the user if they are the initiator
+      socket.emit('room_joined', { isInitiator })
+
       // Notify other users in the room that someone joined
       socket
-        .to(`video_${roomId}`)
+        .to(videoRoomName)
         .emit('user_joined', { userId: socket.userId })
-      logger.info(`User ${socket.userId} joined video room: ${roomId}`)
+
+      logger.info(`User ${socket.userId} joined video room: ${roomId} (Initiator: ${isInitiator})`)
     })
 
     socket.on('webrtc_offer', ({ roomId, offer, targetUserId }) => {
