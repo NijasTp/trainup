@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Types } from 'mongoose'
 import { INotificationService } from '../core/interfaces/services/INotificationService'
 import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepository'
+import { IUserRepository } from '../core/interfaces/repositories/IUserRepository'
 
 @injectable()
 export class SlotService implements ISlotService {
@@ -19,7 +20,8 @@ export class SlotService implements ISlotService {
     @inject(TYPES.ISlotRepository) private _slotRepository: ISlotRepository,
     @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-    @inject(TYPES.ITrainerRepository) private _trainerRepository: ITrainerRepository
+    @inject(TYPES.ITrainerRepository) private _trainerRepository: ITrainerRepository,
+    @inject(TYPES.IUserRepository) private _userRepository: IUserRepository
   ) { }
 
   async createSlot(
@@ -141,7 +143,10 @@ export class SlotService implements ISlotService {
 
     await this._slotRepository.addBookingRequest(slotId, userId)
 
-    await this._notificationService.sendSessionRequestNotification(trainerId.toString(), userId)
+    const user = await this._userRepository.findById(userId)
+    const userName = (user as any)?.name || 'Someone'
+
+    await this._notificationService.sendSessionRequestNotification(trainerId.toString(), userName)
   }
 
   async approveSessionRequest(

@@ -43,6 +43,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     const makingOfferRef = useRef(false);
     const ignoreOfferRef = useRef(false);
     const isPoliteRef = useRef(false);
+    const isInitializingRef = useRef(false);
 
     const rtcConfiguration = {
         iceServers: [
@@ -58,11 +59,14 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         localVideoRef.current = el;
         if (el && localStreamRef.current) {
             el.srcObject = localStreamRef.current;
+            console.log("[DEBUG] Local stream attached to video element");
         }
     };
 
     useEffect(() => {
-        initializeCall();
+        if (!isInitializingRef.current) {
+            initializeCall();
+        }
         return () => {
             cleanup();
         };
@@ -87,58 +91,72 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     };
 
     const initializeCall = async () => {
+        if (isInitializingRef.current) return;
+        isInitializingRef.current = true;
+
         try {
+            console.log("[DEBUG] Initializing call for room:", roomId);
             setIsLoading(true);
             setError(null);
 
             // 1. Get User Media
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-                    audio: true
-                });
-                localStreamRef.current = stream;
-                setIsVideoEnabled(true);
-                setIsAudioEnabled(true);
-                setIsCameraDenied(false);
-            } catch (mediaErr: any) {
-                console.warn('Camera/Mic access denied:', mediaErr);
-                setIsCameraDenied(true);
-                setIsVideoEnabled(false);
-                setIsAudioEnabled(false);
+            if (!localStreamRef.current) {
+                try {
+                    console.log("[DEBUG] Requesting user media...");
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+                        audio: true
+                    });
+                    localStreamRef.current = stream;
+                    console.log("[DEBUG] User media obtained");
+                    setIsVideoEnabled(true);
+                    setIsAudioEnabled(true);
+                    setIsCameraDenied(false);
+
+                    // If video element already exists, attach stream
+                    if (localVideoRef.current) {
+                        localVideoRef.current.srcObject = stream;
+                    }
+                } catch (mediaErr: any) {
+                    console.warn('[DEBUG] Camera/Mic access denied:', mediaErr);
+                    setIsCameraDenied(true);
+                    setIsVideoEnabled(false);
+                    setIsAudioEnabled(false);
+                }
             }
 
             // 2. Initialize Socket
-            socketRef.current = io(import.meta.env.VITE_API_URL, {
-                withCredentials: true,
-                transports: ['websocket', 'polling']
-            });
+            if (!socketRef.current) {
+                socketRef.current = io(import.meta.env.VITE_API_URL, {
+                    withCredentials: true,
+                    transports: ['websocket', 'polling']
+                });
 
-            socketRef.current.on('connect', () => {
-                console.log('Socket connected');
-                setIsConnected(true);
-                socketRef.current?.emit('join_video_room', { roomId });
-            });
+                socketRef.current.on('connect', () => {
+                    console.log('[DEBUG] Socket connected:', socketRef.current?.id);
+                    setIsConnected(true);
+                    socketRef.current?.emit('join_video_room', { roomId });
+                });
 
-            socketRef.current.on('connect_error', (err) => {
-                console.error('Socket connection error:', err);
-                setError('Failed to connect to signaling server.');
-                setIsLoading(false);
-            });
+                socketRef.current.on('connect_error', (err) => {
+                    console.error('[DEBUG] Socket connection error:', err);
+                    setError('Failed to connect to signaling server.');
+                    setIsLoading(false);
+                });
 
-            // 3. Setup Socket Listeners
-            setupSocketListeners();
+                setupSocketListeners();
+            }
 
-            // 4. API Call to join room
+            // 3. API Call to join room
             try {
                 await API.post(`/video-call/room/${roomId}/join`);
             } catch (err) {
-                console.error("Failed to join call via API", err);
+                console.error("[DEBUG] Failed to join call via API", err);
             }
 
             setIsLoading(false);
         } catch (err: any) {
-            console.error('Error initializing call:', err);
+            console.error('[DEBUG] Error initializing call:', err);
             setError(err.message || 'Failed to initialize call');
             setIsLoading(false);
         }
@@ -149,42 +167,48 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
         if (!socket) return;
 
         socket.on('room_joined', ({ isInitiator }) => {
-            console.log('Room joined. Initiator?', isInitiator);
+            console.log('[DEBUG] Room joined. Initiator?', isInitiator);
             isPoliteRef.current = !isInitiator;
+
             // The impolite peer (initiator) starts the connection
             if (isInitiator) {
+                console.log("[DEBUG] I am the initiator (impolite). Waiting for participant...");
+            } else {
+                console.log("[DEBUG] I am the participant (polite). Creating PC...");
                 createPeerConnection();
             }
         });
 
         socket.on('user_joined', async ({ userId }) => {
-            console.log('User joined:', userId);
+            console.log('[DEBUG] Remote user joined:', userId);
             setIsRemoteUserConnected(true);
             if (!callStartTimeRef.current) callStartTimeRef.current = new Date();
-            // Ensure PC exists when user joined
+
+            // Both sides can ensure PC exists (if not already created by polite join)
             createPeerConnection();
         });
 
         socket.on('user_left', () => {
-            console.log('User left');
+            console.log('[DEBUG] Remote user left');
             setIsRemoteUserConnected(false);
             setRemoteStream(null);
             if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
         });
 
         socket.on('webrtc_offer', async ({ offer }) => {
-            console.log('Received WebRTC offer');
+            console.log('[DEBUG] Received WebRTC offer');
             const pc = createPeerConnection();
             try {
                 const offerCollision = (makingOfferRef.current || pc.signalingState !== 'stable');
                 ignoreOfferRef.current = !isPoliteRef.current && offerCollision;
 
                 if (ignoreOfferRef.current) {
-                    console.log('Collision: ignoring offer (not polite)');
+                    console.log('[DEBUG] Collision: ignoring offer (I am impolite)');
                     return;
                 }
 
                 if (offerCollision) {
+                    console.log("[DEBUG] Collision: rolling back (I am polite)");
                     await pc.setLocalDescription({ type: 'rollback' });
                 }
 
@@ -192,20 +216,25 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
                 const answer = await pc.createAnswer();
                 await pc.setLocalDescription(answer);
 
+                console.log("[DEBUG] Sending answer...");
                 socket.emit('webrtc_answer', { roomId, answer });
             } catch (err) {
-                console.error('Error handling offer:', err);
+                console.error('[DEBUG] Error handling offer:', err);
             }
         });
 
         socket.on('webrtc_answer', async ({ answer }) => {
-            console.log('Received WebRTC answer');
+            console.log('[DEBUG] Received WebRTC answer');
             const pc = peerConnectionRef.current;
-            if (!pc) return;
+            if (!pc) {
+                console.warn("[DEBUG] Received answer but PC is null");
+                return;
+            }
             try {
                 await pc.setRemoteDescription(new RTCSessionDescription(answer));
+                console.log("[DEBUG] Remote description set successfully");
             } catch (err) {
-                console.error('Error handling answer:', err);
+                console.error('[DEBUG] Error handling answer:', err);
             }
         });
 
@@ -214,36 +243,49 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             if (!pc) return;
             try {
                 await pc.addIceCandidate(new RTCIceCandidate(candidate));
-            } catch (err) {
+            } catch (err: any) {
                 if (!ignoreOfferRef.current) {
-                    // Ignore errors during collision rollbacks
+                    // console.error('[DEBUG] Error adding ICE candidate:', err.message);
                 }
             }
+        });
+
+        socket.on('error', (err) => {
+            console.error('[DEBUG] Socket error event:', err);
         });
     };
 
     const createPeerConnection = () => {
         if (peerConnectionRef.current) return peerConnectionRef.current;
 
+        console.log("[DEBUG] Creating new RTCPeerConnection");
         const pc = new RTCPeerConnection(rtcConfiguration);
 
         // Add tracks
         if (localStreamRef.current) {
+            console.log("[DEBUG] Adding local tracks to PC");
             localStreamRef.current.getTracks().forEach(track => {
                 pc.addTrack(track, localStreamRef.current!);
             });
+        } else {
+            console.warn("[DEBUG] Creating PC but localStream is null");
         }
 
         pc.onnegotiationneeded = async () => {
             try {
+                console.log("[DEBUG] Negotiation needed, creating offer...");
                 makingOfferRef.current = true;
                 await pc.setLocalDescription();
-                socketRef.current?.emit('webrtc_offer', {
-                    roomId,
-                    offer: pc.localDescription
-                });
+
+                if (pc.localDescription) {
+                    socketRef.current?.emit('webrtc_offer', {
+                        roomId,
+                        offer: pc.localDescription
+                    });
+                    console.log("[DEBUG] Offer sent");
+                }
             } catch (err) {
-                console.error('onnegotiationneeded error:', err);
+                console.error('[DEBUG] onnegotiationneeded error:', err);
             } finally {
                 makingOfferRef.current = false;
             }
@@ -255,9 +297,8 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             }
         };
 
-        // Handle remote stream
         pc.ontrack = (event) => {
-            console.log('Remote track received:', event.track.kind);
+            console.log('[DEBUG] Remote track received:', event.track.kind);
             if (event.streams && event.streams[0]) {
                 setRemoteStream(event.streams[0]);
                 if (remoteVideoRef.current) {
@@ -266,8 +307,12 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             }
         };
 
+        pc.oniceconnectionstatechange = () => {
+            console.log('[DEBUG] ICE Connection State:', pc.iceConnectionState);
+        };
+
         pc.onconnectionstatechange = () => {
-            console.log('PC State:', pc.connectionState);
+            console.log('[DEBUG] PC Connection State:', pc.connectionState);
             if (pc.connectionState === 'connected') {
                 setIsRemoteUserConnected(true);
             } else if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
@@ -300,24 +345,35 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
     };
 
     const cleanup = async () => {
+        console.log("[DEBUG] Cleaning up video call session...");
         try {
             await API.post(`/video-call/room/${roomId}/leave`);
-        } catch (e) { console.error('Error leave API', e) }
+        } catch (e) {
+            // Ignore error during cleanup
+        }
 
         if (localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach(track => track.stop());
+            localStreamRef.current.getTracks().forEach(track => {
+                track.stop();
+                console.log("[DEBUG] Stopped local track:", track.kind);
+            });
+            localStreamRef.current = null;
         }
 
         if (peerConnectionRef.current) {
             peerConnectionRef.current.close();
             peerConnectionRef.current = null;
+            console.log("[DEBUG] Closed RTCPeerConnection");
         }
 
         if (socketRef.current) {
             socketRef.current.emit('leave_video_room', { roomId });
             socketRef.current.disconnect();
             socketRef.current = null;
+            console.log("[DEBUG] Disconnected socket");
         }
+
+        isInitializingRef.current = false;
     };
 
     const handleEndCall = () => {
