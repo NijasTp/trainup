@@ -20,7 +20,8 @@ import {
   Settings,
   LogOut,
   ChevronDown,
-  MessageSquare
+  MessageSquare,
+  Heart
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -200,6 +201,7 @@ export const SiteHeader: React.FC = () => {
     { name: "Trainers", path: "/trainers", icon: Users, show: true },
     { name: "Workouts", path: "/workouts", icon: Dumbbell, show: true },
     { name: "Diet", path: "/diets", icon: Utensils, show: true },
+    { name: "Wishlist", path: "/wishlist", icon: Heart, show: true },
   ].filter(link => link.show)
 
   return (

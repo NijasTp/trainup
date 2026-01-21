@@ -11,10 +11,13 @@ interface GymPageLayoutProps {
 
 export default function GymPageLayout({ children, title, subtitle, actions, fullWidth = false }: GymPageLayoutProps) {
     return (
-        <div className="relative min-h-screen w-full bg-[#050505] text-white overflow-x-hidden font-sans selection:bg-blue-500/30">
-            {/* Background Beams */}
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-40 grayscale-[0.2]">
-                <Beams />
+        <div className="relative min-h-screen w-full bg-black text-white overflow-x-hidden font-sans selection:bg-blue-500/30">
+            {/* Background Effects */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent"></div>
+                <div className="opacity-40 grayscale-[0.2]">
+                    <Beams />
+                </div>
             </div>
 
             {/* Content Overlay */}
@@ -23,8 +26,12 @@ export default function GymPageLayout({ children, title, subtitle, actions, full
                 {(title || actions) && (
                     <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
                         <div>
-                            {title && <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-2">{title}</h1>}
-                            {subtitle && <p className="text-blue-200/60 text-lg font-light max-w-2xl">{subtitle}</p>}
+                            {title && (
+                                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-blue-200 to-white bg-clip-text text-transparent mb-2">
+                                    {title}
+                                </h1>
+                            )}
+                            {subtitle && <p className="text-gray-400 text-lg font-light max-w-2xl">{subtitle}</p>}
                         </div>
                         <div className="flex gap-3">
                             {actions}

@@ -71,6 +71,7 @@ import ProfileCompletion from './pages/user/ProfileCompletion';
 import UserNotifications from './pages/user/UserNotifications';
 import TrainerNotifications from './pages/trainer/TrainerNotifications';
 import ProgressPage from './pages/user/Progress';
+import WishlistPage from './pages/user/WishlistPage';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import AdminRatingManagement from './pages/admin/AdminRatingManagement';
 
@@ -128,6 +129,7 @@ function App() {
         <Route path={ROUTES.USER_DIET} element={<ProtectedRoute><Diets /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_DIET} element={<ProtectedRoute><UserAddDiet /></ProtectedRoute>} />
         <Route path={ROUTES.USER_PROGRESS} element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_WISHLIST} element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_NOT_FOUND} element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
 
         {/* Trainer Routes */}

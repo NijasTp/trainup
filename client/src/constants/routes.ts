@@ -36,6 +36,7 @@ export const ROUTES = {
   USER_PROGRESS: '/progress',
 
   CALLBACK: "/callback",
+  USER_WISHLIST: "/wishlist",
   USER_NOT_FOUND: "*",
 
   // Trainer Routes

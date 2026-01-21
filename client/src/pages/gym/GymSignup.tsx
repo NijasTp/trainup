@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/ui/logo';
 import { Building2, Mail, Lock, Upload, MapPin, Loader2 } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import { toast } from 'react-toastify';
 import { requestGymOtp } from '@/services/authService';
 import { ROUTES } from '@/constants/routes';
@@ -110,7 +111,7 @@ export default function GymSignup() {
             mapInstanceRef.current = map;
         }
 
-    
+
         return () => {
             if (step !== 2 && mapInstanceRef.current) {
                 mapInstanceRef.current.remove();
@@ -118,7 +119,7 @@ export default function GymSignup() {
                 markerRef.current = null;
             }
         };
-    }, [step]); 
+    }, [step]);
 
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -137,144 +138,162 @@ export default function GymSignup() {
             await requestGymOtp(formData.email);
             toast.success("OTP sent to your email");
             navigate(ROUTES.GYM_VERIFY_OTP, { state: { email: formData.email, formData } });
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Signup failed");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            toast.error(error.response?.data?.message || "Signup failed");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-            <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+        <div className="min-h-screen bg-black flex items-center justify-center p-4 selection:bg-blue-500/30">
+            {/* Background Effects */}
+            <div className="fixed inset-0 pointer-events-none">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px]" />
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
+            </div>
+
+            <div className="relative z-10 w-full max-w-4xl bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in fade-in zoom-in-95 duration-700">
 
                 {/* Left Side - Visual */}
-                <div className="md:w-1/3 bg-blue-600 p-8 flex flex-col justify-between text-white">
-                    <div>
-                        <Logo className="mb-8" />
-                        <h2 className="text-3xl font-bold mb-4">Partner with TrainUp</h2>
-                        <p className="text-blue-100">Manage your gym, trainers, and members all in one place. Grow your business with our comprehensive management suite.</p>
+                <div className="md:w-1/3 bg-gradient-to-br from-blue-600 to-blue-800 p-10 flex flex-col justify-between text-white relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/10 to-transparent"></div>
+                    <div className="relative z-10">
+                        <Logo className="mb-10" />
+                        <h2 className="text-4xl font-black mb-6 leading-tight">Partner with TrainUp</h2>
+                        <p className="text-blue-100 text-lg font-light leading-relaxed">Manage your gym, trainers, and members all in one place. Grow your business with our comprehensive management suite.</p>
                     </div>
-                    <div className="text-sm text-blue-200">
-                        Already a partner? <Link to={ROUTES.GYM_LOGIN} className="text-white underline font-medium">Login here</Link>
+                    <div className="relative z-10 text-sm text-blue-200">
+                        Already a partner? <Link to={ROUTES.GYM_LOGIN} className="text-white underline font-bold hover:text-blue-100 transition-colors">Login here</Link>
                     </div>
                 </div>
 
                 {/* Right Side - Form */}
-                <div className="md:w-2/3 p-8">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Create Gym Account</h1>
+                <div className="md:w-2/3 p-10 bg-black/40">
+                    <h1 className="text-3xl font-black text-white mb-2">Create Gym Account</h1>
+                    <p className="text-gray-400 mb-8">Join the elite fitness network.</p>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
 
                         {step === 1 && (
-                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                                <div className="relative">
-                                    <Building2 className="absolute left-3 top-3 text-gray-400" size={20} />
-                                    <input
-                                        type="text"
-                                        placeholder="Gym Name"
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        required
-                                    />
+                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="relative">
+                                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                                        <input
+                                            type="text"
+                                            placeholder="Gym Name"
+                                            className="w-full pl-12 pr-4 py-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-blue-500/50 outline-none transition-all"
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="relative">
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                                        <input
+                                            type="email"
+                                            placeholder="Email Address"
+                                            className="w-full pl-12 pr-4 py-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-blue-500/50 outline-none transition-all"
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
-                                    <input
-                                        type="email"
-                                        placeholder="Email Address"
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
-                                    <input
-                                        type="password"
-                                        placeholder="Password"
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                                        value={formData.password}
-                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
-                                    <input
-                                        type="password"
-                                        placeholder="Confirm Password"
-                                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                                        value={formData.confirmPassword}
-                                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                        required
-                                    />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="relative">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                                        <input
+                                            type="password"
+                                            placeholder="Password"
+                                            className="w-full pl-12 pr-4 py-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-blue-500/50 outline-none transition-all"
+                                            value={formData.password}
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="relative">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                                        <input
+                                            type="password"
+                                            placeholder="Confirm Password"
+                                            className="w-full pl-12 pr-4 py-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-blue-500/50 outline-none transition-all"
+                                            value={formData.confirmPassword}
+                                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                            required
+                                        />
+                                    </div>
                                 </div>
 
-                                <button
+                                <Button
                                     type="button"
                                     onClick={() => setStep(2)}
-                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition"
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-7 rounded-xl transition-all shadow-lg shadow-blue-500/20"
                                 >
                                     Next: Location & Docs
-                                </button>
+                                </Button>
                             </div>
                         )}
 
                         {step === 2 && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                                 {/* Map Section */}
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     <div className="flex justify-between items-center">
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gym Location</label>
-                                        <button type="button" onClick={getLocation} className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full flex items-center gap-1 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition">
-                                            <MapPin size={12} /> Detect My Location
+                                        <label className="block text-sm font-bold text-gray-300">Gym Location</label>
+                                        <button type="button" onClick={getLocation} className="text-xs bg-blue-500/10 text-blue-400 px-4 py-1.5 rounded-full flex items-center gap-2 hover:bg-blue-500/20 transition-all border border-blue-500/20">
+                                            <MapPin size={14} /> Detect My Location
                                         </button>
                                     </div>
-                                    <div className="h-64 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 z-0 bg-gray-100 dark:bg-gray-800">
-                                        <div ref={mapContainerRef} style={{ height: '100%', width: '100%' }}></div>
+                                    <div className="h-64 rounded-2xl overflow-hidden border border-white/10 z-0 bg-white/5 group relative">
+                                        <div ref={mapContainerRef} style={{ height: '100%', width: '100%' }} className="relative z-0"></div>
                                     </div>
-                                    <p className="text-xs text-gray-500">Tap on the map to manually adjust the pin.</p>
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-widest text-center">Tap on the map to manually adjust the pin.</p>
                                 </div>
 
                                 {/* File Uploads */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Registration Certificate</label>
-                                        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition relative">
+                                    <div className="space-y-2">
+                                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest">Registration Certificate</label>
+                                        <div className="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center cursor-pointer hover:border-blue-500/50 hover:bg-white/5 transition-all relative group">
                                             <input type="file" onChange={(e) => handleFileChange(e, 'certificate')} className="absolute inset-0 opacity-0 cursor-pointer" required />
-                                            <Upload className="mx-auto text-gray-400 mb-2" size={24} />
-                                            <span className="text-xs text-gray-500">{formData.certificate ? formData.certificate.name : "Upload PDF/Image"}</span>
+                                            <Upload className="mx-auto text-gray-500 mb-2 group-hover:text-blue-400 transition-colors" size={24} />
+                                            <span className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors block truncate max-w-full px-2">
+                                                {formData.certificate ? formData.certificate.name : "Upload PDF/Image"}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Profile Image</label>
-                                        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition relative">
+                                    <div className="space-y-2">
+                                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest">Profile Image</label>
+                                        <div className="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center cursor-pointer hover:border-blue-500/50 hover:bg-white/5 transition-all relative group">
                                             <input type="file" onChange={(e) => handleFileChange(e, 'profileImage')} className="absolute inset-0 opacity-0 cursor-pointer" required />
-                                            <Upload className="mx-auto text-gray-400 mb-2" size={24} />
-                                            <span className="text-xs text-gray-500">{formData.profileImage ? formData.profileImage.name : "Upload Logo"}</span>
+                                            <Upload className="mx-auto text-gray-500 mb-2 group-hover:text-blue-400 transition-colors" size={24} />
+                                            <span className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors block truncate max-w-full px-2">
+                                                {formData.profileImage ? formData.profileImage.name : "Upload Logo"}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-3">
-                                    <button
+                                <div className="flex gap-4">
+                                    <Button
                                         type="button"
+                                        variant="outline"
                                         onClick={() => setStep(1)}
-                                        className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-3 rounded-lg transition"
+                                        className="flex-1 border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 py-7 rounded-xl font-bold"
                                     >
                                         Back
-                                    </button>
-                                    <button
+                                    </Button>
+                                    <Button
                                         type="submit"
                                         disabled={loading}
-                                        className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition flex justify-center items-center gap-2"
+                                        className="flex-1 bg-green-600 hover:bg-green-700 text-white font-black py-7 rounded-xl transition-all shadow-lg shadow-green-500/20 flex justify-center items-center gap-2"
                                     >
                                         {loading && <Loader2 className="animate-spin" size={20} />}
                                         Register Gym
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         )}
