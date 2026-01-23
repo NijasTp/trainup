@@ -1,17 +1,18 @@
-import { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import LoginForm from '../../components/user/LoginForm';
 import TrainerLoginForm from '../../components/trainer/TrainerLoginForm';
+import GymLoginForm from '../../components/gym/GymLoginForm';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../redux/store';
-
 import type { LoginPageProps } from "@/interfaces/user/ILogin";
 
 const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
-  const isTrainer = initialRole === 'trainer';
+  const [activeRole, setActiveRole] = useState<'user' | 'trainer' | 'gym'>(initialRole);
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.userAuth);
   const { trainer } = useSelector((state: RootState) => state.trainerAuth);
+  const { gym } = useSelector((state: RootState) => state.gymAuth);
 
   useEffect(() => {
     if (user) {
@@ -24,8 +25,10 @@ const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
       } else {
         navigate('/trainer/waitlist', { replace: true });
       }
+    } else if (gym) {
+      navigate('/gym/dashboard', { replace: true });
     }
-  }, [user, trainer, navigate]);
+  }, [user, trainer, gym, navigate]);
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center">
@@ -35,50 +38,58 @@ const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
           alt="Gym Background"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/70"></div>
+        <div className="absolute inset-0 bg-black/75"></div>
       </div>
 
-
       <div className="relative z-10 w-full max-w-md mx-auto px-4">
-        <div className="backdrop-blur-md bg-gray-800/90 rounded-2xl overflow-hidden shadow-2xl border border-gray-700 transition-all duration-300">
-          <div className="pt-10 px-8 pb-6">
-            <h1 className="text-center text-3xl font-extrabold tracking-wider text-white mb-2">
+        <div className="backdrop-blur-xl bg-gray-900/80 rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5 transition-all duration-300">
+          <div className="pt-12 px-8 pb-4">
+            <h1 className="text-center text-4xl font-black tracking-tighter text-white mb-8">
               TRAIN<span className="text-[#176B87]">UP</span>
             </h1>
 
-            {/* Toggle Switch */}
-            <div className="flex justify-center mt-6 mb-2">
-              <div className="bg-gray-700/50 p-1 rounded-full flex relative">
-                <Link
-                  to="/user/login"
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 z-10 ${!isTrainer ? 'text-white' : 'text-gray-400 hover:text-gray-200'
-                    }`}
-                >
-                  User
-                </Link>
-                <Link
-                  to="/trainer/login"
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 z-10 ${isTrainer ? 'text-white' : 'text-gray-400 hover:text-gray-200'
-                    }`}
-                >
-                  Trainer
-                </Link>
+            {/* 3-Way Toggle Switch */}
+            <div className="bg-white/5 p-1 rounded-2xl flex relative h-12">
+              <button
+                onClick={() => setActiveRole('user')}
+                className={`flex-1 text-xs font-black uppercase tracking-widest transition-all duration-500 z-10 ${activeRole === 'user' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                  }`}
+              >
+                User
+              </button>
+              <button
+                onClick={() => setActiveRole('trainer')}
+                className={`flex-1 text-xs font-black uppercase tracking-widest transition-all duration-500 z-10 ${activeRole === 'trainer' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                  }`}
+              >
+                Trainer
+              </button>
+              <button
+                onClick={() => setActiveRole('gym')}
+                className={`flex-1 text-xs font-black uppercase tracking-widest transition-all duration-500 z-10 ${activeRole === 'gym' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                  }`}
+              >
+                Gym
+              </button>
 
-                {/* Sliding Background */}
-                <div
-                  className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[#176B87] rounded-full transition-all duration-300 ease-in-out ${isTrainer ? 'translate-x-full' : 'translate-x-0'
-                    }`}
-                ></div>
-              </div>
+              {/* Sliding Background */}
+              <div
+                className={`absolute top-1 bottom-1 w-[calc(33.33%-4px)] bg-[#176B87] rounded-xl transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${activeRole === 'user' ? 'translate-x-0' :
+                  activeRole === 'trainer' ? 'translate-x-[100%]' : 'translate-x-[200%]'
+                  }`}
+              ></div>
             </div>
           </div>
 
-          <div className="px-8 pb-8">
-            <div className={`transition-opacity duration-300 ${!isTrainer ? 'block' : 'hidden'}`}>
+          <div className="px-8 pb-10">
+            <div className={`transition-all duration-500 ${activeRole === 'user' ? 'block opacity-100' : 'hidden opacity-0'}`}>
               <LoginForm />
             </div>
-            <div className={`transition-opacity duration-300 ${isTrainer ? 'block' : 'hidden'}`}>
+            <div className={`transition-all duration-500 ${activeRole === 'trainer' ? 'block opacity-100' : 'hidden opacity-0'}`}>
               <TrainerLoginForm />
+            </div>
+            <div className={`transition-all duration-500 ${activeRole === 'gym' ? 'block opacity-100' : 'hidden opacity-0'}`}>
+              <GymLoginForm />
             </div>
           </div>
         </div>

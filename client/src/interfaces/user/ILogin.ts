@@ -1,3 +1,3 @@
 export interface LoginPageProps {
-    initialRole?: 'user' | 'trainer';
+    initialRole?: 'user' | 'trainer' | 'gym';
 }

@@ -14,8 +14,9 @@ export default function GymPageLayout({ children, title, subtitle, actions, full
         <div className="relative min-h-screen w-full bg-black text-white overflow-x-hidden font-sans selection:bg-blue-500/30">
             {/* Background Effects */}
             <div className="fixed inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent"></div>
-                <div className="opacity-40 grayscale-[0.2]">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px]" />
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
+                <div className="opacity-30 grayscale-[0.2]">
                     <Beams />
                 </div>
             </div>

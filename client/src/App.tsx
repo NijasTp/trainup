@@ -82,7 +82,7 @@ import GymEmployees from './pages/gym/GymEmployees';
 import GymProfile from './pages/gym/GymProfile';
 import GymStore from './pages/gym/GymStore';
 import PostTrainerHiring from './pages/gym/PostTrainerHiring';
-import GymLogin from "./pages/gym/GymLogin";
+const GymLogin = () => <Login initialRole="gym" />;
 import GymSignup from "./pages/gym/GymSignup";
 import GymVerifyOtp from "./pages/gym/GymVerifyOtp";
 import GymForgotPassword from "./pages/gym/GymForgotPassword";
