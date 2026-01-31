@@ -249,7 +249,7 @@ export default function HomePage() {
               className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.1]"
             >
               Transform Your Body.<br />
-              <span className="bg-gradient-to-r from-primary via-purple-500 to-blue-500 bg-clip-text text-transparent animate-gradient-x px-2">
+              <span className="bg-gradient-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent animate-gradient-x px-2">
                 One Day at a Time.
               </span>
             </motion.h1>
