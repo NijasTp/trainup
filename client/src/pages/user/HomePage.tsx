@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Flame,
   TrendingUp,
@@ -17,8 +15,8 @@ import {
   Target,
   Award,
   Activity,
-  TrendingDown,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { getTrainers } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
@@ -26,11 +24,71 @@ import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { Link, useNavigate } from "react-router-dom";
 import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";
+import { ROUTES } from "@/constants/routes";
 import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/IHomePage";
 
 import { useSelector } from "react-redux";
 import ProfileCompletionModal from "@/components/user/general/ProfileCompletionModal";
 // import API from "@/lib/axios";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants: any = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+    },
+  },
+};
+
+const GlassCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <motion.div
+    variants={itemVariants}
+    className={`relative group overflow-hidden bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors duration-500 ${className}`}
+  >
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    {children}
+  </motion.div>
+);
+
+const AnimatedNumber = ({ value }: { value: number }) => {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = value;
+    if (start === end) return;
+
+    let totalDuration = 1000;
+    let increment = end / (totalDuration / 16);
+
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        setDisplayValue(end);
+        clearInterval(timer);
+      } else {
+        setDisplayValue(Math.floor(start));
+      }
+    }, 16);
+
+    return () => clearInterval(timer);
+  }, [value]);
+
+  return <span>{displayValue}</span>;
+};
 
 export default function HomePage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
@@ -147,8 +205,13 @@ export default function HomePage() {
   const workoutProgress = calculateWorkoutProgress();
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent z-0"></div>
+    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+      {/* Background Visuals */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03)_0%,transparent_70%)]" />
+      </div>
 
       <SiteHeader />
 
@@ -157,351 +220,373 @@ export default function HomePage() {
         onOpenChange={setShowProfileModal}
       />
 
-      <main className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 z-10 flex-1">
-        <div className="text-center space-y-4 mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
-            <Flame className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">{streak} Day Streak!</span>
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16 z-10 flex-1"
+      >
+        {/* Hero Section */}
+        <section className="relative text-center space-y-8 pt-8">
+          <motion.div
+            variants={itemVariants}
+            className="inline-flex items-center gap-2 px-6 py-2 bg-white/5 backdrop-blur-xl rounded-full border border-white/10 shadow-2xl"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Flame className="h-5 w-5 text-orange-500 fill-orange-500" />
+            </motion.div>
+            <span className="text-sm font-semibold tracking-wide uppercase">
+              <span className="text-orange-500 mr-1"><AnimatedNumber value={streak} /></span> Day Streak
+            </span>
+          </motion.div>
+
+          <div className="space-y-4">
+            <motion.h1
+              variants={itemVariants}
+              className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.1]"
+            >
+              Transform Your Body.<br />
+              <span className="bg-gradient-to-r from-primary via-purple-500 to-blue-500 bg-clip-text text-transparent animate-gradient-x px-2">
+                One Day at a Time.
+              </span>
+            </motion.h1>
+
+            <motion.p
+              variants={itemVariants}
+              className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto font-light leading-relaxed"
+            >
+              Master your fitness with <span className="text-white font-medium">AI-powered workouts</span>,
+              <span className="text-white font-medium"> personalized nutrition</span>, and
+              <span className="text-white font-medium"> elite coaching</span>.
+            </motion.p>
           </div>
-          <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-            Welcome Back, Champion!
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Ready to crush today's goals? Let's see what's on your fitness agenda.
-          </p>
-        </div>
 
-        {/* Stats Overview */}
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
-              <Flame className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">{streak} days</div>
-              {streak > 0 ? (
-                <p className="text-xs text-green-700">
-                  <TrendingUp className="inline h-3 w-3 mr-1" />
-                  Keep it going!
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  <TrendingDown className="inline h-3 w-3 mr-1" />
-                  Keep practicing, you can do it!
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-4">
+            <Button
+              size="lg"
+              className="h-14 px-8 bg-primary hover:bg-primary/90 text-lg font-bold rounded-full transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)] group relative overflow-hidden"
+              onClick={() => navigate("/workouts")}
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                Start Today <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-14 px-8 border-white/10 bg-white/5 hover:bg-white/10 text-lg font-bold rounded-full transition-all"
+              onClick={() => navigate("/trainers")}
+            >
+              Browse Trainers
+            </Button>
+          </motion.div>
+        </section>
 
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Today's Nutrition</CardTitle>
-              <Apple className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {dietProgress.consumed}/{dietProgress.total} cal
+        {/* Stats Overview - Bento Grid */}
+        <section className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
+          <GlassCard className="md:col-span-2 lg:col-span-2 flex flex-col justify-between min-h-[200px] border-primary/20 bg-primary/5">
+            <div className="flex justify-between items-start">
+              <div className="p-3 bg-primary/20 rounded-2xl">
+                <Flame className="h-6 w-6 text-primary" />
               </div>
-              <Progress value={dietProgress.percentage} className="mt-2" />
-              <div className="flex justify-between items-center mt-1">
-                <p className="text-xs text-muted-foreground">{Math.round(dietProgress.percentage)}% completed</p>
-                {dietProgress.hasTemplate && (
-                  <Badge variant="outline" className="text-[10px] h-4 border-green-500/30 text-green-600">
-                    Template: Day {diet?.templateDay}
-                  </Badge>
-                )}
+              <Badge variant="outline" className="border-primary/20 text-primary bg-primary/10">Active</Badge>
+            </div>
+            <div>
+              <h3 className="text-gray-400 text-sm font-medium mb-1">Current Streak</h3>
+              <div className="text-5xl font-black text-white flex items-baseline gap-2">
+                <AnimatedNumber value={streak} />
+                <span className="text-xl font-medium text-gray-500">days</span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="mt-4 flex items-center gap-2 text-green-500 text-sm">
+              <TrendingUp className="h-4 w-4" />
+              <span>Top 5% this week</span>
+            </div>
+          </GlassCard>
 
-          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Today's Workouts</CardTitle>
-              <Dumbbell className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {workoutProgress.completed}/{workoutProgress.total}
+          <GlassCard className="md:col-span-2 lg:col-span-2 flex flex-col justify-between min-h-[200px] border-green-500/20 bg-green-500/5">
+            <div className="flex justify-between items-start">
+              <div className="p-3 bg-green-500/20 rounded-2xl">
+                <Apple className="h-6 w-6 text-green-500" />
               </div>
-              <Progress value={workoutProgress.percentage} className="mt-2" />
-              <p className="text-xs text-muted-foreground mt-1">{Math.round(workoutProgress.percentage)}% completed</p>
-            </CardContent>
-          </Card>
-        </div>
+              <span className="text-xs font-bold text-green-500">{Math.round(dietProgress.percentage)}%</span>
+            </div>
+            <div>
+              <h3 className="text-gray-400 text-sm font-medium mb-1">Calories Consumed</h3>
+              <div className="text-4xl font-black text-white flex items-baseline gap-2">
+                <AnimatedNumber value={dietProgress.consumed} />
+                <span className="text-lg font-medium text-gray-500">/ {dietProgress.total}</span>
+              </div>
+              <div className="w-full h-1.5 bg-white/5 rounded-full mt-4 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${dietProgress.percentage}%` }}
+                  className="h-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                />
+              </div>
+            </div>
+          </GlassCard>
+
+          <GlassCard className="md:col-span-4 lg:col-span-2 flex flex-col justify-between min-h-[200px] border-blue-500/20 bg-blue-500/5">
+            <div className="flex justify-between items-start">
+              <div className="p-3 bg-blue-500/20 rounded-2xl">
+                <Dumbbell className="h-6 w-6 text-blue-500" />
+              </div>
+              <Activity className="h-5 w-5 text-blue-500/50" />
+            </div>
+            <div>
+              <h3 className="text-gray-400 text-sm font-medium mb-1">Workout Progress</h3>
+              <div className="text-4xl font-black text-white flex items-baseline gap-2">
+                <AnimatedNumber value={workoutProgress.completed} />
+                <span className="text-lg font-medium text-gray-500">/ {workoutProgress.total}</span>
+              </div>
+              <p className="text-xs text-blue-400 mt-2 font-medium uppercase tracking-wider">
+                {workoutProgress.total - workoutProgress.completed} sessions remaining today
+              </p>
+            </div>
+          </GlassCard>
+        </section>
 
         {/* Featured Trainers */}
-        <Card className="bg-card/40 backdrop-blur-sm border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              <CardTitle>Featured Trainers</CardTitle>
+        <section className="space-y-6">
+          <div className="flex items-end justify-between px-2">
+            <div className="space-y-1">
+              <h2 className="text-3xl font-black tracking-tight">Elite Coaches</h2>
+              <p className="text-gray-500 font-medium">Learn from the best in the industry</p>
             </div>
             <Link to="/trainers">
-              <Button variant="ghost" size="sm">
-                View All <ChevronRight className="h-4 w-4 ml-1" />
+              <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all">
+                View All Trainers <ChevronRight className="h-4 w-4" />
               </Button>
             </Link>
-          </CardHeader>
-          <CardContent>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-              </div>
+              [1, 2, 3].map((i) => (
+                <div key={i} className="h-[400px] rounded-3xl bg-white/5 animate-pulse border border-white/10" />
+              ))
             ) : trainers.length === 0 ? (
-              <div className="text-center py-8 space-y-2">
-                <Users className="h-12 w-12 mx-auto text-muted-foreground/50" />
-                <p className="text-muted-foreground">No trainers available at the moment</p>
-                <Button variant="outline" size="sm">
-                  <Users className="h-4 w-4 mr-2" />
-                  Browse Trainers
-                </Button>
+              <div className="col-span-full py-20 text-center space-y-4">
+                <Users className="h-16 w-16 mx-auto text-white/10" />
+                <p className="text-gray-500 text-xl font-medium">No trainers available right now.</p>
               </div>
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {trainers.slice(0, 3).map((trainer) => (
-                  <div
-                    key={trainer._id}
-                    className="group relative overflow-hidden bg-secondary/30 rounded-lg border border-border/30 hover:border-border transition-all duration-300 hover:shadow-lg"
-                  >
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={trainer.profileImage || "/placeholder.svg"}
-                        alt={trainer.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute top-3 right-3">
-                        <div className="flex items-center gap-1 px-2 py-1 bg-black/40 backdrop-blur-sm rounded-full">
-                          <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
-                          <span className="text-white text-xs font-medium">{trainer.rating}</span>
-                        </div>
-                      </div>
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <h4 className="font-semibold text-white mb-1">{trainer.name}</h4>
-                        <div className="flex items-center gap-2 text-white/80 text-sm">
-                          <MapPin className="h-3 w-3" />
-                          <span>{trainer.location}</span>
-                        </div>
+              trainers.slice(0, 3).map((trainer) => (
+                <motion.div
+                  key={trainer._id}
+                  variants={itemVariants}
+                  whileHover={{ y: -10 }}
+                  className="group relative h-[450px] rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
+                >
+                  <img
+                    src={trainer.profileImage || "/placeholder.svg"}
+                    alt={trainer.name}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+                  <div className="absolute top-4 left-4">
+                    <Badge className="bg-primary/90 backdrop-blur-md text-white border-0 py-1.5 px-4 rounded-full font-bold shadow-xl">
+                      {trainer.specialty}
+                    </Badge>
+                  </div>
+
+                  <div className="absolute top-4 right-4 h-10 w-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10">
+                    <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                    <span className="ml-1 text-xs font-bold">{trainer.rating}</span>
+                  </div>
+
+                  <div className="absolute bottom-0 left-0 right-0 p-8 space-y-4">
+                    <div>
+                      <h4 className="text-2xl font-black text-white">{trainer.name}</h4>
+                      <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <span>{trainer.location}</span>
                       </div>
                     </div>
-                    <div className="p-4">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="text-xs">
-                          {trainer.specialty}
-                        </Badge>
-                        <span className="font-bold text-primary">
-                          {typeof trainer.price === 'object'
-                            ? `From ₹${trainer.price.basic}`
-                            : trainer.price}
-                        </span>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">Starting from</p>
+                        <p className="text-xl font-black text-primary">
+                          {typeof trainer.price === 'object' ? `₹${trainer.price.basic}` : trainer.price}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{trainer.bio}</p>
-                      <Button onClick={() => navigate(`/trainers/${trainer._id}`)} className="w-full mt-3" size="sm">
-                        View Profile
+                      <Button
+                        onClick={() => navigate(`/trainers/${trainer._id}`)}
+                        className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-6"
+                      >
+                        Profile
                       </Button>
                     </div>
                   </div>
-                ))}
-              </div>
+                </motion.div>
+              ))
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        {/* Today's Workouts */}
-        <Card className="bg-card/40 backdrop-blur-sm border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Dumbbell className="h-5 w-5 text-primary" />
-              <CardTitle>Today's Workouts</CardTitle>
-            </div>
-            <Link to="/workouts">
-              <Button variant="ghost" size="sm">
-                View All <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+        {/* Today's Workouts & Diet Grid */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Workouts */}
+          <GlassCard className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/20 rounded-xl">
+                  <Dumbbell className="h-5 w-5 text-blue-500" />
+                </div>
+                <h3 className="text-xl font-bold">Today's Regimen</h3>
               </div>
-            ) : !Array.isArray(workouts) || workouts.length === 0 ? (
-              <div className="text-center py-8 space-y-2">
-                <Activity className="h-12 w-12 mx-auto text-muted-foreground/50" />
-                <p className="text-muted-foreground">No workouts scheduled for today</p>
-                <Button variant="outline" size="sm" onClick={() => navigate("/workouts/add")}>
-                  <Dumbbell className="h-4 w-4 mr-2" />
-                  Add Workout
+              <Link to="/workouts">
+                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                  View Schedule
                 </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {workouts.slice(0, 3).map((workout) => (
-                  <div
+              </Link>
+            </div>
+
+            <div className="space-y-4">
+              {isLoading ? (
+                [1, 2].map((i) => <div key={i} className="h-20 bg-white/5 rounded-2xl animate-pulse" />)
+              ) : !Array.isArray(workouts) || workouts.length === 0 ? (
+                <div className="py-12 text-center space-y-4">
+                  <Activity className="h-12 w-12 mx-auto text-white/5" />
+                  <p className="text-gray-500">No sessions planned for today.</p>
+                  <Button onClick={() => navigate("/workouts/add")} variant="outline" className="rounded-full border-white/10">Add Session</Button>
+                </div>
+              ) : (
+                workouts.slice(0, 3).map((workout) => (
+                  <motion.div
                     key={workout._id}
-                    className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border/30"
+                    whileHover={{ x: 10 }}
+                    className={`flex items-center justify-between p-4 rounded-2xl border transition-colors ${workout.isDone
+                      ? "bg-green-500/10 border-green-500/20"
+                      : "bg-white/5 border-white/10 hover:bg-white/10"
+                      }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${workout.isDone ? "bg-green-500" : "bg-yellow-500"}`} />
+                    <div className="flex items-center gap-4">
+                      <div className={`w-3 h-3 rounded-full ${workout.isDone ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-yellow-500"}`} />
                       <div>
-                        <h4 className="font-medium">{workout.name}</h4>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {workout.time}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Target className="h-3 w-3" />
-                            {workout.exercises?.length} exercises
-                          </span>
-                          {workout.givenBy === "trainer" && (
-                            <Badge variant="secondary" className="text-xs">
-                              <Users className="h-3 w-3 mr-1" />
-                              Trainer
-                            </Badge>
-                          )}
+                        <h4 className={`font-bold ${workout.isDone ? "line-through text-gray-500" : "text-white"}`}>
+                          {workout.name}
+                        </h4>
+                        <div className="flex items-center gap-4 text-xs text-gray-500 font-medium">
+                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {workout.time}</span>
+                          <span className="flex items-center gap-1"><Target className="h-3 w-3" /> {workout.exercises?.length} sets</span>
                         </div>
                       </div>
                     </div>
-                    {workout.isDone && "Completed"}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Today's Diet */}
-        <Card className="bg-card/40 backdrop-blur-sm border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Apple className="h-5 w-5 text-green-600" />
-              <CardTitle>Today's Meals</CardTitle>
+                    {workout.isDone ? (
+                      <Badge className="bg-green-500/20 text-green-500 border-0">Done</Badge>
+                    ) : (
+                      <Button size="sm" variant="ghost" className="rounded-full hover:bg-primary/20 hover:text-primary" onClick={() => navigate(ROUTES.USER_START_WORKOUT.replace(':id', workout._id))}>
+                        Start
+                      </Button>
+                    )}
+                  </motion.div>
+                ))
+              )}
             </div>
-            <Link to="/diets">
-              <Button variant="ghost" size="sm">
-                View All <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          </GlassCard>
+
+          {/* Diet */}
+          <GlassCard className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-500/20 rounded-xl">
+                  <Apple className="h-5 w-5 text-orange-500" />
+                </div>
+                <h3 className="text-xl font-bold">Nutrition Plan</h3>
               </div>
-            ) : !diet?.meals || !Array.isArray(diet.meals) || diet.meals.length === 0 ? (
-              <div className="text-center py-8 space-y-2">
-                <Apple className="h-12 w-12 mx-auto text-muted-foreground/50" />
-                <p className="text-muted-foreground">No meals planned for today</p>
-                <Button variant="outline" size="sm" onClick={() => navigate("/diets/add")}>
-                  <Apple className="h-4 w-4 mr-2" />
-                  Add Meal
+              <Link to="/diets">
+                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                  Log Meal
                 </Button>
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {(diet.meals.length > 0 ? diet.meals : (diet.templateMeals || [])).slice(0, 6).map((meal) => (
-                  <div key={meal._id} className={`p-4 rounded-lg border border-border/30 ${meal._id.startsWith('template-') ? 'bg-orange-500/5' : 'bg-secondary/30'}`}>
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-sm">{meal.name}</h4>
-                      <div className={`w-2 h-2 rounded-full ${meal.isEaten ? "bg-green-500" : "bg-gray-400"}`} />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {isLoading ? (
+                [1, 2, 3, 4].map((i) => <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse" />)
+              ) : !diet?.meals || diet.meals.length === 0 ? (
+                <div className="col-span-full py-12 text-center space-y-4">
+                  <Apple className="h-12 w-12 mx-auto text-white/5" />
+                  <p className="text-gray-500">No meals logged for today.</p>
+                </div>
+              ) : (
+                (diet.meals.length > 0 ? diet.meals : (diet.templateMeals || [])).slice(0, 4).map((meal) => (
+                  <motion.div
+                    key={meal._id}
+                    whileHover={{ scale: 1.02 }}
+                    className={`p-4 rounded-2xl border ${meal.isEaten
+                      ? "bg-green-500/5 border-green-500/20"
+                      : "bg-white/5 border-white/10"
+                      }`}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <h4 className="font-bold text-sm truncate pr-2">{meal.name}</h4>
+                      <div className={`w-2 h-2 rounded-full ${meal.isEaten ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-gray-600"}`} />
                     </div>
-                    <div className="space-y-1 text-xs text-muted-foreground">
-                      <div className="flex justify-between">
-                        <span>Calories:</span>
-                        <span className="font-medium">{meal.calories}</span>
+                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter text-gray-500">
+                      <div className="flex flex-col">
+                        <span>Cals</span>
+                        <span className="text-white text-sm">{meal.calories}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Protein:</span>
-                        <span className="font-medium">{meal.protein}g</span>
+                      <div className="flex flex-col">
+                        <span>Prot</span>
+                        <span className="text-white text-sm">{meal.protein}g</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Time:</span>
-                        <span className="font-medium">{meal.time}</span>
+                      <div className="flex flex-col">
+                        <span>Time</span>
+                        <span className="text-white text-sm">{meal.time}</span>
                       </div>
                     </div>
-                    {meal.source === "trainer" && (
-                      <Badge variant="secondary" className="text-xs mt-2">
-                        <Users className="h-3 w-3 mr-1" />
-                        Trainer
-                      </Badge>
-                    )}
-                    {meal._id.startsWith('template-') && (
-                      <Badge variant="outline" className="text-[10px] mt-2 border-orange-500/30 text-orange-500">
-                        From Template
-                      </Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </GlassCard>
+        </section>
 
         {/* Quick Actions */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card
-            className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
-            onClick={() => navigate("/workouts")}
-          >
-            <CardContent className="flex items-center gap-3 p-6">
-              <div className="p-2 bg-primary/20 rounded-lg">
-                <Dumbbell className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h4 className="font-medium">Start Workout</h4>
-                <p className="text-sm text-muted-foreground">Begin today's session</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
-            onClick={() => navigate("/diets")}
-          >
-            <CardContent className="flex items-center gap-3 p-6">
-              <div className="p-2 bg-green-500/20 rounded-lg">
-                <Apple className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <h4 className="font-medium">Log Meal</h4>
-                <p className="text-sm text-muted-foreground">Track your nutrition</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
-            onClick={() => navigate("/trainers")}
-          >
-            <CardContent className="flex items-center gap-3 p-6">
-              <div className="p-2 bg-blue-500/20 rounded-lg">
-                <Users className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <h4 className="font-medium">Find Trainer</h4>
-                <p className="text-sm text-muted-foreground">Get expert guidance</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
-            onClick={() => navigate("/dashboard")}
-          >
-            <CardContent className="flex items-center gap-3 p-6">
-              <div className="p-2 bg-purple-500/20 rounded-lg">
-                <Award className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <h4 className="font-medium">View Progress</h4>
-                <p className="text-sm text-muted-foreground">Check your stats</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+        <section className="space-y-6">
+          <h2 className="text-2xl font-black px-2 tracking-tight">Quick Actions</h2>
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { title: "Start Workout", desc: "Launch active session", icon: Dumbbell, color: "from-blue-600 to-cyan-500", path: "/workouts" },
+              { title: "Log Nutrition", desc: "Track daily intake", icon: Apple, color: "from-orange-600 to-amber-500", path: "/diets" },
+              { title: "Find Coaches", desc: "Expert personalized help", icon: Users, color: "from-purple-600 to-pink-500", path: "/trainers" },
+              { title: "Analytics", desc: "View detailed progress", icon: Award, color: "from-primary to-indigo-500", path: "/dashboard" },
+            ].map((action, i) => (
+              <motion.div
+                key={i}
+                variants={itemVariants}
+                whileHover={{ y: -8, scale: 1.02 }}
+                onClick={() => navigate(action.path)}
+                className="group cursor-pointer relative overflow-hidden rounded-3xl p-1 bg-white/5 border border-white/10"
+              >
+                <div className="relative z-10 p-6 flex flex-col gap-4">
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.color} p-0.5 shadow-lg group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-shadow`}>
+                    <div className="w-full h-full rounded-[14px] bg-black/20 backdrop-blur-sm flex items-center justify-center">
+                      <action.icon className="h-7 w-7 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-black">{action.title}</h4>
+                    <p className="text-gray-500 text-sm font-medium">{action.desc}</p>
+                  </div>
+                </div>
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      </motion.main>
       <SiteFooter />
     </div>
   );
