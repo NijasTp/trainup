@@ -26,6 +26,7 @@ import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";
 import { ROUTES } from "@/constants/routes";
 import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/IHomePage";
+import Aurora from "@/components/ui/Aurora";
 
 import { useSelector } from "react-redux";
 import ProfileCompletionModal from "@/components/user/general/ProfileCompletionModal";
@@ -207,10 +208,13 @@ export default function HomePage() {
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
       {/* Background Visuals */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03)_0%,transparent_70%)]" />
+      <div className="absolute inset-0 z-0">
+        <Aurora
+          colorStops={["#080808", "#222222", "#080808"]}
+          amplitude={1.1}
+          blend={0.6}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
       </div>
 
       <SiteHeader />
