@@ -219,7 +219,7 @@ export default function StartSessionPage() {
         setCurrentExerciseIndex(currentExerciseIndex + 1);
       } else {
         const totalWorkoutTime = updatedTimes.reduce((acc, et) => acc + et.duration, 0);
-        navigate(`/workouts/${id}/success`, { state: { exerciseTimes: updatedTimes, totalWorkoutTime, isComplete: true } });
+        navigate(`/workouts/${id}/success`, { state: { exerciseTimes: updatedTimes, totalWorkoutTime, isDone: true } });
       }
     }
   }

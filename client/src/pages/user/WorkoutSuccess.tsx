@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { useLocation, useParams, useNavigate, Link, } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDispatch } from "react-redux";
+import { updateUser } from "@/redux/slices/userAuthSlice";
+import { getProfile } from "@/services/userService";
 import { Trophy, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
@@ -15,6 +18,7 @@ import type { LocationState } from "@/interfaces/user/IWorkoutSuccess";
 export default function SuccessPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const location = useLocation();
   const state = location.state as LocationState | undefined;
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -67,6 +71,13 @@ export default function SuccessPage() {
             isDone: true,
             exerciseUpdates,
           });
+
+          // Refetch profile to get updated streak
+          const profileData = await getProfile();
+          if (profileData) {
+            dispatch(updateUser(profileData));
+          }
+
           toast.success("Workout marked as complete!", {
             description: "Your progress has been saved.",
           });
