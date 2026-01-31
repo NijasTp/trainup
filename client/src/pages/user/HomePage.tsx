@@ -210,7 +210,7 @@ export default function HomePage() {
       {/* Background Visuals */}
       <div className="absolute inset-0 z-0">
         <Aurora
-          colorStops={["#080808", "#222222", "#080808"]}
+          colorStops={["#020617", "#0f172a", "#020617"]}
           amplitude={1.1}
           blend={0.6}
         />
