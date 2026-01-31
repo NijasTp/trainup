@@ -15,6 +15,7 @@ import {
 } from "recharts"
 import Badge from "@/components/admin/ui/Badge"
 import { Dropdown, DropdownItem } from "@/components/admin/ui/Dropdown"
+import { Link } from "react-router-dom"
 
 const StatCard = ({
   title,
