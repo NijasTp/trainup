@@ -35,8 +35,9 @@ export const StreakCalendar: React.FC<StreakCalendarProps> = ({ sessions, curren
     }, [currentMonth]);
 
     const workoutDates = useMemo(() => {
+        const sessionsArray = Array.isArray(sessions) ? sessions : [];
         return new Set(
-            sessions
+            sessionsArray
                 .filter(s => s.isDone)
                 .map(s => s.date)
         );

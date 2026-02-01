@@ -290,7 +290,7 @@ export default function AddSessionPage() {
             return;
         }
 
-        setAddedExercises([...addedExercises, result.data]);
+        setAddedExercises([...addedExercises, { ...result.data, id: `${result.data.id}-${Date.now()}` }]);
         setModalOpen(false);
     }
 
@@ -485,9 +485,9 @@ export default function AddSessionPage() {
                     )}
                     {!isSuggestionsLoading && !error && displayedSuggestions.length > 0 && (
                         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {displayedSuggestions.map((sug) => (
+                            {displayedSuggestions.map((sug, index) => (
                                 <ExerciseSuggestionCard
-                                    key={sug.data.id}
+                                    key={`${sug.data.id}-${index}`}
                                     suggestion={sug}
                                     onAdd={() => handleAddClick(sug.data.base_id, sug.value)}
                                     isLoading={isLoading}

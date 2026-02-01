@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { Flame, X } from 'lucide-react';
 import { StreakCalendar } from './StreakCalendar';
@@ -22,8 +22,9 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
                 setLoading(true);
                 try {
                     const data = await getAllSessions();
-                    // Assuming data is { workouts: [...] } or direct array
-                    setSessions(data.workouts || data || []);
+                    // Fix: extract the sessions array from the response object
+                    const sessionsArray = data.sessions || data.workouts || (Array.isArray(data) ? data : []);
+                    setSessions(sessionsArray);
                 } catch (error) {
                     console.error("Failed to fetch sessions for streak calendar", error);
                 } finally {
@@ -38,6 +39,7 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-none w-screen h-screen m-0 p-0 border-none bg-black/60 backdrop-blur-2xl transition-all duration-500 overflow-y-auto [&>button]:hidden">
                 <DialogTitle className="sr-only">Streak Details</DialogTitle>
+                <DialogDescription className="sr-only">View your workout consistency and current streak.</DialogDescription>
 
                 <div className="min-h-screen w-full flex flex-col items-center py-12 px-4 relative">
                     {/* Close Button */}

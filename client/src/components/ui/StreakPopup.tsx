@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Flame } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
@@ -76,6 +76,7 @@ export const StreakPopup: React.FC<StreakPopupProps> = ({ isOpen, onClose, strea
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-md bg-transparent border-none shadow-none flex flex-col items-center justify-center p-0 overflow-hidden [&>button]:hidden">
                 <DialogTitle className="sr-only">Streak Milestone</DialogTitle>
+                <DialogDescription className="sr-only">Celebration of your new workout streak milestone!</DialogDescription>
                 <motion.div
                     initial={{ scale: 0.6, opacity: 0, y: 40 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
