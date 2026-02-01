@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
-import { Flame, X } from 'lucide-react';
+import { Flame } from 'lucide-react';
 import { StreakCalendar } from './StreakCalendar';
 import { getAllSessions } from '@/services/workoutService';
 import { Button } from '@/components/ui/button';
@@ -37,24 +37,15 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-none w-screen h-screen m-0 p-0 border-none bg-black/60 backdrop-blur-2xl transition-all duration-500 overflow-y-auto [&>button]:hidden">
+            <DialogContent className="max-w-xl bg-zinc-950/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-0 overflow-hidden shadow-2xl">
                 <DialogTitle className="sr-only">Streak Details</DialogTitle>
                 <DialogDescription className="sr-only">View your workout consistency and current streak.</DialogDescription>
 
-                <div className="min-h-screen w-full flex flex-col items-center justify-center py-6 px-4 relative">
-                    {/* Close Button */}
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onClose}
-                        className="absolute top-6 right-6 text-white/50 hover:text-white hover:bg-white/10 rounded-full h-12 w-12"
-                    >
-                        <X className="h-6 w-6" />
-                    </Button>
+                <div className="relative p-8 md:p-10">
 
-                    <div className="w-full max-w-xl space-y-4">
+                    <div className="space-y-6">
                         {/* Header Section - Horizontal Row */}
-                        <div className="flex flex-row items-center justify-between gap-6 bg-white/5 border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-2xl relative overflow-hidden group">
+                        <div className="flex flex-row items-center justify-between gap-6 bg-white/5 border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-xl relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
                             <motion.div
@@ -63,12 +54,12 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
                                 transition={{ delay: 0.2 }}
                                 className="relative z-10 space-y-0 text-left"
                             >
-                                <h2 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-none">
+                                <h2 className="text-6xl md:text-7xl font-black text-white tracking-tighter leading-none">
                                     <span className="bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
                                         {streak}
                                     </span>
                                 </h2>
-                                <p className="text-lg md:text-xl font-bold bg-gradient-to-r from-orange-400 to-red-600 bg-clip-text text-transparent uppercase tracking-widest">
+                                <p className="text-base md:text-lg font-bold bg-gradient-to-r from-orange-400 to-red-600 bg-clip-text text-transparent uppercase tracking-widest">
                                     Day Streak
                                 </p>
                             </motion.div>
@@ -80,8 +71,8 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
                                 className="relative z-10"
                             >
                                 <div className="relative">
-                                    <div className="absolute inset-0 bg-orange-500 blur-3xl opacity-20 transition-opacity duration-500" />
-                                    <Flame className="h-24 w-24 md:h-28 md:w-28 text-orange-500 fill-orange-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.6)]" />
+                                    <div className="absolute inset-0 bg-orange-500 blur-2xl opacity-20 transition-opacity duration-500" />
+                                    <Flame className="h-20 w-20 md:h-24 md:w-24 text-orange-500 fill-orange-500 drop-shadow-[0_0_12px_rgba(249,115,22,0.6)]" />
                                 </div>
                             </motion.div>
                         </div>
@@ -91,7 +82,7 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.4 }}
-                            className="bg-white/5 border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-2xl relative overflow-hidden group"
+                            className="bg-white/5 border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-xl relative overflow-hidden group"
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
@@ -107,24 +98,14 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
                                 </div>
 
                                 {loading ? (
-                                    <div className="h-[200px] flex items-center justify-center">
-                                        <div className="animate-spin h-6 w-6 border-3 border-orange-500/20 border-t-orange-500 rounded-full" />
+                                    <div className="h-[180px] flex items-center justify-center">
+                                        <div className="animate-spin h-5 w-5 border-2 border-orange-500/20 border-t-orange-500 rounded-full" />
                                     </div>
                                 ) : (
                                     <StreakCalendar sessions={sessions} />
                                 )}
                             </div>
                         </motion.div>
-
-                        {/* Motivator */}
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.6 }}
-                            className="text-center text-gray-500 text-sm font-medium italic pb-4"
-                        >
-                            "The only workout you regret is the one that didn't happen."
-                        </motion.p>
                     </div>
                 </div>
             </DialogContent>

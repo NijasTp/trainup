@@ -3,6 +3,7 @@ import { injectable, inject } from 'inversify';
 import { STATUS_CODE } from '../constants/status';
 import TYPES from '../core/types/types';
 import { IWorkoutService } from '../core/interfaces/services/IWorkoutService';
+import { SocketHandler } from '../utils/socketHandler.util';
 
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import { MESSAGES } from '../constants/messages.constants';
@@ -31,7 +32,8 @@ import { IStreakService } from '../core/interfaces/services/IStreakService';
 export class WorkoutController {
   constructor(
     @inject(TYPES.WorkoutService) private _workoutService: IWorkoutService,
-    @inject(TYPES.IStreakService) private _streakService: IStreakService
+    @inject(TYPES.IStreakService) private _streakService: IStreakService,
+    @inject(TYPES.SocketHandler) private _socketHandler: SocketHandler
   ) { }
 
   async createSession(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -75,8 +77,14 @@ export class WorkoutController {
       }
 
       if (dto.isDone && updated.userId) {
+        console.log(`[STREAK_DEBUG] Completing workout for user: ${updated.userId}`);
         await this._streakService.updateUserStreak(new Types.ObjectId(updated.userId));
         const streakData = await this._streakService.checkAndResetUserStreak(new Types.ObjectId(updated.userId));
+
+        console.log(`[STREAK_DEBUG] Current streak: ${streakData.currentStreak}. Emitting via SocketHandler...`);
+        // Emit socket event for real-time streak update via SocketHandler
+        this._socketHandler.emitStreakUpdate(updated.userId, streakData.currentStreak);
+
         res.status(STATUS_CODE.OK).json({
           success: true,
           streak: streakData.currentStreak,

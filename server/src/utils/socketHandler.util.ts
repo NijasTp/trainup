@@ -18,10 +18,9 @@ import { JwtService } from '../utils/jwt'
 
 @injectable()
 export class SocketHandler {
-  private io: Server
 
   constructor(
-    io: Server,
+    @inject(TYPES.SocketServer) private io: Server,
     @inject(TYPES.IUserService) private _userService: IUserService,
     @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
     @inject(TYPES.IMessageService) private _messageService: IMessageService,
@@ -32,7 +31,6 @@ export class SocketHandler {
     @inject(TYPES.IAdminRepository) private _adminRepository: IAdminRepository,
     @inject(TYPES.IGymRepository) private _gymRepository: IGymRepository
   ) {
-    this.io = io
     this.initialize()
   }
 
@@ -316,6 +314,20 @@ export class SocketHandler {
 
     socket.on('disconnect', () => {
       logger.info(`User disconnected: ${socket.userId}`)
+    })
+  }
+
+  public emitStreakUpdate(userId: string, streak: number) {
+    const targetRoom = `user_${userId}`;
+    logger.info(`[SOCKET_STREAK] Emitting streak_updated to ${targetRoom}. Value: ${streak}`);
+
+    // Check if there are any sockets in this room
+    const room = this.io.sockets.adapter.rooms.get(targetRoom);
+    const subscriberCount = room ? room.size : 0;
+    logger.info(`[SOCKET_STREAK] Room ${targetRoom} has ${subscriberCount} active connections.`);
+
+    this.io.to(targetRoom).emit('streak_updated', {
+      streak
     })
   }
 }

@@ -102,6 +102,8 @@ const TYPES = {
   IProgressRepository: Symbol.for("IProgressRepository"),
   IProgressService: Symbol.for("IProgressService"),
   IQueueService: Symbol.for("IQueueService"),
+  SocketServer: Symbol.for("SocketServer"),
+  SocketHandler: Symbol.for("SocketHandler"),
 };
 
 export default TYPES;

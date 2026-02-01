@@ -148,19 +148,28 @@ export const SiteHeader: React.FC = () => {
     });
 
     socket.on("streak_updated", (data: { streak: number }) => {
-      console.log("Streak updated event received:", data);
+      console.log("Streak updated event received! Data:", data);
 
-      const today = new Date().toISOString().split('T')[0];
-      const storageKey = `streak_popup_shown_${user._id}_${today}`;
-      const alreadyShown = localStorage.getItem(storageKey);
+      const today = new Date().toDateString();
+      const storageKey = `lastStreakPopup_${user._id}`;
+      const lastShown = localStorage.getItem(storageKey);
 
-      if (data.streak > currentStreak && !alreadyShown) {
+      console.log("Streak Popup Guard Check:", {
+        lastShown,
+        today,
+        shouldShow: lastShown !== today,
+        user_id: user?._id
+      });
+
+      if (lastShown !== today) {
+        console.log("Showing Streak Popup!");
         setShowStreakPopup(true);
-        localStorage.setItem(storageKey, 'true');
+        localStorage.setItem(storageKey, today);
+      } else {
+        console.log("Streak popup already shown today, skipping.");
       }
 
       setCurrentStreak(data.streak)
-      // Update global store
       if (user) {
         dispatch(updateUser({ streak: data.streak }))
       }
@@ -174,7 +183,7 @@ export const SiteHeader: React.FC = () => {
       console.log("Disconnecting socket");
       socket.disconnect()
     }
-  }, [user?._id, dispatch]) // removed user from dependency to avoid re-connecting on every update
+  }, [user?._id, dispatch])
 
   useEffect(() => {
     if (!user) {

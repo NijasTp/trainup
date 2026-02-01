@@ -129,6 +129,7 @@ import { IReviewRepository } from "../interfaces/repositories/IReviewRepository"
 import { IReviewService } from "../interfaces/services/IReviewService";
 import { IQueueService } from "../interfaces/services/IQueueService";
 import { QueueService } from "../../services/queue.service";
+import { SocketHandler } from "../../utils/socketHandler.util";
 
 
 import { NotificationCron } from "../../cron/notification.cron";
@@ -244,5 +245,6 @@ container.bind<IReviewRepository>(TYPES.IReviewRepository).to(ReviewRepository);
 container.bind<IReviewService>(TYPES.IReviewService).to(ReviewService);
 
 container.bind<IQueueService>(TYPES.IQueueService).to(QueueService).inSingletonScope();
+container.bind<SocketHandler>(TYPES.SocketHandler).to(SocketHandler).inSingletonScope();
 
 export default container;

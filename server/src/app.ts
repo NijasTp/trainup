@@ -49,17 +49,8 @@ const io = new SocketServer(httpServer, {
   },
 });
 
-new SocketHandler(
-  io,
-  container.get(TYPES.IUserService),
-  container.get(TYPES.IUserPlanService),
-  container.get(TYPES.IMessageService),
-  container.get(TYPES.IJwtService),
-  container.get(TYPES.IUserRepository),
-  container.get(TYPES.ITrainerRepository),
-  container.get(TYPES.IAdminRepository),
-  container.get(TYPES.IGymRepository)
-);
+container.bind<SocketServer>(TYPES.SocketServer).toConstantValue(io);
+container.get<SocketHandler>(TYPES.SocketHandler);
 
 const eventService = container.get<IEventService>(TYPES.IEventService);
 eventService.setIO(io);
