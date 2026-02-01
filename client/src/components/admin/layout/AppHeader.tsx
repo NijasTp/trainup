@@ -74,7 +74,7 @@ const AppHeader: React.FC = () => {
                     </button>
 
                     <Link to="/admin/dashboard" className="lg:hidden font-bold">
-                        <span className="text-brand-500">Train</span>up
+                        <span className="text-zinc-900 dark:text-white">Train</span>up
                     </Link>
                 </div>
                 <div className="flex items-center justify-end w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none">

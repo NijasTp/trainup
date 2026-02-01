@@ -240,7 +240,7 @@ export default function HomePage() {
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Flame className="h-5 w-5 text-orange-500 fill-orange-500" />
+              <Flame className="h-5 w-5 text-orange-500 fill-[#030303]" />
             </motion.div>
             <span className="text-sm font-semibold tracking-wide uppercase">
               <span className="text-orange-500 mr-1"><AnimatedNumber value={streak} /></span> Day Streak
@@ -295,7 +295,7 @@ export default function HomePage() {
           <GlassCard className="md:col-span-2 lg:col-span-2 flex flex-col justify-between min-h-[200px] border-primary/20 bg-primary/5">
             <div className="flex justify-between items-start">
               <div className="p-3 bg-primary/20 rounded-2xl">
-                <Flame className="h-6 w-6 text-primary" />
+                <Flame className="h-6 w-6 text-primary fill-[#030303]" />
               </div>
               <Badge variant="outline" className="border-primary/20 text-primary bg-primary/10">Active</Badge>
             </div>
@@ -315,7 +315,7 @@ export default function HomePage() {
           <GlassCard className="md:col-span-2 lg:col-span-2 flex flex-col justify-between min-h-[200px] border-green-500/20 bg-green-500/5">
             <div className="flex justify-between items-start">
               <div className="p-3 bg-green-500/20 rounded-2xl">
-                <Apple className="h-6 w-6 text-green-500" />
+                <Apple className="h-6 w-6 text-green-500 fill-[#030303]" />
               </div>
               <span className="text-xs font-bold text-green-500">{Math.round(dietProgress.percentage)}%</span>
             </div>
@@ -338,7 +338,7 @@ export default function HomePage() {
           <GlassCard className="md:col-span-4 lg:col-span-2 flex flex-col justify-between min-h-[200px] border-blue-500/20 bg-blue-500/5">
             <div className="flex justify-between items-start">
               <div className="p-3 bg-blue-500/20 rounded-2xl">
-                <Dumbbell className="h-6 w-6 text-blue-500" />
+                <Dumbbell className="h-6 w-6 text-blue-500 fill-[#030303]" />
               </div>
               <Activity className="h-5 w-5 text-blue-500/50" />
             </div>
@@ -576,7 +576,7 @@ export default function HomePage() {
                 <div className="relative z-10 p-6 flex flex-col gap-4">
                   <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.color} p-0.5 shadow-lg group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-shadow`}>
                     <div className="w-full h-full rounded-[14px] bg-black/20 backdrop-blur-sm flex items-center justify-center">
-                      <action.icon className="h-7 w-7 text-white" />
+                      <action.icon className="h-7 w-7 text-white fill-[#030303]" />
                     </div>
                   </div>
                   <div>

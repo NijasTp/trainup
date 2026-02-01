@@ -270,7 +270,7 @@ export const SiteHeader: React.FC = () => {
             <Flame
               className={cn(
                 "h-4 w-4",
-                currentStreak ? "text-orange-500 fill-orange-500" : "text-muted-foreground"
+                currentStreak ? "text-orange-500 fill-[#030303]" : "text-muted-foreground"
               )}
             />
             <span className="text-sm font-bold text-orange-600 dark:text-orange-400">{currentStreak}</span>

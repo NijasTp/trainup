@@ -1,17 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-    BoxCubeIcon,
-    CalenderIcon,
     ChevronDownIcon,
     GridIcon,
     HorizontaLDots,
     ListIcon,
-    PageIcon,
     PieChartIcon,
-    PlugInIcon,
-    TableIcon,
     UserCircleIcon,
+    UserGroupIcon,
 } from "../icons";
 import { useSidebar } from "../../../context/SidebarContext";
 
@@ -34,7 +30,7 @@ const navItems: NavItem[] = [
         path: "/admin/users",
     },
     {
-        icon: <UserCircleIcon />, // Using UserCircleIcon for Trainers as well
+        icon: <UserGroupIcon />,
         name: "Trainers",
         subItems: [
             { name: "Trainer Listing", path: "/admin/trainers" },
@@ -236,9 +232,9 @@ const AppSidebar: React.FC = () => {
                 <Link to="/admin/dashboard" className="flex items-center gap-2">
                     <span className="text-2xl font-bold text-gray-900 dark:text-white">
                         {isExpanded || isHovered || isMobileOpen ? (
-                            <><span className="text-brand-500">Train</span>up</>
+                            <><span className="text-zinc-900 dark:text-white">Train</span>up</>
                         ) : (
-                            <span className="text-brand-500">T</span>
+                            <span className="text-zinc-900 dark:text-white">T</span>
                         )}
                     </span>
                 </Link>
