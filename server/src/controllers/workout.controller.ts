@@ -76,6 +76,13 @@ export class WorkoutController {
 
       if (dto.isDone && updated.userId) {
         await this._streakService.updateUserStreak(new Types.ObjectId(updated.userId));
+        const streakData = await this._streakService.checkAndResetUserStreak(new Types.ObjectId(updated.userId));
+        res.status(STATUS_CODE.OK).json({
+          success: true,
+          streak: streakData.currentStreak,
+          session: updated
+        });
+        return;
       }
 
       res.status(STATUS_CODE.OK).json(updated);

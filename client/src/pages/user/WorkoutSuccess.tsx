@@ -67,15 +67,13 @@ export default function SuccessPage() {
             exerciseId: et.exerciseId,
             timeTaken: et.duration,
           }));
-          await updateWorkoutSession(id, {
+          const response = await updateWorkoutSession(id, {
             isDone: true,
             exerciseUpdates,
           });
 
-          // Refetch profile to get updated streak
-          const profileData = await getProfile();
-          if (profileData) {
-            dispatch(updateUser(profileData));
+          if (response && response.streak !== undefined) {
+            dispatch(updateUser({ streak: response.streak }));
           }
 
           toast.success("Workout marked as complete!", {
