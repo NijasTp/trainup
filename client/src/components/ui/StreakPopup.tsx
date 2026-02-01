@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Flame } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
+import { Button } from '@/components/ui/button';
 
 interface StreakPopupProps {
     isOpen: boolean;
@@ -9,12 +11,63 @@ interface StreakPopupProps {
     streak: number;
 }
 
+const AnimatedNumber = ({ value }: { value: number }) => {
+    const [displayValue, setDisplayValue] = useState(0);
+
+    useEffect(() => {
+        if (value <= 0) {
+            setDisplayValue(0);
+            return;
+        }
+        let start = 0;
+        const end = value;
+        const totalDuration = 1500;
+        const incrementTime = Math.max(totalDuration / end, 16); // cap at ~60fps
+
+        const timer = setInterval(() => {
+            start += 1;
+            setDisplayValue(start);
+            if (start >= end) clearInterval(timer);
+        }, incrementTime);
+
+        return () => clearInterval(timer);
+    }, [value]);
+
+    return <span>{displayValue}</span>;
+};
+
 export const StreakPopup: React.FC<StreakPopupProps> = ({ isOpen, onClose, streak }) => {
     useEffect(() => {
         if (isOpen) {
+            // Trigger confetti
+            const duration = 3 * 1000;
+            const end = Date.now() + duration;
+
+            const frame = () => {
+                confetti({
+                    particleCount: 2,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#f97316', '#ea580c', '#ffffff']
+                });
+                confetti({
+                    particleCount: 2,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#f97316', '#ea580c', '#ffffff']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            };
+            frame();
+
             const timer = setTimeout(() => {
                 onClose();
-            }, 3000);
+            }, 5000); // 5 seconds for premium feel
             return () => clearTimeout(timer);
         }
     }, [isOpen, onClose]);
@@ -22,45 +75,73 @@ export const StreakPopup: React.FC<StreakPopupProps> = ({ isOpen, onClose, strea
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-md bg-transparent border-none shadow-none flex flex-col items-center justify-center p-0 overflow-hidden [&>button]:hidden">
-                <DialogTitle className="sr-only">Streak Update</DialogTitle>
+                <DialogTitle className="sr-only">Streak Milestone</DialogTitle>
                 <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    transition={{ type: "spring", damping: 12, stiffness: 200 }}
-                    className="relative flex flex-col items-center"
+                    initial={{ scale: 0.6, opacity: 0, y: 40 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.8, opacity: 0, y: 20 }}
+                    transition={{ type: "spring", damping: 15, stiffness: 150 }}
+                    className="relative flex flex-col items-center group"
                 >
-                    <div className="relative">
-                        <motion.div
-                            animate={{
-                                scale: [1, 1.15, 1],
-                                filter: ["brightness(1)", "brightness(1.2)", "brightness(1)"]
-                            }}
-                            transition={{
-                                duration: 1.5,
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                            }}
-                        >
-                            <Flame className="w-40 h-40 text-orange-500 fill-orange-500 drop-shadow-[0_0_30px_rgba(249,115,22,0.8)]" />
-                        </motion.div>
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-4 text-white font-black text-5xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] font-sans">
-                            {streak}
+                    {/* Background Glow */}
+                    <div className="absolute inset-0 bg-orange-600 blur-[100px] opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
+
+                    <div className="relative bg-zinc-900/80 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-white/10 shadow-2xl flex flex-col items-center text-center space-y-6">
+                        <div className="relative">
+                            <motion.div
+                                animate={{
+                                    scale: [1, 1.1, 1],
+                                    filter: ["brightness(1)", "brightness(1.3)", "brightness(1)"]
+                                }}
+                                transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                                className="relative z-10"
+                            >
+                                <Flame className="w-32 h-32 text-orange-500 fill-orange-500 drop-shadow-[0_0_25px_rgba(249,115,22,0.6)]" />
+                            </motion.div>
+
+                            {/* Particles behind flame */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-orange-600/20 to-transparent blur-xl" />
                         </div>
+
+                        <div className="space-y-2">
+                            <motion.h2
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="text-4xl font-black text-white px-2"
+                            >
+                                Daily Streak Unlocked!
+                            </motion.h2>
+                            <motion.p
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 }}
+                                className="text-gray-400 font-medium text-lg leading-relaxed"
+                            >
+                                You have a <span className="text-orange-500 font-bold text-2xl px-1">
+                                    <AnimatedNumber value={streak} />
+                                </span> day streak — keep going!
+                            </motion.p>
+                        </div>
+
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.8 }}
+                            className="w-full pt-4"
+                        >
+                            <Button
+                                onClick={onClose}
+                                className="w-full h-14 bg-white text-black hover:bg-gray-200 text-lg font-black rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl"
+                            >
+                                CONTINUE
+                            </Button>
+                        </motion.div>
                     </div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="mt-4 text-center"
-                    >
-                        <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 drop-shadow-sm">
-                            STREAK!
-                        </h2>
-                        <p className="text-orange-200 mt-1 font-semibold text-lg drop-shadow-md">
-                            You're on fire!
-                        </p>
-                    </motion.div>
                 </motion.div>
             </DialogContent>
         </Dialog>

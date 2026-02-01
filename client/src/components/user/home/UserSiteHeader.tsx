@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils"
 import { CustomDropdown } from "@/components/ui/custom-dropdown"
 import { io } from "socket.io-client"
 import { StreakPopup } from "@/components/ui/StreakPopup"
+import { StreakModal } from "@/components/ui/StreakModal"
 import { updateUser } from "@/redux/slices/userAuthSlice"
 
 interface Notification {
@@ -56,6 +57,7 @@ export const SiteHeader: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentStreak, setCurrentStreak] = useState(user?.streak ?? 0)
   const [showStreakPopup, setShowStreakPopup] = useState(false)
+  const [showStreakModal, setShowStreakModal] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
   // Dropdown states
@@ -147,8 +149,17 @@ export const SiteHeader: React.FC = () => {
 
     socket.on("streak_updated", (data: { streak: number }) => {
       console.log("Streak updated event received:", data);
+
+      const today = new Date().toISOString().split('T')[0];
+      const storageKey = `streak_popup_shown_${user._id}_${today}`;
+      const alreadyShown = localStorage.getItem(storageKey);
+
+      if (data.streak > currentStreak && !alreadyShown) {
+        setShowStreakPopup(true);
+        localStorage.setItem(storageKey, 'true');
+      }
+
       setCurrentStreak(data.streak)
-      setShowStreakPopup(true)
       // Update global store
       if (user) {
         dispatch(updateUser({ streak: data.streak }))
@@ -266,11 +277,14 @@ export const SiteHeader: React.FC = () => {
           </Button>
 
           {/* Streak */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
+          <div
+            onClick={() => setShowStreakModal(true)}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 cursor-pointer hover:bg-orange-500/20 transition-colors"
+          >
             <Flame
               className={cn(
                 "h-4 w-4",
-                currentStreak ? "text-orange-500 fill-[#030303]" : "text-muted-foreground"
+                currentStreak ? "text-orange-500" : "text-muted-foreground"
               )}
             />
             <span className="text-sm font-bold text-orange-600 dark:text-orange-400">{currentStreak}</span>
@@ -504,6 +518,11 @@ export const SiteHeader: React.FC = () => {
       <StreakPopup
         isOpen={showStreakPopup}
         onClose={() => setShowStreakPopup(false)}
+        streak={currentStreak}
+      />
+      <StreakModal
+        isOpen={showStreakModal}
+        onClose={() => setShowStreakModal(false)}
         streak={currentStreak}
       />
     </header>
