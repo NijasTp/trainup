@@ -123,3 +123,14 @@ export const PlugInIcon: React.FC<IconProps> = (props) => (
         />
     </svg>
 );
+
+export const UserGroupIcon: React.FC<IconProps> = (props) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M8.5 7.5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5S12.38 10 11 10s-2.5-1.12-2.5-2.5ZM11 11.5c-2.48 0-4.5 2.02-4.5 4.5v.5c0 .28.22.5.5.5h8c.28 0 .5-.22.5-.5v-.5c0-2.48-2.02-4.5-4.5-4.5ZM15.5 8c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2ZM17.5 11.5c-2.07 0-3.75 1.68-3.75 3.75v.25c0 .28.22.5.5.5h6.5c.28 0 .5-.22.5-.5v-.25c0-2.07-1.68-3.75-3.75-3.75Z"
+            fill="currentColor"
+        />
+    </svg>
+);

@@ -25,18 +25,18 @@
   --text-theme-xs: 12px;
   --text-theme-xs--line-height: 18px;
 
-  --color-brand-25: #f2f7ff;
-  --color-brand-50: #ecf3ff;
-  --color-brand-100: #dde9ff;
-  --color-brand-200: #c2d6ff;
-  --color-brand-300: #9cb9ff;
-  --color-brand-400: #7592ff;
-  --color-brand-500: #465fff;
-  --color-brand-600: #3641f5;
-  --color-brand-700: #2a31d8;
-  --color-brand-800: #252dae;
-  --color-brand-900: #262e89;
-  --color-brand-950: #161950;
+  --color-brand-25: #ffffff;
+  --color-brand-50: #fafafa; /* zinc-50 */
+  --color-brand-100: #f4f4f5; /* zinc-100 */
+  --color-brand-200: #e4e4e7; /* zinc-200 */
+  --color-brand-300: #d4d4d8; /* zinc-300 */
+  --color-brand-400: #a1a1aa; /* zinc-400 */
+  --color-brand-500: #18181b; /* zinc-900 */
+  --color-brand-600: #09090b; /* zinc-950 */
+  --color-brand-700: #000000;
+  --color-brand-800: #000000;
+  --color-brand-900: #000000;
+  --color-brand-950: #000000;
 
   --color-gray-dark: #1a2231;
 
@@ -56,7 +56,7 @@
 }
 
 @utility menu-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  @apply bg-zinc-100 text-zinc-900 dark:bg-white/[0.08] dark:text-white;
 }
 
 @utility menu-item-inactive {
@@ -64,7 +64,7 @@
 }
 
 @utility menu-item-icon-active {
-  @apply text-brand-500 dark:text-brand-400;
+  @apply text-zinc-900 dark:text-white;
 }
 
 @utility menu-item-icon-size {
@@ -82,7 +82,7 @@
 }
 
 @utility menu-dropdown-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  @apply bg-zinc-100 text-zinc-900 dark:bg-white/[0.08] dark:text-white;
 }
 
 @utility menu-dropdown-item-inactive {

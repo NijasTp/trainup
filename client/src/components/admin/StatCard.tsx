@@ -1,41 +1,44 @@
+import React from "react";
+
 interface StatCardProps {
   title: string;
   value: string;
-  status?: string;
-  icon?: string;
-  isGradient?: boolean;
+  icon: React.ElementType;
+  trend?: string;
+  trendType?: "positive" | "negative" | "neutral";
 }
 
+export default function StatCard({
+  title,
+  value,
+  icon: Icon,
+  trend,
+  trendType = "neutral",
+}: StatCardProps) {
+  const getTrendColor = () => {
+    switch (trendType) {
+      case "positive": return "text-green-500";
+      case "negative": return "text-red-500";
+      default: return "text-gray-500";
+    }
+  };
 
-export default function StatCard({ title, value, status, icon, isGradient = false }: StatCardProps) {
   return (
-    <div
-      className={`rounded-xl p-5 text-white transition-all duration-300 ${
-        isGradient
-          ? "bg-gradient-to-br from-[#001C30] to-[#176B87]"
-          : "bg-[#071822] border border-gray-700 hover:bg-gradient-to-br hover:from-[#001C30] hover:to-[#176B87]"
-      }`}
-    >
-      <div className="flex justify-between items-center mb-2">
-        <p className="text-xs font-semibold select-text">{title}</p>
-        <button
-          aria-label={`Open ${title.toLowerCase()} details`}
-          className="text-white text-xs border border-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-white hover:text-[#001C30] transition"
-        >
-          <i className="fas fa-arrow-up-right"></i>
-        </button>
-      </div>
-      <p className="text-3xl font-bold select-text">{value}</p>
-      {status && (
-        <div
-          className={`flex items-center gap-1 mt-2 text-xs font-semibold rounded-md px-2 py-1 w-max ${
-            isGradient ? "bg-[#144E63]" : "text-[#176B87]"
-          }`}
-        >
-          {icon && <i className={icon}></i>}
-          <span>{status}</span>
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 transition-all hover:shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <div className="p-3 rounded-xl bg-gray-50 dark:bg-white/5">
+          <Icon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
         </div>
-      )}
+        {trend && (
+          <span className={`text-xs font-bold ${getTrendColor()}`}>
+            {trend}
+          </span>
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{title}</p>
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{value}</h3>
+      </div>
     </div>
   );
 }
