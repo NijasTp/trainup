@@ -19,8 +19,9 @@ import { JwtService } from '../utils/jwt'
 @injectable()
 export class SocketHandler {
 
+  private io!: Server
+
   constructor(
-    @inject(TYPES.SocketServer) private io: Server,
     @inject(TYPES.IUserService) private _userService: IUserService,
     @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
     @inject(TYPES.IMessageService) private _messageService: IMessageService,
@@ -30,7 +31,10 @@ export class SocketHandler {
     private _trainerRepository: ITrainerRepository,
     @inject(TYPES.IAdminRepository) private _adminRepository: IAdminRepository,
     @inject(TYPES.IGymRepository) private _gymRepository: IGymRepository
-  ) {
+  ) { }
+
+  public setIO(io: Server) {
+    this.io = io
     this.initialize()
   }
 

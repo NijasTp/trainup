@@ -49,8 +49,8 @@ const io = new SocketServer(httpServer, {
   },
 });
 
-container.bind<SocketServer>(TYPES.SocketServer).toConstantValue(io);
-container.get<SocketHandler>(TYPES.SocketHandler);
+const socketHandler = container.get<SocketHandler>(TYPES.SocketHandler);
+socketHandler.setIO(io);
 
 const eventService = container.get<IEventService>(TYPES.IEventService);
 eventService.setIO(io);
