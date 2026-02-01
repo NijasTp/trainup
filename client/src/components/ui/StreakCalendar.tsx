@@ -12,17 +12,16 @@ import {
     endOfWeek,
     isFuture,
 } from "date-fns";
-import { Flame, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 interface StreakCalendarProps {
     sessions: any[]; // Workout sessions from API
-    currentStreak: number;
 }
 
-export const StreakCalendar: React.FC<StreakCalendarProps> = ({ sessions, currentStreak }) => {
+export const StreakCalendar: React.FC<StreakCalendarProps> = ({ sessions }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     const calendarDays = useMemo(() => {
@@ -110,14 +109,9 @@ export const StreakCalendar: React.FC<StreakCalendarProps> = ({ sessions, curren
                                     animate={{ scale: 1, opacity: 1 }}
                                     className={cn(
                                         "absolute inset-0 flex items-center justify-center rounded-xl",
-                                        isToday ? "bg-orange-500/30 ring-1 ring-orange-500/50" : "bg-orange-500/10"
+                                        isToday ? "bg-orange-500/40 ring-2 ring-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.3)]" : "bg-orange-500/20"
                                     )}
-                                >
-                                    <Flame className={cn(
-                                        "h-6 w-6 opacity-30",
-                                        isToday ? "text-orange-400 opacity-60" : "text-orange-500/40"
-                                    )} />
-                                </motion.div>
+                                />
                             )}
 
                             <span className={cn(
