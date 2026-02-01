@@ -41,7 +41,7 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
                 <DialogTitle className="sr-only">Streak Details</DialogTitle>
                 <DialogDescription className="sr-only">View your workout consistency and current streak.</DialogDescription>
 
-                <div className="min-h-screen w-full flex flex-col items-center py-12 px-4 relative">
+                <div className="min-h-screen w-full flex flex-col items-center justify-center py-6 px-4 relative">
                     {/* Close Button */}
                     <Button
                         variant="ghost"
@@ -52,23 +52,23 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
                         <X className="h-6 w-6" />
                     </Button>
 
-                    <div className="w-full max-w-2xl space-y-6">
+                    <div className="w-full max-w-xl space-y-4">
                         {/* Header Section - Horizontal Row */}
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-8 bg-white/5 border border-white/10 rounded-[2.5rem] p-10 md:p-12 shadow-2xl relative overflow-hidden group">
+                        <div className="flex flex-row items-center justify-between gap-6 bg-white/5 border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-2xl relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
                             <motion.div
                                 initial={{ x: -20, opacity: 0 }}
                                 animate={{ x: 0, opacity: 1 }}
                                 transition={{ delay: 0.2 }}
-                                className="relative z-10 space-y-1 text-center md:text-left"
+                                className="relative z-10 space-y-0 text-left"
                             >
-                                <h2 className="text-7xl md:text-9xl font-black text-white tracking-tighter leading-none">
+                                <h2 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-none">
                                     <span className="bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
                                         {streak}
                                     </span>
                                 </h2>
-                                <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-600 bg-clip-text text-transparent uppercase tracking-widest">
+                                <p className="text-lg md:text-xl font-bold bg-gradient-to-r from-orange-400 to-red-600 bg-clip-text text-transparent uppercase tracking-widest">
                                     Day Streak
                                 </p>
                             </motion.div>
@@ -81,7 +81,7 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
                             >
                                 <div className="relative">
                                     <div className="absolute inset-0 bg-orange-500 blur-3xl opacity-20 transition-opacity duration-500" />
-                                    <Flame className="h-32 w-32 md:h-44 md:w-44 text-orange-500 fill-orange-500 drop-shadow-[0_0_20px_rgba(249,115,22,0.6)]" />
+                                    <Flame className="h-24 w-24 md:h-28 md:w-28 text-orange-500 fill-orange-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.6)]" />
                                 </div>
                             </motion.div>
                         </div>
@@ -91,24 +91,24 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.4 }}
-                            className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden group"
+                            className="bg-white/5 border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-2xl relative overflow-hidden group"
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-                            <div className="relative z-10 space-y-6">
-                                <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                                    <div className="space-y-1">
-                                        <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">Your Consistency</h3>
-                                        <p className="text-gray-400 text-sm md:text-base font-medium">Keep the fire burning!</p>
+                            <div className="relative z-10 space-y-4">
+                                <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                                    <div className="space-y-0.5">
+                                        <h3 className="text-lg md:text-xl font-bold text-white tracking-tight">Your Consistency</h3>
+                                        <p className="text-gray-400 text-xs md:text-sm font-medium">Keep the fire burning!</p>
                                     </div>
-                                    <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
-                                        <Flame className="h-5 w-5 text-orange-500" />
+                                    <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                                        <Flame className="h-4 w-4 text-orange-500" />
                                     </div>
                                 </div>
 
                                 {loading ? (
-                                    <div className="h-[250px] flex items-center justify-center">
-                                        <div className="animate-spin h-8 w-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full" />
+                                    <div className="h-[200px] flex items-center justify-center">
+                                        <div className="animate-spin h-6 w-6 border-3 border-orange-500/20 border-t-orange-500 rounded-full" />
                                     </div>
                                 ) : (
                                     <StreakCalendar sessions={sessions} />
