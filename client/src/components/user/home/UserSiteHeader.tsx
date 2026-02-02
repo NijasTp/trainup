@@ -148,32 +148,36 @@ export const SiteHeader: React.FC = () => {
     });
 
     socket.on("streak_updated", (data: { streak: number }) => {
-      console.log("Streak updated event received! Data:", data);
+      console.log("[STREAK_SYNC] Received streak_updated event:", data);
+
+      if (!user?._id) {
+        console.warn("[STREAK_SYNC] Event received but no user ID found in state.");
+        return;
+      }
 
       const today = new Date().toDateString();
-      const storageKey = `lastStreakPopup_${user._id}`;
-      const lastShown = localStorage.getItem(storageKey);
+      const storageKey = `streak_popup_shown_${user._id}`;
+      const lastShownDate = localStorage.getItem(storageKey);
 
-      console.log("Streak Popup Guard Check:", {
-        lastShown,
+      console.log("[STREAK_SYNC] Daily Guard Details:", {
+        userId: user._id,
         today,
-        shouldShow: lastShown !== today,
-        user_id: user?._id
+        lastShownDate,
+        alreadyShownToday: lastShownDate === today
       });
 
-      if (lastShown !== today) {
-        console.log("Showing Streak Popup!");
+      // Update the streak value immediately
+      setCurrentStreak(data.streak);
+      dispatch(updateUser({ streak: data.streak }));
+
+      if (lastShownDate !== today) {
+        console.log("[STREAK_SYNC] Triggering StreakPopup visibility.");
         setShowStreakPopup(true);
         localStorage.setItem(storageKey, today);
       } else {
-        console.log("Streak popup already shown today, skipping.");
+        console.log("[STREAK_SYNC] StreakPopup suppressed by daily guard.");
       }
-
-      setCurrentStreak(data.streak)
-      if (user) {
-        dispatch(updateUser({ streak: data.streak }))
-      }
-    })
+    });
 
     socket.on("new_message", () => {
       setChatUnreadCount(prev => prev + 1);

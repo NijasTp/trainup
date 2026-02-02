@@ -74,76 +74,48 @@ export const StreakPopup: React.FC<StreakPopupProps> = ({ isOpen, onClose, strea
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md bg-transparent border-none shadow-none flex flex-col items-center justify-center p-0 overflow-hidden [&>button]:hidden">
+            <DialogContent className="sm:max-w-md bg-zinc-900 border-white/10 shadow-2xl flex flex-col items-center justify-center p-0 overflow-hidden [&>button]:hidden">
                 <DialogTitle className="sr-only">Streak Milestone</DialogTitle>
                 <DialogDescription className="sr-only">Celebration of your new workout streak milestone!</DialogDescription>
-                <motion.div
-                    initial={{ scale: 0.6, opacity: 0, y: 40 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.8, opacity: 0, y: 20 }}
-                    transition={{ type: "spring", damping: 15, stiffness: 150 }}
-                    className="relative flex flex-col items-center group"
-                >
+                <div className="relative flex flex-col items-center w-full p-10 text-center space-y-6">
                     {/* Background Glow */}
-                    <div className="absolute inset-0 bg-orange-600 blur-[100px] opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
+                    <div className="absolute inset-0 bg-orange-600/10 blur-3xl -z-10" />
 
-                    <div className="relative bg-zinc-900/80 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-white/10 shadow-2xl flex flex-col items-center text-center space-y-6">
-                        <div className="relative">
-                            <motion.div
-                                animate={{
-                                    scale: [1, 1.1, 1],
-                                    filter: ["brightness(1)", "brightness(1.3)", "brightness(1)"]
-                                }}
-                                transition={{
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                                className="relative z-10"
-                            >
-                                <Flame className="w-32 h-32 text-orange-500 fill-orange-500 drop-shadow-[0_0_25px_rgba(249,115,22,0.6)]" />
-                            </motion.div>
-
-                            {/* Particles behind flame */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-orange-600/20 to-transparent blur-xl" />
-                        </div>
-
-                        <div className="space-y-2">
-                            <motion.h2
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="text-4xl font-black text-white px-2"
-                            >
-                                Daily Streak Unlocked!
-                            </motion.h2>
-                            <motion.p
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4 }}
-                                className="text-gray-400 font-medium text-lg leading-relaxed"
-                            >
-                                You have a <span className="text-orange-500 font-bold text-2xl px-1">
-                                    <AnimatedNumber value={streak} />
-                                </span> day streak — keep going!
-                            </motion.p>
-                        </div>
-
+                    <div className="relative">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.8 }}
-                            className="w-full pt-4"
+                            animate={{
+                                scale: [1, 1.1, 1],
+                            }}
+                            transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }}
                         >
-                            <Button
-                                onClick={onClose}
-                                className="w-full h-14 bg-white text-black hover:bg-gray-200 text-lg font-black rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl"
-                            >
-                                CONTINUE
-                            </Button>
+                            <Flame className="w-24 h-24 text-orange-500 fill-orange-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.4)]" />
                         </motion.div>
                     </div>
-                </motion.div>
+
+                    <div className="space-y-2">
+                        <h2 className="text-3xl font-black text-white">
+                            Daily Streak Unlocked!
+                        </h2>
+                        <p className="text-gray-400 font-medium text-lg">
+                            You have a <span className="text-orange-500 font-bold text-2xl">
+                                <AnimatedNumber value={streak} />
+                            </span> day streak!
+                        </p>
+                    </div>
+
+                    <div className="w-full pt-4">
+                        <Button
+                            onClick={onClose}
+                            className="w-full h-14 bg-white text-black hover:bg-gray-200 text-lg font-black rounded-2xl transition-all"
+                        >
+                            CONTINUE
+                        </Button>
+                    </div>
+                </div>
             </DialogContent>
         </Dialog>
     );

@@ -81,9 +81,12 @@ export class WorkoutController {
         await this._streakService.updateUserStreak(new Types.ObjectId(updated.userId));
         const streakData = await this._streakService.checkAndResetUserStreak(new Types.ObjectId(updated.userId));
 
-        console.log(`[STREAK_DEBUG] Current streak: ${streakData.currentStreak}. Emitting via SocketHandler...`);
-        // Emit socket event for real-time streak update via SocketHandler
-        this._socketHandler.emitStreakUpdate(updated.userId, streakData.currentStreak);
+        console.log(`[STREAK_DEBUG] Current streak: ${streakData.currentStreak}. Emitting via SocketHandler in 1s...`);
+        // Emit socket event for real-time streak update via SocketHandler with a delay
+        // This ensures the frontend has finished navigating to the success page and reconnected
+        setTimeout(() => {
+          this._socketHandler.emitStreakUpdate(updated.userId!, streakData.currentStreak);
+        }, 1000);
 
         res.status(STATUS_CODE.OK).json({
           success: true,
