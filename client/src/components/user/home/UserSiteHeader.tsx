@@ -141,6 +141,8 @@ export const SiteHeader: React.FC = () => {
 
     socket.on('connect', () => {
       console.log('Socket connected:', socket.id);
+      // Join the user-specific room for targeted events like streak updates
+      socket.emit('join_room', user._id);
     });
 
     socket.on('connect_error', (err) => {
@@ -289,18 +291,32 @@ export const SiteHeader: React.FC = () => {
             <Search className="h-5 w-5" />
           </Button>
 
-          {/* Streak */}
-          <div
-            onClick={() => setShowStreakModal(true)}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 cursor-pointer hover:bg-orange-500/20 transition-colors"
-          >
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 cursor-pointer hover:bg-orange-500/20 transition-colors group relative">
             <Flame
               className={cn(
                 "h-4 w-4",
                 currentStreak ? "text-orange-500" : "text-muted-foreground"
               )}
+              onClick={() => setShowStreakModal(true)}
             />
-            <span className="text-sm font-bold text-orange-600 dark:text-orange-400">{currentStreak}</span>
+            <span
+              className="text-sm font-bold text-orange-600 dark:text-orange-400"
+              onClick={() => setShowStreakModal(true)}
+            >
+              {currentStreak}
+            </span>
+
+            {/* Debug Trigger - only visible on hover */}
+            <div
+              className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-50"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("[DEBUG] Manually triggering streak popup");
+                setShowStreakPopup(true);
+              }}
+            >
+              <Button size="sm" variant="outline" className="h-6 text-[10px] py-0 bg-background/80 whitespace-nowrap">TEST POPUP</Button>
+            </div>
           </div>
 
           {/* Notifications */}

@@ -60,9 +60,14 @@ export default function SuccessPage() {
 
 
 
+    const didUpdate = useRef(false);
+
     async function markSessionAsDone() {
+      if (didUpdate.current) return;
+
       try {
         if (id && state?.exerciseTimes && state.isDone) {
+          didUpdate.current = true;
           const exerciseUpdates = state.exerciseTimes.map((et) => ({
             exerciseId: et.exerciseId,
             timeTaken: et.duration,
@@ -81,6 +86,7 @@ export default function SuccessPage() {
           });
         }
       } catch (err: any) {
+        didUpdate.current = false; // Allow retry on failure
         toast.error("Failed to update workout status", {
           description: err.message || "An error occurred",
         });

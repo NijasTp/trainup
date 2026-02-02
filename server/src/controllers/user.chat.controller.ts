@@ -10,7 +10,6 @@ import { logger } from '../utils/logger.util'
 export class UserChatController {
     constructor(
         @inject(TYPES.IMessageService) private _messageService: IMessageService,
-        @inject(TYPES.IJwtService) private _jwtService: IJwtService
     ) { }
 
     async getChatMessages(req: Request, res: Response, next: NextFunction): Promise<void> {

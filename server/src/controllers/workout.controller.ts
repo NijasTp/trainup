@@ -76,17 +76,16 @@ export class WorkoutController {
         throw new AppError(MESSAGES.SESSION_NOT_FOUND, STATUS_CODE.NOT_FOUND);
       }
 
-      if (dto.isDone && updated.userId) {
-        console.log(`[STREAK_DEBUG] Completing workout for user: ${updated.userId}`);
-        await this._streakService.updateUserStreak(new Types.ObjectId(updated.userId));
-        const streakData = await this._streakService.checkAndResetUserStreak(new Types.ObjectId(updated.userId));
+      if (dto.isDone) {
+        const jwtUser = req.user as JwtPayload;
+        const targetUserId = jwtUser.id;
 
-        console.log(`[STREAK_DEBUG] Current streak: ${streakData.currentStreak}. Emitting via SocketHandler in 1s...`);
-        // Emit socket event for real-time streak update via SocketHandler with a delay
-        // This ensures the frontend has finished navigating to the success page and reconnected
+        await this._streakService.updateUserStreak(new Types.ObjectId(targetUserId));
+        const streakData = await this._streakService.checkAndResetUserStreak(new Types.ObjectId(targetUserId));
+
         setTimeout(() => {
-          this._socketHandler.emitStreakUpdate(updated.userId!, streakData.currentStreak);
-        }, 1000);
+          this._socketHandler.emitStreakUpdate(targetUserId, streakData.currentStreak);
+        }, 1500);
 
         res.status(STATUS_CODE.OK).json({
           success: true,
