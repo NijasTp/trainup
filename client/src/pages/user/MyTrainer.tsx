@@ -30,7 +30,7 @@ import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TrainerReviews from "@/components/user/reviews/TrainerReviews";
 
-import type { User, Trainer } from "@/interfaces/user/IMyTrainer";
+import type { User, Trainer, UserPlan } from "@/interfaces/user/IMyTrainer";
 
 export default function MyTrainerProfile() {
     const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function MyTrainerProfile() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [imageLoaded, setImageLoaded] = useState(false);
-    const [userPlan, setUserPlan] = useState<any | null>(null);
+    const [userPlan, setUserPlan] = useState<UserPlan | null>(null);
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
@@ -111,10 +111,23 @@ export default function MyTrainerProfile() {
     };
 
     const getRemainingTime = () => {
+        if (userPlan?.expiryDate) {
+            const expiry = new Date(userPlan.expiryDate);
+            return formatDistanceToNow(expiry, { addSuffix: true });
+        }
         if (!user?.subscriptionStartDate) return "Unknown";
         const startDate = new Date(user.subscriptionStartDate);
         const endDate = addMonths(startDate, 1);
         return formatDistanceToNow(endDate, { addSuffix: true });
+    };
+
+    const getDaysLeft = () => {
+        if (!userPlan?.expiryDate) return null;
+        const expiry = new Date(userPlan.expiryDate);
+        const today = new Date();
+        const diffTime = expiry.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays > 0 ? diffDays : 0;
     };
 
     const getPlanColor = (plan: string) => {
@@ -280,10 +293,20 @@ export default function MyTrainerProfile() {
                                                 <Clock className="h-5 w-5 text-accent" />
                                                 <span className="font-medium">{trainer.experience} years experience</span>
                                             </div>
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="h-5 w-5 text-orange-500" />
+                                                <span className="font-semibold text-foreground">{getDaysLeft() ?? 0} days left</span>
+                                            </div>
                                             {user?.trainerPlan === 'pro' && (
                                                 <div className="flex items-center gap-2 text-purple-600">
                                                     <Video className="h-5 w-5" />
                                                     <span className="font-semibold">{userPlan?.videoCallsLeft ?? 0} sessions left</span>
+                                                </div>
+                                            )}
+                                            {user?.trainerPlan === 'premium' && (
+                                                <div className="flex items-center gap-2 text-blue-600">
+                                                    <MessageSquare className="h-5 w-5" />
+                                                    <span className="font-semibold">{userPlan?.messagesLeft ?? 0} chats left</span>
                                                 </div>
                                             )}
                                         </div>
@@ -449,40 +472,81 @@ export default function MyTrainerProfile() {
                     {user?.trainerPlan && (
                         <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
                             <CardHeader>
-                                <h3 className="text-xl font-bold text-foreground">Current Plan</h3>
+                                <h3 className="text-xl font-bold text-foreground">Current Plan Details</h3>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="text-center p-6 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10">
-                                    <div className="flex items-center justify-center gap-2 mb-2">
-                                        {getPlanIcon(user.trainerPlan)}
-                                        <div className="text-2xl font-bold text-primary">
-                                            {user.trainerPlan.charAt(0).toUpperCase() + user.trainerPlan.slice(1)} Plan
-                                        </div>
+                            <CardContent className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10 flex flex-col items-center justify-center text-center">
+                                        <Calendar className="h-8 w-8 text-primary mb-2" />
+                                        <div className="text-2xl font-bold text-foreground">{getDaysLeft() ?? 0}</div>
+                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Days Remaining</p>
                                     </div>
-                                    <p className="text-muted-foreground text-sm">Active subscription</p>
-                                    <p className="text-xs text-muted-foreground mt-2">
-                                        Expires {getRemainingTime()}
-                                    </p>
+
+                                    <div className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10 flex flex-col items-center justify-center text-center">
+                                        <MessageSquare className="h-8 w-8 text-blue-500 mb-2" />
+                                        <div className="text-2xl font-bold text-foreground">
+                                            {user.trainerPlan === 'pro' ? 'Unlimited' : (userPlan?.messagesLeft ?? 0)}
+                                        </div>
+                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Chats Left</p>
+                                    </div>
+
+                                    <div className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10 flex flex-col items-center justify-center text-center">
+                                        <Video className="h-8 w-8 text-purple-500 mb-2" />
+                                        <div className="text-2xl font-bold text-foreground">
+                                            {user.trainerPlan === 'pro' ? (userPlan?.videoCallsLeft ?? 0) : '0'}
+                                        </div>
+                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Video Calls Left</p>
+                                    </div>
                                 </div>
 
-                                {/* Plan Features */}
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex items-center gap-2 text-green-600">
-                                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                        Personalized workouts & diet
+                                <div className="p-6 bg-primary/5 rounded-xl border border-primary/10">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-2">
+                                            {getPlanIcon(user.trainerPlan)}
+                                            <span className="font-bold text-lg uppercase">{user.trainerPlan} Plan</span>
+                                        </div>
+                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">Active</Badge>
                                     </div>
-                                    {user.trainerPlan !== 'basic' && (
-                                        <div className="flex items-center gap-2 text-green-600">
-                                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                            Chat with trainer {user.trainerPlan === 'premium' ? `(${userPlan?.messagesLeft ?? 0} msgs left)` : '(unlimited)'}
+
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">Expires on</span>
+                                            <span className="font-medium">{userPlan?.expiryDate ? new Date(userPlan.expiryDate).toLocaleDateString(undefined, { dateStyle: 'long' }) : 'N/A'}</span>
                                         </div>
-                                    )}
-                                    {user.trainerPlan === 'pro' && (
-                                        <div className="flex items-center gap-2 text-green-600">
-                                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                            Video calls ({userPlan?.videoCallsLeft ?? 0} left)
+                                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                            <div
+                                                className="bg-primary h-full transition-all duration-500"
+                                                style={{ width: `${Math.min(100, (getDaysLeft() || 0) / 30 * 100)}%` }}
+                                            />
                                         </div>
-                                    )}
+                                        <p className="text-right text-xs text-muted-foreground">{getRemainingTime()}</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2 text-sm">
+                                    <h4 className="font-semibold text-foreground mb-3">Included in your plan:</h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <div className="flex items-center gap-2 text-green-600">
+                                            <Shield className="h-4 w-4" />
+                                            Personalized workout plans
+                                        </div>
+                                        <div className="flex items-center gap-2 text-green-600">
+                                            <Shield className="h-4 w-4" />
+                                            Custom diet recommendations
+                                        </div>
+                                        {user.trainerPlan !== 'basic' && (
+                                            <div className="flex items-center gap-2 text-green-600">
+                                                <Shield className="h-4 w-4" />
+                                                Direct messaging with trainer
+                                            </div>
+                                        )}
+                                        {user.trainerPlan === 'pro' && (
+                                            <div className="flex items-center gap-2 text-green-600">
+                                                <Shield className="h-4 w-4" />
+                                                1-on-1 video call sessions
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

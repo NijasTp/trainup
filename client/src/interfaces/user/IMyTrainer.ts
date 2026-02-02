@@ -35,3 +35,15 @@ export interface Trainer {
         pro: number;
     };
 }
+
+export interface UserPlan {
+    _id: string;
+    userId: string;
+    trainerId: string;
+    planType: 'basic' | 'premium' | 'pro';
+    messagesLeft: number;
+    videoCallsLeft: number;
+    expiryDate: string | Date;
+    duration: number;
+    amount: number;
+}
