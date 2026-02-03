@@ -154,7 +154,9 @@ export const SiteHeader: React.FC = () => {
       setChatUnreadCount(prev => prev + 1);
     });
 
-    return () => socket.disconnect()
+    return () => {
+      socket.disconnect()
+    }
   }, [user?._id, dispatch])
 
   useEffect(() => {
@@ -197,8 +199,8 @@ export const SiteHeader: React.FC = () => {
   ].filter(link => link.show)
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-6 py-8 pointer-events-none">
-      <nav className="container mx-auto max-w-7xl flex items-center justify-between backdrop-blur-xl bg-black/40 px-8 py-4 rounded-full border border-white/10 shadow-2xl transition-all hover:bg-black/50 pointer-events-auto">
+    <header className="fixed top-0 left-0 right-0 z-50 px-6 py-8">
+      <nav className="container mx-auto max-w-7xl flex items-center justify-between backdrop-blur-xl bg-black/40 px-8 py-4 rounded-full border border-white/10 shadow-2xl transition-all hover:bg-black/50">
         <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate("/home")}>
           <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform">
             <Activity className="w-6 h-6 text-cyan-400" />
