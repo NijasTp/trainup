@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, Suspense } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { Button } from '@/components/ui/button'
@@ -6,29 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import GradientBlinds from '@/components/ui/GradientBlinds'
 import {
   Dumbbell,
-  Users,
-  TrendingUp,
   Activity,
   Award,
   ArrowRight,
   CheckCircle2,
-  Video
 } from 'lucide-react'
+import ColorBends from '@/components/ui/ColorBends'
+import DumbbellScene from './DumbbellScene'
+import FeatureSection from './FeatureSection'
 
 gsap.registerPlugin(ScrollTrigger)
-
-const FeatureCard = ({ icon: Icon, title, description }: { icon: any, title: string, description: string, index: number }) => (
-  <div className="feature-card opacity-0 translate-y-10 p-6 rounded-2xl bg-card/50 backdrop-blur-md border border-white/10 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 group">
-    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-5 text-primary group-hover:scale-110 transition-transform duration-300">
-      <Icon size={28} />
-    </div>
-    <h3 className="text-xl font-bold mb-3 text-foreground">{title}</h3>
-    <p className="text-muted-foreground leading-relaxed">{description}</p>
-  </div>
-)
 
 const RoleCard = ({
   title,
@@ -45,46 +34,43 @@ const RoleCard = ({
   gradient: string
   features: string[]
 }) => (
-  <Card className="role-card opacity-0 scale-95 group relative overflow-hidden border-0 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 bg-card/40 backdrop-blur-md h-full flex flex-col user-select-none">
+  <Card className="role-card group relative overflow-hidden border-0 shadow-2xl bg-white/5 backdrop-blur-md h-full flex flex-col border border-white/10">
     <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 ${gradient}`} />
     <CardHeader className="text-center pb-6 relative z-10 pt-10">
-      <div className="w-24 h-24 mx-auto mb-8 rounded-full bg-gradient-to-b from-background/80 to-background/20 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500 border border-white/10">
-        <Icon size={48} className="text-primary group-hover:text-accent transition-colors duration-300" />
+      <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform duration-500">
+        <Icon size={36} className="text-primary" />
       </div>
-      <CardTitle className="text-4xl font-black text-foreground mb-3 tracking-tight">
+      <CardTitle className="text-3xl font-bold text-white mb-2 tracking-tight">
         {title}
       </CardTitle>
-      <CardDescription className="text-lg font-medium text-muted-foreground/80">
+      <CardDescription className="text-gray-400">
         {description}
       </CardDescription>
     </CardHeader>
     <CardContent className="pt-0 relative z-10 flex-grow flex flex-col px-8 pb-10">
-      <ul className="space-y-4 mb-10 flex-grow">
+      <ul className="space-y-3 mb-8 flex-grow">
         {features.map((feature, i) => (
-          <li key={i} className="flex items-center text-muted-foreground font-medium">
-            <div className="mr-3 p-1 rounded-full bg-primary/10 text-primary">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
+          <li key={i} className="flex items-center text-gray-300 text-sm">
+            <CheckCircle2 className="w-4 h-4 mr-3 text-primary" />
             {feature}
           </li>
         ))}
       </ul>
       <Link to={linkTo} className="mt-auto block">
         <Button
-          className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-bold py-7 text-lg rounded-xl shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 group-hover:scale-[1.02]"
+          className="w-full bg-white text-black hover:bg-gray-200 font-bold py-6 rounded-xl transition-all duration-300"
         >
           Join as {title}
-          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+          <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </Link>
     </CardContent>
   </Card>
 )
 
-
 export default function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null)
-  const heroRef = useRef<HTMLDivElement>(null)
+  const dumbbellRef = useRef<any>(null)
   const { user } = useSelector((state: any) => state.userAuth)
   const { trainer } = useSelector((state: any) => state.trainerAuth)
   const navigate = useNavigate()
@@ -98,215 +84,204 @@ export default function LandingPage() {
   }, [user, trainer, navigate])
 
   useGSAP(() => {
-    const tl = gsap.timeline()
+    if (!dumbbellRef.current) return
 
-    tl.from('.hero-badge', {
-      y: -30,
-      opacity: 0,
-      duration: 0.8,
-      ease: 'power4.out'
-    })
-      .from('.hero-title-main', {
-        y: 50,
-        opacity: 0,
-        duration: 1,
-        ease: 'power4.out',
-        stagger: 0.2
-      }, '-=0.4')
-      .from('.hero-desc', {
-        y: 30,
-        opacity: 0,
-        duration: 1,
-        ease: 'power3.out'
-      }, '-=0.6')
-      .from('.hero-buttons', {
-        y: 30,
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power3.out'
-      }, '-=0.6')
-
-    gsap.to('.feature-card', {
+    const tl = gsap.timeline({
       scrollTrigger: {
-        trigger: '.features-section',
-        start: 'top 85%',
-      },
-      y: 0,
-      opacity: 1,
-      duration: 0.8,
-      stagger: 0.15,
-      ease: 'power3.out'
+        trigger: containerRef.current,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1,
+      }
     })
 
-    gsap.to('.role-card', {
-      scrollTrigger: {
-        trigger: '.roles-section',
-        start: 'top 80%',
-      },
-      scale: 1,
-      opacity: 1,
-      duration: 1,
-      stagger: 0.2,
-      ease: 'back.out(1.2)'
+    // Stage 1 -> Stage 2 (Hero to Feature 1)
+    // Horizontal [0, 0, 1.57] -> Vertical [0, 0, 0]
+    // Move to Right [2, -1, 0]
+    tl.to(dumbbellRef.current.position, { x: 2, y: -0.5, z: 0 }, 0)
+    tl.to(dumbbellRef.current.rotation, { z: 0, y: 0.5 }, 0)
+
+    // Stage 2 -> Stage 3 (Feature 1 to Feature 2)
+    // Move to Left [-2, -0.5, 0]
+    // Slight Y rotation
+    tl.to(dumbbellRef.current.position, { x: -2, y: -0.5, z: 0 }, 1)
+    tl.to(dumbbellRef.current.rotation, { y: -0.5, z: 0.2 }, 1)
+
+    // Stage 3 -> Stage 4 (Feature 2 to Feature 3)
+    // Recenters [0, -1, 0]
+    // Gentle tilt
+    tl.to(dumbbellRef.current.position, { x: 0, y: -1, z: 1 }, 2)
+    tl.to(dumbbellRef.current.rotation, { x: 0.3, y: 0, z: 0 }, 2)
+
+    // Stage 4 -> Stage 5 (Feature 3 to Feature 4)
+    // Move Right again or rotate differently
+    tl.to(dumbbellRef.current.position, { x: 2, y: 0, z: 0 }, 3)
+    tl.to(dumbbellRef.current.rotation, { x: 0, y: Math.PI, z: 1.57 }, 3)
+
+    // Final Stage (to Roles)
+    tl.to(dumbbellRef.current.position, { x: 0, y: -5, z: -2 }, 4)
+    tl.to(dumbbellRef.current.scale, { x: 0.5, y: 0.5, z: 0.5 }, 4)
+
+    // Fade in text elements
+    gsap.utils.toArray('.feature-section').forEach((section: any) => {
+      gsap.fromTo(section.querySelector('div'),
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1,
+          y: 0,
+          scrollTrigger: {
+            trigger: section,
+            start: 'top center',
+            end: 'bottom center',
+            scrub: true,
+            toggleActions: 'play reverse play reverse'
+          }
+        })
     })
 
-  }, { scope: containerRef })
+  }, { scope: containerRef, dependencies: [dumbbellRef.current] })
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-background relative overflow-x-hidden font-sans selection:bg-primary/30">
+    <div ref={containerRef} className="relative bg-black text-white overflow-x-hidden">
+      {/* Background Layer */}
+      <div className="fixed inset-0 z-0 opacity-40 pointer-events-none">
+        <ColorBends
+          colors={['#1a1a1a', '#333333', '#4d4d4d', '#ff8e3c']}
+          speed={0.1}
+          scale={1.5}
+          noise={0.05}
+          warpStrength={0.5}
+        />
+      </div>
 
-      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Dynamic Background */}
-        <div className="absolute inset-0 z-0">
-          <GradientBlinds
-            gradientColors={['#1a1a1a', '#2d1b4e', '#1a1a1a']}
-            blindCount={12}
-            noise={0.3}
-            dpr={1}
-            angle={-45}
-            distortAmount={2}
-            spotlightRadius={0.8}
-            spotlightSoftness={0.6}
-            mouseDampening={0.1}
-          />
-          {/* Overlay to ensure text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/10 to-background z-[1]" />
-          <div className="absolute inset-0 bg-black/10 z-[1]" />
-        </div>
+      {/* 3D Scene Layer */}
+      <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center text-primary font-bold">LOADING EXPERIENCE...</div>}>
+        <DumbbellScene modelRef={dumbbellRef} />
+      </Suspense>
 
-        <div className="container relative z-10 mx-auto text-center max-w-5xl px-6 pt-20">
-          <div className="hero-badge inline-flex items-center px-6 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl text-white mb-10 shadow-lg hover:bg-white/10 transition-colors cursor-default">
-            <span className="relative flex h-3 w-3 mr-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+      {/* Content Layer */}
+      <div className="relative z-20">
+        {/* Hero Section */}
+        <section className="h-screen flex flex-col items-center justify-center text-center px-6">
+          <div className="space-y-4 max-w-4xl">
+            <span className="inline-block px-4 py-1 rounded-full border border-white/20 bg-white/5 text-xs font-semibold uppercase tracking-widest text-primary mb-4">
+              The Future of Fitness
             </span>
-            <span className="text-sm font-semibold tracking-wide uppercase">The Future of Fitness is Here</span>
-          </div>
-
-          <h1 className="text-7xl md:text-9xl font-black mb-8 tracking-tighter leading-[0.9] text-white drop-shadow-2xl">
-            <span className="hero-title-main block bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">Unleash</span>
-            <span className="hero-title-main block text-transparent bg-clip-text bg-gradient-to-r from-primary via-white to-primary bg-[200%_auto] animate-gradient">Your Potential</span>
-          </h1>
-
-          <p className="hero-desc text-xl md:text-3xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed font-light tracking-wide">
-            Experience authorized training with personalized plans, real-time tracking, and expert guidance.
-          </p>
-
-          <div className="hero-buttons flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Button
-              size="lg"
-              className="h-16 px-10 text-xl rounded-full bg-white text-black hover:bg-gray-100 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.4)] transition-all duration-300 border-0 font-bold"
-              onClick={() => document.getElementById('roles')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Start Your Journey
-            </Button>
-          </div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce z-10 text-white/50">
-          <ArrowRight className="rotate-90 w-6 h-6" />
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="features-section py-32 px-6 relative z-10">
-        <div className="container mx-auto max-w-7xl">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">Elite Features</h2>
-            <p className="text-muted-foreground text-xl max-w-2xl mx-auto">
-              Everything you need to transform your body and mind.
+            <h1 className="text-7xl md:text-9xl font-black tracking-tighter leading-none italic">
+              TRAIN<span className="text-primary">UP</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl mx-auto">
+              Experience authorized training with personalized plans, real-time tracking, and expert guidance.
             </p>
+            <div className="pt-10">
+              <Button
+                size="lg"
+                className="h-16 px-10 text-xl rounded-full bg-white text-black hover:bg-gray-100 font-bold transition-transform hover:scale-105"
+                onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+              >
+                Start Your Journey
+              </Button>
+            </div>
           </div>
+          <div className="absolute bottom-10 animate-bounce">
+            <ArrowRight className="rotate-90 text-gray-500" />
+          </div>
+        </section>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <FeatureCard
-              index={0}
-              icon={Dumbbell}
+        {/* Features Sections */}
+        <div className="relative">
+          <section className="feature-container">
+            <FeatureSection
               title="Personalized Workouts"
               description="Get custom workouts assigned directly by your professional trainer."
+              align="left"
             />
-            <FeatureCard
-              index={1}
-              icon={TrendingUp}
+          </section>
+          <section className="feature-container">
+            <FeatureSection
               title="Track Your Progress"
               description="Monitor every metric. Visualize your improvements with detailed analytics."
+              align="right"
             />
-            <FeatureCard
-              index={2}
-              icon={Video}
+          </section>
+          <section className="feature-container">
+            <FeatureSection
               title="Online Sessions"
               description="Connect face-to-face with your trainer for real-time guidance and motivation."
+              align="center"
             />
-            <FeatureCard
-              index={3}
-              icon={Users}
+          </section>
+          <section className="feature-container">
+            <FeatureSection
               title="Expert Community"
               description="Join a thriving community of fitness enthusiasts and certified pros."
+              align="left"
             />
-          </div>
+          </section>
         </div>
-      </section>
 
-      {/* Role Selection Section */}
-      <section id="roles" className="roles-section py-32 px-6 relative z-10 bg-gradient-to-b from-background to-background/50">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-6">Choose Your Path</h2>
-            <p className="text-xl text-muted-foreground">
-              Select how you want to join the Trainup revolution.
+        {/* Role Selection */}
+        <section id="roles" className="py-32 px-6 bg-black">
+          <div className="container mx-auto max-w-6xl">
+            <div className="text-center mb-20 space-y-4">
+              <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter">CHOOSE YOUR PATH</h2>
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                Select how you want to join the Trainup revolution.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-10">
+              <RoleCard
+                title="Member"
+                description="Start your personal transformation journey today."
+                icon={Dumbbell}
+                linkTo="/user/login"
+                gradient="bg-primary/20"
+                features={[
+                  "Access to certified trainers",
+                  "Personalized workout plans",
+                  "Progress tracking tools",
+                  "Community support"
+                ]}
+              />
+
+              <RoleCard
+                title="Trainer"
+                description="Grow your business and inspire others."
+                icon={Award}
+                linkTo="/trainer/login"
+                gradient="bg-orange-500/20"
+                features={[
+                  "Client management dashboard",
+                  "Workout plan builder",
+                  "Schedule management",
+                  "Performance analytics"
+                ]}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="py-20 px-6 border-t border-white/5 bg-black">
+          <div className="container mx-auto text-center space-y-12">
+            <div className="flex items-center justify-center gap-3">
+              <Activity className="w-8 h-8 text-primary" />
+              <span className="text-3xl font-black tracking-tighter italic">TRAINUP</span>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-10 text-gray-500 font-medium">
+              <Link to="#" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link to="#" className="hover:text-white transition-colors">Terms of Service</Link>
+              <Link to="#" className="hover:text-white transition-colors">Contact Support</Link>
+            </div>
+
+            <p className="text-gray-600">
+              &copy; {new Date().getFullYear()} Trainup. All rights reserved.
             </p>
           </div>
-
-          <div className="grid md:grid-cols-2 gap-10 lg:gap-16">
-            <RoleCard
-              title="Member"
-              description="Start your personal transformation journey today."
-              icon={Dumbbell}
-              linkTo="/user/login"
-              gradient="bg-gradient-to-br from-blue-500/20 to-purple-500/20"
-              features={[
-                "Access to certified trainers",
-                "Personalized workout plans",
-                "Progress tracking tools",
-                "Community support"
-              ]}
-            />
-
-            <RoleCard
-              title="Trainer"
-              description="Grow your business and inspire others."
-              icon={Award}
-              linkTo="/trainer/login"
-              gradient="bg-gradient-to-br from-orange-500/20 to-red-500/20"
-              features={[
-                "Client management dashboard",
-                "Workout plan builder",
-                "Schedule management",
-                "Performance analytics"
-              ]}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-16 px-6 border-t border-border/10 bg-black/20 backdrop-blur-lg relative z-10">
-        <div className="container mx-auto text-center">
-          <div className="flex items-center justify-center mb-8 gap-2">
-            <Activity className="w-8 h-8 text-primary" />
-            <span className="text-2xl font-bold tracking-tighter">Trainup</span>
-          </div>
-          <p className="text-muted-foreground mb-8 text-lg">
-            &copy; {new Date().getFullYear()} Trainup. All rights reserved.
-          </p>
-          <div className="flex justify-center space-x-10 text-muted-foreground font-medium">
-            <Link to="#" className="hover:text-primary transition-colors hover:underline underline-offset-4">Privacy Policy</Link>
-            <Link to="#" className="hover:text-primary transition-colors hover:underline underline-offset-4">Terms of Service</Link>
-            <Link to="#" className="hover:text-primary transition-colors hover:underline underline-offset-4">Contact Support</Link>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   )
 }
