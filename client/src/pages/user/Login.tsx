@@ -6,7 +6,7 @@ import GymLoginForm from '../../components/gym/GymLoginForm';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../redux/store';
 import type { LoginPageProps } from "@/interfaces/user/ILogin";
-import PrismaticBurst from '@/components/ui/PrismaticBurst';
+import Aurora from '@/components/ui/Aurora';
 
 const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
   const [activeRole, setActiveRole] = useState<'user' | 'trainer' | 'gym'>(initialRole);
@@ -33,25 +33,13 @@ const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
-      {/* PrismaticBurst Background Layer */}
+      {/* Aurora Background Layer */}
       <div className="absolute inset-0 z-0">
-        <PrismaticBurst
-          intensity={1.5}
-          speed={0.2}
-          animationType="rotate3d"
-          colors={[
-            '#000000',
-            '#051923',
-            '#1b002e',
-            '#003554',
-            '#006494',
-            '#0582ca',
-            '#003554',
-            '#051923',
-            '#000000',
-          ]}
-          distort={0.5}
-          mixBlendMode="screen"
+        <Aurora
+          colorStops={["#7cff67", "#B19EEF", "#5227FF"]}
+          blend={0.5}
+          amplitude={1.0}
+          speed={1}
         />
         <div className="absolute inset-0 bg-black/60"></div>
       </div>
