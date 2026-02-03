@@ -6,6 +6,7 @@ import GymLoginForm from '../../components/gym/GymLoginForm';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../redux/store';
 import type { LoginPageProps } from "@/interfaces/user/ILogin";
+import PrismaticBurst from '@/components/ui/PrismaticBurst';
 
 const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
   const [activeRole, setActiveRole] = useState<'user' | 'trainer' | 'gym'>(initialRole);
@@ -31,18 +32,32 @@ const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
   }, [user, trainer, gym, navigate]);
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center">
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
+      {/* PrismaticBurst Background Layer */}
       <div className="absolute inset-0 z-0">
-        <img
-          src="https://images.unsplash.com/photo-1570829460005-c840387bb1ca?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fGVtcHR5JTIwZ3ltfGVufDB8fDB8fHww"
-          alt="Gym Background"
-          className="w-full h-full object-cover"
+        <PrismaticBurst
+          intensity={1.5}
+          speed={0.2}
+          animationType="rotate3d"
+          colors={[
+            '#000000',
+            '#051923',
+            '#1b002e',
+            '#003554',
+            '#006494',
+            '#0582ca',
+            '#003554',
+            '#051923',
+            '#000000',
+          ]}
+          distort={0.5}
+          mixBlendMode="screen"
         />
-        <div className="absolute inset-0 bg-black/75"></div>
+        <div className="absolute inset-0 bg-black/60"></div>
       </div>
 
       <div className="relative z-10 w-full max-w-md mx-auto px-4">
-        <div className="backdrop-blur-xl bg-gray-900/80 rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5 transition-all duration-300">
+        <div className="backdrop-blur-xl bg-gray-900/60 rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5 transition-all duration-300">
           <div className="pt-12 px-8 pb-4">
             <h1 className="text-center text-4xl font-black tracking-tighter text-white mb-8">
               TRAIN<span className="text-[#176B87]">UP</span>

@@ -1,11 +1,11 @@
-import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import Galaxy from '@/components/ui/Galaxy'
+import PrismaticBurst from '@/components/ui/PrismaticBurst'
 import HeroSection from './HeroSection'
 import FeatureSection from './FeatureSection'
 import CTASection from './CTASection'
 import { Activity } from 'lucide-react'
+import { useEffect } from 'react'
 
 export default function LandingPage() {
   const { user } = useSelector((state: any) => state.userAuth)
@@ -24,20 +24,24 @@ export default function LandingPage() {
     <div className="relative bg-black text-white selection:bg-cyan-500/30 font-sans overflow-x-hidden">
 
       {/* Premium Background Layer */}
-      <div className="fixed inset-0 z-0 opacity-40">
-        <Galaxy
-          mouseRepulsion={true}
-          mouseInteraction={true}
-          density={1}
-          glowIntensity={0.3}
-          saturation={0}
-          hueShift={140}
-          twinkleIntensity={0.3}
-          rotationSpeed={0.1}
-          repulsionStrength={2}
-          autoCenterRepulsion={0}
-          starSpeed={0.5}
-          speed={1}
+      <div className="fixed inset-0 z-0 opacity-40 pointer-events-none">
+        <PrismaticBurst
+          intensity={1.5}
+          speed={0.2}
+          animationType="rotate3d"
+          colors={[
+            '#000000',
+            '#051923',
+            '#1b002e',
+            '#003554',
+            '#006494',
+            '#0582ca',
+            '#003554',
+            '#051923',
+            '#000000',
+          ]}
+          distort={0.5}
+          mixBlendMode="screen"
         />
       </div>
 
