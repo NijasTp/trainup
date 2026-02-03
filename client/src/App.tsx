@@ -35,7 +35,7 @@ import StartSessionPage from './pages/user/StartWorkoutPage';
 import SuccessPage from './pages/user/WorkoutSuccess';
 import Diets from './pages/user/Diets';
 import UserAddDiet from './pages/user/UserAddDiet';
-import RoleSelectionPage from './pages/user/ChooseLogin';
+import RoleSelectionPage from './pages/user/LandingPage';
 import TemplateManagement from './pages/admin/TemplateManagement';
 import UserProfile from './pages/user/UserProfile';
 import UserDashboard from './pages/user/UserDashboard';
