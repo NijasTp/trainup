@@ -232,13 +232,7 @@ export default function HomePage() {
       >
         {/* Hero Section */}
         <section className="relative text-center space-y-8 pt-8">
-          <motion.div
-            variants={itemVariants}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-white/5 backdrop-blur-xl rounded-full border border-white/10 shadow-2xl"
-          >
-          
-          
-          </motion.div>
+
 
           <div className="space-y-4">
             <motion.h1
