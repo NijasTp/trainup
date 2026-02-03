@@ -1,11 +1,11 @@
-import { useEffect, Suspense } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import {  useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { Activity } from 'lucide-react'
-import ColorBends from '@/components/ui/ColorBends'
+import PrismaticBurst from '@/components/ui/PrismaticBurst'
 import HeroSection from './HeroSection'
 import FeatureSection from './FeatureSection'
 import CTASection from './CTASection'
+import { Activity } from 'lucide-react'
 
 export default function LandingPage() {
   const { user } = useSelector((state: any) => state.userAuth)
@@ -24,50 +24,18 @@ export default function LandingPage() {
     <div className="relative bg-black text-white selection:bg-cyan-500/30 font-sans overflow-x-hidden">
 
       {/* Premium Background Layer */}
-      <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
-        <ColorBends
-          colors={['#000000', '#0a1a1f', '#072e33', '#000000']}
-          speed={0.03}
-          scale={1.5}
-          noise={0.02}
-          warpStrength={0.2}
+      <div className="fixed inset-0 z-0 opacity-40 pointer-events-none">
+        <PrismaticBurst
+          intensity={1.5}
+          speed={0.2}
+          animationType="rotate3d"
+          colors={['#000000', '#051923', '#1b002e', '#003554', '#006494', '#0582ca', '#003554', '#051923', '#000000']}
+          distort={0.5}
+          mixBlendMode="screen"
         />
       </div>
 
       <div className="relative z-10">
-        {/* Navigation / Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 px-6 py-8">
-          <nav className="container mx-auto max-w-7xl flex items-center justify-between backdrop-blur-xl bg-black/40 px-8 py-4 rounded-full border border-white/10 shadow-2xl transition-all hover:bg-black/50">
-            <div className="flex items-center gap-2 group cursor-pointer">
-              <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform">
-                <Activity className="w-6 h-6 text-cyan-400" />
-              </div>
-              <span className="text-2xl font-black tracking-tighter italic text-white group-hover:text-cyan-400 transition-colors">TRAINUP</span>
-            </div>
-
-            <div className="hidden md:flex items-center gap-10 text-sm font-semibold tracking-wide text-gray-400">
-              <a href="#features" className="hover:text-white transition-colors relative group">
-                Features
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-500 transition-all group-hover:w-full" />
-              </a>
-              <a href="#community" className="hover:text-white transition-colors relative group">
-                Community
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-500 transition-all group-hover:w-full" />
-              </a>
-              <a href="#pricing" className="hover:text-white transition-colors relative group">
-                Pricing
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-500 transition-all group-hover:w-full" />
-              </a>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <Link to="/user/login" className="text-sm font-bold text-gray-400 hover:text-white transition-colors px-4">Login</Link>
-              <Link to="/user/login" className="bg-white text-black px-8 py-3 rounded-full text-sm font-black hover:bg-cyan-400 hover:text-black transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                Get Started
-              </Link>
-            </div>
-          </nav>
-        </header>
 
         <main>
           {/* Sections */}
@@ -80,7 +48,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Track Your Food Records"
               description="Easily log your meals and track calories, macros, and hydration. Our intuitive interface makes nutrition management effortless."
-              imagePath="/src/assets/diet-image.png"
+              imagePath="/src/assets/diet-image.jpg"
               bullets={[
                 "Real-time calorie tracking",
                 "Detailed macro breakdown",
@@ -93,7 +61,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Get Personalized Trainer"
               description="Connect with certified fitness professionals who craft custom programs tailored to your specific biomechanics and lifestyle."
-              imagePath="/assets/trainer-image.png"
+              imagePath="/src/assets/trainer-image.jpg"
               bullets={[
                 "Direct 1-on-1 video coaching sessions",
                 "Daily chat support with your coach",
@@ -106,7 +74,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Track Your Progress"
               description="Visualize your journey with interactive charts and deep-dive metrics. Data-driven insights to optimize your training."
-              imagePath="/assets/progress-image.png"
+              imagePath="/src/assets/progress-image.jpg"
               bullets={[
                 "Interactive performance trend charts",
                 "Body composition and photo logging",

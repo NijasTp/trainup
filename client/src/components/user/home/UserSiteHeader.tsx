@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react"
-import { logout } from "@/redux/slices/userAuthSlice"
+import { logout, updateUser } from "@/redux/slices/userAuthSlice"
 import type { RootState } from "@/redux/store"
 import { useDispatch, useSelector } from "react-redux"
 import { Link, useNavigate, useLocation } from "react-router-dom"
@@ -8,7 +8,6 @@ import {
   Bell,
   CalendarClock,
   Megaphone,
-  Search,
   Users,
   Flame,
   Menu,
@@ -19,21 +18,32 @@ import {
   User,
   Settings,
   LogOut,
-  ChevronDown,
   MessageSquare,
-  Heart
+  Heart,
+  Activity
 } from "lucide-react"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import API from "@/lib/axios"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { CustomDropdown } from "@/components/ui/custom-dropdown"
 import { io } from "socket.io-client"
 import { StreakPopup } from "@/components/ui/StreakPopup"
 import { StreakModal } from "@/components/ui/StreakModal"
-import { updateUser } from "@/redux/slices/userAuthSlice"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface Notification {
   _id: string
@@ -58,20 +68,6 @@ export const SiteHeader: React.FC = () => {
   const [currentStreak, setCurrentStreak] = useState(user?.streak ?? 0)
   const [showStreakPopup, setShowStreakPopup] = useState(false)
   const [showStreakModal, setShowStreakModal] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-
-  // Dropdown states
-  const [isNotifOpen, setIsNotifOpen] = useState(false)
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
-
-  // Handle scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -83,7 +79,6 @@ export const SiteHeader: React.FC = () => {
       setNotifications(data.notifications)
       setUnreadCount(data.unreadCount)
     } catch (err) {
-      // Silent error for notifications
       console.error("Failed to load notifications")
     } finally {
       setLoading(false)
@@ -123,7 +118,6 @@ export const SiteHeader: React.FC = () => {
     }
   }
 
-  // Socket and Streak Effect
   useEffect(() => {
     if (user?.streak !== undefined) {
       setCurrentStreak(user.streak)
@@ -133,51 +127,26 @@ export const SiteHeader: React.FC = () => {
   useEffect(() => {
     if (!user?._id) return
 
-    console.log("Initializing socket for user:", user._id);
     const socket = io(import.meta.env.VITE_SERVER_URL, {
       withCredentials: true,
       transports: ['websocket', 'polling']
     })
 
     socket.on('connect', () => {
-      console.log('Socket connected:', socket.id);
-      // Join the user-specific room for targeted events like streak updates
       socket.emit('join_room', user._id);
     });
 
-    socket.on('connect_error', (err) => {
-      console.error('Socket connection error:', err);
-    });
-
     socket.on("streak_updated", (data: { streak: number }) => {
-      console.log("[STREAK_SYNC] Received streak_updated event:", data);
-
-      if (!user?._id) {
-        console.warn("[STREAK_SYNC] Event received but no user ID found in state.");
-        return;
-      }
-
       const today = new Date().toDateString();
       const storageKey = `streak_popup_shown_${user._id}`;
       const lastShownDate = localStorage.getItem(storageKey);
 
-      console.log("[STREAK_SYNC] Daily Guard Details:", {
-        userId: user._id,
-        today,
-        lastShownDate,
-        alreadyShownToday: lastShownDate === today
-      });
-
-      // Update the streak value immediately
       setCurrentStreak(data.streak);
       dispatch(updateUser({ streak: data.streak }));
 
       if (lastShownDate !== today) {
-        console.log("[STREAK_SYNC] Triggering StreakPopup visibility.");
         setShowStreakPopup(true);
         localStorage.setItem(storageKey, today);
-      } else {
-        console.log("[STREAK_SYNC] StreakPopup suppressed by daily guard.");
       }
     });
 
@@ -185,10 +154,7 @@ export const SiteHeader: React.FC = () => {
       setChatUnreadCount(prev => prev + 1);
     });
 
-    return () => {
-      console.log("Disconnecting socket");
-      socket.disconnect()
-    }
+    return () => socket.disconnect()
   }, [user?._id, dispatch])
 
   useEffect(() => {
@@ -231,319 +197,199 @@ export const SiteHeader: React.FC = () => {
   ].filter(link => link.show)
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-40 w-full transition-all duration-300 border-b border-transparent",
-        scrolled ? "bg-background/80 backdrop-blur-md border-border/40 shadow-sm" : "bg-background/60 backdrop-blur-sm"
-      )}
-    >
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
-        {/* Logo */}
-        <Link
-          to="/home"
-          className="flex items-center gap-2 group"
-        >
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#4B8B9B] to-[#2E5C6E] text-white shadow-lg group-hover:shadow-[#4B8B9B]/20 transition-all duration-300">
-            <Dumbbell className="h-5 w-5" />
+    <header className="fixed top-0 left-0 right-0 z-50 px-6 py-8 pointer-events-none">
+      <nav className="container mx-auto max-w-7xl flex items-center justify-between backdrop-blur-xl bg-black/40 px-8 py-4 rounded-full border border-white/10 shadow-2xl transition-all hover:bg-black/50 pointer-events-auto">
+        <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate("/home")}>
+          <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform">
+            <Activity className="w-6 h-6 text-cyan-400" />
           </div>
-          <div className="flex flex-col leading-none">
-            <span className="font-bold text-lg tracking-tight">TRAIN<span className="text-[#4B8B9B]">UP</span></span>
-          </div>
-        </Link>
+          <span className="text-2xl font-black tracking-tighter italic text-white group-hover:text-cyan-400 transition-colors uppercase">TRAINUP</span>
+        </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1 absolute left-1/2 transform -translate-x-1/2">
+        <div className="hidden md:flex items-center gap-8 lg:gap-10 text-sm font-semibold tracking-wide text-gray-400">
           {navLinks.map((link) => {
-            const Icon = link.icon
             const isActive = location.pathname === link.path
             return (
               <Link
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "bg-[#4B8B9B]/10 text-[#4B8B9B]"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  "hover:text-white transition-colors relative group tracking-tighter italic uppercase text-xs lg:text-sm",
+                  isActive && "text-white"
                 )}
               >
-                <Icon className="h-4 w-4" />
                 {link.name}
-
+                <span className={cn(
+                  "absolute -bottom-1 left-0 h-0.5 bg-cyan-500 transition-all",
+                  isActive ? "w-full" : "w-0 group-hover:w-full"
+                )} />
+                {link.name === "My Trainer" && chatUnreadCount > 0 && (
+                  <span className="absolute -top-3 -right-3 h-4 min-w-4 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1 shadow-lg shadow-red-500/20">
+                    {chatUnreadCount}
+                  </span>
+                )}
               </Link>
             )
           })}
-        </nav>
+        </div>
 
         {/* Right Side Actions */}
-        <div className="flex items-center gap-2 md:gap-4">
-          {/* Search - Desktop */}
-          <div className="hidden lg:block relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              className="pl-9 h-9 bg-secondary/50 border-transparent focus:bg-background focus:border-[#4B8B9B]/50 transition-all rounded-full"
-            />
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 cursor-pointer hover:bg-orange-500/20 transition-colors group relative" onClick={() => setShowStreakModal(true)}>
+            <Flame className={cn("h-4 w-4", currentStreak ? "text-orange-500" : "text-muted-foreground")} />
+            <span className="text-sm font-black text-orange-500 italic tracking-tighter">{currentStreak}</span>
           </div>
 
-          {/* Search - Mobile Icon */}
-          <Button variant="ghost" size="icon" className="lg:hidden text-muted-foreground hover:text-foreground">
-            <Search className="h-5 w-5" />
-          </Button>
-
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 cursor-pointer hover:bg-orange-500/20 transition-colors group relative">
-            <Flame
-              className={cn(
-                "h-4 w-4",
-                currentStreak ? "text-orange-500" : "text-muted-foreground"
-              )}
-              onClick={() => setShowStreakModal(true)}
-            />
-            <span
-              className="text-sm font-bold text-orange-600 dark:text-orange-400"
-              onClick={() => setShowStreakModal(true)}
-            >
-              {currentStreak}
-            </span>
-
-            {/* Debug Trigger - only visible on hover */}
-            <div
-              className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log("[DEBUG] Manually triggering streak popup");
-                setShowStreakPopup(true);
-              }}
-            >
-              <Button size="sm" variant="outline" className="h-6 text-[10px] py-0 bg-background/80 whitespace-nowrap">TEST POPUP</Button>
-            </div>
-          </div>
-
-          {/* Notifications */}
-          <CustomDropdown
-            isOpen={isNotifOpen}
-            onClose={() => setIsNotifOpen(false)}
-            width="w-80"
-            trigger={
+          {/* Notifications Popover */}
+          <Popover>
+            <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative text-muted-foreground hover:text-foreground rounded-full"
-                onClick={() => {
-                  setIsNotifOpen(!isNotifOpen);
-                  setIsProfileOpen(false);
-                }}
+                className="relative text-gray-400 hover:text-white transition-colors group"
               >
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-background" />
-                )}
-              </Button>
-            }
-            content={
-              <>
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-                  <span className="font-semibold text-sm">Notifications</span>
+                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-cyan-500/50 group-hover:bg-cyan-500/10 transition-all">
+                  <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <button
-                      onClick={markAllAsRead}
-                      className="text-xs text-[#4B8B9B] hover:text-[#4B8B9B]/80 font-medium transition-colors"
+                    <span className="absolute top-0 right-0 h-3 w-3 rounded-full bg-red-500 border-2 border-black" />
+                  )}
+                </div>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-80 bg-black/80 backdrop-blur-xl border-white/10 p-0 shadow-2xl overflow-hidden mt-4"
+              align="end"
+            >
+              <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5 backdrop-blur-xl">
+                <span className="text-xs font-black tracking-widest text-white uppercase italic">Notifications</span>
+                {unreadCount > 0 && (
+                  <button onClick={markAllAsRead} className="text-[10px] font-bold text-cyan-400 hover:text-white uppercase transition-colors">Mark All Read</button>
+                )}
+              </div>
+              <div className="max-h-[350px] overflow-y-auto">
+                {loading ? (
+                  <div className="p-8 text-center"><div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto" /></div>
+                ) : notifications.length === 0 ? (
+                  <div className="p-12 text-center text-gray-500 text-xs italic">No notifications yet</div>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n._id}
+                      onClick={() => !n.isRead && markAsRead(n._id)}
+                      className={cn(
+                        "p-4 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors group",
+                        !n.isRead && "bg-cyan-500/5"
+                      )}
                     >
-                      Mark all read
-                    </button>
-                  )}
-                </div>
-
-                <div className="max-h-[400px] overflow-y-auto py-1">
-                  {loading ? (
-                    <div className="p-8 text-center text-muted-foreground">
-                      <div className="animate-spin h-5 w-5 border-2 border-[#4B8B9B] border-t-transparent rounded-full mx-auto mb-2" />
-                      <span className="text-xs">Loading...</span>
-                    </div>
-                  ) : notifications.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground">
-                      <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                      <p className="text-sm">No notifications yet</p>
-                    </div>
-                  ) : (
-                    notifications.map((n) => (
-                      <div
-                        key={n._id}
-                        className={cn(
-                          "flex items-start gap-3 px-4 py-3 cursor-pointer outline-none transition-colors hover:bg-accent/50",
-                          !n.isRead && "bg-accent/20"
-                        )}
-                        onClick={() => {
-                          if (!n.isRead) markAsRead(n._id)
-                        }}
-                      >
-                        <div className={cn(
-                          "mt-0.5 h-8 w-8 rounded-full flex items-center justify-center shrink-0",
-                          n.type.includes("session") ? "bg-blue-500/10 text-blue-500" :
-                            n.type.includes("trainer") ? "bg-purple-500/10 text-purple-500" :
-                              "bg-[#4B8B9B]/10 text-[#4B8B9B]"
-                        )}>
-                          {n.type.includes("session") ? <CalendarClock className="h-4 w-4" /> :
-                            n.type.includes("trainer") ? <Users className="h-4 w-4" /> :
-                              <Megaphone className="h-4 w-4" />}
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-cyan-500/20">
+                          {n.type.includes("session") ? <CalendarClock className="h-4 w-4 text-cyan-400" /> : <Megaphone className="h-4 w-4 text-gray-400" />}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={cn("text-sm font-medium leading-none mb-1", !n.isRead && "text-foreground")}>
-                            {n.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground line-clamp-2 mb-1.5">
-                            {n.message}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground/70">
-                            {formatDate(n.createdAt)}
-                          </p>
+                        <div className="space-y-1">
+                          <p className="text-[13px] font-bold text-white group-hover:text-cyan-400 transition-colors italic">{n.title}</p>
+                          <p className="text-xs text-gray-400 leading-relaxed font-light">{n.message}</p>
+                          <p className="text-[10px] text-gray-600 font-bold uppercase">{formatDate(n.createdAt)}</p>
                         </div>
-                        {!n.isRead && (
-                          <div className="h-2 w-2 rounded-full bg-[#4B8B9B] shrink-0 mt-1.5" />
-                        )}
                       </div>
-                    ))
-                  )}
-                </div>
-                <div className="p-2 border-t border-border/50">
-                  <Link
-                    to="/notifications"
-                    onClick={() => setIsNotifOpen(false)}
-                    className="flex items-center justify-center w-full py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-colors"
-                  >
-                    View all notifications
-                  </Link>
-                </div>
-              </>
-            }
-          />
+                    </div>
+                  ))
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
 
-          {/* User Profile Dropdown */}
-          <CustomDropdown
-            isOpen={isProfileOpen}
-            onClose={() => setIsProfileOpen(false)}
-            width="w-56"
-            trigger={
-              <Button
-                variant="ghost"
-                className="pl-2 pr-1 h-10 rounded-full hover:bg-accent/50 gap-2"
-                onClick={() => {
-                  setIsProfileOpen(!isProfileOpen);
-                  setIsNotifOpen(false);
-                }}
-              >
-                <Avatar className="h-8 w-8 border border-border">
-                  <AvatarImage src={userAvatar} alt={userName} className="object-cover" />
-                  <AvatarFallback className="bg-[#4B8B9B] text-white text-xs">
+          {/* Profile Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center gap-2 group cursor-pointer ml-2">
+                <Avatar className="h-10 w-10 border border-white/10 group-hover:border-cyan-500/50 transition-all ring-offset-black transition-all">
+                  <AvatarImage src={userAvatar} className="object-cover" />
+                  <AvatarFallback className="bg-cyan-500/20 text-cyan-400 text-xs italic font-black">
                     {userName[0]?.toUpperCase() ?? "U"}
                   </AvatarFallback>
                 </Avatar>
-                <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
-              </Button>
-            }
-            content={
-              <div className="p-1">
-                <div className="px-2 py-2.5 mb-1 border-b border-border/50">
-                  <p className="text-sm font-semibold truncate">{userName}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                </div>
-
-                <Link
-                  to="/dashboard"
-                  onClick={() => setIsProfileOpen(false)}
-                  className="flex items-center gap-2 px-2 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent outline-none text-foreground"
-                >
-                  <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-                  Dashboard
-                </Link>
-
-                <Link
-                  to="/profile"
-                  onClick={() => setIsProfileOpen(false)}
-                  className="flex items-center gap-2 px-2 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent outline-none text-foreground"
-                >
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  Profile
-                </Link>
-
-                <Link
-                  to="/settings"
-                  onClick={() => setIsProfileOpen(false)}
-                  className="flex items-center gap-2 px-2 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent outline-none text-foreground"
-                >
-                  <Settings className="h-4 w-4 text-muted-foreground" />
-                  Settings
-                </Link>
-
-                <div className="h-px bg-border/50 my-1" />
-
-                <button
-                  onClick={() => {
-                    handleSignOut();
-                    setIsProfileOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-2 py-2 text-sm rounded-lg cursor-pointer hover:bg-red-500/10 text-red-500 hover:text-red-600 outline-none"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign out
-                </button>
               </div>
-            }
-          />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-56 bg-black/80 backdrop-blur-xl border-white/10 p-1 shadow-2xl mt-4"
+              align="end"
+            >
+              <DropdownMenuLabel className="p-4 bg-white/5 rounded-lg mb-1">
+                <p className="text-xs font-black tracking-widest text-white uppercase italic">{userName}</p>
+                <p className="text-[10px] text-gray-500 truncate mt-0.5">{user?.email}</p>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:text-cyan-400 transition-colors" onClick={() => navigate("/dashboard")}>
+                <LayoutDashboard className="h-4 w-4 mr-2" />
+                <span className="text-xs font-bold uppercase italic tracking-tighter">Dashboard</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:text-cyan-400 transition-colors" onClick={() => navigate("/profile")}>
+                <User className="h-4 w-4 mr-2" />
+                <span className="text-xs font-bold uppercase italic tracking-tighter">Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:text-cyan-400 transition-colors" onClick={() => navigate("/settings")}>
+                <Settings className="h-4 w-4 mr-2" />
+                <span className="text-xs font-bold uppercase italic tracking-tighter">Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuItem className="text-red-400 hover:text-red-500 hover:bg-red-500/5 focus:bg-red-500/5 transition-colors" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                <span className="text-xs font-bold uppercase italic tracking-tighter">Sign Out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Mobile Menu Toggle */}
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-muted-foreground hover:text-foreground"
+            className="md:hidden text-gray-400 hover:text-white"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
         </div>
-      </div>
+      </nav>
 
       {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur-md animate-in slide-in-from-top-5">
-          <nav className="flex flex-col p-4 space-y-2">
-            {navLinks.map((link) => {
-              const Icon = link.icon
-              const isActive = location.pathname === link.path
-              return (
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="md:hidden container mx-auto max-w-7xl mt-4 pointer-events-auto"
+          >
+            <div className="bg-black/90 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 shadow-2xl space-y-4">
+              {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-[#4B8B9B]/10 text-[#4B8B9B]"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                    "flex items-center justify-between p-4 rounded-2xl transition-all font-black italic uppercase tracking-tighter text-sm",
+                    location.pathname === link.path ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "text-gray-400 hover:text-white hover:bg-white/5"
                   )}
                 >
-                  <Icon className="h-5 w-5" />
                   {link.name}
                   {link.name === "My Trainer" && chatUnreadCount > 0 && (
-                    <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                      {chatUnreadCount}
-                    </span>
+                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{chatUnreadCount}</span>
                   )}
                 </Link>
-              )
-            })}
-            <div className="pt-4 mt-2 border-t border-border/40">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search..."
-                  className="pl-9 bg-secondary/50 border-transparent focus:bg-background focus:border-[#4B8B9B]/50 transition-all rounded-lg"
-                />
-              </div>
+              ))}
+              <div className="h-px bg-white/5 my-4" />
+              <button
+                onClick={handleSignOut}
+                className="w-full p-4 rounded-2xl bg-red-500/10 text-red-400 font-black italic uppercase tracking-tighter text-sm text-left"
+              >
+                Sign Out
+              </button>
             </div>
-          </nav>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <StreakPopup
         isOpen={showStreakPopup}
         onClose={() => setShowStreakPopup(false)}

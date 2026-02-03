@@ -65,11 +65,15 @@ export default function FeatureSection({ title, description, imagePath, align = 
 
                         <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm shadow-2xl shadow-cyan-900/10">
                             {imagePath ? (
-                                <img
-                                    src={imagePath}
-                                    alt={title}
-                                    className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
-                                />
+                                <>
+                                    <img
+                                        src={imagePath}
+                                        alt={title}
+                                        className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+                                    />
+                                    {/* Dark coating overlay (30% opacity) */}
+                                    <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+                                </>
                             ) : (
                                 <div className="aspect-[4/3] bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
                                     <div className="text-white/10 font-black text-4xl uppercase tracking-[0.2em]">Visual Representation</div>
