@@ -236,15 +236,8 @@ export default function HomePage() {
             variants={itemVariants}
             className="inline-flex items-center gap-2 px-6 py-2 bg-white/5 backdrop-blur-xl rounded-full border border-white/10 shadow-2xl"
           >
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <Flame className="h-5 w-5 text-orange-500" />
-            </motion.div>
-            <span className="text-sm font-semibold tracking-wide uppercase">
-              <span className="text-orange-500 mr-1"><AnimatedNumber value={streak} /></span> Day Streak
-            </span>
+          
+          
           </motion.div>
 
           <div className="space-y-4">
