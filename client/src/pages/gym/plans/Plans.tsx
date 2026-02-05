@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { mockPlans } from '../data/mock';
-import { GymPlan } from '../types';
+import type { GymPlan } from '../types';
 
 const Plans = () => {
     const [plans, setPlans] = useState<GymPlan[]>(mockPlans);

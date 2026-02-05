@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { mockAnnouncements } from '../data/mock';
-import { Announcement } from '../types';
+import type { Announcement } from '../types';
 
 const Announcements = () => {
     const [view, setView] = useState<'list' | 'editor'>('list');
@@ -147,8 +147,8 @@ const Announcements = () => {
                                             type="button"
                                             onClick={() => setEditingAnn({ ...editingAnn!, target: t as any })}
                                             className={`py-3 rounded-xl border text-xs font-bold uppercase tracking-widest transition-all ${editingAnn?.target === t
-                                                    ? 'bg-primary border-primary text-black'
-                                                    : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'
+                                                ? 'bg-primary border-primary text-black'
+                                                : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'
                                                 }`}
                                         >
                                             {t}

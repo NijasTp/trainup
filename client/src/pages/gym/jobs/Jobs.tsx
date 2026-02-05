@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { mockJobs } from '../data/mock';
-import { Job } from '../types';
+import type { Job } from '../types';
 
 const Jobs = () => {
     const [view, setView] = useState<'list' | 'editor'>('list');

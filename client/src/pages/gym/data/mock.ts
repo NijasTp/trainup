@@ -1,5 +1,5 @@
 
-import { Member, GymPlan, Product, Attendance, Announcement, Job, WorkoutTemplate } from '../types';
+import type { Member, GymPlan, Product, Attendance, Announcement, Job, WorkoutTemplate } from '../types';
 
 export const mockMembers: Member[] = [
     { id: '1', name: 'John Doe', email: 'john@example.com', planName: 'All Access', status: 'Active', joinDate: '2024-01-15' },
