@@ -2,16 +2,20 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Award, Calendar, Flame, Lock, Mail, Phone, Ruler, Scale, Trophy, User, Shield, CreditCard, ArrowRight, Eye } from "lucide-react";
+import { Award, Calendar, Flame, Lock, Mail, Phone, Trophy, User, CreditCard, ArrowRight, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { getProfilePageData } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import type { UserProfile } from "@/interfaces/user/profileInterface";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
 import API from "@/lib/axios";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
 import type { Transaction } from "@/interfaces/user/IUserTransactions";
+import Aurora from "@/components/ui/Aurora";
+import MagicBento from './MagicBento';
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -20,6 +24,7 @@ export default function Profile() {
   const [isTransactionsLoading, setIsTransactionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate()
+  const reduxUser = useSelector((state: RootState) => state.userAuth.user);
 
   useEffect(() => {
     document.title = "TrainUp - Your Profile";
@@ -82,8 +87,17 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+      {/* Background Visuals */}
+      <div className="absolute inset-0 z-0">
+        <Aurora
+          colorStops={["#020617", "#0f172a", "#020617"]}
+          amplitude={1.1}
+          blend={0.6}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+      </div>
+
       <SiteHeader />
       <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
 
@@ -166,177 +180,118 @@ export default function Profile() {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-8">
-                {/* Personal Information */}
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold flex items-center gap-2">
-                    <User className="h-5 w-5 text-primary" />
-                    Personal Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
+                {/* Dynamic Metrics Grid */}
+                <MagicBento
+                  textAutoHide={true}
+                  enableStars
+                  enableSpotlight
+                  enableBorderGlow={true}
+                  enableTilt={false}
+                  enableMagnetism={false}
+                  clickEffect
+                  spotlightRadius={400}
+                  particleCount={12}
+                  glowColor="132, 0, 255"
+                  disableAnimations={false}
+                  items={[
+                    {
+                      title: 'Gender',
+                      description: profile.gender || 'Not specified',
+                      label: 'Personal',
+                      color: '#060010'
+                    },
+                    {
+                      title: 'Age',
+                      description: profile.age ? `${profile.age} years` : 'Not added',
+                      label: 'Personal',
+                      color: '#060010'
+                    },
+                    {
+                      title: 'Height',
+                      description: profile.height ? `${profile.height} cm` : 'Not added',
+                      label: 'Fitness',
+                      color: '#060010'
+                    },
+                    {
+                      title: 'Weight',
+                      description: profile.weight ? `${profile.weight} kg` : 'Not added',
+                      label: 'Fitness',
+                      color: '#060010'
+                    },
+                    {
+                      title: 'Current Streak',
+                      description: `${reduxUser?.streak ?? profile.streak ?? 0} days`,
+                      label: 'Activity',
+                      color: '#060010'
+                    },
+                    {
+                      title: 'Experience (XP)',
+                      description: `${reduxUser?.xp ?? profile.xp ?? 0} points`,
+                      label: 'Progress',
+                      color: '#060010'
+                    }
+                  ]}
+                />
+
+                {/* Additional Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-border/50">
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
                       <Mail className="h-5 w-5 text-primary" />
-                      <span className="text-foreground">{profile.email}</span>
+                      Contact details
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg">
+                        <Mail className="h-5 w-5 text-primary" />
+                        <span className="text-foreground">{profile.email}</span>
+                      </div>
+                      <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg">
+                        <Phone className="h-5 w-5 text-primary" />
+                        <span className="text-foreground">{profile.phone || 'No phone added'}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                      <Phone className="h-5 w-5 text-primary" />
-                      {profile.phone ? (
-                        <span className="text-foreground">{profile.phone}</span>
-                      ) : (
-                        <span className="text-red-500 font-medium">Not added</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                      <Ruler className="h-5 w-5 text-primary" />
-                      {profile.height ? (
-                        <span className="text-foreground">Height: {profile.height} cm</span>
-                      ) : (
-                        <span className="text-red-500 font-medium">Height: Not added</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                      <Scale className="h-5 w-5 text-primary" />
-                      {profile.weight ? (
-                        <span className="text-foreground">Weight: {profile.weight} kg</span>
-                      ) : (
-                        <span className="text-red-500 font-medium">Weight: Not added</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                      <Calendar className="h-5 w-5 text-primary" />
-                      {profile.age ? (
-                        <span className="text-foreground">Age: {profile.age} years</span>
-                      ) : (
-                        <span className="text-red-500 font-medium">Age: Not added</span>
-                      )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-primary" />
+                      Assigned Trainer
+                    </h3>
+                    <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg">
+                      <User className="h-5 w-5 text-primary" />
+                      <span className="text-foreground">{profile.assignedTrainer || 'No trainer assigned'}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Fitness Details */}
                 <div className="space-y-4">
                   <h3 className="text-xl font-semibold flex items-center gap-2">
-                    <Flame className="h-5 w-5 text-primary" />
-                    Fitness Details
+                    <Award className="h-5 w-5 text-primary" />
+                    Achievements
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {profile.goals && profile.goals.length > 0 && (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                          <Award className="h-4 w-4 text-primary" />
-                          Goals
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {profile.goals.map((goal, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="font-medium bg-primary/10 hover:bg-primary/20 transition-all duration-300"
-                            >
-                              {goal}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {profile.activityLevel && (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                          <Flame className="h-4 w-4 text-primary" />
-                          Activity Level
-                        </div>
+                  <div className="flex flex-wrap gap-2 p-4 bg-muted/10 rounded-xl border border-border/20">
+                    {profile.achievements && profile.achievements.length > 0 ? (
+                      profile.achievements.map((achievement, index) => (
                         <Badge
-                          variant="outline"
-                          className="font-medium border-primary/30 hover:bg-primary/10 transition-all duration-300"
+                          key={index}
+                          variant="secondary"
+                          className="px-4 py-2 font-medium bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
                         >
-                          {profile.activityLevel}
+                          {achievement}
                         </Badge>
-                      </div>
-                    )}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <Shield className="h-4 w-4 text-primary" />
-                        Equipment
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className="font-medium border-primary/30 hover:bg-primary/10 transition-all duration-300"
-                      >
-                        {profile.equipment ? "Available" : "Not Available"}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Trainer */}
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold flex items-center gap-2">
-                    <User className="h-5 w-5 text-primary" />
-                    Trainer
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {profile.assignedTrainer && (
-                      <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                        <User className="h-5 w-5 text-primary" />
-                        <span className="text-foreground">Trainer: {profile.assignedTrainer}</span>
-                      </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-sm italic">No achievements unlocked yet. Keep working out!</p>
                     )}
                   </div>
                 </div>
 
-                {/* Progress and Achievements */}
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-primary" />
-                    Progress & Achievements
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <Flame className="h-4 w-4 text-primary" />
-                        Streak
-                      </div>
-                      <span className="text-lg font-bold text-primary bg-muted/20 p-3 rounded-lg block">
-                        {profile.streak || 0} days
-                      </span>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <Trophy className="h-4 w-4 text-primary" />
-                        XP
-                      </div>
-                      <span className="text-lg font-bold text-primary bg-muted/20 p-3 rounded-lg block">
-                        {profile.xp || 0} points
-                      </span>
-                    </div>
-                    {profile.achievements && profile.achievements.length > 0 && (
-                      <div className="space-y-3 md:col-span-3">
-                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                          <Award className="h-4 w-4 text-primary" />
-                          Achievements
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {profile.achievements.map((achievement, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="font-medium bg-primary/10 hover:bg-primary/20 transition-all duration-300"
-                            >
-                              {achievement}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Account Information */}
                 <div className="space-y-4">
                   <h3 className="text-xl font-semibold flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-primary" />
                     Account Details
                   </h3>
-                  <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg hover:bg-muted/30 transition-all duration-300">
+                  <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg">
                     <span className="text-foreground">
                       Joined: {new Date(profile.createdAt).toLocaleDateString()}
                     </span>
@@ -433,6 +388,7 @@ export default function Profile() {
                 )}
               </CardContent>
             </Card>
+
           </div>
         )}
       </main>

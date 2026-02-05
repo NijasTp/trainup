@@ -8,6 +8,7 @@ import { Search, Dumbbell, Target, Clock, Star, Play, Info, CheckCircle2, X } fr
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { getWorkoutTemplates, toggleWorkoutTemplate } from "@/services/templateService";
 import { toast } from "react-toastify";
+import Aurora from "@/components/ui/Aurora";
 import { useSelector, useDispatch } from "react-redux";
 import { updateUser } from "@/redux/slices/userAuthSlice";
 import type { IWorkoutTemplate } from "@/interfaces/template/IWorkoutTemplate";
@@ -60,7 +61,7 @@ export default function WorkoutTemplates() {
       const isActive = user?.activeWorkoutTemplates?.some(t => t.templateId === selectedTemplate._id);
       const action = isActive ? "stopped" : "started";
 
-      const response = await toggleWorkoutTemplate(selectedTemplate._id);
+      await toggleWorkoutTemplate(selectedTemplate._id);
 
       await refreshProfile();
 
@@ -81,7 +82,16 @@ export default function WorkoutTemplates() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 selection:bg-primary/30">
+    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit selection:bg-primary/30">
+      {/* Background Visuals */}
+      <div className="absolute inset-0 z-0">
+        <Aurora
+          colorStops={["#020617", "#0f172a", "#020617"]}
+          amplitude={1.1}
+          blend={0.6}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+      </div>
       <SiteHeader />
 
       {/* Hero Section */}

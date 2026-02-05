@@ -40,6 +40,7 @@ import { toast } from "react-toastify";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import API from "@/lib/axios";
+import Aurora from "@/components/ui/Aurora";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").trim(),
@@ -695,8 +696,16 @@ export default function EditProfile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+      <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+        {/* Background Visuals */}
+        <div className="absolute inset-0 z-0">
+          <Aurora
+            colorStops={["#020617", "#0f172a", "#020617"]}
+            amplitude={1.1}
+            blend={0.6}
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+        </div>
         <SiteHeader />
         <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6">
           <div className="relative">
@@ -709,8 +718,16 @@ export default function EditProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+      {/* Background Visuals */}
+      <div className="absolute inset-0 z-0">
+        <Aurora
+          colorStops={["#020617", "#0f172a", "#020617"]}
+          amplitude={1.1}
+          blend={0.6}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+      </div>
       <SiteHeader />
 
       <main className="relative container mx-auto px-4 py-12 space-y-8">

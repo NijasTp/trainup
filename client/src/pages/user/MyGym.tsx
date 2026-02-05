@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
+import Aurora from "@/components/ui/Aurora";
 import { useNavigate } from "react-router-dom";
 import API from "@/lib/axios";
 import GymReviews from "@/components/user/reviews/GymReviews";
@@ -55,9 +56,18 @@ export default function MyGym() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+      <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+        {/* Background Visuals */}
+        <div className="absolute inset-0 z-0">
+          <Aurora
+            colorStops={["#020617", "#0f172a", "#020617"]}
+            amplitude={1.1}
+            blend={0.6}
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+        </div>
         <SiteHeader />
-        <div className="container mx-auto px-4 py-16 text-center">
+        <div className="relative container mx-auto px-4 py-16 text-center z-10">
           <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your gym...</p>
         </div>
@@ -67,9 +77,18 @@ export default function MyGym() {
 
   if (!gymData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+      <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+        {/* Background Visuals */}
+        <div className="absolute inset-0 z-0">
+          <Aurora
+            colorStops={["#020617", "#0f172a", "#020617"]}
+            amplitude={1.1}
+            blend={0.6}
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+        </div>
         <SiteHeader />
-        <div className="container mx-auto px-4 py-16 text-center">
+        <div className="relative container mx-auto px-4 py-16 text-center z-10">
           <Building className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
           <h3 className="text-xl font-semibold mb-2">No Active Membership</h3>
           <p className="text-muted-foreground mb-6">
@@ -97,8 +116,16 @@ export default function MyGym() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+      {/* Background Visuals */}
+      <div className="absolute inset-0 z-0">
+        <Aurora
+          colorStops={["#020617", "#0f172a", "#020617"]}
+          amplitude={1.1}
+          blend={0.6}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+      </div>
 
       <SiteHeader />
 

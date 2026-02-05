@@ -11,7 +11,7 @@ export class UserPlanService implements IUserPlanService {
   constructor(
     @inject(TYPES.IUserPlanRepository)
     private _userPlanRepository: IUserPlanRepository
-  ) {}
+  ) { }
 
   async createUserPlan(data: Partial<IUserPlan>): Promise<IUserPlan> {
     return await this._userPlanRepository.createUserPlan(data);
@@ -36,7 +36,7 @@ export class UserPlanService implements IUserPlanService {
     }
 
     if (plan.planType === 'premium' && plan.messagesLeft <= 0) {
-      return false; 
+      return false;
     }
 
     if (plan.planType === 'premium') {
@@ -71,5 +71,9 @@ export class UserPlanService implements IUserPlanService {
 
   async deleteUserPlan(userId: string, trainerId: string): Promise<void> {
     await this._userPlanRepository.deleteUserPlan(userId, trainerId);
+  }
+
+  async findAllByUserId(userId: string): Promise<IUserPlan[]> {
+    return await this._userPlanRepository.findAllByUserId(userId);
   }
 }

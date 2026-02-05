@@ -15,6 +15,7 @@ import { getWorkoutDays, getAllSessions } from "@/services/workoutService";
 import { WorkoutCalendar } from "@/components/user/workouts/WorkoutCalendar";
 
 import type { WorkoutSession, WorkoutDay } from "@/interfaces/user/IWorkouts";
+import Aurora from "@/components/ui/Aurora";
 
 
 function formatTime(seconds: number | undefined): string {
@@ -366,8 +367,17 @@ export default function WorkoutPage() {
   ) || [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+      {/* Background Visuals */}
+      <div className="absolute inset-0 z-0">
+        <Aurora
+          colorStops={["#020617", "#0f172a", "#020617"]}
+          amplitude={1.1}
+          blend={0.6}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+      </div>
+
       <SiteHeader />
       <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
         <section className="flex flex-col gap-6">

@@ -21,6 +21,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 
 import type { Session } from "@/interfaces/user/IUserSessions";
+import Aurora from "@/components/ui/Aurora";
 
 
 export default function UserSessions() {
@@ -137,9 +138,17 @@ export default function UserSessions() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+                {/* Background Visuals */}
+                <div className="absolute inset-0 z-0">
+                    <Aurora
+                        colorStops={["#020617", "#0f172a", "#020617"]}
+                        amplitude={1.1}
+                        blend={0.6}
+                    />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                </div>
                 <SiteHeader />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
                 <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6">
                     <div className="relative">
                         <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
@@ -153,9 +162,17 @@ export default function UserSessions() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+                {/* Background Visuals */}
+                <div className="absolute inset-0 z-0">
+                    <Aurora
+                        colorStops={["#020617", "#0f172a", "#020617"]}
+                        amplitude={1.1}
+                        blend={0.6}
+                    />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                </div>
                 <SiteHeader />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
                 <div className="relative container mx-auto px-4 py-16 text-center space-y-6">
                     <h3 className="text-2xl font-bold text-foreground">Error</h3>
                     <p className="text-muted-foreground text-lg">{error}</p>
@@ -173,9 +190,17 @@ export default function UserSessions() {
 
     if (!currentUserId) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+                {/* Background Visuals */}
+                <div className="absolute inset-0 z-0">
+                    <Aurora
+                        colorStops={["#020617", "#0f172a", "#020617"]}
+                        amplitude={1.1}
+                        blend={0.6}
+                    />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                </div>
                 <SiteHeader />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
                 <div className="relative container mx-auto px-4 py-16 text-center space-y-6">
                     <h3 className="text-2xl font-bold text-foreground">Authentication Error</h3>
                     <p className="text-muted-foreground text-lg">Please log in to view your sessions</p>
@@ -190,9 +215,17 @@ export default function UserSessions() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
+        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+            {/* Background Visuals */}
+            <div className="absolute inset-0 z-0">
+                <Aurora
+                    colorStops={["#020617", "#0f172a", "#020617"]}
+                    amplitude={1.1}
+                    blend={0.6}
+                />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+            </div>
             <SiteHeader />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
             <div className="relative border-b border-border/50 bg-card/20 backdrop-blur-sm">
                 <div className="container mx-auto px-4 py-6">

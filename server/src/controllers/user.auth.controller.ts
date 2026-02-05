@@ -119,8 +119,8 @@ export class UserAuthController {
             const dto: LoginDto = req.body
             const result: LoginResponseDto = await this._userService.loginUser(dto.email, dto.password)
             this._jwtService.setTokens(res, result.accessToken, result.refreshToken)
-            const streak = await this._streakService.checkAndResetUserStreak(result.user._id)
-            const response = { ...result, streak }
+            const streakData = await this._streakService.checkAndResetUserStreak(result.user._id)
+            const response = { ...result, user: { ...result.user, streak: streakData.currentStreak } }
             res.status(STATUS_CODE.OK).json(response)
         } catch (err) {
             logger.error('Login error:', err)
@@ -130,8 +130,13 @@ export class UserAuthController {
 
     async checkSession(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const user = req.user as JwtPayload
-            res.status(STATUS_CODE.OK).json({ valid: true, id: user.id, role: user.role })
+            const userId = (req.user as JwtPayload).id
+            const user = await this._userService.getUserById(userId)
+            if (!user) {
+                res.status(STATUS_CODE.UNAUTHORIZED).json({ valid: false })
+                return
+            }
+            res.status(STATUS_CODE.OK).json({ valid: true, user })
         } catch (err) {
             next(err)
         }

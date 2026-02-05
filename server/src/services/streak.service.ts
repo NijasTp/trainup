@@ -26,17 +26,15 @@ export class StreakService implements IStreakService {
 
   async updateUserStreak(userId: Types.ObjectId): Promise<IStreak> {
     const streak = await this.getOrCreateUserStreak(userId);
-    const today = new Date();
-    const lastAction = new Date(streak.lastActionDate);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const lastActionDate = new Date(streak.lastActionDate);
+    const lastAction = new Date(lastActionDate.getFullYear(), lastActionDate.getMonth(), lastActionDate.getDate());
 
-    const isSameDay =
-      today.getFullYear() === lastAction.getFullYear() &&
-      today.getMonth() === lastAction.getMonth() &&
-      today.getDate() === lastAction.getDate();
+    const diffTime = today.getTime() - lastAction.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-    const diffDays = Math.floor((today.getTime() - lastAction.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (isSameDay && streak.currentStreak > 0) {
+    if (diffDays === 0 && streak.currentStreak > 0) {
       return streak;
     }
 
@@ -49,7 +47,7 @@ export class StreakService implements IStreakService {
       streak.currentStreak = 1;
     }
 
-    streak.lastActionDate = today;
+    streak.lastActionDate = now;
     const updated = await this._streakRepo.update(streak);
     if (!updated) throw new AppError(MESSAGES.FAILED_TO_UPDATE_STREAK, STATUS_CODE.INTERNAL_SERVER_ERROR);
 
@@ -60,19 +58,25 @@ export class StreakService implements IStreakService {
 
   async checkAndResetUserStreak(userId: Types.ObjectId): Promise<IStreak> {
     const streak = await this.getOrCreateUserStreak(userId);
-    const today = new Date();
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const lastActionDate = new Date(streak.lastActionDate);
+    const lastAction = new Date(lastActionDate.getFullYear(), lastActionDate.getMonth(), lastActionDate.getDate());
 
-    const diffDays = Math.floor(
-      (today.getTime() - new Date(streak.lastActionDate).getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const diffTime = today.getTime() - lastAction.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays <= 1) {
       return streak;
     }
+
     streak.currentStreak = 0;
-    streak.lastActionDate = new Date();
+    streak.lastActionDate = now;
     const updated = await this._streakRepo.update(streak);
     if (!updated) throw new AppError(MESSAGES.FAILED_TO_UPDATE_STREAK, STATUS_CODE.INTERNAL_SERVER_ERROR);
+
+    this._eventService.emitToUser(userId.toString(), 'streak_updated', { streak: updated.currentStreak });
+
     return updated;
   }
 }

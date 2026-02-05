@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
+import Aurora from "@/components/ui/Aurora";
 
 import type { Notification, NotificationsResponse } from "@/interfaces/user/IUserNotifications";
 
@@ -149,21 +150,40 @@ export default function UserNotifications() {
     };
     if (!user) {
         return (
-            <div className="flex min-h-screen items-center justify-center p-4">
+            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+                {/* Background Visuals */}
+                <div className="absolute inset-0 z-0">
+                    <Aurora
+                        colorStops={["#020617", "#0f172a", "#020617"]}
+                        amplitude={1.1}
+                        blend={0.6}
+                    />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                </div>
                 <SiteHeader />
-                <Alert className="max-w-md">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                        Please log in to view your notifications.
-                    </AlertDescription>
-                </Alert>
+                <div className="flex-1 flex items-center justify-center p-4">
+                    <Alert className="max-w-md bg-card/40 backdrop-blur-sm border-border/50 text-white">
+                        <AlertCircle className="h-4 w-4 text-primary" />
+                        <AlertDescription>
+                            Please log in to view your notifications.
+                        </AlertDescription>
+                    </Alert>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+            {/* Background Visuals */}
+            <div className="absolute inset-0 z-0">
+                <Aurora
+                    colorStops={["#020617", "#0f172a", "#020617"]}
+                    amplitude={1.1}
+                    blend={0.6}
+                />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+            </div>
             <SiteHeader />
             <main className="relative container mx-auto px-4 py-8 space-y-8 flex-1">
                 <div className="mx-auto max-w-5xl space-y-8">

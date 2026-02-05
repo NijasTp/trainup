@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import io, { Socket } from 'socket.io-client';
 import { debounce } from 'lodash';
+import Aurora from "@/components/ui/Aurora";
 
 import type { Message, ChatTrainer as Trainer, UserPlan } from "@/interfaces/user/IUserChat";
 
@@ -378,8 +379,17 @@ export default function ChatPage() {
 
     if (isLoading) {
         return (
-            <div className="h-screen flex flex-col bg-background">
-                <div className="flex-1 flex items-center justify-center">
+            <div className="relative h-screen flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+                {/* Background Visuals */}
+                <div className="absolute inset-0 z-0">
+                    <Aurora
+                        colorStops={["#020617", "#0f172a", "#020617"]}
+                        amplitude={1.1}
+                        blend={0.6}
+                    />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                </div>
+                <div className="flex-1 flex items-center justify-center relative z-10">
                     <div className="text-center space-y-4">
                         <div className="relative">
                             <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
@@ -393,8 +403,17 @@ export default function ChatPage() {
 
     if (error) {
         return (
-            <div className="h-screen flex flex-col bg-background">
-                <div className="flex-1 flex items-center justify-center">
+            <div className="relative h-screen flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+                {/* Background Visuals */}
+                <div className="absolute inset-0 z-0">
+                    <Aurora
+                        colorStops={["#020617", "#0f172a", "#020617"]}
+                        amplitude={1.1}
+                        blend={0.6}
+                    />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                </div>
+                <div className="flex-1 flex items-center justify-center relative z-10">
                     <div className="text-center space-y-6 p-8">
                         <AlertCircle className="h-16 w-16 mx-auto text-destructive/50" />
                         <div className="space-y-2">
@@ -414,9 +433,19 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="h-screen flex flex-col bg-background">
+        <div className="relative h-screen flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+            {/* Background Visuals */}
+            <div className="absolute inset-0 z-0">
+                <Aurora
+                    colorStops={["#020617", "#0f172a", "#020617"]}
+                    amplitude={1.1}
+                    blend={0.6}
+                />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+            </div>
+
             {/* Fixed Header */}
-            <div className="border-b bg-card/50 backdrop-blur-sm">
+            <div className="relative z-10 border-b bg-card/5 backdrop-blur-md">
                 <div className="flex items-center justify-between p-4">
                     <div className="flex items-center space-x-3">
                         <Link to="/my-trainer/profile">
@@ -466,7 +495,7 @@ export default function ChatPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden relative z-10">
                 <div className="h-full overflow-y-auto p-4 space-y-4">
                     {messages.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center">
@@ -564,7 +593,7 @@ export default function ChatPage() {
             </div>
 
             {/* Fixed Footer */}
-            <div className="border-t bg-card/50 backdrop-blur-sm p-4">
+            <div className="relative z-10 border-t bg-card/5 backdrop-blur-md p-4">
                 {isOtherUserTyping && (
                     <p className="text-xs text-muted-foreground mb-2 animate-pulse">
                         {trainer?.name} is typing...

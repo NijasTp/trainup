@@ -23,4 +23,8 @@ export class UserPlanRepository implements IUserPlanRepository {
   async deleteUserPlan(userId: string, trainerId: string): Promise<void> {
     await UserPlanModel.findOneAndDelete({ userId, trainerId });
   }
+
+  async findAllByUserId(userId: string): Promise<IUserPlan[]> {
+    return await UserPlanModel.find({ userId }).exec();
+  }
 }

@@ -9,6 +9,7 @@ export const NOTIFICATION_MESSAGES = {
     SESSION_ACCEPTED: "Your session request has been accepted by {trainerName}",
     SESSION_REJECTED: "Your session request has been rejected by {trainerName}. Reason: {reason}",
     SUBSCRIPTION_CANCELLED: "Your trainer subscription has been cancelled",
+    SUBSCRIPTION_EXPIRING_SOON: "Your subscription to {trainerName} is expiring soon on {expiryDate}",
     TRAINER_WORKOUT_ASSIGNED: "New workout assigned by your trainer: {workoutName}",
     WEIGHT_REMINDER: "Don't forget to log your daily weight!",
     WORKOUT_INACTIVITY: "You haven't worked out in 5 days. Time to get back on track!",
@@ -51,7 +52,7 @@ export const NOTIFICATION_MESSAGES = {
   // Admin Notifications
   ADMIN: {
     TRAINER_APPLICATIONS: "{count} new trainer applications pending approval",
-    GYM_APPLICATIONS: "{count} new gym applications pending approval", 
+    GYM_APPLICATIONS: "{count} new gym applications pending approval",
     USER_REGISTRATIONS: "{count} new users registered today",
     PLATFORM_MILESTONE: "Platform milestone: {count} total users!",
     REVENUE_UPDATE: "Platform revenue update: ₹{amount} this month",
@@ -90,8 +91,9 @@ export const NOTIFICATION_TYPES = {
     GYM_ANNOUNCEMENT: 'user_gym_announcement',
     DIET_ASSIGNED: 'user_diet_assigned',
     VIDEO_CALL_REMINDER: 'user_video_call_reminder',
+    SUBSCRIPTION_EXPIRING_SOON: 'user_subscription_expiring_soon',
   },
-  
+
   TRAINER: {
     NEW_SUBSCRIBER: 'trainer_new_subscriber',
     WORKOUT_REMINDER: 'trainer_workout_reminder',
@@ -103,7 +105,7 @@ export const NOTIFICATION_TYPES = {
     CLIENT_INACTIVE: 'trainer_client_inactive',
     PAYMENT_RECEIVED: 'trainer_payment_received',
   },
-  
+
   GYM: {
     NEW_MEMBER: 'gym_new_member',
     MEMBER_ATTENDANCE_WARNING: 'gym_member_attendance_warning',
@@ -111,7 +113,7 @@ export const NOTIFICATION_TYPES = {
     PAYMENT_RECEIVED: 'gym_payment_received',
     LOW_ATTENDANCE_ALERT: 'gym_low_attendance_alert',
   },
-  
+
   ADMIN: {
     TRAINER_APPLICATIONS: 'admin_trainer_applications',
     GYM_APPLICATIONS: 'admin_gym_applications',

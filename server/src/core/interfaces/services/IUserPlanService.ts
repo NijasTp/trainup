@@ -7,4 +7,5 @@ export interface IUserPlanService {
   decrementMessages(userId: string, trainerId: string): Promise<boolean>;
   decrementVideoCalls(userId: string, trainerId: string): Promise<boolean>;
   deleteUserPlan(userId: string, trainerId: string): Promise<void>;
+  findAllByUserId(userId: string): Promise<IUserPlan[]>;
 }

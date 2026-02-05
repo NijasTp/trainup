@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux"; 
+import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import type { RootState } from "../redux/store";
 import { toast } from "react-toastify";
@@ -21,7 +21,13 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const checkSession = async () => {
       if (user) {
         try {
-          await checkUserSession();
+          const response = await checkUserSession();
+          if (response.valid && response.user) {
+            // Using login to refresh all user data
+            const userWithRole = { ...response.user, role: 'user' };
+            const { login } = await import("@/redux/slices/userAuthSlice");
+            dispatch(login(userWithRole));
+          }
           console.log('User session is valid');
         } catch (error: any) {
           console.error("Session check failed:", error);

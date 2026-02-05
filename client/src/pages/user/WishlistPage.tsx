@@ -2,6 +2,7 @@ import React from 'react';
 import { ShoppingBag, Star, ArrowRight, ShoppingCart, Trash2, AlertCircle } from 'lucide-react';
 import { SiteHeader } from '@/components/user/home/UserSiteHeader';
 import { SiteFooter } from '@/components/user/home/UserSiteFooter';
+import Aurora from "@/components/ui/Aurora";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -48,11 +49,15 @@ const mockWishlist: WishlistItem[] = [
 
 const WishlistPage: React.FC = () => {
     return (
-        <div className="min-h-screen flex flex-col bg-black text-white selection:bg-blue-500/30">
-            {/* Background Decor */}
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px]" />
-                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
+        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit selection:bg-blue-500/30">
+            {/* Background Visuals */}
+            <div className="absolute inset-0 z-0">
+                <Aurora
+                    colorStops={["#020617", "#0f172a", "#020617"]}
+                    amplitude={1.1}
+                    blend={0.6}
+                />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
             </div>
 
             <SiteHeader />

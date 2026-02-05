@@ -18,6 +18,7 @@ export interface UserProfile {
     streak?: number;
     xp?: number;
     achievements?: string[];
+    gender?: string;
     createdAt: string;
     updatedAt: string;
 }

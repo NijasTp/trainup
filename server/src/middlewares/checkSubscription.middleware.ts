@@ -1,14 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import { IUserRepository } from "../core/interfaces/repositories/IUserRepository";
+import { IStreakService } from "../core/interfaces/services/IStreakService";
+import { IUserPlanService } from "../core/interfaces/services/IUserPlanService";
 import container from "../core/di/inversify.config";
 import TYPES from "../core/types/types";
 import { UserService } from "../services/user.service";
 import { TrainerService } from "../services/trainer.service";
 import { logger } from "../utils/logger.util";
 import { JwtPayload } from "../core/interfaces/services/IJwtService";
-import { UserPlanModel } from "../models/userPlan.model";
 import { INotificationService } from "../core/interfaces/services/INotificationService";
 import { NOTIFICATION_TYPES } from "../constants/notification.constants";
+import { Types } from "mongoose";
 
 export const checkSubscriptionExpiry = async (
   req: Request,
@@ -16,62 +18,64 @@ export const checkSubscriptionExpiry = async (
   next: NextFunction
 ) => {
   try {
-    const userId = (req.user as JwtPayload)?.id;
-    if (!userId) return next();
+    const userPayload = req.user as JwtPayload;
+    if (!userPayload || userPayload.role !== 'user') return next();
+
+    const userId = userPayload.id;
 
     const userService = container.get<UserService>(TYPES.IUserService);
     const trainerService = container.get<TrainerService>(TYPES.ITrainerService);
     const notificationService = container.get<INotificationService>(TYPES.INotificationService);
     const userRepo = container.get<IUserRepository>(TYPES.IUserRepository);
+    const streakService = container.get<IStreakService>(TYPES.IStreakService);
+    const userPlanService = container.get<IUserPlanService>(TYPES.IUserPlanService);
 
     const user = await userRepo.findById(userId);
     if (!user || user.isBanned) return next();
 
-    if (!user.assignedTrainer) return next();
+    // 1. Check and Reset Streak
+    await streakService.checkAndResetUserStreak(new Types.ObjectId(userId));
 
-    const trainerId = user.assignedTrainer.toString();
-    let trainer = null;
-    let shouldCancel = false;
-    let reason = "";
+    // 2. Check Subscription Expiry
+    const userPlans = await userPlanService.findAllByUserId(userId);
+    const now = new Date();
 
-    try {
-      trainer = await trainerService.getTrainerById(trainerId);
-    } catch (error) {
-      logger.error(`Trainer ${trainerId} not found for user ${userId} during subscription check`);
-      shouldCancel = true;
-      reason = "Trainer no longer exists";
-    }
+    for (const plan of userPlans) {
+      const trainerId = plan.trainerId.toString();
+      const expiryDate = new Date(plan.expiryDate);
 
-    if (!shouldCancel) {
-      if (trainer && trainer.isBanned) {
-        shouldCancel = true;
-        reason = "Trainer has been banned";
-      } else {
-        const userPlan = await UserPlanModel.findOne({ userId, trainerId });
-        if (userPlan && userPlan.expiryDate && new Date() > userPlan.expiryDate) {
-          shouldCancel = true;
-          reason = "Subscription has expired";
+      // Already expired
+      if (now > expiryDate) {
+        logger.info(`Auto-cancelling expired subscription for user ${userId} and trainer ${trainerId}`);
+
+        await userService.cancelSubscription(userId, trainerId);
+        await trainerService.removeClientFromTrainer(trainerId, userId);
+
+        await notificationService.createNotification({
+          recipientId: userId,
+          recipientRole: "user",
+          type: NOTIFICATION_TYPES.USER.SESSION_REJECTED,
+          title: "Subscription Expired",
+          message: `Your subscription has expired.`,
+          priority: "high",
+          category: "warning"
+        });
+      }
+
+      else if ((expiryDate.getTime() - now.getTime()) < (3 * 24 * 60 * 60 * 1000)) {
+        if (req.method === 'GET') {
+          const trainer = await trainerService.getTrainerById(trainerId);
+          await notificationService.createNotification({
+            recipientId: userId,
+            recipientRole: "user",
+            type: 'user_subscription_expiring_soon',
+            title: "Subscription Expiring Soon",
+            message: `Your subscription to ${trainer?.name || 'your trainer'} is expiring soon on ${expiryDate.toLocaleDateString()}.`,
+            priority: "medium",
+            category: "info"
+          });
         }
       }
-    }
-
-    if (shouldCancel) {
-      logger.info(`Auto-cancelling subscription for user ${userId}. Reason: ${reason}`);
-
-      const trainerName = trainer?.name || "your trainer";
-
-      await userService.cancelSubscription(userId, trainerId);
-      await trainerService.removeClientFromTrainer(trainerId, userId);
-
-      await notificationService.createNotification({
-        recipientId: user._id.toString(),
-        recipientRole: "user",
-        type: NOTIFICATION_TYPES.USER.SESSION_REJECTED,
-        title: "Subscription Cancelled",
-        message: `Your subscription to ${trainerName} has been cancelled. Reason: ${reason}`,
-        priority: "high",
-        category: "warning"
-      });
     }
 
     next();
