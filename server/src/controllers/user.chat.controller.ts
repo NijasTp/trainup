@@ -46,9 +46,10 @@ export class UserChatController {
     async getUnreadCounts(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = (req.user as JwtPayload).id
-            const counts = await this._messageService.getUnreadCount(userId)
+            const counts = await this._messageService.getUnreadCountsBySender(userId)
             res.status(STATUS_CODE.OK).json({ counts })
         } catch (err) {
+            logger.error('Error fetching unread counts:', err)
             next(err)
         }
     }

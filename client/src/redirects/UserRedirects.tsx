@@ -11,7 +11,7 @@ import LoadingSpinner from "@/components/ui/LoadSpinner";
 
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const user = useSelector((state: RootState) => state.userAuth);
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.userAuth);
   const location = useLocation();
   const dispatch = useDispatch();
   const [checking, setChecking] = useState(true);
@@ -19,7 +19,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const checkSession = async () => {
-      if (user) {
+      if (isAuthenticated && user) {
         try {
           const response = await checkUserSession();
           if (response.valid && response.user) {
@@ -45,7 +45,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     };
 
     checkSession();
-  }, [user, location.pathname, dispatch]);
+  }, [isAuthenticated, location.pathname, dispatch]);
 
   if (checking) return <LoadingSpinner />;
 
