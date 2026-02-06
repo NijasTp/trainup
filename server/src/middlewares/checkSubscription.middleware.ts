@@ -33,10 +33,8 @@ export const checkSubscriptionExpiry = async (
     const user = await userRepo.findById(userId);
     if (!user || user.isBanned) return next();
 
-    // 1. Check and Reset Streak
     await streakService.checkAndResetUserStreak(new Types.ObjectId(userId));
 
-    // 2. Check Subscription Expiry
     const userPlans = await userPlanService.findAllByUserId(userId);
     const now = new Date();
 
@@ -44,12 +42,17 @@ export const checkSubscriptionExpiry = async (
       const trainerId = plan.trainerId.toString();
       const expiryDate = new Date(plan.expiryDate);
 
-      // Already expired
       if (now > expiryDate) {
         logger.info(`Auto-cancelling expired subscription for user ${userId} and trainer ${trainerId}`);
 
         await userService.cancelSubscription(userId, trainerId);
-        await trainerService.removeClientFromTrainer(trainerId, userId);
+        await userPlanService.deleteUserPlan(userId, trainerId);
+
+        try {
+          await trainerService.removeClientFromTrainer(trainerId, userId);
+        } catch (err) {
+          logger.warn(`Could not remove client from trainer ${trainerId}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        }
 
         await notificationService.createNotification({
           recipientId: userId,
@@ -64,13 +67,20 @@ export const checkSubscriptionExpiry = async (
 
       else if ((expiryDate.getTime() - now.getTime()) < (3 * 24 * 60 * 60 * 1000)) {
         if (req.method === 'GET') {
-          const trainer = await trainerService.getTrainerById(trainerId);
+          let trainerName = 'your trainer';
+          try {
+            const trainer = await trainerService.getTrainerById(trainerId);
+            trainerName = trainer?.name || 'your trainer';
+          } catch (err) {
+            logger.warn(`Could not fetch trainer ${trainerId} for notification: ${err instanceof Error ? err.message : 'Unknown error'}`);
+          }
+
           await notificationService.createNotification({
             recipientId: userId,
             recipientRole: "user",
             type: 'user_subscription_expiring_soon',
             title: "Subscription Expiring Soon",
-            message: `Your subscription to ${trainer?.name || 'your trainer'} is expiring soon on ${expiryDate.toLocaleDateString()}.`,
+            message: `Your subscription to ${trainerName} is expiring soon on ${expiryDate.toLocaleDateString()}.`,
             priority: "medium",
             category: "info"
           });

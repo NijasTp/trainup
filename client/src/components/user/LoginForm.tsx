@@ -22,12 +22,11 @@ const LoginForm = () => {
 
     try {
       setLoading(true);
-      const { user, streak } = await loginApi(email, password);
-      console.log(streak)
-      dispatch(login({ ...user, streak: streak.currentStreak }));
+      const { user } = await loginApi(email, password);
+      dispatch(login(user));
       toast.success("Login successful");
       navigate("/home");
-       setLoading(false);
+      setLoading(false);
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || "Login failed";
       setError(errorMessage);

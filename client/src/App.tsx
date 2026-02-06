@@ -96,7 +96,7 @@ function App() {
       <Routes>
         <Route path={ROUTES.CHOOSE_LOGIN} element={<RoleSelectionPage />} />
         <Route path={ROUTES.GLOBAL_LOGIN} element={<RoleSelectionPage />} />
-        <Route path={ROUTES.USER_LOGIN} element={<Login initialRole="user" />} />
+        <Route path={ROUTES.USER_LOGIN} element={<Login initialRole="user" />} />     
         <Route path={ROUTES.USER_FORGOT_PASSWORD} element={<PreventLoggedIn><ForgotPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_NEW_PASSWORD} element={<PreventLoggedIn><NewPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_SIGNUP} element={<PreventLoggedIn><Signup /></PreventLoggedIn>} />
@@ -130,7 +130,7 @@ function App() {
         <Route path={ROUTES.USER_ADD_DIET} element={<ProtectedRoute><UserAddDiet /></ProtectedRoute>} />
         <Route path={ROUTES.USER_PROGRESS} element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WISHLIST} element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
-        <Route path={ROUTES.USER_NOT_FOUND} element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+
 
         {/* Trainer Routes */}
         <Route path={ROUTES.TRAINER_LOGIN} element={<Login initialRole="trainer" />} />
@@ -175,7 +175,7 @@ function App() {
 
         {/* Gym Management Routes */}
         <Route path="/gym/register" element={<GymRegister />} />
-        <Route path="/gym" element={<GymProtectedRoute><GymLayout><Routes>
+        <Route path="/gym/*" element={<GymLayout><Routes>
           <Route path="dashboard" element={<GymDashboardPage />} />
           <Route path="profile" element={<GymProfilePage />} />
           <Route path="plans" element={<GymPlansPage />} />
@@ -195,8 +195,9 @@ function App() {
           <Route path="workouts" element={<GymWorkoutsPage />} />
           <Route path="workouts/create" element={<GymWorkoutsPage />} />
           <Route path="workouts/edit/:id" element={<GymWorkoutsPage />} />
-        </Routes></GymLayout></GymProtectedRoute>} />
+        </Routes></GymLayout>} />
 
+        <Route path={ROUTES.USER_NOT_FOUND} element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
       </Routes>
     </>
   );
