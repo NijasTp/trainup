@@ -16,15 +16,14 @@ export class QueueService implements IQueueService {
                 if (times % 100 === 0) {
                     logger.warn("Redis connection failing. Notification queue will be inactive.");
                 }
-                return Math.min(times * 100, 15000); // Retry with backoff
+                return Math.min(times * 100, 15000); 
             }
         });
 
         this._redisConnection.on("error", (_err) => {
-            // Root listener
+           
         });
 
-        // Override duplicate for BullMQ internal clones
         const originalDuplicate = this._redisConnection.duplicate.bind(this._redisConnection);
         this._redisConnection.duplicate = (...args: any[]) => {
             const duplicate = originalDuplicate(...args);
