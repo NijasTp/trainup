@@ -39,4 +39,20 @@ router.delete('/subscription-plan/:id', authMiddleware, roleMiddleware(['gym']),
 // Reapply
 router.post('/reapply', authMiddleware, roleMiddleware(['gym']), gymController.reapply.bind(gymController))
 
+// Equipment
+import { GymEquipmentController } from "../controllers/gym.equipment.controller";
+const equipmentController = container.get<GymEquipmentController>(TYPES.GymEquipmentController);
+
+router.post('/equipment', authMiddleware, roleMiddleware(['gym']), equipmentController.createEquipment.bind(equipmentController));
+router.get('/equipment', authMiddleware, roleMiddleware(['gym']), equipmentController.getEquipments.bind(equipmentController));
+router.get('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.getEquipmentById.bind(equipmentController));
+router.put('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.updateEquipment.bind(equipmentController));
+router.delete('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.deleteEquipment.bind(equipmentController));
+router.patch('/equipment/:id/availability', authMiddleware, roleMiddleware(['gym']), equipmentController.toggleAvailability.bind(equipmentController));
+
+// Equipment Categories
+router.post('/equipment-categories', authMiddleware, roleMiddleware(['gym']), equipmentController.createCategory.bind(equipmentController));
+router.get('/equipment-categories', authMiddleware, roleMiddleware(['gym']), equipmentController.getCategories.bind(equipmentController));
+router.delete('/equipment-categories/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.deleteCategory.bind(equipmentController));
+
 export default router

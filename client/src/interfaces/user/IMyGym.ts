@@ -13,6 +13,7 @@ export interface UserSubscription {
     planDurationUnit: string;
     subscribedAt: string;
     preferredTime: string;
+    expiresAt?: string;
 }
 
 export interface Gym {
@@ -29,6 +30,9 @@ export interface Gym {
     phone?: string;
     images?: string[];
     reviews?: any[];
+    profileImage?: string;
+    geoLocation?: { type: string; coordinates: [number, number] };
+    address?: string;
 }
 
 export interface MyGymData {

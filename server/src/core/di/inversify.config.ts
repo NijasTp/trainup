@@ -247,4 +247,24 @@ container.bind<IReviewService>(TYPES.IReviewService).to(ReviewService);
 container.bind<IQueueService>(TYPES.IQueueService).to(QueueService).inSingletonScope();
 container.bind<SocketHandler>(TYPES.SocketHandler).to(SocketHandler).inSingletonScope();
 
+// Gym Equipment
+import { IGymEquipmentRepository } from "../interfaces/repositories/IGymEquipmentRepository";
+import { IGymEquipmentCategoryRepository } from "../interfaces/repositories/IGymEquipmentCategoryRepository";
+import { IGymEquipmentService } from "../interfaces/services/IGymEquipmentService";
+import { GymEquipmentRepository } from "../../repositories/gymEquipment.repository";
+import { GymEquipmentCategoryRepository } from "../../repositories/gymEquipmentCategory.repository";
+import { GymEquipmentService } from "../../services/gymEquipment.service";
+import { GymEquipmentController } from "../../controllers/gym.equipment.controller";
+
+container.bind<IGymEquipmentRepository>(TYPES.IGymEquipmentRepository).to(GymEquipmentRepository);
+container.bind<IGymEquipmentCategoryRepository>(TYPES.IGymEquipmentCategoryRepository).to(GymEquipmentCategoryRepository);
+container.bind<IGymEquipmentService>(TYPES.IGymEquipmentService).to(GymEquipmentService);
+container.bind<GymEquipmentController>(TYPES.GymEquipmentController).to(GymEquipmentController);
+
+// Refund
+import { IRefundService } from "../interfaces/services/IRefundService";
+import { RefundService } from "../../services/refund.service";
+container.bind<IRefundService>(TYPES.IRefundService).to(RefundService);
+
 export default container;
+

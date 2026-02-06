@@ -127,3 +127,20 @@ export const MESSAGES = {
   VERIFICATION_REJECTED: "Verification rejected",
   USER_STATUS_UPDATED: "User status updated successfully",
 };
+
+export const GYM_MESSAGES = {
+  EQUIPMENT_NOT_FOUND: "Equipment not found",
+  EQUIPMENT_CREATED: "Equipment created successfully",
+  EQUIPMENT_UPDATED: "Equipment updated successfully",
+  EQUIPMENT_DELETED: "Equipment deleted successfully",
+  EQUIPMENT_CATEGORY_REQUIRED: "Equipment category is required",
+  CATEGORY_NOT_FOUND: "Category not found",
+  CATEGORY_CREATED: "Category created successfully",
+  CATEGORY_DELETED: "Category deleted successfully",
+  CATEGORY_ALREADY_EXISTS: "Category with this name already exists",
+  MEMBERSHIP_NOT_FOUND: "Gym membership not found",
+  MEMBERSHIP_EXPIRED: "Your gym membership has expired",
+  MEMBERSHIP_CANCELLED: "Gym membership cancelled successfully",
+  REFUND_PROCESSED: "Refund processed successfully",
+  NO_ACTIVE_SUBSCRIPTION: "No active gym subscription found",
+};

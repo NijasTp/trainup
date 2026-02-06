@@ -103,6 +103,15 @@ const TYPES = {
   IProgressService: Symbol.for("IProgressService"),
   IQueueService: Symbol.for("IQueueService"),
   SocketHandler: Symbol.for("SocketHandler"),
+
+  // Gym Equipment
+  IGymEquipmentRepository: Symbol.for("IGymEquipmentRepository"),
+  IGymEquipmentCategoryRepository: Symbol.for("IGymEquipmentCategoryRepository"),
+  IGymEquipmentService: Symbol.for("IGymEquipmentService"),
+  GymEquipmentController: Symbol.for("GymEquipmentController"),
+
+  // Refund
+  IRefundService: Symbol.for("IRefundService"),
 };
 
 export default TYPES;
