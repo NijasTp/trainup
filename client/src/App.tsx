@@ -74,6 +74,8 @@ import ProgressPage from './pages/user/Progress';
 import WishlistPage from './pages/user/WishlistPage';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import AdminRatingManagement from './pages/admin/AdminRatingManagement';
+import AdminGymManagement from './pages/admin/AdminGymManagement';
+
 
 import GymLayout from './pages/gym/layouts/GymLayout';
 import GymRegister from './pages/gym/register/Register';
@@ -87,7 +89,11 @@ import GymStorePage from './pages/gym/store/Store';
 import GymAnnouncementsPage from './pages/gym/announcements/Announcements';
 import GymJobsPage from './pages/gym/jobs/Jobs';
 import GymWorkoutsPage from './pages/gym/workouts/Workouts';
+import GymOtpVerification from './pages/gym/register/GymOtpVerification';
+import GymStatus from './pages/gym/register/GymStatus';
+import GymReapply from './pages/gym/register/GymReapply';
 import { GymPreventLoggedIn, GymProtectedRoute } from "./redirects/GymRedirects";
+
 
 function App() {
   return (
@@ -96,7 +102,7 @@ function App() {
       <Routes>
         <Route path={ROUTES.CHOOSE_LOGIN} element={<RoleSelectionPage />} />
         <Route path={ROUTES.GLOBAL_LOGIN} element={<RoleSelectionPage />} />
-        <Route path={ROUTES.USER_LOGIN} element={<Login initialRole="user" />} />     
+        <Route path={ROUTES.USER_LOGIN} element={<Login initialRole="user" />} />
         <Route path={ROUTES.USER_FORGOT_PASSWORD} element={<PreventLoggedIn><ForgotPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_NEW_PASSWORD} element={<PreventLoggedIn><NewPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_SIGNUP} element={<PreventLoggedIn><Signup /></PreventLoggedIn>} />
@@ -169,13 +175,18 @@ function App() {
         <Route path={ROUTES.ADMIN_USER_DETAILS} element={<AdminProtectedRoute><IndividualUser /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_TEMPLATE_MANAGEMENT} element={<AdminProtectedRoute><TemplateManagement /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_RATINGS} element={<AdminProtectedRoute><AdminRatingManagement /></AdminProtectedRoute>} />
+        <Route path={ROUTES.ADMIN_GYMS} element={<AdminProtectedRoute><AdminGymManagement /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_ADD_WORKOUT_TEMPLATE} element={<AdminProtectedRoute><WorkoutTemplateForm /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_ADD_DIET_TEMPLATE} element={<AdminProtectedRoute><NewDietTemplate /></AdminProtectedRoute>} />
         <Route path={ROUTES.ADMIN_EDIT_TEMPLATE} element={<AdminProtectedRoute><EditTemplate /></AdminProtectedRoute>} />
 
         {/* Gym Management Routes */}
+        <Route path="/gym/verify" element={<GymOtpVerification />} />
         <Route path="/gym/register" element={<GymRegister />} />
+        <Route path="/gym/status" element={<GymProtectedRoute><GymStatus /></GymProtectedRoute>} />
+        <Route path="/gym/reapply" element={<GymProtectedRoute><GymReapply /></GymProtectedRoute>} />
         <Route path="/gym/*" element={<GymLayout><Routes>
+
           <Route path="dashboard" element={<GymDashboardPage />} />
           <Route path="profile" element={<GymProfilePage />} />
           <Route path="plans" element={<GymPlansPage />} />

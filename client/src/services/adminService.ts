@@ -136,3 +136,32 @@ export const getTrainerReviews = async (trainerId: string, page: number = 1, lim
   const res = await API.get(`/admin/trainers/${trainerId}/reviews?${params.toString()}`);
   return res.data;
 };
+
+export const getGyms = async (
+  page: number,
+  limit: number = 5,
+  search: string = "",
+  isBanned?: string,
+  verifyStatus?: string,
+  startDate?: string,
+  endDate?: string
+) => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    search,
+  });
+  if (isBanned && isBanned !== "all") params.append("isBanned", isBanned);
+  if (verifyStatus && verifyStatus !== "all" && verifyStatus !== undefined) params.append("verifyStatus", verifyStatus);
+  if (startDate) params.append("startDate", startDate);
+  if (endDate) params.append("endDate", endDate);
+
+  const res = await API.get(`/admin/gyms?${params.toString()}`);
+  return res.data;
+};
+
+export const updateGymStatus = async (gymId: string, status: { isBanned?: boolean, verifyStatus?: string, rejectReason?: string }) => {
+  const res = await API.patch(`/admin/gyms/${gymId}`, status);
+  return res.data;
+};
+

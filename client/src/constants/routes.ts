@@ -80,6 +80,8 @@ export const ROUTES = {
   ADMIN_EDIT_TEMPLATE: "/admin/templates/:id/:template/edit",
   ADMIN_TRANSACTIONS: "/admin/transactions",
   ADMIN_RATINGS: "/admin/ratings",
+  ADMIN_GYMS: "/admin/gyms",
+
 
   // Gym Management Routes (New)
   GYM_DASHBOARD: "/gym/dashboard",
@@ -94,4 +96,6 @@ export const ROUTES = {
   GYM_VERIFY_OTP: "/gym/verify-otp",
   GYM_FORGOT_PASSWORD: "/gym/forgot-password",
   GYM_RESET_PASSWORD: "/gym/reset-password",
+  GYM_STATUS: "/gym/status",
+  GYM_REAPPLY: "/gym/reapply",
 };

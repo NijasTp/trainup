@@ -31,6 +31,11 @@ const navItems: NavItem[] = [
     },
     {
         icon: <UserGroupIcon />,
+        name: "Gyms",
+        path: "/admin/gyms",
+    },
+    {
+        icon: <UserGroupIcon />,
         name: "Trainers",
         subItems: [
             { name: "Trainer Listing", path: "/admin/trainers" },

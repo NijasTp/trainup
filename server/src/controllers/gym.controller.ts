@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../core/types/types';
 import { IGymService } from '../core/interfaces/services/IGymService';
+import { IGymAuthService } from '../core/interfaces/services/IGymAuthService';
 import { IOTPService } from '../core/interfaces/services/IOtpService';
 import { UploadedFile } from 'express-fileupload';
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService';
@@ -27,6 +28,7 @@ import { AppError } from '../utils/appError.util';
 export class GymController {
   constructor(
     @inject(TYPES.IGymService) private _gymService: IGymService,
+    @inject(TYPES.IGymAuthService) private _gymAuthService: IGymAuthService,
     @inject(TYPES.IOtpService) private _otpService: IOTPService,
     @inject(TYPES.IJwtService) private _jwtService: IJwtService
   ) { }
@@ -41,25 +43,41 @@ export class GymController {
     }
   }
 
-  async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const dto: GymVerifyOtpDto = req.body;
-      await this._otpService.verifyOtp(dto.email, dto.otp);
+      const { email } = req.body;
+      const isVerified = await this._gymAuthService.isVerified(email);
+      if (!isVerified) {
+        throw new AppError('Email not verified or verification expired', STATUS_CODE.BAD_REQUEST);
+      }
+
       const result: GymLoginResponseDto = await this._gymService.registerGym(
-        {
-          name: dto.name,
-          email: dto.email,
-          password: dto.password,
-          geoLocation: dto.geoLocation,
-        },
+        req.body,
         req.files as {
-          certificate?: UploadedFile;
+          certifications?: UploadedFile | UploadedFile[];
+          logo?: UploadedFile;
           profileImage?: UploadedFile;
           images?: UploadedFile | UploadedFile[];
         }
       );
+
+      await this._gymAuthService.clearVerification(email);
+
       this._jwtService.setTokens(res, result.accessToken, result.refreshToken);
       res.status(STATUS_CODE.CREATED).json({ gym: result.gym });
+    } catch (err) {
+      logger.error('Error in register:', err);
+      next(err);
+    }
+  }
+
+  async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const dto: GymVerifyOtpDto = req.body;
+      await this._otpService.verifyOtp(dto.email, dto.otp);
+      // This seems to be the old registration flow or for verification of existing gyms.
+      // Keeping it for now but it might need refactoring if it conflicts.
+      res.status(STATUS_CODE.OK).json({ message: 'OTP verified' });
     } catch (err) {
       logger.info('Error in verifyOtp:', err);
       next(err);
@@ -162,7 +180,8 @@ export class GymController {
         user.id,
         req.body,
         req.files as {
-          certificate?: UploadedFile;
+          certifications?: UploadedFile | UploadedFile[];
+          logo?: UploadedFile;
           profileImage?: UploadedFile;
           images?: UploadedFile | UploadedFile[];
         }
@@ -276,7 +295,7 @@ export class GymController {
       const { email, otp, password } = req.body;
       await this._otpService.verifyOtp(email, otp);
       await this._gymService.resetPassword(email, password);
-      res.status(STATUS_CODE.OK).json({ message: MESSAGES.PASSWORD_RESET_SUCCESS });
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.PASSWORD_RESET });
     } catch (err) {
       next(err);
     }

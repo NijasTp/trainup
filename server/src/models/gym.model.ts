@@ -11,7 +11,14 @@ export interface IGym extends Document {
     type: "Point";
     coordinates: [number, number];
   };
-  certificate: string;
+  address: string | null;
+  certifications: string[];
+  openingHours: {
+    day: string;
+    open: string;
+    close: string;
+    isClosed: boolean;
+  }[];
   verifyStatus: "pending" | "approved" | "rejected";
   rejectReason: string | null;
   isBanned: boolean;
@@ -22,6 +29,8 @@ export interface IGym extends Document {
   updatedAt: Date | null;
   images: string[] | null;
   profileImage: string | null;
+  logo: string | null;
+  description: string | null;
   rating?: number;
   reviews?: { rating: number; message: string; userId: Types.ObjectId; subscriptionPlan?: string; createdAt: Date }[];
 }
@@ -41,8 +50,18 @@ const GymSchema = new Schema<IGym>(
     ],
     geoLocation: {
       type: { type: String, enum: ["Point"], default: "Point" },
-      coordinates: { type: [Number], required: true, minlength: 2, maxlength: 2 },
+      coordinates: { type: [Number], required: true, default: [0, 0] },
     },
+    address: { type: String },
+    certifications: [{ type: String }],
+    openingHours: [
+      {
+        day: { type: String, required: true },
+        open: { type: String },
+        close: { type: String },
+        isClosed: { type: Boolean, default: false },
+      },
+    ],
     verifyStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],
@@ -51,11 +70,12 @@ const GymSchema = new Schema<IGym>(
     rejectReason: { type: String },
     isBanned: { type: Boolean, default: false },
     tokenVersion: { type: Number, default: 0 },
-    certificate: { type: String },
     trainers: [{ type: Schema.Types.ObjectId, ref: "Trainer" }],
     members: [{ type: Schema.Types.ObjectId, ref: "User" }],
     images: [{ type: String }],
     profileImage: { type: String, default: null },
+    logo: { type: String, default: null },
+    description: { type: String },
     rating: { type: Number, default: 0 },
     reviews: [
       {

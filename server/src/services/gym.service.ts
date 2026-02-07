@@ -38,13 +38,15 @@ export class GymService implements IGymService {
   async registerGym(
     data: Partial<IGym>,
     files: {
-      certificate?: UploadedFile
+      certifications?: UploadedFile | UploadedFile[]
+      logo?: UploadedFile
       profileImage?: UploadedFile
       images?: UploadedFile | UploadedFile[]
     }
   ): Promise<GymLoginResponseDto> {
-    let certificateUrl: string | undefined
+    const certificationsUrls: string[] = []
     let profileImageUrl: string | undefined
+    let logoUrl: string | undefined
     const imageUrls: string[] = []
 
     if (!data.password) {
@@ -76,18 +78,15 @@ export class GymService implements IGymService {
       )
     }
 
-    if (
-      !geoLocationObj ||
-      geoLocationObj.type !== 'Point' ||
-      !Array.isArray(geoLocationObj.coordinates) ||
-      geoLocationObj.coordinates.length < 2 ||
-      typeof geoLocationObj.coordinates[0] !== 'number' ||
-      typeof geoLocationObj.coordinates[1] !== 'number'
-    ) {
-      throw new AppError(
-        'Invalid geolocation coordinates',
-        STATUS_CODE.BAD_REQUEST
-      )
+    let openingHours: any[] = []
+    if (typeof data.openingHours === 'string') {
+      try {
+        openingHours = JSON.parse(data.openingHours)
+      } catch (e) {
+        logger.error('Error parsing openingHours:', e)
+      }
+    } else if (Array.isArray(data.openingHours)) {
+      openingHours = data.openingHours
     }
 
     const geoLocation = {
@@ -98,14 +97,18 @@ export class GymService implements IGymService {
       ] as [number, number]
     }
 
-    if (files?.certificate) {
-      const certUpload = await cloudinary.uploader.upload(
-        files.certificate.tempFilePath,
-        {
-          folder: 'trainup/gyms/certificate'
-        }
-      )
-      certificateUrl = certUpload.secure_url
+    if (files?.certifications) {
+      const certs = Array.isArray(files.certifications) ? files.certifications : [files.certifications];
+      const uploadPromises = certs.map(cert =>
+        cloudinary.uploader.upload(cert.tempFilePath, { folder: 'trainup/gyms/certificate' })
+      );
+      const results = await Promise.all(uploadPromises);
+      results.forEach(res => certificationsUrls.push(res.secure_url));
+    }
+
+    if (files?.logo) {
+      const logoUpload = await cloudinary.uploader.upload(files.logo.tempFilePath, { folder: 'trainup/gyms/logos' });
+      logoUrl = logoUpload.secure_url;
     }
 
     if (files?.profileImage) {
@@ -119,28 +122,25 @@ export class GymService implements IGymService {
     }
 
     if (files?.images) {
-      const uploadPromises = Array.isArray(files.images)
-        ? files.images.map(img =>
-          cloudinary.uploader.upload(img.tempFilePath, {
-            folder: 'trainup/gyms/gallery'
-          })
-        )
-        : [
-          cloudinary.uploader.upload(files.images.tempFilePath, {
-            folder: 'trainup/gyms/gallery'
-          })
-        ]
+      const imagesArr = Array.isArray(files.images) ? files.images : [files.images];
+      const uploadPromises = imagesArr.map(img =>
+        cloudinary.uploader.upload(img.tempFilePath, {
+          folder: 'trainup/gyms/gallery'
+        })
+      );
 
-      const results = await Promise.all(uploadPromises)
-      results.forEach(res => imageUrls.push(res.secure_url))
+      const results = await Promise.all(uploadPromises);
+      results.forEach(res => imageUrls.push(res.secure_url));
     }
 
     const gym = await this._gymRepo.createGym({
       ...data,
       password: hashedPassword,
       geoLocation,
-      certificate: certificateUrl,
+      openingHours,
+      certifications: certificationsUrls,
       profileImage: profileImageUrl,
+      logo: logoUrl,
       images: imageUrls
     })
 
@@ -349,12 +349,16 @@ export class GymService implements IGymService {
       role: gym.role,
       name: gym.name!,
       email: gym.email!,
+      address: gym.address || undefined,
+      description: gym.description || undefined,
       geoLocation: gym.geoLocation!,
-      certificate: gym.certificate!,
+      certifications: gym.certifications || [],
+      openingHours: gym.openingHours || [],
       verifyStatus: gym.verifyStatus,
       rejectReason: gym.rejectReason || undefined,
       isBanned: gym.isBanned,
       profileImage: gym.profileImage || undefined,
+      logo: gym.logo || undefined,
       images: gym.images || undefined,
       trainers: gym.trainers?.map(t => t.toString()) || undefined,
       members: gym.members?.map(m => m.toString()) || undefined,
@@ -480,9 +484,15 @@ export class GymService implements IGymService {
   async reapplyGym(
     gymId: string,
     data: Partial<IGym>,
-    files: { certificate?: UploadedFile; profileImage?: UploadedFile; images?: UploadedFile | UploadedFile[] }
+    files: {
+      certifications?: UploadedFile | UploadedFile[]
+      logo?: UploadedFile
+      profileImage?: UploadedFile
+      images?: UploadedFile | UploadedFile[]
+    }
   ): Promise<GymLoginResponseDto> {
-    let certificateUrl: string | undefined
+    const certificationsUrls: string[] = []
+    let logoUrl: string | undefined
     let profileImageUrl: string | undefined
     const imageUrls: string[] = []
 
@@ -499,40 +509,49 @@ export class GymService implements IGymService {
       geoLocationObj = data.geoLocation as { type: 'Point'; coordinates: [number, number] }
     }
 
+    let openingHours: any[] | undefined
+    if (typeof data.openingHours === 'string') {
+      try {
+        openingHours = JSON.parse(data.openingHours)
+      } catch (e) {
+        logger.error('Error parsing openingHours:', e)
+      }
+    } else if (Array.isArray(data.openingHours)) {
+      openingHours = data.openingHours
+    }
+
     const update: Partial<IGym> = {}
     if (data.name) update.name = data.name
+    if (data.address) update.address = data.address
+    if (data.description) update.description = data.description
+    if (openingHours) update.openingHours = openingHours
+
     if (geoLocationObj) {
-      if (
-        !geoLocationObj ||
-        geoLocationObj.type !== 'Point' ||
-        !Array.isArray(geoLocationObj.coordinates) ||
-        geoLocationObj.coordinates.length < 2
-      ) {
-        throw new AppError('Invalid geolocation coordinates', STATUS_CODE.BAD_REQUEST)
-      }
       update.geoLocation = {
         type: 'Point',
         coordinates: [geoLocationObj.coordinates[0], geoLocationObj.coordinates[1]]
       }
     }
 
-    if (files?.certificate) {
-      const certUpload = await cloudinary.uploader.upload(files.certificate.tempFilePath, { folder: 'trainup/gyms/certificate' })
-      certificateUrl = certUpload.secure_url
-      update.certificate = certificateUrl
+    if (files?.certifications) {
+      const certs = Array.isArray(files.certifications) ? files.certifications : [files.certifications];
+      const uploadPromises = certs.map(cert => cloudinary.uploader.upload(cert.tempFilePath, { folder: 'trainup/gyms/certificate' }));
+      const results = await Promise.all(uploadPromises);
+      update.certifications = results.map(res => res.secure_url);
+    }
+    if (files?.logo) {
+      const logoUpload = await cloudinary.uploader.upload(files.logo.tempFilePath, { folder: 'trainup/gyms/logos' });
+      update.logo = logoUpload.secure_url;
     }
     if (files?.profileImage) {
       const profileUpload = await cloudinary.uploader.upload(files.profileImage.tempFilePath, { folder: 'trainup/gyms/profiles' })
-      profileImageUrl = profileUpload.secure_url
-      update.profileImage = profileImageUrl
+      update.profileImage = profileUpload.secure_url
     }
     if (files?.images) {
-      const uploadPromises = Array.isArray(files.images)
-        ? files.images.map(img => cloudinary.uploader.upload(img.tempFilePath, { folder: 'trainup/gyms/gallery' }))
-        : [cloudinary.uploader.upload(files.images.tempFilePath, { folder: 'trainup/gyms/gallery' })]
-      const results = await Promise.all(uploadPromises)
-      results.forEach(res => imageUrls.push(res.secure_url))
-      update.images = imageUrls
+      const imagesArr = Array.isArray(files.images) ? files.images : [files.images];
+      const uploadPromises = imagesArr.map(img => cloudinary.uploader.upload(img.tempFilePath, { folder: 'trainup/gyms/gallery' }));
+      const results = await Promise.all(uploadPromises);
+      update.images = results.map(res => res.secure_url);
     }
 
     update.verifyStatus = 'pending'

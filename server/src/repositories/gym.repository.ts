@@ -53,7 +53,7 @@ export class GymRepository implements IGymRepository {
       .skip((page - 1) * limit)
       .limit(limit)
       .select(
-        'name email geoLocation isBanned verifyStatus profileImage createdAt'
+        'name email geoLocation isBanned verifyStatus profileImage logo address createdAt'
       )
       .lean()
 
@@ -67,7 +67,7 @@ export class GymRepository implements IGymRepository {
 
   async findApplicationById(id: string): Promise<GymResponseDto | null> {
     const gym = await GymModel.findById(id)
-      .select('name email password geoLocation certificate profileImage images')
+      .select('name email password geoLocation certifications profileImage logo address openingHours description images')
       .lean()
     return gym ? this.mapToResponseDto(gym as IGym) : null
   }
@@ -491,7 +491,7 @@ export class GymRepository implements IGymRepository {
       email: gym.email ?? null,
       profileImage: gym.profileImage ?? null,
       images: gym.images ?? null,
-      certificate: gym.certificate ?? null,
+      certifications: gym.certifications || null,
       memberCount: gym.members?.length ?? 0,
       rating: (gym as unknown as { avgRating?: number }).avgRating ?? 0
     }
@@ -576,12 +576,16 @@ export class GymRepository implements IGymRepository {
       role: gym.role,
       name: gym.name!,
       email: gym.email!,
+      address: gym.address || undefined,
+      description: gym.description || undefined,
       geoLocation: gym.geoLocation!,
-      certificate: gym.certificate!,
+      certifications: gym.certifications || [],
+      openingHours: gym.openingHours || [],
       verifyStatus: gym.verifyStatus,
       rejectReason: gym.rejectReason || undefined,
       isBanned: gym.isBanned,
       profileImage: gym.profileImage || undefined,
+      logo: gym.logo || undefined,
       images: gym.images || undefined,
       trainers: gym.trainers?.map(t => t.toString()) || undefined,
       members: gym.members?.map(m => m.toString()) || undefined,

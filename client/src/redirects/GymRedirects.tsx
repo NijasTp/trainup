@@ -16,16 +16,13 @@ export const GymPreventLoggedIn: React.FC<Props> = ({ children }) => {
 
 
     if (gym) {
-        if (gym.verifyStatus == 'approved') {
+        if (gym.verifyStatus === 'approved') {
             return <Navigate to={ROUTES.GYM_DASHBOARD} replace />;
         } else {
-            // If pending or rejected, where do we go? Usually waiting screen or just strictly dashboard but limited?
-            // For now, let's assume dashboard handles logic or we just allow them in.
-            // But user request says "Prevent unverified... from accessing protected routes".
-            // This is PreventLoggedIn, so if they ARE logged in, we redirect them OUT of login page.
-            return <Navigate to={ROUTES.GYM_DASHBOARD} replace />;
+            return <Navigate to={ROUTES.GYM_STATUS} replace />;
         }
     }
+
 
     return children;
 };
@@ -58,19 +55,13 @@ export const GymProtectedRoute: React.FC<{ children: JSX.Element }> = ({ childre
 
     // Strict check for verified status
     if (gym.verifyStatus !== 'approved') {
-        // Maybe redirect to a 'GymPending' page if we had one, or show a restricted view.
-        // For now, if dashboard, maybe we show a warning inside the dashboard.
-        // Or we can block access completely.
-        // User said: "Prevent unverified, rejected, or inactive gyms from accessing protected routes".
-        // If so, we should redirect to a status page.
-        // But wait, if they login and are pending, they land on dashboard?
-        // Let's assume dashboard IS the status page for now, or we should render a "Pending Approval" component here.
-        // Simpler: Just allow dashboard but blocks others if needed.
-        // But strictly following user:
-        if (gym.verifyStatus === 'rejected') {
-            // return <Navigate to={ROUTES.GYM_REJECTED} replace />; // If we had one
+        // Allow access to status and reapply pages
+        if (location.pathname === ROUTES.GYM_STATUS || location.pathname === ROUTES.GYM_REAPPLY) {
+            return children;
         }
+        return <Navigate to={ROUTES.GYM_STATUS} replace />;
     }
+
 
     return children;
 };

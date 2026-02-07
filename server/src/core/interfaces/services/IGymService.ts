@@ -20,7 +20,8 @@ export interface IGymService {
   registerGym(
     data: Partial<IGym>,
     files: {
-      certificate?: UploadedFile;
+      certifications?: UploadedFile | UploadedFile[];
+      logo?: UploadedFile;
       profileImage?: UploadedFile;
       images?: UploadedFile | UploadedFile[];
     }
@@ -31,7 +32,12 @@ export interface IGymService {
   reapplyGym(
     gymId: string,
     data: Partial<IGym>,
-    files: { certificate?: UploadedFile; profileImage?: UploadedFile; images?: UploadedFile | UploadedFile[] }
+    files: {
+      certifications?: UploadedFile | UploadedFile[];
+      logo?: UploadedFile;
+      profileImage?: UploadedFile;
+      images?: UploadedFile | UploadedFile[]
+    }
   ): Promise<GymLoginResponseDto>;
 
   getAllGyms(page: number, limit: number, searchQuery: string): Promise<unknown>;
@@ -152,4 +158,5 @@ export interface IGymService {
     search: string
   ): Promise<{ announcements: unknown[]; totalPages: number; total: number }>;
 
+  resetPassword(email: string, password: string): Promise<void>;
 }

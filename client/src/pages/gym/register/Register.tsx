@@ -1,9 +1,7 @@
-
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Building2,
-    Mail,
     Lock,
     MapPin,
     Upload,
@@ -11,244 +9,334 @@ import {
     X,
     ChevronRight,
     ChevronLeft,
-    CheckCircle2
+    CheckCircle2,
+    FileText,
+    Target
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import Aurora from '@/components/ui/Aurora';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import { registerGym } from '@/services/authService';
+import ImageCropModal from './components/ImageCropModal';
+import OpeningHoursSelector from './components/OpeningHoursSelector';
+import type { OpeningHour } from './components/OpeningHoursSelector';
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const Register = () => {
+    const [searchParams] = useSearchParams();
+    const verifiedEmail = searchParams.get('email') || '';
+
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
-        gymName: '',
-        email: '',
+        name: '',
+        email: verifiedEmail,
         password: '',
         address: '',
-        latitude: '',
-        longitude: '',
+        description: '',
+        lat: '',
+        lng: '',
     });
+
     const [logo, setLogo] = useState<File | null>(null);
-    const [images, setImages] = useState<File[]>([]);
+    const [croppedLogo, setCroppedLogo] = useState<string | null>(null);
+    const [showcaseImages, setShowcaseImages] = useState<File[]>([]);
+    const [certifications, setCertifications] = useState<File[]>([]);
+    const [openingHours, setOpeningHours] = useState<OpeningHour[]>(
+        DAYS.map(day => ({ day, open: '09:00', close: '22:00', isClosed: false }))
+    );
+
+    const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+    const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
     const navigate = useNavigate();
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    useEffect(() => {
+        if (!verifiedEmail) {
+            toast.error('Please verify your email first');
+            navigate('/gym/verify');
+        }
+    }, [verifiedEmail, navigate]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setLogo(e.target.files[0]);
+            const reader = new FileReader();
+            reader.onload = () => {
+                setImageToCrop(reader.result as string);
+                setIsCropModalOpen(true);
+            };
+            reader.readAsDataURL(e.target.files[0]);
         }
     };
 
-    const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onCropComplete = (croppedImageBlob: Blob) => {
+        const file = new File([croppedImageBlob], 'logo.jpg', { type: 'image/jpeg' });
+        setLogo(file);
+        setCroppedLogo(URL.createObjectURL(croppedImageBlob));
+        setIsCropModalOpen(false);
+    };
+
+    const handleShowcaseImages = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            setImages([...images, ...Array.from(e.target.files)]);
+            setShowcaseImages([...showcaseImages, ...Array.from(e.target.files)]);
         }
     };
 
-    const removeImage = (index: number) => {
-        setImages(images.filter((_, i) => i !== index));
+    const handleCertifications = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setCertifications([...certifications, ...Array.from(e.target.files)]);
+        }
     };
 
-    const nextStep = () => setStep(step + 1);
-    const prevStep = () => setStep(step - 1);
+    const detectLocation = () => {
+        if (!navigator.geolocation) {
+            toast.error('Geolocation is not supported by your browser');
+            return;
+        }
+
+        toast.loading('Detecting location...', { id: 'geo' });
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setFormData(prev => ({
+                    ...prev,
+                    lat: position.coords.latitude.toString(),
+                    lng: position.coords.longitude.toString()
+                }));
+                toast.success('Location detected!', { id: 'geo' });
+            },
+            (error) => {
+                toast.error('Failed to detect location: ' + error.message, { id: 'geo' });
+            }
+        );
+    };
+
+    const handleSubmit = async () => {
+        try {
+            setLoading(true);
+            const data = new FormData();
+            data.append('name', formData.name);
+            data.append('email', formData.email);
+            data.append('password', formData.password);
+            data.append('address', formData.address);
+            data.append('description', formData.description);
+            data.append('geoLocation', JSON.stringify({
+                type: 'Point',
+                coordinates: [parseFloat(formData.lng), parseFloat(formData.lat)]
+            }));
+            data.append('openingHours', JSON.stringify(openingHours));
+
+            if (logo) data.append('logo', logo);
+            showcaseImages.forEach(img => data.append('images', img));
+            certifications.forEach(cert => data.append('certifications', cert));
+
+            await registerGym(data);
+            toast.success('Registration submitted! waiting for admin approval.');
+            navigate('/gym/login');
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Registration failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const nextStep = () => {
+        if (step === 1 && (!formData.name || !formData.password || !formData.address || !formData.lat || !formData.lng)) {
+            toast.error('Please fill all required fields');
+            return;
+        }
+        setStep(step + 1);
+    };
 
     return (
-        <div className="relative min-h-screen w-full flex items-center justify-center bg-[#030303] text-white overflow-hidden font-outfit p-4">
-            {/* Background Visuals */}
+        <div className="relative min-h-screen w-full flex items-center justify-center bg-[#030303] text-white overflow-hidden font-outfit p-4 lg:p-8">
             <div className="absolute inset-0 z-0">
-                <Aurora
-                    colorStops={["#020617", "#0f172a", "#020617"]}
-                    amplitude={1.1}
-                    blend={0.6}
-                />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none" />
+                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
             </div>
 
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="relative z-10 w-full max-w-2xl"
-            >
-                <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
-                    {/* Progress Bar */}
-                    <div className="h-1 bg-white/5 w-full">
-                        <motion.div
-                            className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
-                            animate={{ width: `${(step / 3) * 100}%` }}
-                        />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-4xl">
+                <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                    {/* Progress Control */}
+                    <div className="flex border-b border-white/10">
+                        {[1, 2, 3, 4].map((s) => (
+                            <div key={s} className="flex-1 relative h-2 bg-white/5">
+                                <motion.div
+                                    className="absolute inset-0 bg-primary"
+                                    initial={{ width: 0 }}
+                                    animate={{ width: step >= s ? '100%' : '0%' }}
+                                    transition={{ duration: 0.5 }}
+                                />
+                                <div className={`absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-widest ${step === s ? 'text-primary' : 'text-gray-500'}`}>
+                                    Step {s}
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
-                    <div className="p-8 sm:p-12">
-                        <div className="text-center mb-10">
-                            <h1 className="text-3xl font-black mb-2 italic">PARTNER WITH <span className="text-primary">TRAINUP</span></h1>
-                            <p className="text-gray-400">Join our network of elite fitness centers</p>
-                        </div>
+                    <div className="p-8 lg:p-12 pt-16">
+                        <header className="mb-12">
+                            <h1 className="text-4xl font-black mb-3 italic tracking-tight">
+                                <span className="text-primary">GYM</span> REGISTRATION
+                            </h1>
+                            <p className="text-gray-400 font-medium">Step {step}: {
+                                step === 1 ? 'General Information' :
+                                    step === 2 ? 'Media & Branding' :
+                                        step === 3 ? 'Certifications' : 'Opening Hours'
+                            }</p>
+                        </header>
 
-                        <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
-                            {step === 1 && (
-                                <motion.div
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="space-y-6"
-                                >
-                                    <div className="grid grid-cols-1 gap-6">
-                                        <div className="relative group">
-                                            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
-                                            <Input
-                                                name="gymName"
-                                                placeholder="Gym Name"
-                                                value={formData.gymName}
-                                                onChange={handleInputChange}
-                                                className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl focus:border-primary/50 transition-all text-lg"
-                                            />
-                                        </div>
-                                        <div className="relative group">
-                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
-                                            <Input
-                                                name="email"
-                                                type="email"
-                                                placeholder="Business Email"
-                                                value={formData.email}
-                                                onChange={handleInputChange}
-                                                className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl focus:border-primary/50 transition-all text-lg"
-                                            />
-                                        </div>
-                                        <div className="relative group">
-                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
-                                            <Input
-                                                name="password"
-                                                type="password"
-                                                placeholder="Create Password"
-                                                value={formData.password}
-                                                onChange={handleInputChange}
-                                                className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl focus:border-primary/50 transition-all text-lg"
-                                            />
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {step === 2 && (
-                                <motion.div
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="space-y-6"
-                                >
-                                    <div className="relative group">
-                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
-                                        <Input
-                                            name="address"
-                                            placeholder="Full Address"
-                                            value={formData.address}
-                                            onChange={handleInputChange}
-                                            className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl focus:border-primary/50 transition-all text-lg"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Input
-                                            name="latitude"
-                                            placeholder="Latitude"
-                                            value={formData.latitude}
-                                            onChange={handleInputChange}
-                                            className="bg-white/5 border-white/10 h-14 rounded-xl focus:border-primary/50 transition-all"
-                                        />
-                                        <Input
-                                            name="longitude"
-                                            placeholder="Longitude"
-                                            value={formData.longitude}
-                                            onChange={handleInputChange}
-                                            className="bg-white/5 border-white/10 h-14 rounded-xl focus:border-primary/50 transition-all"
-                                        />
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {step === 3 && (
-                                <motion.div
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="space-y-6"
-                                >
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Gym Logo</label>
-                                        <div className="relative flex items-center justify-center w-full h-32 bg-white/5 border-2 border-dashed border-white/10 rounded-2xl hover:border-primary/50 transition-all group overflow-hidden">
-                                            <input
-                                                type="file"
-                                                onChange={handleLogoChange}
-                                                className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                                                accept="image/*"
-                                            />
-                                            {logo ? (
-                                                <div className="flex items-center gap-4">
-                                                    <CheckCircle2 className="text-primary h-6 w-6" />
-                                                    <span className="font-medium text-primary">{logo.name}</span>
+                        <div className="min-h-[400px]">
+                            <AnimatePresence mode="wait">
+                                {step === 1 && (
+                                    <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <div className="space-y-6">
+                                            <div className="group space-y-2">
+                                                <label className="text-sm font-bold text-gray-400 uppercase ml-1">Gym Name</label>
+                                                <div className="relative">
+                                                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
+                                                    <Input name="name" value={formData.name} onChange={handleInputChange} className="bg-white/5 border-white/10 h-14 pl-12 rounded-2xl focus:ring-primary/20" placeholder="Elite Fitness Center" />
                                                 </div>
-                                            ) : (
-                                                <div className="text-center group-hover:scale-110 transition-transform">
-                                                    <Upload className="mx-auto h-8 w-8 text-gray-500 mb-2" />
-                                                    <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                                            </div>
+                                            <div className="group space-y-2">
+                                                <label className="text-sm font-bold text-gray-400 uppercase ml-1">Password</label>
+                                                <div className="relative">
+                                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
+                                                    <Input name="password" type="password" value={formData.password} onChange={handleInputChange} className="bg-white/5 border-white/10 h-14 pl-12 rounded-2xl" placeholder="••••••••" />
                                                 </div>
-                                            )}
+                                            </div>
+                                            <div className="group space-y-2">
+                                                <label className="text-sm font-bold text-gray-400 uppercase ml-1">Description</label>
+                                                <Textarea name="description" value={formData.description} onChange={handleInputChange} className="bg-white/5 border-white/10 min-h-[120px] rounded-2xl p-4" placeholder="Tell us about your facilities..." />
+                                            </div>
                                         </div>
-                                    </div>
+                                        <div className="space-y-6">
+                                            <div className="group space-y-2">
+                                                <label className="text-sm font-bold text-gray-400 uppercase ml-1">Address</label>
+                                                <div className="relative">
+                                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
+                                                    <Input name="address" value={formData.address} onChange={handleInputChange} className="bg-white/5 border-white/10 h-14 pl-12 rounded-2xl" placeholder="123 Street, City" />
+                                                </div>
+                                            </div>
+                                            <div className="p-6 bg-white/5 rounded-3xl border border-white/10 space-y-4">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-sm font-bold text-gray-400 uppercase">Location Detection</span>
+                                                    <Button onClick={detectLocation} variant="ghost" size="sm" className="text-primary hover:bg-primary/10">
+                                                        <Target className="h-4 w-4 mr-2" /> Detect
+                                                    </Button>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <Input name="lat" value={formData.lat} onChange={handleInputChange} placeholder="Latitude" className="bg-white/10 border-none h-12" readOnly />
+                                                    <Input name="lng" value={formData.lng} onChange={handleInputChange} placeholder="Longitude" className="bg-white/10 border-none h-12" readOnly />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
 
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Gym Showcase Images</label>
-                                        <div className="grid grid-cols-4 gap-4 mb-4">
-                                            {images.map((img, i) => (
-                                                <div key={i} className="relative aspect-square bg-white/5 rounded-xl border border-white/10 overflow-hidden group">
-                                                    <img src={URL.createObjectURL(img)} alt="preview" className="w-full h-full object-cover" />
-                                                    <button
-                                                        onClick={() => removeImage(i)}
-                                                        className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <X size={14} />
+                                {step === 2 && (
+                                    <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-center">
+                                            <div className="lg:col-span-1 space-y-4">
+                                                <label className="text-sm font-bold text-gray-400 uppercase">Brand Logo</label>
+                                                <div className="relative aspect-square rounded-3xl bg-white/5 border-2 border-dashed border-white/10 flex flex-col items-center justify-center group overflow-hidden cursor-pointer hover:border-primary/50 transition-colors">
+                                                    {croppedLogo ? (
+                                                        <img src={croppedLogo} className="w-full h-full object-cover" alt="Logo" />
+                                                    ) : (
+                                                        <>
+                                                            <Upload className="h-10 w-10 text-gray-500 mb-3 group-hover:text-primary transition-colors" />
+                                                            <span className="text-xs text-gray-500">Upload & Crop</span>
+                                                        </>
+                                                    )}
+                                                    <input type="file" onChange={handleLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" />
+                                                </div>
+                                            </div>
+                                            <div className="lg:col-span-2 space-y-4">
+                                                <label className="text-sm font-bold text-gray-400 uppercase">Showcase Gallery</label>
+                                                <div className="grid grid-cols-3 gap-4">
+                                                    {showcaseImages.map((img, i) => (
+                                                        <div key={i} className="relative aspect-square rounded-2xl bg-white/5 border border-white/10 overflow-hidden group">
+                                                            <img src={URL.createObjectURL(img)} className="w-full h-full object-cover" />
+                                                            <button onClick={() => setShowcaseImages(showcaseImages.filter((_, idx) => idx !== i))} className="absolute top-2 right-2 p-1 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <X className="h-3 w-3" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                    <div className="relative aspect-square rounded-2xl bg-white/5 border-2 border-dashed border-white/10 flex items-center justify-center hover:border-primary/50 transition-colors cursor-pointer group">
+                                                        <ImageIcon className="h-8 w-8 text-gray-500 group-hover:text-primary" />
+                                                        <input type="file" multiple onChange={handleShowcaseImages} className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                {step === 3 && (
+                                    <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                                        <div className="p-12 border-2 border-dashed border-white/10 rounded-[2rem] bg-white/5 text-center group hover:border-primary/50 transition-colors relative">
+                                            <FileText className="h-12 w-12 text-gray-500 mx-auto mb-4 group-hover:text-primary" />
+                                            <h3 className="text-xl font-bold mb-2">Upload Certifications</h3>
+                                            <p className="text-gray-500 text-sm max-w-md mx-auto">Upload your business licenses, fitness certifications, and safety permits (PDF, Image)</p>
+                                            <input type="file" multiple onChange={handleCertifications} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {certifications.map((file, i) => (
+                                                <div key={i} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl group">
+                                                    <div className="flex items-center gap-3 overflow-hidden">
+                                                        <CheckCircle2 className="text-primary h-5 w-5 shrink-0" />
+                                                        <span className="text-sm font-medium truncate">{file.name}</span>
+                                                    </div>
+                                                    <button onClick={() => setCertifications(certifications.filter((_, idx) => idx !== i))} className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors">
+                                                        <X className="h-4 w-4" />
                                                     </button>
                                                 </div>
                                             ))}
-                                            <div className="relative aspect-square bg-white/5 border-2 border-dashed border-white/10 rounded-xl flex items-center justify-center hover:border-primary/50 transition-all group">
-                                                <input
-                                                    type="file"
-                                                    multiple
-                                                    onChange={handleImagesChange}
-                                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                                    accept="image/*"
-                                                />
-                                                <ImageIcon className="text-gray-500 group-hover:text-primary transition-colors" />
-                                            </div>
                                         </div>
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            <div className="flex gap-4 pt-4">
-                                {step > 1 && (
-                                    <Button
-                                        onClick={prevStep}
-                                        variant="outline"
-                                        className="flex-1 h-14 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 text-white text-lg font-bold"
-                                    >
-                                        <ChevronLeft className="mr-2" /> Back
-                                    </Button>
+                                    </motion.div>
                                 )}
-                                <Button
-                                    onClick={step === 3 ? () => navigate('/gym/dashboard') : nextStep}
-                                    className="flex-[2] h-14 rounded-xl bg-primary hover:bg-primary/90 text-black text-lg font-bold shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02]"
-                                >
-                                    {step === 3 ? 'Complete Registration' : 'Next Step'} <ChevronRight className="ml-2" />
-                                </Button>
-                            </div>
 
-                            <div className="text-center text-gray-500 text-sm">
-                                Already registered? <button onClick={() => navigate('/gym/login')} className="text-primary font-bold hover:underline">Login here</button>
-                            </div>
-                        </form>
+                                {step === 4 && (
+                                    <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                                        <OpeningHoursSelector hours={openingHours} onChange={setOpeningHours} />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-4 mt-12 pt-8 border-t border-white/10">
+                            {step > 1 && (
+                                <Button onClick={() => setStep(step - 1)} variant="outline" className="flex-1 h-14 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 text-lg font-bold">
+                                    <ChevronLeft className="mr-2" /> Back
+                                </Button>
+                            )}
+                            <Button
+                                onClick={step === 4 ? handleSubmit : nextStep}
+                                disabled={loading}
+                                className="flex-[2] h-14 rounded-2xl bg-primary hover:bg-primary/90 text-black text-lg font-black shadow-[0_4px_20px_rgba(var(--primary-rgb),0.3)] disabled:opacity-50"
+                            >
+                                {loading ? 'Processing...' : step === 4 ? 'Submit Application' : 'Continue'}
+                                {!loading && <ChevronRight className="ml-2" />}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </motion.div>
+
+            {imageToCrop && (
+                <ImageCropModal
+                    isOpen={isCropModalOpen}
+                    image={imageToCrop}
+                    onClose={() => setIsCropModalOpen(false)}
+                    onCropComplete={onCropComplete}
+                />
+            )}
         </div>
     );
 };

@@ -11,8 +11,15 @@ const gymController = container.get<GymController>(TYPES.GymController);
 
 
 
-// Auth
-router.post("/login", gymController.login.bind(gymController));
+// Pre-registration Auth
+import { GymAuthController } from "../controllers/gym.auth.controller";
+const gymAuthController = container.get<GymAuthController>(TYPES.GymAuthController);
+
+router.post("/auth/request-otp", gymAuthController.requestOtp.bind(gymAuthController));
+router.post("/auth/verify-otp", gymAuthController.verifyOtp.bind(gymAuthController));
+router.post("/register", fileUpload({ useTempFiles: true }), gymController.register.bind(gymController));
+
+// Auth (Existing Accounts)
 router.post("/request-otp", gymController.requestOtp.bind(gymController));
 router.post("/verify-otp", gymController.verifyOtp.bind(gymController));
 

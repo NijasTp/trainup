@@ -102,19 +102,35 @@ export const gymLogin = async (email: string, password: string) => {
 }
 
 
-export const requestGymOtp = async (email: string) => {
-  const response = await API.post("/gym/request-otp", { email });
+export const requestGymAuthOtp = async (email: string) => {
+  const response = await API.post("/gym/auth/request-otp", { email });
   return response.data;
 };
 
-export const gymVerifyOtp = async (formData: FormData) => {
-  const response = await API.post("/gym/verify-otp", formData, {
+export const verifyGymAuthOtp = async (email: string, otp: string) => {
+  const response = await API.post("/gym/auth/verify-otp", { email, otp });
+  return response.data;
+};
+
+export const registerGym = async (formData: FormData) => {
+  const response = await API.post("/gym/register", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
   });
   return response.data;
 };
+
+export const reapplyGym = async (formData: FormData) => {
+  const response = await API.post("/gym/reapply", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+
+
 
 export const gymLogout = async () => {
   await API.post('/gym/logout')

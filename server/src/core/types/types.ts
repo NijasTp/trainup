@@ -112,6 +112,10 @@ const TYPES = {
 
   // Refund
   IRefundService: Symbol.for("IRefundService"),
+
+  IAuthGymTempRepository: Symbol.for("IAuthGymTempRepository"),
+  IGymAuthService: Symbol.for("IGymAuthService"),
+  GymAuthController: Symbol.for("GymAuthController"),
 };
 
 export default TYPES;

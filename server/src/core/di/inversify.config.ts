@@ -266,5 +266,16 @@ import { IRefundService } from "../interfaces/services/IRefundService";
 import { RefundService } from "../../services/refund.service";
 container.bind<IRefundService>(TYPES.IRefundService).to(RefundService);
 
+// Gym Auth (Pre-registration)
+import { IAuthGymTempRepository } from "../interfaces/repositories/IAuthGymTempRepository";
+import { IGymAuthService } from "../interfaces/services/IGymAuthService";
+import { AuthGymTempRepository } from "../../repositories/authGymTemp.repository";
+import { GymAuthService } from "../../services/gymAuth.service";
+import { GymAuthController } from "../../controllers/gym.auth.controller";
+
+container.bind<IAuthGymTempRepository>(TYPES.IAuthGymTempRepository).to(AuthGymTempRepository).inSingletonScope();
+container.bind<IGymAuthService>(TYPES.IGymAuthService).to(GymAuthService).inSingletonScope();
+container.bind<GymAuthController>(TYPES.GymAuthController).to(GymAuthController).inSingletonScope();
+
 export default container;
 

@@ -29,20 +29,41 @@ export interface GeoLocationDto {
   coordinates: [number, number];
 }
 
+export interface OpeningHourDto {
+  day: string;
+  open: string;
+  close: string;
+  isClosed: boolean;
+}
+
+export interface RegisterGymDto {
+  name: string;
+  email: string;
+  password: string;
+  address: string;
+  description: string;
+  geoLocation: GeoLocationDto;
+  openingHours: OpeningHourDto[];
+}
+
 export interface GymResponseDto {
   _id: string;
   role: string;
   name: string;
   email: string;
+  address?: string;
+  description?: string;
   geoLocation: {
     type: "Point";
     coordinates: [number, number];
   };
-  certificate: string;
+  certifications?: string[];
+  openingHours?: OpeningHourDto[];
   verifyStatus: "pending" | "approved" | "rejected";
   rejectReason?: string;
   isBanned: boolean;
   profileImage?: string;
+  logo?: string;
   images?: string[];
   trainers?: string[];
   members?: string[];
@@ -259,7 +280,7 @@ export interface GymSummary {
   phone?: string | null;
   profileImage?: string | null;
   images?: string[] | null;
-  certificate?: string | null;
+  certifications?: string[] | null;
   memberCount: number;
   rating: number;
 }
