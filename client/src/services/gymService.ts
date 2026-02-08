@@ -209,3 +209,23 @@ export const deleteAnnouncement = async (id: string) => {
 
 
 
+// User Side Gym APIs
+export const getUserGymAnnouncements = async (page: number = 1, limit: number = 10, search: string = '') => {
+  const res = await API.get(`/user/gym-announcements?page=${page}&limit=${limit}&search=${search}`);
+  return res.data;
+};
+
+export const getUserGymEquipment = async () => {
+  const res = await API.get('/user/gym-equipment');
+  return res.data;
+};
+
+export const getUserGymProducts = async (page: number = 1, limit: number = 10, search: string = '', category: string = 'all') => {
+  const res = await API.get(`/user/gym-products?page=${page}&limit=${limit}&search=${search}&category=${category}`);
+  return res.data;
+};
+
+export const getUserGymWorkoutTemplates = async (page: number = 1, limit: number = 10, search: string = '') => {
+  const res = await API.get(`/user/gym-workout-templates?page=${page}&limit=${limit}&search=${search}`);
+  return res.data;
+};

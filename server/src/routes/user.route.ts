@@ -123,6 +123,9 @@ router.get("/gyms/:id", authMiddleware, userGymController.getGymById.bind(userGy
 router.get("/gyms/:gymId/subscription-plans", authMiddleware, userGymController.getGymSubscriptionPlans.bind(userGymController));
 router.get("/my-gym", authMiddleware, userGymController.getMyGym.bind(userGymController));
 router.get("/gym-announcements", authMiddleware, userGymController.getGymAnnouncements.bind(userGymController));
+router.get("/gym-equipment", authMiddleware, userGymController.getGymEquipment.bind(userGymController));
+router.get("/gym-products", authMiddleware, userGymController.getGymProducts.bind(userGymController));
+router.get("/gym-workout-templates", authMiddleware, userGymController.getGymWorkoutTemplates.bind(userGymController));
 router.post("/gyms/cancel-membership", authMiddleware, roleMiddleware(['user']), userGymController.cancelMembership.bind(userGymController));
 
 
