@@ -485,6 +485,16 @@ export class GymController {
       next(err);
     }
   }
+
+  async getDashboardStats(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const stats = await this._gymService.getGymDashboardStats(gymId);
+      res.status(STATUS_CODE.OK).json(stats);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 

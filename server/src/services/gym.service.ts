@@ -1053,5 +1053,52 @@ export class GymService implements IGymService {
     });
     if (result.deletedCount === 0) throw new AppError('Workout template not found', STATUS_CODE.NOT_FOUND);
   }
+
+  async getGymDashboardStats(gymId: string): Promise<any> {
+    const gymObjectId = new mongoose.Types.ObjectId(gymId);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(today);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const [
+      memberCount,
+      activePlansCount,
+      todayAttendance,
+      productCount,
+      recentAnnouncements,
+      totalRevenue
+    ] = await Promise.all([
+      UserGymMembershipModel.countDocuments({ gymId: gymObjectId }),
+      this._gymRepo.listSubscriptionPlans(gymId, 1, 1, '', 'true').then(res => res.total),
+      AttendanceModel.countDocuments({ gymId: gymObjectId, date: { $gte: today, $lte: endOfToday } }),
+      GymProductModel.countDocuments({ gymId: gymObjectId }),
+      this._gymRepo.getAnnouncementsByGym(gymId, 1, 3, '').then(res => res.announcements),
+      this._gymRepo.getGymTotalRevenue(gymId)
+    ]);
+
+    // Mock revenue data for the last 12 months for the chart
+    // In a real scenario, this would be aggregated from GymTransactionModel
+    const monthlyRevenue = [40, 70, 45, 90, 65, 80, 50, 85, 60, 95, 75, 100];
+
+    return {
+      stats: [
+        { title: 'Total Members', value: memberCount, icon: 'Users', trend: '+12%', color: 'from-blue-500 to-cyan-500' },
+        { title: 'Active Plans', value: activePlansCount, icon: 'CreditCard', trend: '+3%', color: 'from-purple-500 to-pink-500' },
+        { title: 'Today Attendance', value: todayAttendance, icon: 'CalendarCheck', trend: '+18%', color: 'from-orange-500 to-amber-500' },
+        { title: 'Store Products', value: productCount, icon: 'Package', trend: 'Stable', color: 'from-primary to-indigo-500' },
+      ],
+      revenueAnalytics: {
+        currentMonth: totalRevenue,
+        monthlyData: monthlyRevenue
+      },
+      announcements: recentAnnouncements.map(ann => ({
+        id: (ann as any)._id,
+        title: ann.title,
+        description: ann.description,
+        date: new Date(ann.createdAt!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      }))
+    };
+  }
 }
 

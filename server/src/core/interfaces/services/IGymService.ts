@@ -261,5 +261,7 @@ export interface IGymService {
   ): Promise<any>;
 
   deleteWorkoutTemplate(templateId: string, gymId: string): Promise<void>;
+
+  getGymDashboardStats(gymId: string): Promise<any>;
 }
 

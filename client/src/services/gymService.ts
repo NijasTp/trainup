@@ -229,3 +229,8 @@ export const getUserGymWorkoutTemplates = async (page: number = 1, limit: number
   const res = await API.get(`/user/gym-workout-templates?page=${page}&limit=${limit}&search=${search}`);
   return res.data;
 };
+
+export const getGymDashboardStats = async () => {
+  const res = await API.get('/gym/dashboard-stats');
+  return res.data;
+};

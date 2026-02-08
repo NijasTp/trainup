@@ -3,14 +3,14 @@ import { motion } from 'framer-motion';
 import {
     Save,
     MapPin,
-    Clock,
     Plus,
     Trash2,
     Upload,
-    Globe,
     Dumbbell,
     Loader2,
-    Camera
+    Camera,
+    Award,
+    FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,12 +28,14 @@ const Profile = () => {
         description: '',
         images: [],
         profileImage: '',
-        logo: ''
+        logo: '',
+        certifications: []
     });
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const logoInputRef = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
+    const certInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchProfile();
@@ -64,34 +66,24 @@ const Profile = () => {
         });
     };
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'profileImage' | 'gallery') => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'profileImage' | 'gallery' | 'certifications') => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
-        if (type === 'gallery') {
-            const formData = new FormData();
-            Array.from(files).forEach(file => formData.append('images', file));
-
-            try {
-                toast.loading('Uploading gallery images...', { id: 'upload' });
-                const result = await updateGymProfile(formData);
-                setGymData(result.gym);
-                toast.success('Gallery updated', { id: 'upload' });
-            } catch (error) {
-                toast.error('Failed to upload images', { id: 'upload' });
-            }
+        const formData = new FormData();
+        if (type === 'gallery' || type === 'certifications') {
+            Array.from(files).forEach(file => formData.append(type === 'gallery' ? 'images' : 'certifications', file));
         } else {
-            const formData = new FormData();
             formData.append(type, files[0]);
+        }
 
-            try {
-                toast.loading(`Uploading ${type}...`, { id: 'upload' });
-                const result = await updateGymProfile(formData);
-                setGymData(result.gym);
-                toast.success(`${type} updated`, { id: 'upload' });
-            } catch (error) {
-                toast.error(`Failed to upload ${type}`, { id: 'upload' });
-            }
+        try {
+            toast.loading(`Uploading ${type}...`, { id: 'upload' });
+            const result = await updateGymProfile(formData);
+            setGymData(result.gym);
+            toast.success(`${type} updated`, { id: 'upload' });
+        } catch (error) {
+            toast.error(`Failed to upload ${type}`, { id: 'upload' });
         }
     };
 
@@ -114,18 +106,17 @@ const Profile = () => {
         }
     };
 
-    const removeImage = async (imageUrl: string) => {
+    const removeImage = async (imageUrl: string, type: 'images' | 'certifications' = 'images') => {
         try {
-            const updatedImages = gymData.images.filter((img: string) => img !== imageUrl);
+            const updatedList = gymData[type].filter((img: string) => img !== imageUrl);
             const formData = new FormData();
-            // Send updated images list as a JSON string to tell backend to remove one
-            formData.append('images', JSON.stringify(updatedImages));
+            formData.append(type, JSON.stringify(updatedList));
 
-            setGymData({ ...gymData, images: updatedImages });
+            setGymData({ ...gymData, [type]: updatedList });
             await updateGymProfile(formData);
-            toast.success('Image removed');
+            toast.success('Removed successfully');
         } catch (error) {
-            toast.error('Failed to remove image');
+            toast.error('Failed to remove');
         }
     };
 
@@ -144,6 +135,7 @@ const Profile = () => {
             <input type="file" ref={logoInputRef} className="hidden" onChange={(e) => handleFileChange(e, 'logo')} accept="image/*" />
             <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => handleFileChange(e, 'profileImage')} accept="image/*" />
             <input type="file" ref={galleryInputRef} className="hidden" multiple onChange={(e) => handleFileChange(e, 'gallery')} accept="image/*" />
+            <input type="file" ref={certInputRef} className="hidden" multiple onChange={(e) => handleFileChange(e, 'certifications')} accept="image/*,application/pdf" />
 
             {/* Profile Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -192,10 +184,11 @@ const Profile = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Basic Info */}
+                {/* Left Column: Basic Info & Certifications */}
                 <div className="lg:col-span-2 space-y-8">
-                    <div className="bg-white/5 border border-white/10 rounded-3xl p-8 space-y-6">
-                        <h3 className="text-xl font-bold flex items-center gap-2 mb-4">
+                    {/* General Info */}
+                    <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
+                        <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
                             <Dumbbell size={20} className="text-primary" />
                             General Information
                         </h3>
@@ -213,15 +206,13 @@ const Profile = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1">Gym Logo</label>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => logoInputRef.current?.click()}
-                                            className="flex-1 bg-white/5 border-white/10 h-12 rounded-xl hover:bg-white/10"
-                                        >
-                                            <Upload size={16} className="mr-2" /> Upload Logo
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => logoInputRef.current?.click()}
+                                        className="w-full bg-white/5 border-white/10 h-12 rounded-xl hover:bg-white/10"
+                                    >
+                                        <Upload size={16} className="mr-2" /> Upload Logo
+                                    </Button>
                                 </div>
                             </div>
 
@@ -266,6 +257,53 @@ const Profile = () => {
                                     placeholder="Describe your gym and services..."
                                 />
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Certifications */}
+                    <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold flex items-center gap-2">
+                                <Award size={20} className="text-primary" />
+                                Professional Certifications
+                            </h3>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => certInputRef.current?.click()}
+                                className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
+                            >
+                                <Plus size={16} className="mr-1" /> Add Certificate
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {gymData.certifications?.length > 0 ? (
+                                gymData.certifications.map((cert: string, i: number) => (
+                                    <div key={i} className="group relative flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-colors">
+                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                            <FileText size={20} />
+                                        </div>
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-xs font-black text-gray-500 uppercase tracking-widest">Certificate {i + 1}</p>
+                                            <a href={cert} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-white hover:text-primary transition-colors block truncate">
+                                                View Document
+                                            </a>
+                                        </div>
+                                        <button
+                                            onClick={() => removeImage(cert, 'certifications')}
+                                            className="opacity-0 group-hover:opacity-100 p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500 transition-all"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="col-span-full border-2 border-dashed border-white/5 rounded-2xl p-8 text-center">
+                                    <Award className="text-white/10 mx-auto mb-2" size={32} />
+                                    <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">No certifications uploaded</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

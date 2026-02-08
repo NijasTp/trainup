@@ -23,7 +23,7 @@ import ImageCropModal from './components/ImageCropModal';
 import OpeningHoursSelector from './components/OpeningHoursSelector';
 import type { OpeningHour } from './components/OpeningHoursSelector';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
+import type { RootState } from '@/redux/store';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 

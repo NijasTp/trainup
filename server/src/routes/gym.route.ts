@@ -19,6 +19,9 @@ router.post("/auth/request-otp", gymAuthController.requestOtp.bind(gymAuthContro
 router.post("/auth/verify-otp", gymAuthController.verifyOtp.bind(gymAuthController));
 router.post("/register", fileUpload({ useTempFiles: true }), gymController.register.bind(gymController));
 
+// Dashboard Stats
+router.get("/dashboard-stats", authMiddleware, roleMiddleware(['gym']), gymController.getDashboardStats.bind(gymController));
+
 // Auth (Existing Accounts)
 router.post("/request-otp", gymController.requestOtp.bind(gymController));
 router.post("/verify-otp", gymController.verifyOtp.bind(gymController));
@@ -72,7 +75,7 @@ router.delete('/subscription-plan/:id', authMiddleware, roleMiddleware(['gym']),
 router.post('/reapply', authMiddleware, roleMiddleware(['gym']), gymController.reapply.bind(gymController))
 
 // Equipment
-import { GymEquipmentController } from "../controllers/gym.equipment.controller";
+import { GymEquipmentController } from "../controllers/gymEquipment.controller";
 const equipmentController = container.get<GymEquipmentController>(TYPES.GymEquipmentController);
 
 router.post('/equipment', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), equipmentController.createEquipment.bind(equipmentController));

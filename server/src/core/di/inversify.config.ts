@@ -258,7 +258,7 @@ import { IGymEquipmentService } from "../interfaces/services/IGymEquipmentServic
 import { GymEquipmentRepository } from "../../repositories/gymEquipment.repository";
 import { GymEquipmentCategoryRepository } from "../../repositories/gymEquipmentCategory.repository";
 import { GymEquipmentService } from "../../services/gymEquipment.service";
-import { GymEquipmentController } from "../../controllers/gym.equipment.controller";
+import { GymEquipmentController } from "../../controllers/gymEquipment.controller";
 
 container.bind<IGymEquipmentRepository>(TYPES.IGymEquipmentRepository).to(GymEquipmentRepository);
 container.bind<IGymEquipmentCategoryRepository>(TYPES.IGymEquipmentCategoryRepository).to(GymEquipmentCategoryRepository);
