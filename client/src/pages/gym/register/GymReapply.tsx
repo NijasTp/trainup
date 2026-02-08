@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import {  useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Building2,
-    Lock,
     MapPin,
     Upload,
     ChevronRight,
@@ -22,13 +20,10 @@ import { getGymDetails } from '@/services/gymService';
 import ImageCropModal from './components/ImageCropModal';
 import OpeningHoursSelector from './components/OpeningHoursSelector';
 import type { OpeningHour } from './components/OpeningHoursSelector';
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/redux/store';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const GymReapply = () => {
-    const { gym } = useSelector((state: RootState) => state.gymAuth);
     const navigate = useNavigate();
 
     const [step, setStep] = useState(1);

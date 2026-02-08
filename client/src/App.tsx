@@ -92,7 +92,7 @@ import GymWorkoutsPage from './pages/gym/workouts/Workouts';
 import GymOtpVerification from './pages/gym/register/GymOtpVerification';
 import GymStatus from './pages/gym/register/GymStatus';
 import GymReapply from './pages/gym/register/GymReapply';
-import { GymPreventLoggedIn, GymProtectedRoute } from "./redirects/GymRedirects";
+import {  GymProtectedRoute } from "./redirects/GymRedirects";
 
 
 function App() {
