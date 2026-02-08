@@ -9,13 +9,33 @@ import { logger } from '../utils/logger.util'
 import { MESSAGES } from '../constants/messages.constants'
 import { AppError } from '../utils/appError.util'
 
+import { IRefundService } from '../core/interfaces/services/IRefundService'
+
 @injectable()
 export class UserGymController {
     constructor(
         @inject(TYPES.IGymService) private _gymService: IGymService,
         @inject(TYPES.IUserService) private _userService: IUserService,
-        @inject(TYPES.IJwtService) private _jwtService: IJwtService
+        @inject(TYPES.IJwtService) private _jwtService: IJwtService,
+        @inject(TYPES.IRefundService) private _refundService: IRefundService
     ) { }
+
+    async cancelMembership(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = (req.user as JwtPayload).id
+            const { membershipId } = req.body
+            if (!membershipId) throw new AppError('Membership ID is required', STATUS_CODE.BAD_REQUEST)
+
+            const result = await this._refundService.applyGymRefund(membershipId, userId)
+            res.status(STATUS_CODE.OK).json({
+                message: 'Membership cancelled successfully',
+                refundAmount: result.refundAmount
+            })
+        } catch (err) {
+            next(err)
+        }
+    }
+
 
     async getGyms(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {

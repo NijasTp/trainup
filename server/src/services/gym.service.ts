@@ -385,10 +385,14 @@ export class GymService implements IGymService {
     price: number;
     description?: string;
     features: string[];
+    trainerChat: boolean;
+    videoCall: boolean;
+    isCardioIncluded: boolean;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
   }> {
+
     if (!dto.name || !dto.duration || !dto.price) {
       throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST)
     }
@@ -404,7 +408,10 @@ export class GymService implements IGymService {
       durationUnit: normalizedUnit,
       price: dto.price,
       description: dto.description,
-      features: dto.features
+      features: dto.features,
+      trainerChat: dto.trainerChat,
+      videoCall: dto.videoCall,
+      isCardioIncluded: dto.isCardioIncluded
     })
     return {
       _id: plan._id.toString(),
@@ -415,10 +422,14 @@ export class GymService implements IGymService {
       price: plan.price,
       description: plan.description,
       features: plan.features,
+      trainerChat: plan.trainerChat,
+      videoCall: plan.videoCall,
+      isCardioIncluded: plan.isCardioIncluded,
       isActive: plan.isActive,
       createdAt: plan.createdAt,
       updatedAt: plan.updatedAt
     }
+
   }
 
   async listSubscriptionPlans(
@@ -452,10 +463,14 @@ export class GymService implements IGymService {
     price: number;
     description?: string;
     features: string[];
+    trainerChat: boolean;
+    videoCall: boolean;
+    isCardioIncluded: boolean;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
   }> {
+
     const rawUpdateUnit = ((dto as { durationUnit?: string }).durationUnit as string | undefined)
     const normalizedUnit = rawUpdateUnit
       ? ((rawUpdateUnit === 'days'
@@ -475,10 +490,14 @@ export class GymService implements IGymService {
       price: plan.price,
       description: plan.description,
       features: plan.features,
+      trainerChat: plan.trainerChat,
+      videoCall: plan.videoCall,
+      isCardioIncluded: plan.isCardioIncluded,
       isActive: plan.isActive,
       createdAt: plan.createdAt,
       updatedAt: plan.updatedAt
     }
+
   }
 
   async reapplyGym(
@@ -590,7 +609,11 @@ export class GymService implements IGymService {
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
+    trainerChat: boolean;
+    videoCall: boolean;
+    isCardioIncluded: boolean;
   } | null> {
+
     const plan = await this._gymRepo.getSubscriptionPlanById(planId)
     if (!plan) return null
     return {
@@ -602,10 +625,14 @@ export class GymService implements IGymService {
       price: plan.price,
       description: plan.description,
       features: plan.features,
+      trainerChat: plan.trainerChat,
+      videoCall: plan.videoCall,
+      isCardioIncluded: plan.isCardioIncluded,
       isActive: plan.isActive,
       createdAt: plan.createdAt as Date,
       updatedAt: plan.updatedAt as Date
     }
+
   }
   async forgotPassword(email: string): Promise<void> {
     const gym = await this._gymRepo.findByEmail(email)
@@ -629,5 +656,79 @@ export class GymService implements IGymService {
 
     const hashedPassword = await bcrypt.hash(password, 10)
     await this._gymRepo.updateGym(gym._id.toString(), { password: hashedPassword })
+  }
+
+  async updateGymProfile(
+
+    gymId: string,
+    data: Partial<IGym>,
+    files?: {
+      logo?: UploadedFile;
+      profileImage?: UploadedFile;
+      images?: UploadedFile | UploadedFile[];
+    }
+  ): Promise<IGym> {
+    const updateData: any = { ...data };
+
+    // Handle JSON parsing for geoLocation and openingHours if they come as strings
+    if (typeof data.geoLocation === 'string') {
+      try {
+        updateData.geoLocation = JSON.parse(data.geoLocation);
+      } catch (e) {
+        logger.error('Error parsing geoLocation:', e);
+      }
+    }
+
+    if (typeof data.openingHours === 'string') {
+      try {
+        updateData.openingHours = JSON.parse(data.openingHours);
+      } catch (e) {
+        logger.error('Error parsing openingHours:', e);
+      }
+    }
+
+    // Handle file uploads
+    if (files?.logo) {
+      const logoUpload = await cloudinary.uploader.upload(files.logo.tempFilePath, {
+        folder: 'trainup/gyms/logos',
+      });
+      updateData.logo = logoUpload.secure_url;
+    }
+
+    if (files?.profileImage) {
+      const profileUpload = await cloudinary.uploader.upload(files.profileImage.tempFilePath, {
+        folder: 'trainup/gyms/profiles',
+      });
+      updateData.profileImage = profileUpload.secure_url;
+    }
+
+    if (files?.images) {
+      const imagesArr = Array.isArray(files.images) ? files.images : [files.images];
+      const uploadPromises = imagesArr.map((img) =>
+        cloudinary.uploader.upload(img.tempFilePath, {
+          folder: 'trainup/gyms/gallery',
+        })
+      );
+      const results = await Promise.all(uploadPromises);
+      const newImageUrls = results.map((res) => res.secure_url);
+
+      // If we want to append images, we might need more logic. 
+      // For now, let's assume 'images' in data might contain existing URLs.
+      let existingImages: string[] = [];
+      if (typeof data.images === 'string') {
+        try { existingImages = JSON.parse(data.images); } catch (e) { }
+      } else if (Array.isArray(data.images)) {
+        existingImages = data.images;
+      }
+
+      updateData.images = [...existingImages, ...newImageUrls];
+    }
+
+    const updatedGym = await this._gymRepo.updateGym(gymId, updateData);
+    if (!updatedGym) {
+      throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    }
+
+    return updatedGym;
   }
 }

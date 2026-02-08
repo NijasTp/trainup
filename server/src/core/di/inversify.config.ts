@@ -41,6 +41,8 @@ import { IVideoCallService } from "../interfaces/services/IVideoCallService";
 import { IVideoCallRepository } from "../interfaces/repositories/IVideoCallRepository";
 import { IProgressRepository } from "../interfaces/repositories/IProgressRepository";
 import { IProgressService } from "../interfaces/services/IProgressService";
+import { IWalletRepository } from "../interfaces/repositories/IWalletRepository";
+
 
 // Implementations
 
@@ -130,6 +132,8 @@ import { IReviewService } from "../interfaces/services/IReviewService";
 import { IQueueService } from "../interfaces/services/IQueueService";
 import { QueueService } from "../../services/queue.service";
 import { SocketHandler } from "../../utils/socketHandler.util";
+import { WalletRepository } from "../../repositories/wallet.repository";
+
 
 
 import { NotificationCron } from "../../cron/notification.cron";
@@ -276,6 +280,9 @@ import { GymAuthController } from "../../controllers/gym.auth.controller";
 container.bind<IAuthGymTempRepository>(TYPES.IAuthGymTempRepository).to(AuthGymTempRepository).inSingletonScope();
 container.bind<IGymAuthService>(TYPES.IGymAuthService).to(GymAuthService).inSingletonScope();
 container.bind<GymAuthController>(TYPES.GymAuthController).to(GymAuthController).inSingletonScope();
+
+container.bind<IWalletRepository>(TYPES.IWalletRepository).to(WalletRepository).inSingletonScope();
+
 
 export default container;
 

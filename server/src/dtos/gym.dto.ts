@@ -97,7 +97,11 @@ export interface CreateSubscriptionPlanDto {
   price: number;
   description?: string;
   features: string[];
+  trainerChat: boolean;
+  videoCall: boolean;
+  isCardioIncluded: boolean;
 }
+
 
 export interface UpdateSubscriptionPlanDto extends Partial<CreateSubscriptionPlanDto> {
   isActive?: boolean;
@@ -112,10 +116,14 @@ export interface SubscriptionPlanResponseDto {
   price: number;
   description?: string;
   features: string[];
+  trainerChat: boolean;
+  videoCall: boolean;
+  isCardioIncluded: boolean;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
+
 
 export interface AddTrainerDto {
   name: string;

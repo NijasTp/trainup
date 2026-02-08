@@ -9,11 +9,15 @@ import { logger } from '../utils/logger.util';
 import { UserGymMembershipModel } from '../models/userGymMembership.model';
 import { UserPlanModel } from '../models/userPlan.model';
 
+import { IWalletRepository } from '../core/interfaces/repositories/IWalletRepository';
+
 @injectable()
 export class RefundService implements IRefundService {
     constructor(
-        @inject(TYPES.IUserPlanRepository) private _userPlanRepo: IUserPlanRepository
+        @inject(TYPES.IUserPlanRepository) private _userPlanRepo: IUserPlanRepository,
+        @inject(TYPES.IWalletRepository) private _walletRepo: IWalletRepository
     ) { }
+
 
     calculateRefund(startDate: Date, endDate: Date, price: number): RefundResult {
         const now = new Date();
@@ -63,10 +67,22 @@ export class RefundService implements IRefundService {
         membership.refundedAmount = refundResult.refundAmount;
         await membership.save();
 
+        // Credit user wallet
+        if (refundResult.refundAmount > 0) {
+            await this._walletRepo.addTransaction(
+                userId,
+                refundResult.refundAmount,
+                'credit',
+                `Refund for gym membership cancellation: ${membershipId}`,
+                membershipId
+            );
+        }
+
         logger.info(`Gym refund applied: ${refundResult.refundAmount} for membership ${membershipId}`);
 
         return refundResult;
     }
+
 
     async applyTrainerRefund(userPlanId: string, userId: string): Promise<RefundResult> {
         const userPlan = await UserPlanModel.findById(userPlanId);
@@ -90,8 +106,20 @@ export class RefundService implements IRefundService {
         userPlan.refundedAmount = refundResult.refundAmount;
         await userPlan.save();
 
+        // Credit user wallet
+        if (refundResult.refundAmount > 0) {
+            await this._walletRepo.addTransaction(
+                userId,
+                refundResult.refundAmount,
+                'credit',
+                `Refund for trainer plan cancellation: ${userPlanId}`,
+                userPlanId
+            );
+        }
+
         logger.info(`Trainer refund applied: ${refundResult.refundAmount} for plan ${userPlanId}`);
 
         return refundResult;
     }
+
 }

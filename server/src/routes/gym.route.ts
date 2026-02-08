@@ -29,6 +29,8 @@ router.post('/reset-password', gymController.resetPassword.bind(gymController));
 
 // Gym protected
 router.get('/get-details', authMiddleware, roleMiddleware(['gym']), gymController.getData.bind(gymController))
+router.put('/update-profile', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), gymController.updateProfile.bind(gymController));
+
 
 router.get("/announcements", authMiddleware, gymController.getAnnouncements.bind(gymController));
 router.post("/announcements", authMiddleware, fileUpload({ useTempFiles: true }), gymController.createAnnouncement.bind(gymController));
@@ -50,12 +52,13 @@ router.post('/reapply', authMiddleware, roleMiddleware(['gym']), gymController.r
 import { GymEquipmentController } from "../controllers/gym.equipment.controller";
 const equipmentController = container.get<GymEquipmentController>(TYPES.GymEquipmentController);
 
-router.post('/equipment', authMiddleware, roleMiddleware(['gym']), equipmentController.createEquipment.bind(equipmentController));
+router.post('/equipment', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), equipmentController.createEquipment.bind(equipmentController));
 router.get('/equipment', authMiddleware, roleMiddleware(['gym']), equipmentController.getEquipments.bind(equipmentController));
 router.get('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.getEquipmentById.bind(equipmentController));
-router.put('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.updateEquipment.bind(equipmentController));
+router.put('/equipment/:id', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), equipmentController.updateEquipment.bind(equipmentController));
 router.delete('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.deleteEquipment.bind(equipmentController));
 router.patch('/equipment/:id/availability', authMiddleware, roleMiddleware(['gym']), equipmentController.toggleAvailability.bind(equipmentController));
+
 
 // Equipment Categories
 router.post('/equipment-categories', authMiddleware, roleMiddleware(['gym']), equipmentController.createCategory.bind(equipmentController));

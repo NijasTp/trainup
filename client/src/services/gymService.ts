@@ -1,10 +1,10 @@
 import API from '@/lib/axios'
 
 
-export const getGymDetails= async ()=>{
-    const res = await API.get('/gym/get-details')
-    console.log(res.data)
-    return res.data
+export const getGymDetails = async () => {
+  const res = await API.get('/gym/get-details')
+  console.log(res.data)
+  return res.data
 }
 
 
@@ -21,7 +21,7 @@ export const getGyms = async (
     searchQuery,
   });
   const res = await API.get(`/admin/gyms?${params.toString()}`);
-  return res.data ;
+  return res.data;
 };
 
 // Toggle ban status
@@ -95,5 +95,12 @@ export const getSubscriptionPlan = async (planId: string) => {
 // Get single gym
 export const getGymById = async (gymId: string) => {
   const res = await API.get(`/admin/gyms/${gymId}`);
-  return res.data ;
+  return res.data;
+};
+
+export const updateGymProfile = async (formData: FormData) => {
+  const res = await API.put('/gym/update-profile', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data;
 };

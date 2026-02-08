@@ -68,10 +68,14 @@ export interface IGymService {
     price: number;
     description?: string;
     features: string[];
+    trainerChat: boolean;
+    videoCall: boolean;
+    isCardioIncluded: boolean;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
   }>;
+
 
   listSubscriptionPlans(
     gymId: string,
@@ -91,10 +95,14 @@ export interface IGymService {
     price: number;
     description?: string;
     features: string[];
+    trainerChat: boolean;
+    videoCall: boolean;
+    isCardioIncluded: boolean;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
   } | null>
+
 
   updateSubscriptionPlan(
     planId: string,
@@ -108,10 +116,14 @@ export interface IGymService {
     price: number;
     description?: string;
     features: string[];
+    trainerChat: boolean;
+    videoCall: boolean;
+    isCardioIncluded: boolean;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
   }>;
+
 
   deleteSubscriptionPlan(planId: string): Promise<void>;
 
@@ -159,4 +171,14 @@ export interface IGymService {
   ): Promise<{ announcements: unknown[]; totalPages: number; total: number }>;
 
   resetPassword(email: string, password: string): Promise<void>;
+
+  updateGymProfile(
+    gymId: string,
+    data: Partial<IGym>,
+    files?: {
+      logo?: UploadedFile;
+      profileImage?: UploadedFile;
+      images?: UploadedFile | UploadedFile[];
+    }
+  ): Promise<IGym>;
 }

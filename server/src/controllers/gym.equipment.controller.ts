@@ -16,13 +16,15 @@ export class GymEquipmentController {
     async createEquipment(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const gymId = (req.user as JwtPayload).id;
+            const files = req.files as any;
+
             const dto: CreateEquipmentDto = {
                 gymId,
                 name: req.body.name,
-                image: req.body.image,
+                image: files?.image,
                 categoryId: req.body.categoryId,
                 categoryName: req.body.categoryName,
-                available: req.body.available,
+                available: req.body.available === 'true' || req.body.available === true,
             };
 
             const equipment = await this._equipmentService.createEquipment(dto);
@@ -62,11 +64,13 @@ export class GymEquipmentController {
     async updateEquipment(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { id } = req.params;
+            const files = req.files as any;
+
             const dto: UpdateEquipmentDto = {
                 name: req.body.name,
-                image: req.body.image,
+                image: files?.image || req.body.image,
                 categoryId: req.body.categoryId,
-                available: req.body.available,
+                available: req.body.available !== undefined ? (req.body.available === 'true' || req.body.available === true) : undefined,
             };
 
             const equipment = await this._equipmentService.updateEquipment(id, dto);

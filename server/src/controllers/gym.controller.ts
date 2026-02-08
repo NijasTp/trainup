@@ -300,4 +300,23 @@ export class GymController {
       next(err);
     }
   }
+
+  async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const result = await this._gymService.updateGymProfile(
+        gymId,
+        req.body,
+        req.files as {
+          logo?: UploadedFile;
+          profileImage?: UploadedFile;
+          images?: UploadedFile | UploadedFile[];
+        }
+      );
+      res.status(STATUS_CODE.OK).json({ message: 'Profile updated successfully', gym: result });
+    } catch (err) {
+      logger.error('Error in updateProfile:', err);
+      next(err);
+    }
+  }
 }

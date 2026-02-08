@@ -6,6 +6,8 @@ import { IGymEquipmentCategoryRepository } from '../core/interfaces/repositories
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
 import { GYM_MESSAGES } from '../constants/messages.constants';
+import cloudinary from '../config/cloudinary';
+
 
 @injectable()
 export class GymEquipmentService implements IGymEquipmentService {
@@ -57,10 +59,18 @@ export class GymEquipmentService implements IGymEquipmentService {
             throw new AppError(GYM_MESSAGES.EQUIPMENT_CATEGORY_REQUIRED, STATUS_CODE.BAD_REQUEST);
         }
 
+        let imageUrl: string | null = null;
+        if (dto.image) {
+            const upload = await cloudinary.uploader.upload(dto.image.tempFilePath, {
+                folder: 'trainup/gyms/equipment'
+            });
+            imageUrl = upload.secure_url;
+        }
+
         const equipment = await this._equipmentRepo.create({
             gymId: dto.gymId as any,
             name: dto.name,
-            image: dto.image || null,
+            image: imageUrl,
             categoryId: categoryId as any,
             available: dto.available ?? true,
         });
@@ -80,7 +90,22 @@ export class GymEquipmentService implements IGymEquipmentService {
     }
 
     async updateEquipment(id: string, dto: UpdateEquipmentDto): Promise<EquipmentResponseDto | null> {
-        const equipment = await this._equipmentRepo.update(id, dto as any);
+        let imageUrl: string | undefined;
+        if (dto.image && typeof dto.image !== 'string') {
+            const upload = await cloudinary.uploader.upload(dto.image.tempFilePath, {
+                folder: 'trainup/gyms/equipment'
+            });
+            imageUrl = upload.secure_url;
+        } else if (typeof dto.image === 'string') {
+            imageUrl = dto.image;
+        }
+
+        const updateData = {
+            ...dto,
+            ...(imageUrl && { image: imageUrl })
+        };
+
+        const equipment = await this._equipmentRepo.update(id, updateData as any);
         return equipment ? this.mapToEquipmentResponse(equipment) : null;
     }
 

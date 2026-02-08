@@ -17,6 +17,8 @@ import {
     GetMyTrainerResponseDto
 } from '../dtos/user.dto'
 
+import { IRefundService } from '../core/interfaces/services/IRefundService'
+
 @injectable()
 export class UserTrainerController {
     constructor(
@@ -24,8 +26,10 @@ export class UserTrainerController {
         @inject(TYPES.IUserService) private _userService: IUserService,
         @inject(TYPES.ISlotService) private _slotService: ISlotService,
         @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
-        @inject(TYPES.IJwtService) private _jwtService: IJwtService
+        @inject(TYPES.IJwtService) private _jwtService: IJwtService,
+        @inject(TYPES.IRefundService) private _refundService: IRefundService
     ) { }
+
 
     async getTrainers(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -100,14 +104,25 @@ export class UserTrainerController {
             const userId = (req.user as JwtPayload).id
             const trainerId = await this._userService.getAssignedTrainerId(userId)
             if (!trainerId) throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.BAD_REQUEST)
+
+            const userPlan = await this._userPlanService.getUserPlan(userId, trainerId)
+            if (!userPlan) throw new AppError('No active trainer subscription found', STATUS_CODE.NOT_FOUND)
+
+            const result = await this._refundService.applyTrainerRefund(userPlan._id.toString(), userId)
+
             await this._userService.cancelSubscription(userId, trainerId)
             await this._trainerService.removeClientFromTrainer(trainerId, userId)
             await this._userPlanService.deleteUserPlan(userId, trainerId)
-            res.status(STATUS_CODE.OK).json({ message: MESSAGES.DELETED })
+
+            res.status(STATUS_CODE.OK).json({
+                message: 'Trainer subscription cancelled successfully',
+                refundAmount: result.refundAmount
+            })
         } catch (err) {
             next(err)
         }
     }
+
 
     async getTrainerAvailability(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {

@@ -4,14 +4,18 @@ export interface ISubscriptionPlan extends Document {
   _id: Types.ObjectId;
   gymId: Types.ObjectId;
   name: string;
-  duration: number; 
+  duration: number;
   durationUnit: 'day' | 'month' | 'year';
   price: number;
   description?: string;
   features: string[];
+  trainerChat: boolean;
+  videoCall: boolean;
+  isCardioIncluded: boolean;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+
 }
 
 const subscriptionPlanSchema: Schema<ISubscriptionPlan> = new Schema(
@@ -23,8 +27,12 @@ const subscriptionPlanSchema: Schema<ISubscriptionPlan> = new Schema(
     price: { type: Number, required: true },
     description: { type: String },
     features: [{ type: String }],
+    trainerChat: { type: Boolean, default: false },
+    videoCall: { type: Boolean, default: false },
+    isCardioIncluded: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
   },
+
   { timestamps: true }
 );
 

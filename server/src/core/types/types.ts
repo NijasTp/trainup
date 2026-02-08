@@ -116,6 +116,9 @@ const TYPES = {
   IAuthGymTempRepository: Symbol.for("IAuthGymTempRepository"),
   IGymAuthService: Symbol.for("IGymAuthService"),
   GymAuthController: Symbol.for("GymAuthController"),
+
+  IWalletRepository: Symbol.for("IWalletRepository"),
 };
+
 
 export default TYPES;
