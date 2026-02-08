@@ -34,8 +34,8 @@ const SidebarItem = ({ icon: Icon, label, path, active, isOpen }: SidebarItemPro
             whileHover={{ scale: 1.02, x: 5 }}
             whileTap={{ scale: 0.98 }}
             className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${active
-                    ? 'bg-primary/20 text-primary border border-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)]'
-                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                ? 'bg-primary/20 text-primary border border-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)]'
+                : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
         >
             <Icon className={`h-5 w-5 ${active ? 'text-primary' : ''}`} />
@@ -113,7 +113,7 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
                     </button>
                 </div>
 
-                <nav className="flex-1 flex flex-col gap-2">
+                <nav className="flex-1 overflow-y-auto flex flex-col gap-2 pr-2 custom-scrollbar">
                     {menuItems.map((item) => (
                         <SidebarItem
                             key={item.path}

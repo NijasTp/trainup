@@ -22,6 +22,7 @@ export interface IWorkoutTemplate extends Document {
     equipment: boolean;
     days: IWorkoutTemplateDay[];
     createdBy: Types.ObjectId | string;
+    creatorModel: 'Admin' | 'Gym';
     createdAt: Date;
     updatedAt: Date;
 }
@@ -53,7 +54,8 @@ const WorkoutTemplateSchema = new Schema<IWorkoutTemplate>(
         goal: { type: String, required: true },
         equipment: { type: Boolean, default: false },
         days: { type: [DaySchema], default: [] },
-        createdBy: { type: Schema.Types.ObjectId, ref: "Admin", required: true },
+        createdBy: { type: Schema.Types.ObjectId, required: true, refPath: 'creatorModel' },
+        creatorModel: { type: String, required: true, enum: ['Admin', 'Gym'] }
     },
     { timestamps: true }
 );

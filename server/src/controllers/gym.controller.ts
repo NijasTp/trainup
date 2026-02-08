@@ -319,4 +319,173 @@ export class GymController {
       next(err);
     }
   }
+
+  async getMembers(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const page = parseInt(req.query.page as string || '1');
+      const limit = parseInt(req.query.limit as string || '10');
+      const search = req.query.search as string || '';
+
+      const result = await this._gymService.getGymMembers(gymId, page, limit, search);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getAttendance(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const date = req.query.date as string || new Date().toISOString().split('T')[0];
+
+      const result = await this._gymService.getGymAttendance(gymId, date);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // Products
+  async createProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const productFiles = req.files && req.files.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
+      const result = await this._gymService.createProduct(gymId, req.body, productFiles);
+      res.status(STATUS_CODE.CREATED).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getProducts(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const { page = '1', limit = '10', search = '', category = 'all' } = req.query as any;
+      const result = await this._gymService.getGymProducts(gymId, parseInt(page), parseInt(limit), search, category);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const { id } = req.params;
+      const productFiles = req.files && req.files.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
+
+      // Parse multi-value arrays from form-data if needed
+      if (req.body.existingImages && typeof req.body.existingImages === 'string') {
+        req.body.existingImages = [req.body.existingImages];
+      }
+
+      const result = await this._gymService.updateProduct(id, gymId, req.body, productFiles);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const { id } = req.params;
+      await this._gymService.deleteProduct(id, gymId);
+      res.status(STATUS_CODE.OK).json({ message: 'Product deleted' });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // Jobs
+  async createJob(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const result = await this._gymService.createJob(gymId, req.body);
+      res.status(STATUS_CODE.CREATED).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getJobs(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const { page = '1', limit = '10', search = '' } = req.query as any;
+      const result = await this._gymService.getGymJobs(gymId, parseInt(page), parseInt(limit), search);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateJob(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const { id } = req.params;
+      const result = await this._gymService.updateJob(id, gymId, req.body);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteJob(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const { id } = req.params;
+      await this._gymService.deleteJob(id, gymId);
+      res.status(STATUS_CODE.OK).json({ message: 'Job deleted' });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // Workout Templates
+  async createWorkoutTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const result = await this._gymService.createWorkoutTemplate(gymId, req.body);
+      res.status(STATUS_CODE.CREATED).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getGymWorkoutTemplates(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const { page = '1', limit = '10', search = '' } = req.query as any;
+      const result = await this._gymService.getGymWorkoutTemplates(gymId, parseInt(page), parseInt(limit), search);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateWorkoutTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const { id } = req.params;
+      const result = await this._gymService.updateWorkoutTemplate(id, gymId, req.body);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteWorkoutTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const { id } = req.params;
+      await this._gymService.deleteWorkoutTemplate(id, gymId);
+      res.status(STATUS_CODE.OK).json({ message: 'Workout template deleted' });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
+
+
+

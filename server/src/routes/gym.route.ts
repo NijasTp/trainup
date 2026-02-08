@@ -30,6 +30,29 @@ router.post('/reset-password', gymController.resetPassword.bind(gymController));
 // Gym protected
 router.get('/get-details', authMiddleware, roleMiddleware(['gym']), gymController.getData.bind(gymController))
 router.put('/update-profile', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), gymController.updateProfile.bind(gymController));
+router.get('/members', authMiddleware, roleMiddleware(['gym']), gymController.getMembers.bind(gymController));
+router.get('/attendance', authMiddleware, roleMiddleware(['gym']), gymController.getAttendance.bind(gymController));
+
+// Products
+router.get('/products', authMiddleware, roleMiddleware(['gym']), gymController.getProducts.bind(gymController));
+router.post('/products', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), gymController.createProduct.bind(gymController));
+router.put('/products/:id', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), gymController.updateProduct.bind(gymController));
+router.delete('/products/:id', authMiddleware, roleMiddleware(['gym']), gymController.deleteProduct.bind(gymController));
+
+// Jobs
+router.get('/jobs', authMiddleware, roleMiddleware(['gym']), gymController.getJobs.bind(gymController));
+router.post('/jobs', authMiddleware, roleMiddleware(['gym']), gymController.createJob.bind(gymController));
+router.put('/jobs/:id', authMiddleware, roleMiddleware(['gym']), gymController.updateJob.bind(gymController));
+router.delete('/jobs/:id', authMiddleware, roleMiddleware(['gym']), gymController.deleteJob.bind(gymController));
+
+// Workout Templates
+router.get('/workout-templates', authMiddleware, roleMiddleware(['gym']), gymController.getGymWorkoutTemplates.bind(gymController));
+router.post('/workout-templates', authMiddleware, roleMiddleware(['gym']), gymController.createWorkoutTemplate.bind(gymController));
+router.put('/workout-templates/:id', authMiddleware, roleMiddleware(['gym']), gymController.updateWorkoutTemplate.bind(gymController));
+router.delete('/workout-templates/:id', authMiddleware, roleMiddleware(['gym']), gymController.deleteWorkoutTemplate.bind(gymController));
+
+
+
 
 
 router.get("/announcements", authMiddleware, gymController.getAnnouncements.bind(gymController));

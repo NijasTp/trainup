@@ -7,7 +7,15 @@ import { IGym } from '../models/gym.model'
 import { ITrainer } from '../models/trainer.model'
 import { ISubscriptionPlan } from '../models/gymSubscriptionPlan.model'
 import { IGymAnnouncement } from '../models/gymAnnouncement.model'
+import { GymProductModel } from '../models/gymProduct.model'
+import { GymJobModel } from '../models/gymJob.model'
+import { UserGymMembershipModel } from '../models/userGymMembership.model'
+import { AttendanceModel } from '../models/gymAttendence.model'
+import mongoose from 'mongoose'
 import cloudinary from '../config/cloudinary'
+import WorkoutTemplate from '../models/workoutTemplate.model'
+import { IWorkoutTemplate } from '../models/workoutTemplate.model'
+
 import { UploadedFile } from 'express-fileupload'
 import { IJwtService } from '../core/interfaces/services/IJwtService'
 import {
@@ -658,7 +666,101 @@ export class GymService implements IGymService {
     await this._gymRepo.updateGym(gym._id.toString(), { password: hashedPassword })
   }
 
+  async getGymMembers(
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ members: any[]; total: number; totalPages: number }> {
+    const skip = (page - 1) * limit;
+    const query: any = { gymId: new mongoose.Types.ObjectId(gymId) };
+
+    // Note: Searching by user name requires a lookup or populating and then filtering if the user model is separate.
+    // For now, let's just fetch all and populate. For large datasets, this should be an aggregation.
+
+    const total = await UserGymMembershipModel.countDocuments(query);
+    const memberships = await UserGymMembershipModel.find(query)
+      .populate('userId', 'name email profileImage')
+      .populate('planId', 'name price duration durationUnit')
+      .sort({ joinedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    let filteredMembers = memberships;
+    if (search) {
+      filteredMembers = memberships.filter((m: any) =>
+        m.userId?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        m.userId?.email?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    return {
+      members: filteredMembers,
+      total,
+      totalPages: Math.ceil(total / limit)
+    };
+  }
+
+  async getGymAttendance(
+    gymId: string,
+    date: string
+  ): Promise<{ records: any[]; stats: any }> {
+    const targetDate = new Date(date);
+    const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+
+    const records = await AttendanceModel.find({
+      gymId: new mongoose.Types.ObjectId(gymId),
+      date: { $gte: startOfDay, $lte: endOfDay }
+    })
+      .populate('userId', 'name email profileImage')
+      .sort({ checkInTime: -1 })
+      .lean();
+
+    // Stats
+    const todayEntries = records.length;
+
+    // Weekly average (simplified: last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const weeklyCount = await AttendanceModel.countDocuments({
+      gymId: new mongoose.Types.ObjectId(gymId),
+      date: { $gte: sevenDaysAgo }
+    });
+    const weeklyAverage = Math.round(weeklyCount / 7);
+
+    // Peak hour calculation (simplified)
+    const hourCounts: { [key: number]: number } = {};
+    records.forEach((r: any) => {
+      const hour = new Date(r.checkInTime).getHours();
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+    });
+    let peakHour = 'N/A';
+    let maxCount = 0;
+    Object.entries(hourCounts).forEach(([hour, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        const h = parseInt(hour);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayHour = h % 12 || 12;
+        peakHour = `${displayHour}:00 ${ampm}`;
+      }
+    });
+
+    return {
+      records,
+      stats: {
+        todayEntries,
+        weeklyAverage,
+        peakHour
+      }
+    };
+  }
+
   async updateGymProfile(
+
+
 
     gymId: string,
     data: Partial<IGym>,
@@ -731,4 +833,225 @@ export class GymService implements IGymService {
 
     return updatedGym;
   }
+
+  // Products
+  async createProduct(
+    gymId: string,
+    data: any,
+    files?: UploadedFile[]
+  ): Promise<any> {
+    const imageUrls: string[] = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const upload = await cloudinary.uploader.upload(file.tempFilePath, {
+          folder: `gyms/${gymId}/products`
+        });
+        imageUrls.push(upload.secure_url);
+      }
+    }
+
+    const product = new GymProductModel({
+      ...data,
+      gymId: new mongoose.Types.ObjectId(gymId),
+      images: imageUrls
+    });
+
+    return await product.save();
+  }
+
+  async getGymProducts(
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string,
+    category: string
+  ): Promise<{ products: any[]; total: number; totalPages: number }> {
+    const skip = (page - 1) * limit;
+    const query: any = { gymId: new mongoose.Types.ObjectId(gymId) };
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    if (category && category !== 'all') {
+      query.category = category;
+    }
+
+    const [products, total] = await Promise.all([
+      GymProductModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      GymProductModel.countDocuments(query)
+    ]);
+
+    return {
+      products,
+      total,
+      totalPages: Math.ceil(total / limit)
+    };
+  }
+
+  async updateProduct(
+    productId: string,
+    gymId: string,
+    data: any,
+    files?: UploadedFile[]
+  ): Promise<any> {
+    const product = await GymProductModel.findOne({ _id: productId, gymId: new mongoose.Types.ObjectId(gymId) });
+    if (!product) throw new AppError('Product not found', STATUS_CODE.NOT_FOUND);
+
+    const imageUrls = [...(data.existingImages || product.images)];
+
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const upload = await cloudinary.uploader.upload(file.tempFilePath, {
+          folder: `gyms/${gymId}/products`
+        });
+        imageUrls.push(upload.secure_url);
+      }
+    }
+
+    delete data.existingImages;
+    Object.assign(product, { ...data, images: imageUrls });
+    return await product.save();
+  }
+
+  async deleteProduct(productId: string, gymId: string): Promise<void> {
+    const result = await GymProductModel.deleteOne({ _id: productId, gymId: new mongoose.Types.ObjectId(gymId) });
+    if (result.deletedCount === 0) throw new AppError('Product not found', STATUS_CODE.NOT_FOUND);
+  }
+
+  // Jobs
+  async createJob(
+    gymId: string,
+    data: any
+  ): Promise<any> {
+    const job = new GymJobModel({
+      ...data,
+      gymId: new mongoose.Types.ObjectId(gymId)
+    });
+    return await job.save();
+  }
+
+  async getGymJobs(
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ jobs: any[]; total: number; totalPages: number }> {
+    const skip = (page - 1) * limit;
+    const query: any = { gymId: new mongoose.Types.ObjectId(gymId) };
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const [jobs, total] = await Promise.all([
+      GymJobModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      GymJobModel.countDocuments(query)
+    ]);
+
+    return {
+      jobs,
+      total,
+      totalPages: Math.ceil(total / limit)
+    };
+  }
+
+  async updateJob(
+    jobId: string,
+    gymId: string,
+    data: any
+  ): Promise<any> {
+    const job = await GymJobModel.findOneAndUpdate(
+      { _id: jobId, gymId: new mongoose.Types.ObjectId(gymId) },
+      { $set: data },
+      { new: true }
+    );
+    if (!job) throw new AppError('Job not found', STATUS_CODE.NOT_FOUND);
+    return job;
+  }
+
+  async deleteJob(jobId: string, gymId: string): Promise<void> {
+    const result = await GymJobModel.deleteOne({ _id: jobId, gymId: new mongoose.Types.ObjectId(gymId) });
+    if (result.deletedCount === 0) throw new AppError('Job not found', STATUS_CODE.NOT_FOUND);
+  }
+
+  // Workout Templates
+  async createWorkoutTemplate(
+    gymId: string,
+    data: any
+  ): Promise<any> {
+    const template = new WorkoutTemplate({
+      ...data,
+      createdBy: new mongoose.Types.ObjectId(gymId),
+      creatorModel: 'Gym'
+    });
+    return await template.save();
+  }
+
+  async getGymWorkoutTemplates(
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ templates: any[]; total: number; totalPages: number }> {
+    const skip = (page - 1) * limit;
+    const query: any = { createdBy: new mongoose.Types.ObjectId(gymId), creatorModel: 'Gym' };
+
+    if (search) {
+      query.title = { $regex: search, $options: 'i' };
+    }
+
+    const [templates, total] = await Promise.all([
+      WorkoutTemplate.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      WorkoutTemplate.countDocuments(query)
+    ]);
+
+    return {
+      templates,
+      total,
+      totalPages: Math.ceil(total / limit)
+    };
+  }
+
+  async updateWorkoutTemplate(
+    templateId: string,
+    gymId: string,
+    data: any
+  ): Promise<any> {
+    const template = await WorkoutTemplate.findOneAndUpdate(
+      { _id: templateId, createdBy: new mongoose.Types.ObjectId(gymId), creatorModel: 'Gym' },
+      { $set: data },
+      { new: true }
+    );
+    if (!template) throw new AppError('Workout template not found', STATUS_CODE.NOT_FOUND);
+    return template;
+  }
+
+  async deleteWorkoutTemplate(templateId: string, gymId: string): Promise<void> {
+    const result = await WorkoutTemplate.deleteOne({
+      _id: templateId,
+      createdBy: new mongoose.Types.ObjectId(gymId),
+      creatorModel: 'Gym'
+    });
+    if (result.deletedCount === 0) throw new AppError('Workout template not found', STATUS_CODE.NOT_FOUND);
+  }
 }
+

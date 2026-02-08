@@ -172,7 +172,21 @@ export interface IGymService {
 
   resetPassword(email: string, password: string): Promise<void>;
 
+  getGymMembers(
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ members: any[]; total: number; totalPages: number }>;
+
+  getGymAttendance(
+    gymId: string,
+    date: string
+  ): Promise<{ records: any[]; stats: any }>;
+
   updateGymProfile(
+
+
     gymId: string,
     data: Partial<IGym>,
     files?: {
@@ -181,4 +195,71 @@ export interface IGymService {
       images?: UploadedFile | UploadedFile[];
     }
   ): Promise<IGym>;
+
+  // Products
+  createProduct(
+    gymId: string,
+    data: any,
+    files?: UploadedFile[]
+  ): Promise<any>;
+
+  getGymProducts(
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string,
+    category: string
+  ): Promise<{ products: any[]; total: number; totalPages: number }>;
+
+  updateProduct(
+    productId: string,
+    gymId: string,
+    data: any,
+    files?: UploadedFile[]
+  ): Promise<any>;
+
+  deleteProduct(productId: string, gymId: string): Promise<void>;
+
+  // Jobs
+  createJob(
+    gymId: string,
+    data: any
+  ): Promise<any>;
+
+  getGymJobs(
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ jobs: any[]; total: number; totalPages: number }>;
+
+  updateJob(
+    jobId: string,
+    gymId: string,
+    data: any
+  ): Promise<any>;
+
+  deleteJob(jobId: string, gymId: string): Promise<void>;
+
+  // Workout Templates
+  createWorkoutTemplate(
+    gymId: string,
+    data: any
+  ): Promise<any>;
+
+  getGymWorkoutTemplates(
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ templates: any[]; total: number; totalPages: number }>;
+
+  updateWorkoutTemplate(
+    templateId: string,
+    gymId: string,
+    data: any
+  ): Promise<any>;
+
+  deleteWorkoutTemplate(templateId: string, gymId: string): Promise<void>;
 }
+
