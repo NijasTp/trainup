@@ -24,14 +24,13 @@ export class GymAuthService implements IGymAuthService {
 
     async requestOtp(emailRaw: string): Promise<void> {
         const email = emailRaw.trim().toLowerCase();
-        // Check if gym already exists
         const existingGym = await this._gymRepo.findByEmail(email);
         if (existingGym) {
             throw new AppError(MESSAGES.EMAIL_ALREADY_REGISTERED, STATUS_CODE.BAD_REQUEST);
         }
 
         const otp = this.generateOtp();
-        const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+        const expiresAt = new Date(Date.now() + 30 * 60 * 1000); 
 
         logger.info(`Gym registration OTP for ${email}: ${otp}`);
         await this._authGymTempRepo.saveVerification(email, otp, expiresAt);

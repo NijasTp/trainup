@@ -3,7 +3,6 @@ import { injectable, inject } from "inversify";
 import TYPES from "../core/types/types";
 import { IGymAuthService } from "../core/interfaces/services/IGymAuthService";
 import { STATUS_CODE } from "../constants/status";
-import { MESSAGES } from "../constants/messages.constants";
 import { logger } from "../utils/logger.util";
 
 @injectable()
