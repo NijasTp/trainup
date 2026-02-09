@@ -75,8 +75,6 @@ export class GymController {
     try {
       const dto: GymVerifyOtpDto = req.body;
       await this._otpService.verifyOtp(dto.email, dto.otp);
-      // This seems to be the old registration flow or for verification of existing gyms.
-      // Keeping it for now but it might need refactoring if it conflicts.
       res.status(STATUS_CODE.OK).json({ message: 'OTP verified' });
     } catch (err) {
       logger.info('Error in verifyOtp:', err);

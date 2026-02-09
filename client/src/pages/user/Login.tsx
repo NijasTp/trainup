@@ -16,6 +16,16 @@ const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
   const { gym } = useSelector((state: RootState) => state.gymAuth);
 
   useEffect(() => {
+    if (activeRole === 'user' && window.location.pathname !== '/user/login') {
+      navigate('/user/login', { replace: true });
+    } else if (activeRole === 'trainer' && window.location.pathname !== '/trainer/login') {
+      navigate('/trainer/login', { replace: true });
+    } else if (activeRole === 'gym' && window.location.pathname !== '/gym/login') {
+      navigate('/gym/login', { replace: true });
+    }
+  }, [activeRole, navigate]);
+
+  useEffect(() => {
     if (user) {
       navigate('/home', { replace: true });
     } else if (trainer) {

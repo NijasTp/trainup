@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import Aurora from '@/components/ui/Aurora';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { ROUTES } from '@/constants/routes';
 import { requestGymAuthOtp, verifyGymAuthOtp } from '@/services/authService';
 
 const GymOtpVerification = () => {
@@ -39,7 +40,7 @@ const GymOtpVerification = () => {
             setStep(2);
             setResendTimer(60);
         } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to send OTP");
+            toast.error(error.response?.data?.error || "Failed to send OTP");
         } finally {
             setLoading(false);
         }
@@ -57,7 +58,7 @@ const GymOtpVerification = () => {
             toast.success("Email verified successfully");
             // Store verified email in session storage to use in Register page
             sessionStorage.setItem('verifiedGymEmail', email);
-            navigate('/gym/register');
+            navigate(ROUTES.GYM_ONBOARDING);
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Invalid OTP");
         } finally {

@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Aurora from '@/components/ui/Aurora';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { ROUTES } from '@/constants/routes';
 import { registerGym } from '@/services/authService';
 import ImageCropModal from './components/ImageCropModal';
 import OpeningHoursSelector from './components/OpeningHoursSelector';
@@ -28,7 +29,7 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 const Register = () => {
     const [searchParams] = useSearchParams();
-    const verifiedEmail = searchParams.get('email') || '';
+    const verifiedEmail = searchParams.get('email') || sessionStorage.getItem('verifiedGymEmail') || '';
 
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
@@ -58,7 +59,7 @@ const Register = () => {
     useEffect(() => {
         if (!verifiedEmail) {
             toast.error('Please verify your email first');
-            navigate('/gym/verify');
+            navigate(ROUTES.GYM_REGISTER);
         }
     }, [verifiedEmail, navigate]);
 
@@ -136,7 +137,8 @@ const Register = () => {
             if (logo) data.append('logo', logo);
             showcaseImages.forEach(img => data.append('images', img));
             certifications.forEach(cert => data.append('certifications', cert));
-
+            console.log('data:',data)
+            console.log('formData:',formData)
             await registerGym(data);
             toast.success('Registration submitted! waiting for admin approval.');
             navigate('/gym/login');

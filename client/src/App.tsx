@@ -92,7 +92,7 @@ import GymWorkoutsPage from './pages/gym/workouts/Workouts';
 import GymOtpVerification from './pages/gym/register/GymOtpVerification';
 import GymStatus from './pages/gym/register/GymStatus';
 import GymReapply from './pages/gym/register/GymReapply';
-import {  GymProtectedRoute } from "./redirects/GymRedirects";
+import { GymProtectedRoute } from "./redirects/GymRedirects";
 
 
 function App() {
@@ -181,12 +181,13 @@ function App() {
         <Route path={ROUTES.ADMIN_EDIT_TEMPLATE} element={<AdminProtectedRoute><EditTemplate /></AdminProtectedRoute>} />
 
         {/* Gym Management Routes */}
-        <Route path="/gym/verify" element={<GymOtpVerification />} />
-        <Route path="/gym/register" element={<GymRegister />} />
-        <Route path="/gym/status" element={<GymProtectedRoute><GymStatus /></GymProtectedRoute>} />
-        <Route path="/gym/reapply" element={<GymProtectedRoute><GymReapply /></GymProtectedRoute>} />
-        <Route path="/gym/*" element={<GymLayout><Routes>
+        <Route path={ROUTES.GYM_LOGIN} element={<Login initialRole="gym" />} />
+        <Route path={ROUTES.GYM_REGISTER} element={<GymOtpVerification />} />
+        <Route path={ROUTES.GYM_ONBOARDING} element={<GymRegister />} />
+        <Route path={ROUTES.GYM_STATUS} element={<GymProtectedRoute><GymStatus /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_REAPPLY} element={<GymProtectedRoute><GymReapply /></GymProtectedRoute>} />
 
+        <Route path="/gym/*" element={<GymProtectedRoute><GymLayout><Routes>
           <Route path="dashboard" element={<GymDashboardPage />} />
           <Route path="profile" element={<GymProfilePage />} />
           <Route path="plans" element={<GymPlansPage />} />
@@ -206,7 +207,7 @@ function App() {
           <Route path="workouts" element={<GymWorkoutsPage />} />
           <Route path="workouts/create" element={<GymWorkoutsPage />} />
           <Route path="workouts/edit/:id" element={<GymWorkoutsPage />} />
-        </Routes></GymLayout>} />
+        </Routes></GymLayout></GymProtectedRoute>} />
 
         <Route path={ROUTES.USER_NOT_FOUND} element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
       </Routes>

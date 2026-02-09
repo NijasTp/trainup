@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function HeroSection() {
     return (
@@ -42,13 +43,15 @@ export default function HeroSection() {
                     transition={{ delay: 0.6, duration: 0.5 }}
                     className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6"
                 >
-                    <Button
-                        size="lg"
-                        className="h-14 px-10 text-lg rounded-full bg-white text-black hover:bg-gray-200 font-bold transition-all hover:scale-105 active:scale-95"
-                    >
-                        Start Your Journey
-                        <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
+                    <Link to="/user/login">
+                        <Button
+                            size="lg"
+                            className="h-14 px-10 text-lg rounded-full bg-white text-black hover:bg-gray-200 font-bold transition-all hover:scale-105 active:scale-95"
+                        >
+                            Start Your Journey
+                            <ArrowRight className="w-5 h-5 ml-2" />
+                        </Button>
+                    </Link>
                     <Button
                         variant="outline"
                         size="lg"
