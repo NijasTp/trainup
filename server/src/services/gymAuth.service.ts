@@ -1,7 +1,6 @@
 import { injectable, inject } from "inversify";
 import TYPES from "../core/types/types";
 import { IGymAuthService } from "../core/interfaces/services/IGymAuthService";
-import { IAuthGymTempRepository } from "../core/interfaces/repositories/IAuthGymTempRepository";
 import { IMailService } from "../core/interfaces/services/IMailService";
 import { IGymRepository } from "../core/interfaces/repositories/IGymRepository";
 import { sendOtpHtml } from "../utils/sendEmail";
@@ -13,7 +12,6 @@ import { logger } from "../utils/logger.util";
 @injectable()
 export class GymAuthService implements IGymAuthService {
     constructor(
-        @inject(TYPES.IAuthGymTempRepository) private _authGymTempRepo: IAuthGymTempRepository,
         @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository,
         @inject(TYPES.IMailService) private _mailService: IMailService
     ) { }
@@ -24,47 +22,76 @@ export class GymAuthService implements IGymAuthService {
 
     async requestOtp(emailRaw: string): Promise<void> {
         const email = emailRaw.trim().toLowerCase();
-        const existingGym = await this._gymRepo.findByEmail(email);
-        if (existingGym) {
+        let gym = await this._gymRepo.findByEmail(email);
+
+        if (gym && gym.onboardingCompleted) {
             throw new AppError(MESSAGES.EMAIL_ALREADY_REGISTERED, STATUS_CODE.BAD_REQUEST);
         }
 
         const otp = this.generateOtp();
-        const expiresAt = new Date(Date.now() + 30 * 60 * 1000); 
+        const otpExpiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+        if (!gym) {
+            await this._gymRepo.createGym({
+                email,
+                otp,
+                otpExpiresAt,
+                role: 'gym',
+                verifyStatus: 'pending',
+                isEmailVerified: false,
+                onboardingCompleted: false
+            } as any);
+        } else {
+            await this._gymRepo.updateGym(gym._id.toString(), {
+                otp,
+                otpExpiresAt,
+                isEmailVerified: false // Reset verification if requesting new OTP
+            });
+        }
 
         logger.info(`Gym registration OTP for ${email}: ${otp}`);
-        await this._authGymTempRepo.saveVerification(email, otp, expiresAt);
         await this._mailService.sendMail(email, 'Your Gym Registration OTP', sendOtpHtml(otp));
     }
 
     async verifyOtp(emailRaw: string, otp: string): Promise<boolean> {
         const email = emailRaw.trim().toLowerCase();
-        const record = await this._authGymTempRepo.findVerificationByEmail(email);
+        const gym = await this._gymRepo.findByEmail(email);
 
-        if (!record) {
+        if (!gym || !gym.otp) {
             throw new AppError(MESSAGES.NO_OTP_REQUESTED, STATUS_CODE.BAD_REQUEST);
         }
 
-        if (record.expiresAt < new Date()) {
+        if (gym.otpExpiresAt! < new Date()) {
             throw new AppError(MESSAGES.OTP_EXPIRED, STATUS_CODE.BAD_REQUEST);
         }
 
-        if (record.otp !== otp) {
+        if (gym.otp !== otp) {
             throw new AppError(MESSAGES.INVALID_OTP, STATUS_CODE.BAD_REQUEST);
         }
 
-        await this._authGymTempRepo.updateVerificationStatus(email, true);
+        await this._gymRepo.updateGym(gym._id.toString(), {
+            isEmailVerified: true,
+            otp: undefined,
+            otpExpiresAt: undefined
+        });
         return true;
     }
 
     async isVerified(emailRaw: string): Promise<boolean> {
         const email = emailRaw.trim().toLowerCase();
-        const record = await this._authGymTempRepo.findVerificationByEmail(email);
-        return !!record && record.verified;
+        const gym = await this._gymRepo.findByEmail(email);
+        return !!gym && gym.isEmailVerified;
     }
 
     async clearVerification(emailRaw: string): Promise<void> {
         const email = emailRaw.trim().toLowerCase();
-        await this._authGymTempRepo.deleteVerification(email);
+        const gym = await this._gymRepo.findByEmail(email);
+        if (gym) {
+            await this._gymRepo.updateGym(gym._id.toString(), {
+                isEmailVerified: false,
+                otp: undefined,
+                otpExpiresAt: undefined
+            });
+        }
     }
 }

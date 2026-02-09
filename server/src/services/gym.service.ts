@@ -141,7 +141,12 @@ export class GymService implements IGymService {
       results.forEach(res => imageUrls.push(res.secure_url));
     }
 
-    const gym = await this._gymRepo.createGym({
+    const existingGym = await this._gymRepo.findByEmail(data.email!)
+    if (!existingGym) {
+      throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    }
+
+    const gym = await this._gymRepo.updateGym(existingGym._id.toString(), {
       ...data,
       password: hashedPassword,
       geoLocation,
@@ -149,9 +154,14 @@ export class GymService implements IGymService {
       certifications: certificationsUrls,
       profileImage: profileImageUrl,
       logo: logoUrl,
-      images: imageUrls
+      images: imageUrls,
+      onboardingCompleted: true,
+      verifyStatus: 'pending' // Reset just in case, though it should be pending
     })
 
+    if (!gym) {
+      throw new AppError('Failed to update gym details', STATUS_CODE.INTERNAL_SERVER_ERROR)
+    }
 
     const accessToken = this._jwtService.generateAccessToken(
       gym._id.toString(),

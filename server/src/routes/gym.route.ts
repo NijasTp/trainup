@@ -23,8 +23,7 @@ router.post("/register", fileUpload({ useTempFiles: true }), gymController.regis
 router.get("/dashboard-stats", authMiddleware, roleMiddleware(['gym']), gymController.getDashboardStats.bind(gymController));
 
 // Auth (Existing Accounts)
-router.post("/request-otp", gymController.requestOtp.bind(gymController));
-router.post("/verify-otp", gymController.verifyOtp.bind(gymController));
+router.post("/login", gymController.login.bind(gymController));
 
 router.post('/logout', gymController.logout.bind(gymController))
 router.post('/forgot-password', gymController.forgotPassword.bind(gymController));
