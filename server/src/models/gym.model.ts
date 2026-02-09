@@ -22,9 +22,10 @@ export interface IGym extends Document {
   verifyStatus: "pending" | "approved" | "rejected";
   rejectReason: string | null;
   isBanned: boolean;
-  tokenVersion?: number;
-  trainers?: Types.ObjectId[] | null;
-  members?: Types.ObjectId[] | null;
+  isEmailVerified: boolean;
+  onboardingCompleted: boolean;
+  otp?: string;
+  otpExpiresAt?: Date;
   createdAt: Date | null;
   updatedAt: Date | null;
   images: string[] | null;
@@ -39,8 +40,12 @@ const GymSchema = new Schema<IGym>(
   {
     role: { type: String, enum: ["gym"], default: "gym" },
     name: { type: String },
-    email: { type: String, unique: true },
+    email: { type: String, unique: true, lowercase: true, trim: true },
     password: { type: String },
+    isEmailVerified: { type: Boolean, default: false },
+    onboardingCompleted: { type: Boolean, default: false },
+    otp: { type: String },
+    otpExpiresAt: { type: Date },
     announcements: [
       {
         title: String,
