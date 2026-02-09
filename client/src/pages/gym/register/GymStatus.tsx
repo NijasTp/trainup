@@ -1,5 +1,5 @@
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/redux/store';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/redux/store';
 
 import { motion } from 'framer-motion';
 import {
@@ -14,15 +14,22 @@ import {
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
 import { useNavigate } from 'react-router-dom';
-import { gymLogout } from '@/services/authService';
+import { logoutGymThunk } from '@/redux/slices/gymAuthSlice';
 
 const GymStatus = () => {
     const { gym } = useSelector((state: RootState) => state.gymAuth);
     const navigate = useNavigate();
+    const dispatch = useDispatch<AppDispatch>();
 
     const handleLogout = async () => {
-        await gymLogout();
-        window.location.href = ROUTES.GYM_LOGIN;
+        try {
+            await dispatch(logoutGymThunk()).unwrap();
+            navigate(ROUTES.GYM_LOGIN);
+        } catch (error) {
+            console.error('Logout failed:', error);
+            // Fallback redirect if API fails but we want to clear local state
+            navigate(ROUTES.GYM_LOGIN);
+        }
     };
 
     const isPending = gym?.verifyStatus === 'pending';

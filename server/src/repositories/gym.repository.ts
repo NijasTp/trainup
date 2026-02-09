@@ -53,7 +53,7 @@ export class GymRepository implements IGymRepository {
       .skip((page - 1) * limit)
       .limit(limit)
       .select(
-        'name email geoLocation isBanned verifyStatus profileImage logo address createdAt'
+        'name email geoLocation isBanned verifyStatus profileImage logo address description images createdAt'
       )
       .lean()
 

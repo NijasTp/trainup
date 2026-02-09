@@ -37,6 +37,7 @@ const Register = () => {
         name: '',
         email: verifiedEmail,
         password: '',
+        confirmPassword: '',
         address: '',
         description: '',
         lat: '',
@@ -169,9 +170,15 @@ const Register = () => {
     };
 
     const nextStep = () => {
-        if (step === 1 && (!formData.name || !formData.password || !formData.address || !formData.lat || !formData.lng)) {
-            toast.error('Please fill all required fields');
-            return;
+        if (step === 1) {
+            if (!formData.name || !formData.password || !formData.confirmPassword || !formData.address || !formData.lat || !formData.lng) {
+                toast.error('Please fill in all basic details');
+                return;
+            }
+            if (formData.password !== formData.confirmPassword) {
+                toast.error('Passwords do not match');
+                return;
+            }
         }
         setStep(step + 1);
     };
@@ -230,6 +237,13 @@ const Register = () => {
                                                 <div className="relative">
                                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
                                                     <Input name="password" type="password" value={formData.password} onChange={handleInputChange} className="bg-white/5 border-white/10 h-14 pl-12 rounded-2xl" placeholder="••••••••" />
+                                                </div>
+                                            </div>
+                                            <div className="group space-y-2">
+                                                <label className="text-sm font-bold text-gray-400 uppercase ml-1">Confirm Password</label>
+                                                <div className="relative">
+                                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
+                                                    <Input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleInputChange} className="bg-white/5 border-white/10 h-14 pl-12 rounded-2xl" placeholder="••••••••" />
                                                 </div>
                                             </div>
                                             <div className="group space-y-2">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {  useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     MapPin,
@@ -95,22 +95,45 @@ const GymReapply = () => {
     };
 
     const detectLocation = () => {
-        if (navigator.geolocation) {
-            toast.loading("Detecting your location...", { id: 'geo' });
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    setFormData({
-                        ...formData,
-                        lat: position.coords.latitude.toString(),
-                        lng: position.coords.longitude.toString()
-                    });
-                    toast.success("Location detected!", { id: 'geo' });
-                },
-                () => {
-                    toast.error("Location access denied.", { id: 'geo' });
-                }
-            );
+        if (!navigator.geolocation) {
+            toast.error('Geolocation is not supported by your browser');
+            return;
         }
+
+        toast.loading('Detecting location...', { id: 'geo' });
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                setFormData(prev => ({
+                    ...prev,
+                    lat: lat.toString(),
+                    lng: lng.toString()
+                }));
+
+                try {
+                    // Reverse geocoding using Nominatim
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                    const data = await response.json();
+                    if (data && data.display_name) {
+                        setFormData(prev => ({
+                            ...prev,
+                            address: data.display_name
+                        }));
+                        toast.success("Location and address detected!", { id: 'geo' });
+                    } else {
+                        toast.success("Location detected!", { id: 'geo' });
+                    }
+                } catch (error) {
+                    console.error("Reverse geocoding failed", error);
+                    toast.success("Location detected!", { id: 'geo' });
+                }
+            },
+            () => {
+                toast.error("Location access denied.", { id: 'geo' });
+            }
+        );
     };
 
     const handleSubmit = async () => {

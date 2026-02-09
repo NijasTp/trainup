@@ -29,10 +29,12 @@ const GymOtpVerification = () => {
 
     const handleRequestOtp = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (loading) return;
         if (!email) {
             toast.error("Please enter your business email");
             return;
         }
+        setLoading(true);
         try {
             await requestGymAuthOtp(email.trim().toLowerCase());
             toast.success("OTP sent to your email");
@@ -47,10 +49,12 @@ const GymOtpVerification = () => {
 
     const handleVerifyOtp = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (loading) return;
         if (!otp || otp.length < 6) {
             toast.error("Please enter a valid 6-digit OTP");
             return;
         }
+        setLoading(true);
         try {
             const normalizedEmail = email.trim().toLowerCase();
             await verifyGymAuthOtp(normalizedEmail, otp);

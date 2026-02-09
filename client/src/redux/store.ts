@@ -21,7 +21,7 @@ import { combineReducers } from 'redux';
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['userAuth','adminAuth','trainerAuth','gymAuth'],
+  whitelist: ['userAuth', 'adminAuth', 'trainerAuth', 'gymAuth'],
 };
 
 const rootReducer = combineReducers({
@@ -36,13 +36,14 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
-  getDefaultMiddleware({
-    serializableCheck: {
-      ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-    },
-  }),
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }),
 });
 
 export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
