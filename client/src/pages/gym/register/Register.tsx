@@ -105,12 +105,31 @@ const Register = () => {
 
         toast.loading('Detecting location...', { id: 'geo' });
         navigator.geolocation.getCurrentPosition(
-            (position) => {
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
                 setFormData(prev => ({
                     ...prev,
-                    lat: position.coords.latitude.toString(),
-                    lng: position.coords.longitude.toString()
+                    lat: lat.toString(),
+                    lng: lng.toString()
                 }));
+
+                try {
+                    // Reverse geocoding using Nominatim
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                    const data = await response.json();
+                    if (data && data.display_name) {
+                        setFormData(prev => ({
+                            ...prev,
+                            address: data.display_name
+                        }));
+                    }
+                } catch (error) {
+                    console.error('Reverse geocoding error:', error);
+                    // Silently fail geocoding, we already have coordinates
+                }
+
                 toast.success('Location detected!', { id: 'geo' });
             },
             (error) => {
@@ -137,8 +156,7 @@ const Register = () => {
             if (logo) data.append('logo', logo);
             showcaseImages.forEach(img => data.append('images', img));
             certifications.forEach(cert => data.append('certifications', cert));
-            console.log('data:',data)
-            console.log('formData:',formData)
+
             await registerGym(data);
             toast.success('Registration submitted! waiting for admin approval.');
             navigate('/gym/login');
