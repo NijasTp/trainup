@@ -33,9 +33,8 @@ const GymOtpVerification = () => {
             toast.error("Please enter your business email");
             return;
         }
-        setLoading(true);
         try {
-            await requestGymAuthOtp(email);
+            await requestGymAuthOtp(email.trim().toLowerCase());
             toast.success("OTP sent to your email");
             setStep(2);
             setResendTimer(60);
@@ -52,12 +51,12 @@ const GymOtpVerification = () => {
             toast.error("Please enter a valid 6-digit OTP");
             return;
         }
-        setLoading(true);
         try {
-            await verifyGymAuthOtp(email, otp);
+            const normalizedEmail = email.trim().toLowerCase();
+            await verifyGymAuthOtp(normalizedEmail, otp);
             toast.success("Email verified successfully");
             // Store verified email in session storage to use in Register page
-            sessionStorage.setItem('verifiedGymEmail', email);
+            sessionStorage.setItem('verifiedGymEmail', normalizedEmail);
             navigate(ROUTES.GYM_ONBOARDING);
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Invalid OTP");
@@ -68,9 +67,8 @@ const GymOtpVerification = () => {
 
     const handleResendOtp = async () => {
         if (resendTimer > 0) return;
-        setLoading(true);
         try {
-            await requestGymAuthOtp(email);
+            await requestGymAuthOtp(email.trim().toLowerCase());
             toast.success("OTP resent successfully");
             setResendTimer(60);
         } catch (error: any) {

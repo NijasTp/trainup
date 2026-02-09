@@ -45,7 +45,7 @@ export class GymController {
 
   async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { email } = req.body;
+      const email = req.body.email?.trim().toLowerCase();
       const isVerified = await this._gymAuthService.isVerified(email);
       if (!isVerified) {
         throw new AppError('Email not verified or verification expired', STATUS_CODE.BAD_REQUEST);

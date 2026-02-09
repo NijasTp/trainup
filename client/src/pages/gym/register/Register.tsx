@@ -29,7 +29,8 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 const Register = () => {
     const [searchParams] = useSearchParams();
-    const verifiedEmail = searchParams.get('email') || sessionStorage.getItem('verifiedGymEmail') || '';
+    const rawEmail = searchParams.get('email') || sessionStorage.getItem('verifiedGymEmail') || '';
+    const verifiedEmail = rawEmail.trim().toLowerCase();
 
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({

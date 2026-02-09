@@ -22,7 +22,8 @@ export class GymAuthService implements IGymAuthService {
         return Math.floor(100000 + Math.random() * 900000).toString();
     }
 
-    async requestOtp(email: string): Promise<void> {
+    async requestOtp(emailRaw: string): Promise<void> {
+        const email = emailRaw.trim().toLowerCase();
         // Check if gym already exists
         const existingGym = await this._gymRepo.findByEmail(email);
         if (existingGym) {
@@ -30,14 +31,15 @@ export class GymAuthService implements IGymAuthService {
         }
 
         const otp = this.generateOtp();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
 
         logger.info(`Gym registration OTP for ${email}: ${otp}`);
         await this._authGymTempRepo.saveVerification(email, otp, expiresAt);
         await this._mailService.sendMail(email, 'Your Gym Registration OTP', sendOtpHtml(otp));
     }
 
-    async verifyOtp(email: string, otp: string): Promise<boolean> {
+    async verifyOtp(emailRaw: string, otp: string): Promise<boolean> {
+        const email = emailRaw.trim().toLowerCase();
         const record = await this._authGymTempRepo.findVerificationByEmail(email);
 
         if (!record) {
@@ -56,12 +58,14 @@ export class GymAuthService implements IGymAuthService {
         return true;
     }
 
-    async isVerified(email: string): Promise<boolean> {
+    async isVerified(emailRaw: string): Promise<boolean> {
+        const email = emailRaw.trim().toLowerCase();
         const record = await this._authGymTempRepo.findVerificationByEmail(email);
         return !!record && record.verified;
     }
 
-    async clearVerification(email: string): Promise<void> {
+    async clearVerification(emailRaw: string): Promise<void> {
+        const email = emailRaw.trim().toLowerCase();
         await this._authGymTempRepo.deleteVerification(email);
     }
 }

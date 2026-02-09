@@ -11,7 +11,7 @@ export interface IAuthGymTemp extends Document {
 
 const AuthGymTempSchema: Schema<IAuthGymTemp> = new Schema(
     {
-        email: { type: String, required: true, unique: true },
+        email: { type: String, required: true, unique: true, lowercase: true, trim: true },
         otp: { type: String, required: true },
         expiresAt: { type: Date, required: true },
         verified: { type: Boolean, default: false },

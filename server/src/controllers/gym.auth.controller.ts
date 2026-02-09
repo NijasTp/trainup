@@ -19,7 +19,7 @@ export class GymAuthController {
                 res.status(STATUS_CODE.BAD_REQUEST).json({ message: "Email is required" });
                 return;
             }
-            await this._gymAuthService.requestOtp(email);
+            await this._gymAuthService.requestOtp(email.trim().toLowerCase());
             res.status(STATUS_CODE.OK).json({ message: "OTP sent to your email" });
         } catch (err) {
             logger.error("Error requesting gym registration OTP:", err);
@@ -34,7 +34,7 @@ export class GymAuthController {
                 res.status(STATUS_CODE.BAD_REQUEST).json({ message: "Email and OTP are required" });
                 return;
             }
-            await this._gymAuthService.verifyOtp(email, otp);
+            await this._gymAuthService.verifyOtp(email.trim().toLowerCase(), otp);
             res.status(STATUS_CODE.OK).json({ message: "Email verified successfully" });
         } catch (err) {
             logger.error("Error verifying gym registration OTP:", err);
