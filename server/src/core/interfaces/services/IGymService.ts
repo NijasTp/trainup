@@ -193,6 +193,7 @@ export interface IGymService {
       logo?: UploadedFile;
       profileImage?: UploadedFile;
       images?: UploadedFile | UploadedFile[];
+      certifications?: UploadedFile | UploadedFile[];
     }
   ): Promise<IGym>;
 

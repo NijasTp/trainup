@@ -113,12 +113,16 @@ export const verifyGymAuthOtp = async (email: string, otp: string) => {
 };
 
 export const registerGym = async (formData: FormData) => {
-  const response = await API.post("/gym/register", formData);
+  const response = await API.post("/gym/register", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return response.data;
 };
 
 export const reapplyGym = async (formData: FormData) => {
-  const response = await API.post("/gym/reapply", formData);
+  const response = await API.post("/gym/reapply", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return response.data;
 };
 
