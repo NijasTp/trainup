@@ -35,7 +35,7 @@ export const GymProtectedRoute: React.FC<{ children: JSX.Element }> = ({ childre
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const res = await api.get("/gym/get-details");
+                const res = await api.get("/gym/session");
                 dispatch(loginGym(res.data));
             } catch (err) {
                 console.error("Failed to fetch gym profile", err);

@@ -14,6 +14,7 @@ export interface IUser {
     streak?: number;
     xp?: number;
     achievements?: string[];
+    profileImage?: string;
     createdAt: Date;
     updatedAt: Date;
 }

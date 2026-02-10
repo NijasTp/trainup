@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react"
 import { AdminLayout } from "@/components/admin/AdminLayout"
-import { Users, UserCheck, DollarSign, ListIcon } from "lucide-react"
+import { Users, UserCheck, DollarSign, ListIcon, Loader2, Sparkles } from "lucide-react"
 import { getDashboardStats, getDashboardGraphData, getTrainers, getTrainerReviews } from "@/services/adminService"
 import StatCard from "@/components/admin/StatCard"
 import PlatformEarnings from "@/components/admin/dashboard/PlatformEarnings"
 import UserGrowth from "@/components/admin/dashboard/UserGrowth"
 import TrainerInsights from "@/components/admin/dashboard/TrainerInsights"
 import DashboardTransactions from "@/components/admin/dashboard/DashboardTransactions"
+import { motion } from "framer-motion"
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState<any>(null)
@@ -84,10 +85,18 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="p-8 flex items-center justify-center h-full min-h-[400px]">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin"></div>
-            <p className="text-zinc-500 font-medium animate-pulse">Loading analytics...</p>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] gap-6">
+          <div className="relative">
+            <Loader2 className="animate-spin text-primary" size={60} />
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute inset-0 bg-primary/20 blur-2xl rounded-full"
+            />
+          </div>
+          <div className="text-center space-y-2">
+            <p className="text-white font-black italic text-xl tracking-widest animate-pulse">SYNCHRONIZING ANALYTICS</p>
+            <p className="text-zinc-500 text-xs font-bold tracking-[0.3em] uppercase">Preparing platform insights...</p>
           </div>
         </div>
       </AdminLayout>
@@ -96,55 +105,66 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-8 pb-10">
+      <div className="space-y-10 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Page Header */}
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">Dashboard Overview</h1>
-          <p className="text-zinc-500 dark:text-zinc-400 font-medium">Platform status and performance metrics</p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-primary">
+              <Sparkles size={16} />
+              <span className="text-[10px] font-black tracking-[0.3em] uppercase">Platform Overview</span>
+            </div>
+            <h1 className="text-4xl font-black text-white italic tracking-tight">ADMIN ANALYTICS</h1>
+            <p className="text-zinc-500 font-medium">Real-time performance metrics and user growth tracking</p>
+          </div>
+
+          <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-2 flex items-center gap-3">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-black text-zinc-400 tracking-widest uppercase">Live System Status</span>
+          </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           <StatCard
-            title="Total Users"
+            title="TOTAL PLATFORM USERS"
             value={stats?.totalUsers?.toLocaleString() || "0"}
             icon={Users}
             trend="+12.5%"
             trendType="positive"
           />
           <StatCard
-            title="Active Trainers"
+            title="CERTIFIED TRAINERS"
             value={stats?.totalTrainers?.toLocaleString() || "0"}
             icon={UserCheck}
             trend="+8.2%"
             trendType="positive"
           />
           <StatCard
-            title="Total Revenue"
+            title="GROSS PLATFORM REVENUE"
             value={`₹${stats?.totalRevenue?.toLocaleString() || "0"}`}
             icon={DollarSign}
             trend="+15.4%"
             trendType="positive"
           />
           <StatCard
-            title="Templates"
+            title="SYSTEM TEMPLATES"
             value={stats?.totalTemplates?.toLocaleString() || "0"}
             icon={ListIcon}
-            trend="Stable"
+            trend="OPTIMIZED"
             trendType="neutral"
           />
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-12 gap-6 items-stretch">
-          <div className="col-span-12 xl:col-span-7">
+        <div className="grid grid-cols-12 gap-8">
+          <div className="col-span-12 xl:col-span-8">
             <PlatformEarnings
               data={revenueData}
               filter={revenueFilter}
               setFilter={setRevenueFilter}
             />
           </div>
-          <div className="col-span-12 xl:col-span-5">
+          <div className="col-span-12 xl:col-span-4">
             <UserGrowth
               data={userData}
               filter={userFilter}
@@ -153,8 +173,8 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* bottom Row */}
-        <div className="grid grid-cols-12 gap-6">
+        {/* Bottom Row */}
+        <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 xl:col-span-4 lg:col-span-5">
             <TrainerInsights
               trainers={trainers}
@@ -173,3 +193,4 @@ const AdminDashboard = () => {
 }
 
 export default AdminDashboard
+

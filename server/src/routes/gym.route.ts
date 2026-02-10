@@ -25,6 +25,7 @@ router.get("/dashboard-stats", authMiddleware, roleMiddleware(['gym']), gymContr
 // Auth (Existing Accounts)
 router.post("/login", gymController.login.bind(gymController));
 
+router.get("/session", authMiddleware, roleMiddleware(['gym']), gymController.checkSession.bind(gymController));
 router.post('/logout', gymController.logout.bind(gymController))
 router.post('/forgot-password', gymController.forgotPassword.bind(gymController));
 router.post('/reset-password', gymController.resetPassword.bind(gymController));

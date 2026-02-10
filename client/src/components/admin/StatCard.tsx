@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface StatCardProps {
   title: string;
@@ -15,30 +16,42 @@ export default function StatCard({
   trend,
   trendType = "neutral",
 }: StatCardProps) {
-  const getTrendColor = () => {
+  const getTrendStyles = () => {
     switch (trendType) {
-      case "positive": return "text-green-500";
-      case "negative": return "text-red-500";
-      default: return "text-gray-500";
+      case "positive": return "text-emerald-500 bg-emerald-500/10 border-emerald-500/20";
+      case "negative": return "text-red-500 bg-red-500/10 border-red-500/20";
+      default: return "text-zinc-500 bg-zinc-500/10 border-zinc-500/20";
     }
   };
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 transition-all hover:shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <div className="p-3 rounded-xl bg-gray-50 dark:bg-white/5">
-          <Icon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5 }}
+      className="relative group overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-6 md:p-8 transition-all"
+    >
+      <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+        <Icon size={100} className="text-primary" />
+      </div>
+
+      <div className="flex items-center justify-between mb-8 relative z-10">
+        <div className="h-14 w-14 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center text-primary shadow-xl group-hover:scale-110 group-hover:bg-primary group-hover:text-black transition-all duration-300">
+          <Icon size={28} />
         </div>
         {trend && (
-          <span className={`text-xs font-bold ${getTrendColor()}`}>
+          <span className={`text-[10px] font-black tracking-widest px-3 py-1.5 rounded-full border ${getTrendStyles()}`}>
             {trend}
           </span>
         )}
       </div>
-      <div>
-        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{title}</p>
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{value}</h3>
+
+      <div className="relative z-10">
+        <p className="text-[10px] font-black text-zinc-500 tracking-[0.2em] uppercase mb-1">{title}</p>
+        <h3 className="text-4xl font-black text-white italic tracking-tight group-hover:text-primary transition-colors">{value}</h3>
       </div>
-    </div>
+
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+    </motion.div>
   );
 }

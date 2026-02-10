@@ -103,6 +103,17 @@ export class GymController {
     }
   }
 
+  async checkSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = req.user!.id
+      const gym = await this._gymService.getGymById(gymId)
+      if (!gym) throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+      res.status(STATUS_CODE.OK).json(gym)
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getData(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const user = req.user as { id: string; role: string };

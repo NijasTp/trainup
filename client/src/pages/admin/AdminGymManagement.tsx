@@ -10,7 +10,12 @@ import {
     Calendar,
     MapPin,
     FileText,
-    ExternalLink
+    ExternalLink,
+    Filter,
+    Loader2,
+    ChevronLeft,
+    ChevronRight,
+    Building
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,10 +34,12 @@ import {
     DialogFooter
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
 
 const AdminGymManagement = () => {
     const [gyms, setGyms] = useState<any[]>([]);
-    const [page] = useState(1);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const [search, setSearch] = useState('');
     const [verifyStatus, setVerifyStatus] = useState('all');
     const [loading, setLoading] = useState(true);
@@ -46,6 +53,7 @@ const AdminGymManagement = () => {
             setLoading(true);
             const data = await getGyms(page, 10, search, undefined, verifyStatus);
             setGyms(data.gyms || []);
+            setTotalPages(data.totalPages || 1);
         } catch (error) {
             toast.error('Failed to fetch gyms');
         } finally {
@@ -55,7 +63,7 @@ const AdminGymManagement = () => {
 
     useEffect(() => {
         fetchGyms();
-    }, [verifyStatus, search]);
+    }, [verifyStatus, search, page]);
 
     const handleStatusUpdate = async (gymId: string, status: string, reason?: string) => {
         try {
@@ -85,156 +93,213 @@ const AdminGymManagement = () => {
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'approved': return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Approved</Badge>;
-            case 'pending': return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending</Badge>;
-            case 'rejected': return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Rejected</Badge>;
-            default: return <Badge variant="outline">{status}</Badge>;
+            case 'approved': return <Badge className="bg-green-500/20 text-green-500 border-0">APPROVED</Badge>;
+            case 'pending': return <Badge className="bg-yellow-500/20 text-yellow-500 border-0">PENDING</Badge>;
+            case 'rejected': return <Badge className="bg-red-500/20 text-red-500 border-0">REJECTED</Badge>;
+            default: return <Badge variant="outline" className="border-white/10 text-gray-400">{status.toUpperCase()}</Badge>;
         }
     };
 
     return (
         <AdminLayout>
-            <div className="space-y-6">
-                <header>
-                    <h1 className="text-2xl font-black text-zinc-900 dark:text-white">Gym Management</h1>
-                    <p className="text-zinc-500 dark:text-zinc-400">Review and manage gym registration applications</p>
-                </header>
-
-                <div className="flex flex-col md:flex-row gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 h-4 w-4" />
-                        <Input
-                            placeholder="Search by gym name or email..."
-                            className="pl-10"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex gap-2">
-                        <select
-                            className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm"
-                            value={verifyStatus}
-                            onChange={(e) => setVerifyStatus(e.target.value)}
-                        >
-                            <option value="all">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                        </select>
+            <div className="space-y-8">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 className="text-3xl font-black text-white italic">GYM MANAGEMENT</h1>
+                        <p className="text-gray-500">Review and manage gym registration applications</p>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
-                                <tr className="text-xs uppercase font-bold text-zinc-500 dark:text-zinc-400">
-                                    <th className="px-6 py-4">Gym Details</th>
-                                    <th className="px-6 py-4">Location</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4">Joined Date</th>
-                                    <th className="px-6 py-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                                {gyms.map((gym) => (
-                                    <tr key={gym._id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center overflow-hidden">
-                                                    {gym.logo ? (
-                                                        <img src={gym.logo} className="h-full w-full object-cover" />
-                                                    ) : (
-                                                        <Building2 className="text-zinc-400 h-5 w-5" />
+                <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
+                    <div className="p-6 border-b border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between">
+                        <div className="relative w-full md:w-96 group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
+                            <Input
+                                placeholder="Search gyms..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="bg-white/5 border-white/10 h-12 pl-12 rounded-xl text-white outline-none focus:ring-0"
+                            />
+                        </div>
+                        <div className="flex gap-2 w-full md:w-auto">
+                            <select
+                                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-gray-300 outline-none focus:ring-1 focus:ring-primary/50"
+                                value={verifyStatus}
+                                onChange={(e) => setVerifyStatus(e.target.value)}
+                            >
+                                <option value="all" className="bg-[#1a1a1a]">All Status</option>
+                                <option value="pending" className="bg-[#1a1a1a]">Pending</option>
+                                <option value="approved" className="bg-[#1a1a1a]">Approved</option>
+                                <option value="rejected" className="bg-[#1a1a1a]">Rejected</option>
+                            </select>
+                            <button className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-gray-400">
+                                <Filter size={20} />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto min-h-[400px]">
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+                                <Loader2 className="animate-spin text-primary" size={40} />
+                                <p className="text-zinc-500 font-bold animate-pulse tracking-widest">LOADING GYMS...</p>
+                            </div>
+                        ) : gyms.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+                                <Building className="text-zinc-700" size={60} />
+                                <p className="text-zinc-500 font-bold">NO GYMS FOUND</p>
+                            </div>
+                        ) : (
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+                                        <th className="px-8 py-4">Gym Details</th>
+                                        <th className="px-8 py-4">Location</th>
+                                        <th className="px-8 py-4">Status</th>
+                                        <th className="px-8 py-4">Joined</th>
+                                        <th className="px-8 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {gyms.map((gym) => (
+                                        <motion.tr
+                                            key={gym._id}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="hover:bg-white/[0.02] transition-colors group"
+                                        >
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                                                        {gym.logo ? (
+                                                            <img src={gym.logo} className="h-full w-full object-cover" />
+                                                        ) : (
+                                                            <Building2 className="text-zinc-500 h-6 w-6" />
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="font-bold text-white truncate">{gym.name}</div>
+                                                        <div className="text-xs text-gray-500 truncate">{gym.email}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                                                    <MapPin className="h-4 w-4 text-primary/60" />
+                                                    <span className="truncate max-w-[200px] font-medium">{gym.address || 'N/A'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="flex flex-col gap-1">
+                                                    {getStatusBadge(gym.verifyStatus)}
+                                                    {gym.isBanned && (
+                                                        <Badge className="bg-red-500/20 text-red-500 border-0 text-[10px] py-0.5">BANNED</Badge>
                                                     )}
                                                 </div>
-                                                <div>
-                                                    <div className="font-bold text-zinc-900 dark:text-white">{gym.name}</div>
-                                                    <div className="text-xs text-zinc-500">{gym.email}</div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
+                                                    <Calendar className="h-4 w-4 text-gray-600" />
+                                                    {new Date(gym.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-1 text-zinc-500 text-sm">
-                                                <MapPin className="h-3 w-3" />
-                                                <span className="truncate max-w-[150px]">{gym.address || 'N/A'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {getStatusBadge(gym.verifyStatus)}
-                                            {gym.isBanned && <Badge className="ml-2 bg-red-500/10 text-red-500 border-red-500/20">Banned</Badge>}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-1 text-zinc-500 text-sm">
-                                                <Calendar className="h-3 w-3" />
-                                                {new Date(gym.createdAt).toLocaleDateString()}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => { setSelectedGym(gym); setIsPreviewOpen(true); }}
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className={gym.isBanned ? 'text-green-500' : 'text-red-500'}
-                                                    onClick={() => handleBanToggle(gym._id, gym.isBanned)}
-                                                >
-                                                    <Ban className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {gyms.length === 0 && !loading && (
-                                    <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
-                                            No gym applications found.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                            </td>
+                                            <td className="px-8 py-6 text-right">
+                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white"
+                                                        onClick={() => { setSelectedGym(gym); setIsPreviewOpen(true); }}
+                                                    >
+                                                        <Eye className="h-5 w-5" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className={`h-10 w-10 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 ${gym.isBanned ? 'text-green-500' : 'text-red-500'}`}
+                                                        onClick={() => handleBanToggle(gym._id, gym.isBanned)}
+                                                    >
+                                                        <Ban className="h-5 w-5" />
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
+
+                    {/* Pagination */}
+                    {!loading && gyms.length > 0 && (
+                        <div className="p-6 border-t border-white/10 flex items-center justify-between">
+                            <p className="text-sm text-gray-500 font-bold">
+                                PAGE {page} OF {totalPages}
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                                    disabled={page === 1}
+                                    className="p-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-all"
+                                >
+                                    <ChevronLeft size={20} />
+                                </button>
+                                <button
+                                    onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={page === totalPages}
+                                    className="p-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-all"
+                                >
+                                    <ChevronRight size={20} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Preview Dialog */}
             <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0a0b] border-white/10 text-white rounded-3xl p-8">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black flex items-center gap-2">
-                            {selectedGym?.name} {getStatusBadge(selectedGym?.verifyStatus)}
-                        </DialogTitle>
-                        <DialogDescription>{selectedGym?.email}</DialogDescription>
+                        <div className="flex items-center justify-between gap-4 mb-6">
+                            <div>
+                                <DialogTitle className="text-3xl font-black italic mb-2 tracking-tight">
+                                    {selectedGym?.name}
+                                </DialogTitle>
+                                <DialogDescription className="text-gray-400 font-medium">
+                                    {selectedGym?.email}
+                                </DialogDescription>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                                {selectedGym && getStatusBadge(selectedGym.verifyStatus)}
+                                {selectedGym?.isBanned && <Badge className="bg-red-500/20 text-red-500 border-0">BANNED</Badge>}
+                            </div>
+                        </div>
                     </DialogHeader>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-6">
-                        <section className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 my-8">
+                        <section className="space-y-8">
                             <div>
-                                <h4 className="text-xs uppercase font-black text-zinc-400 mb-2">About Gym</h4>
-                                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4">ABOUT GYM</h4>
+                                <p className="text-sm text-gray-400 leading-bold font-medium bg-white/5 p-4 rounded-2xl border border-white/5">
                                     {selectedGym?.description || 'No description provided.'}
                                 </p>
                             </div>
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm">
-                                    <MapPin className="text-zinc-400 h-4 w-4" />
+
+                            <div className="grid grid-cols-1 gap-3">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-1">LOCATION INFO</h4>
+                                <div className="flex items-center gap-3 text-sm font-bold text-gray-300 bg-white/5 p-4 rounded-2xl border border-white/5 transition-colors hover:bg-white/10">
+                                    <MapPin className="text-primary h-5 w-5" />
                                     <span>{selectedGym?.address}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Building2 className="text-zinc-400 h-4 w-4" />
-                                    <span>Coordinates: {selectedGym?.geoLocation?.coordinates?.join(', ')}</span>
+                                <div className="flex items-center gap-3 text-sm font-bold text-gray-400 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                    <Building2 className="text-gray-600 h-5 w-5" />
+                                    <span className="font-mono text-xs tracking-tighter">COORDS: {selectedGym?.geoLocation?.coordinates?.join(', ')}</span>
                                 </div>
                             </div>
 
                             <div>
-                                <h4 className="text-xs uppercase font-black text-zinc-400 mb-2">Certifications</h4>
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4">CERTIFICATIONS</h4>
                                 <div className="grid grid-cols-1 gap-2">
                                     {selectedGym?.certifications?.map((cert: string, i: number) => (
                                         <a
@@ -242,43 +307,43 @@ const AdminGymManagement = () => {
                                             href={cert}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center gap-3 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors group"
+                                            className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-primary/10 hover:border-primary/20 transition-all group"
                                         >
-                                            <FileText className="text-primary h-5 w-5" />
-                                            <span className="text-sm font-medium">Certification {i + 1}</span>
-                                            <ExternalLink className="ml-auto h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <FileText className="text-primary h-6 w-6" />
+                                            <span className="text-sm font-bold text-white group-hover:translate-x-1 transition-transform">Certification {i + 1}</span>
+                                            <ExternalLink className="ml-auto h-4 w-4 text-gray-500 group-hover:text-primary transition-colors" />
                                         </a>
                                     ))}
                                     {(!selectedGym?.certifications || selectedGym.certifications.length === 0) && (
-                                        <p className="text-sm text-zinc-500 italic">No certifications uploaded.</p>
+                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-sm text-gray-600 italic">No certifications uploaded.</div>
                                     )}
                                 </div>
                             </div>
                         </section>
 
-                        <section className="space-y-4">
+                        <section className="space-y-8">
                             <div>
-                                <h4 className="text-xs uppercase font-black text-zinc-400 mb-2">Showcase Images</h4>
-                                <div className="grid grid-cols-2 gap-2">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4">SHOWCASE IMAGES</h4>
+                                <div className="grid grid-cols-2 gap-3">
                                     {selectedGym?.images?.map((img: string, i: number) => (
-                                        <div key={i} className="aspect-video rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden border border-zinc-200 dark:border-zinc-800">
+                                        <div key={i} className="aspect-video rounded-2xl bg-white/5 overflow-hidden border border-white/10 shadow-lg transition-transform hover:scale-[1.02]">
                                             <img src={img} className="w-full h-full object-cover" />
                                         </div>
                                     ))}
                                     {(!selectedGym?.images || selectedGym.images.length === 0) && (
-                                        <p className="text-sm text-zinc-500 italic col-span-2">No showcase images.</p>
+                                        <div className="col-span-2 p-8 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-sm text-gray-600 italic">No showcase images.</div>
                                     )}
                                 </div>
                             </div>
 
                             <div>
-                                <h4 className="text-xs uppercase font-black text-zinc-400 mb-2 font-outfit">Opening Hours</h4>
-                                <div className="space-y-1">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4 font-outfit">OPENING HOURS</h4>
+                                <div className="bg-white/5 rounded-2xl border border-white/10 p-4 space-y-1">
                                     {selectedGym?.openingHours?.map((oh: any, i: number) => (
-                                        <div key={i} className="flex justify-between text-sm py-1 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                                            <span className="font-medium">{oh.day}</span>
-                                            <span className={oh.isClosed ? 'text-red-500 font-bold' : 'text-zinc-600 dark:text-zinc-400'}>
-                                                {oh.isClosed ? 'Closed' : `${oh.open} - ${oh.close}`}
+                                        <div key={i} className="flex justify-between items-center text-sm py-2 px-2 rounded-lg hover:bg-white/5 transition-colors">
+                                            <span className="font-bold text-gray-300">{oh.day}</span>
+                                            <span className={oh.isClosed ? 'text-red-500 font-black italic text-xs tracking-widest' : 'text-primary font-bold'}>
+                                                {oh.isClosed ? 'CLOSED' : `${oh.open} - ${oh.close}`}
                                             </span>
                                         </div>
                                     ))}
@@ -287,51 +352,65 @@ const AdminGymManagement = () => {
                         </section>
                     </div>
 
-                    <DialogFooter className="gap-2 sm:gap-0">
+                    <DialogFooter className="gap-3 pt-6 border-t border-white/10">
                         {selectedGym?.verifyStatus === 'pending' && (
                             <>
                                 <Button
-                                    variant="outline"
-                                    className="text-red-500 border-red-500/20 hover:bg-red-500/10"
+                                    className="h-12 px-6 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 rounded-xl font-bold transition-all flex items-center gap-2"
                                     onClick={() => setIsRejectDialogOpen(true)}
                                 >
-                                    <XCircle className="mr-2 h-4 w-4" /> Reject Application
+                                    <XCircle size={18} /> Reject
                                 </Button>
                                 <Button
-                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                    className="h-12 px-8 bg-primary hover:bg-primary/90 text-black font-black rounded-xl transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] shadow-primary/20"
                                     onClick={() => handleStatusUpdate(selectedGym._id, 'approved')}
                                 >
-                                    <CheckCircle2 className="mr-2 h-4 w-4" /> Approve Application
+                                    <CheckCircle2 size={18} /> Approve
                                 </Button>
                             </>
                         )}
-                        <Button variant="ghost" onClick={() => setIsPreviewOpen(false)}>Close</Button>
+                        <Button
+                            variant="ghost"
+                            className="h-12 px-6 rounded-xl hover:bg-white/5 text-gray-400 font-bold"
+                            onClick={() => setIsPreviewOpen(false)}
+                        >
+                            Close
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             {/* Reject Reason Dialog */}
             <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-                <DialogContent>
+                <DialogContent className="bg-[#0a0a0b] border-white/10 text-white rounded-3xl p-8 max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Reject Application</DialogTitle>
-                        <DialogDescription>Please provide a reason for rejecting {selectedGym?.name}'s application.</DialogDescription>
+                        <DialogTitle className="text-2xl font-black italic tracking-tight">REJECT APPLICATION</DialogTitle>
+                        <DialogDescription className="text-gray-400 font-medium">
+                            Please provide a reason for rejecting <span className="text-white font-bold">{selectedGym?.name}</span>'s application.
+                        </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4">
+                    <div className="py-6">
                         <Textarea
                             placeholder="Reason for rejection..."
                             value={rejectReason}
                             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setRejectReason(e.target.value)}
+                            className="bg-white/5 border-white/10 rounded-xl min-h-[120px] text-white focus:ring-primary/50 text-base p-4"
                         />
                     </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsRejectDialogOpen(false)}>Cancel</Button>
+                    <DialogFooter className="gap-3">
                         <Button
-                            className="bg-red-600 hover:bg-red-700 text-white"
+                            variant="ghost"
+                            className="flex-1 rounded-xl text-gray-400 font-bold hover:bg-white/5"
+                            onClick={() => setIsRejectDialogOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl transition-all disabled:opacity-50"
                             onClick={() => handleStatusUpdate(selectedGym?._id, 'rejected', rejectReason)}
                             disabled={!rejectReason}
                         >
-                            Reject
+                            REJECT
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -341,3 +420,4 @@ const AdminGymManagement = () => {
 };
 
 export default AdminGymManagement;
+

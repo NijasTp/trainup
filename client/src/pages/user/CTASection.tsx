@@ -43,7 +43,7 @@ export default function CTASection() {
                             </motion.div>
                         </Link>
 
-                        <Link to="/gym/register">
+                        <Link to="/gym/login">
                             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                 <Button variant="outline" className="h-16 px-10 text-xl rounded-full border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/5 font-bold shadow-[0_0_20px_rgba(6,182,212,0.1)]">
                                     Join as Gym Owner
