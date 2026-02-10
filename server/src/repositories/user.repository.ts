@@ -69,7 +69,7 @@ export class UserRepository implements IUserRepository {
         .sort({ createdAt: -1, _id: -1 })
         .skip(skip)
         .limit(limit)
-        .select('name email phone role isVerified isBanned createdAt')
+        .select('_id name email phone role isVerified isBanned createdAt')
         .lean(),
       UserModel.countDocuments(query)
     ])

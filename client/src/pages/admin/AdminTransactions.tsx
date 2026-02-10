@@ -17,7 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Download, Search, ChevronLeft, ChevronRight, Wallet, History, Sparkles, Filter, ArrowUpRight, DollarSign } from "lucide-react";
+import { Download, Search, ChevronLeft, ChevronRight, Wallet, History, Sparkles, Filter, ArrowUpRight, DollarSign, Loader2 } from "lucide-react";
 import { getAdminTransactions, downloadSaleReport } from "@/services/adminService";
 import { unparse } from "papaparse";
 import { motion, AnimatePresence } from "framer-motion";
@@ -232,12 +232,12 @@ export default function AdminTransactions() {
                                             <TableCell className="text-center">
                                                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-white/5">
                                                     <div className={`h-2 w-2 rounded-full animate-pulse ${t.status === "completed" ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" :
-                                                            t.status === "failed" ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" :
-                                                                "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                                                        t.status === "failed" ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" :
+                                                            "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
                                                         }`} />
                                                     <span className={`text-[10px] font-black italic uppercase tracking-widest ${t.status === "completed" ? "text-emerald-500" :
-                                                            t.status === "failed" ? "text-red-500" :
-                                                                "text-amber-500"
+                                                        t.status === "failed" ? "text-red-500" :
+                                                            "text-amber-500"
                                                         }`}>
                                                         {t.status}
                                                     </span>

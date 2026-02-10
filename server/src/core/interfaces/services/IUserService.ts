@@ -37,7 +37,7 @@ export interface IUserService {
     updateData: Partial<IUser>,
     files?: { profileImage?: UploadedFile }
   ): Promise<UserResponseDto>
-  updateUserStatus(id: string, updateData: Partial<IUser>): Promise<void>
+  updateUserStatus(id: string, updateData: Partial<IUser>): Promise<UserResponseDto>
   updateUserTrainerId(userId: string, trainerId: string): Promise<void>
   updateUserGymMembership(
     userId: string,

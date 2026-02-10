@@ -22,6 +22,7 @@ import {
     Ruler,
     Clock,
     UserCircle,
+    Users,
     ShieldAlert,
     ChevronRight,
     Sparkles,

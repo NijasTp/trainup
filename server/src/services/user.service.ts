@@ -236,25 +236,24 @@ export class UserService implements IUserService {
         return this.mapToResponseDto(updatedUser);
     }
 
-    async updateUserStatus(id: string, updateData: Partial<IUser>) {
+    async updateUserStatus(id: string, updateData: Partial<IUser>): Promise<UserResponseDto> {
+        let updatedUser: IUser | null
         if (updateData.isBanned !== undefined) {
-            const updatedUser = await this._userRepo.updateStatusAndIncrementVersion(
+            updatedUser = await this._userRepo.updateStatusAndIncrementVersion(
                 id,
                 { isBanned: updateData.isBanned }
             )
-            if (!updatedUser)
-                throw new AppError(
-                    MESSAGES.FAILED_TO_UPDATE_USER_BAN,
-                    STATUS_CODE.INTERNAL_SERVER_ERROR
-                )
-            return
+        } else {
+            updatedUser = await this._userRepo.updateStatus(id, updateData)
         }
-        const updatedUser = await this._userRepo.updateStatus(id, updateData)
-        if (!updatedUser)
+
+        if (!updatedUser) {
             throw new AppError(
-                MESSAGES.FAILED_TO_UPDATE_USER_BAN,
-                STATUS_CODE.INTERNAL_SERVER_ERROR
+                MESSAGES.USER_NOT_FOUND,
+                STATUS_CODE.NOT_FOUND
             )
+        }
+        return this.mapToResponseDto(updatedUser)
     }
 
     async updateUserTrainerId(userId: string, trainerId: string) {
