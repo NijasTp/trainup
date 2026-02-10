@@ -31,7 +31,7 @@ const TrainerManagement = () => {
   const [endDate, setEndDate] = useState<string>("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmBan, setConfirmBan] = useState<{ id: string, status: boolean, name: string } | null>(null);
-  const trainersPerPage = 10;
+  const trainersPerPage = 5;
   const navigate = useNavigate();
 
   useEffect(() => {

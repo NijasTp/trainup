@@ -14,6 +14,11 @@ import {
     X,
     ChevronDown
 } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { logout as logoutAction } from "@/redux/slices/adminAuthSlice";
+import { logoutAdmin } from "@/services/authService";
+import { toast } from "react-toastify";
 
 interface SidebarItemProps {
     icon: React.ElementType;
@@ -79,6 +84,23 @@ const SidebarItem = ({ icon: Icon, label, path, active, isOpen, subItems }: Side
 const AppSidebar: React.FC<{ isOpen: boolean; setIsOpen: (val: boolean) => void }> = ({ isOpen, setIsOpen }) => {
     const location = useLocation();
 
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await logoutAdmin();
+            dispatch(logoutAction());
+            toast.success("Logged out successfully");
+            navigate("/admin/login");
+        } catch (error) {
+            console.error("Logout failed:", error);
+            // Even if API fails, we should clear local state
+            dispatch(logoutAction());
+            navigate("/admin/login");
+        }
+    };
+
     const menuItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
         { icon: Users, label: 'Users', path: '/admin/users' },
@@ -136,13 +158,13 @@ const AppSidebar: React.FC<{ isOpen: boolean; setIsOpen: (val: boolean) => void 
             </nav>
 
             <div className="pt-4 border-t border-white/10">
-                <Link
-                    to="/admin/login"
-                    className={`w-full flex items-center ${isOpen ? 'gap-4 px-4' : 'justify-center'} py-3 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all`}
+                <button
+                    onClick={handleLogout}
+                    className={`w-full flex items-center ${isOpen ? 'gap-4 px-4' : 'justify-center'} py-3 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer`}
                 >
                     <LogOut size={20} className="shrink-0" />
                     {isOpen && <span className="font-medium">Logout</span>}
-                </Link>
+                </button>
             </div>
         </motion.aside>
     );

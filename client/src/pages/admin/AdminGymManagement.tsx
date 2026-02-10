@@ -51,7 +51,7 @@ const AdminGymManagement = () => {
     const fetchGyms = async () => {
         try {
             setLoading(true);
-            const data = await getGyms(page, 10, search, undefined, verifyStatus);
+            const data = await getGyms(page, 5, search, undefined, verifyStatus);
             setGyms(data.gyms || []);
             setTotalPages(data.totalPages || 1);
         } catch (error) {

@@ -18,7 +18,7 @@ const UserManagement = () => {
   const [searchInput, setSearchInput] = useState("");
   const [isBannedFilter, setIsBannedFilter] = useState<string>("all");
   const [startDate, setStartDate] = useState<string>("");
-  const usersPerPage = 10;
+  const usersPerPage = 5;
   const navigate = useNavigate();
 
   useEffect(() => {
