@@ -20,11 +20,14 @@ import { getGymDetails } from '@/services/gymService';
 import ImageCropModal from './components/ImageCropModal';
 import OpeningHoursSelector from './components/OpeningHoursSelector';
 import type { OpeningHour } from './components/OpeningHoursSelector';
+import { useDispatch } from 'react-redux';
+import { updateGymDetails } from '@/redux/slices/gymAuthSlice';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const GymReapply = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
@@ -154,7 +157,8 @@ const GymReapply = () => {
         certifications.forEach(file => data.append('certifications', file));
 
         try {
-            await reapplyGym(data);
+            const response = await reapplyGym(data);
+            dispatch(updateGymDetails(response.gym));
             toast.success("Application resubmitted successfully! Please wait for approval.");
             navigate(ROUTES.GYM_STATUS);
         } catch (error) {

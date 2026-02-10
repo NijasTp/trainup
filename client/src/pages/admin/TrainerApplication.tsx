@@ -17,11 +17,9 @@ import {
   Shield,
   Star,
   Clock,
-  Badge,
   XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Logo } from '@/components/ui/logo';
 import {
   Dialog,
@@ -32,6 +30,9 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { Badge } from '@/components/ui/badge';
+import { motion } from 'framer-motion';
 
 const TrainerApplication = () => {
   const { trainerId } = useParams();
@@ -74,7 +75,6 @@ const TrainerApplication = () => {
 
   const handleReject = async () => {
     if (!rejectReason.trim()) {
-      alert('Please provide a reason for rejection');
       return;
     }
     setLoading(true);
@@ -96,342 +96,279 @@ const TrainerApplication = () => {
 
   if (fetching) {
     return (
-      <div className="min-h-screen bg-[#1F2A44] flex items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-[#4B8B9B]" />
-        <span className="ml-4 text-white text-xl">Loading application details...</span>
-      </div>
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center min-h-[600px] gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-zinc-500 font-bold animate-pulse tracking-widest uppercase">LOADING APPLICATION...</p>
+        </div>
+      </AdminLayout>
     );
   }
 
   if (!application) {
     return (
-      <div className="min-h-screen bg-[#1F2A44] flex flex-col items-center justify-center">
-        <p className="text-white text-xl mb-4">Application not found</p>
-        <Button onClick={handleBack}>Back to Trainers</Button>
-      </div>
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center min-h-[600px] gap-6">
+          <p className="text-white text-xl font-bold">APPLICATION NOT FOUND</p>
+          <Button
+            onClick={handleBack}
+            className="bg-primary text-black font-black italic px-8 h-12 rounded-2xl hover:bg-primary/90"
+          >
+            BACK TO TRAINERS
+          </Button>
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#1F2A44] p-4">
-      <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
-          body {
-            font-family: 'Poppins', sans-serif;
-          }
-          .animate-fade-in {
-            animation: fadeIn 0.5s ease-out;
-          }
-          @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-          }
-        `}
-      </style>
-
-      <div className="max-w-4xl mx-auto animate-fade-in">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
+    <AdminLayout>
+      <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-2">
+            <button
               onClick={handleBack}
-              className="text-white hover:text-[#4B8B9B] hover:bg-[#4B8B9B]/10"
+              className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-xs font-black tracking-widest uppercase mb-4 group"
             >
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Back to Trainers
-            </Button>
+              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+              BACK TO LIST
+            </button>
+            <h1 className="text-4xl font-black text-white italic leading-none">APPLICATION REVIEW</h1>
+            <p className="text-gray-500">Evaluate trainer application and professional credentials</p>
           </div>
-          <Logo />
+
+          <div className="flex items-center gap-3">
+            <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-4 py-2 font-black text-xs h-10 flex items-center gap-2">
+              <Clock size={14} />
+              PENDING VERIFICATION
+            </Badge>
+          </div>
         </div>
 
-        {/* Main Content */}
-        <Card className="bg-[#111827] border border-[#4B8B9B]/30 shadow-xl">
-          <CardHeader className="border-b border-[#4B8B9B]/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#4B8B9B]/20 to-[#001C30]/20 rounded-full flex items-center justify-center">
-                  <Shield className="h-8 w-8 text-[#4B8B9B]" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-white">Trainer Application Review</h1>
-                  <p className="text-[#4B8B9B] mt-1">Review and verify trainer application</p>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Profile & Contact */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Main Info Card */}
+            <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 space-y-8 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Shield size={120} className="text-primary" />
               </div>
-              <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
-                <Clock className="h-3 w-3 mr-1" />
-                Pending Verification
-              </Badge>
-            </div>
-          </CardHeader>
 
-          <CardContent className="space-y-8 mt-6">
-            {/* Profile Section */}
-            <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
-              {application.profileImage && (
-                <img
-                  src={application.profileImage}
-                  alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-[#4B8B9B]/30"
-                />
-              )}
-              <div className="flex-1 text-center md:text-left">
-                <h2 className="text-3xl font-bold text-white">{application.name}</h2>
-                <p className="text-[#4B8B9B] text-lg mt-1">{application.specialization}</p>
-                <div className="flex items-center justify-center md:justify-start space-x-4 mt-3 text-gray-400">
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    <span className="text-sm">Applied {new Date(application.createdAt).toLocaleDateString()}</span>
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
+                <div className="relative">
+                  <img
+                    src={application.profileImage || "/default-avatar.png"}
+                    alt="Profile"
+                    className="w-40 h-40 rounded-[2rem] object-cover border-4 border-white/5 shadow-2xl"
+                  />
+                  <div className="absolute -bottom-4 -right-4 bg-primary text-black p-3 rounded-2xl shadow-xl">
+                    <User size={24} />
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Contact Information */}
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                <User className="h-5 w-5 mr-2 text-[#4B8B9B]" />
-                Contact Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
-                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
-                    <Mail className="h-4 w-4" />
-                    <span className="text-sm font-medium">Email</span>
+                <div className="flex-1 text-center md:text-left space-y-4">
+                  <div>
+                    <h2 className="text-4xl font-black text-white italic">{application.name.toUpperCase()}</h2>
+                    <p className="text-primary font-black tracking-[0.2em] text-sm mt-1">{application.specialization.toUpperCase()}</p>
                   </div>
-                  <p className="text-white">{application.email}</p>
-                </div>
 
-                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
-                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
-                    <Phone className="h-4 w-4" />
-                    <span className="text-sm font-medium">Phone</span>
-                  </div>
-                  <p className="text-white">{application.phone}</p>
-                </div>
-
-                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
-                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
-                    <MapPin className="h-4 w-4" />
-                    <span className="text-sm font-medium">Location</span>
-                  </div>
-                  <p className="text-white">{application.location}</p>
-                </div>
-
-                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
-                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
-                    <Briefcase className="h-4 w-4" />
-                    <span className="text-sm font-medium">Experience</span>
-                  </div>
-                  <p className="text-white">{application.experience}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Subscription Plans */}
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                <Shield className="h-5 w-5 mr-2 text-[#4B8B9B]" />
-                Proposed Subscription Plans (Monthly)
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
-                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
-                    <Star className="h-4 w-4" />
-                    <span className="text-sm font-medium">Basic Plan</span>
-                  </div>
-                  <p className="text-2xl font-bold text-white">₹{application.price?.basic?.toLocaleString() || '0'}</p>
-                </div>
-
-                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
-                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
-                    <Briefcase className="h-4 w-4" />
-                    <span className="text-sm font-medium">Premium Plan</span>
-                  </div>
-                  <p className="text-2xl font-bold text-white">₹{application.price?.premium?.toLocaleString() || '0'}</p>
-                </div>
-
-                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
-                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-1">
-                    <Award className="h-4 w-4" />
-                    <span className="text-sm font-medium">Pro Plan</span>
-                  </div>
-                  <p className="text-2xl font-bold text-white">₹{application.price?.pro?.toLocaleString() || '0'}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Professional Information */}
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                <Award className="h-5 w-5 mr-2 text-[#4B8B9B]" />
-                Professional Details
-              </h3>
-              <div className="space-y-4">
-                <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
-                  <div className="flex items-center space-x-2 text-[#4B8B9B] mb-2">
-                    <FileText className="h-4 w-4" />
-                    <span className="text-sm font-medium">Bio</span>
-                  </div>
-                  <p className="text-white whitespace-pre-wrap">{application.bio}</p>
-                </div>
-
-                {application.certificate && (
-                  <div className="bg-[#1F2A44]/50 rounded-lg p-4 border border-[#4B8B9B]/20">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 text-[#4B8B9B]">
-                        <FileCheck className="h-4 w-4" />
-                        <span className="text-sm font-medium">Certificate</span>
-                      </div>
-                      <Badge className="bg-green-500/10 text-green-500 border-green-500/30">
-                        Uploaded
-                      </Badge>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-6 pt-4 border-t border-white/5">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-black tracking-widest uppercase block">Email Address</span>
+                      <p className="text-white font-medium">{application.email}</p>
                     </div>
-                    <Button
-                      variant="outline"
-                      className="mt-3 text-[#4B8B9B] border-[#4B8B9B]/30 hover:bg-[#4B8B9B]/10"
-                      onClick={() => setIsCertificateModalOpen(true)}
-                    >
-                      View Certificate
-                    </Button>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-black tracking-widest uppercase block">Contact Number</span>
+                      <p className="text-white font-medium">{application.phone}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-black tracking-widest uppercase block">Location</span>
+                      <p className="text-white font-medium">{application.location}</p>
+                    </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bio Section */}
+            <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 space-y-6">
+              <h3 className="text-xl font-black text-white italic flex items-center gap-3">
+                <FileText className="text-primary" size={24} />
+                PROFESSIONAL BIO
+              </h3>
+              <p className="text-gray-400 leading-relaxed font-medium">
+                {application.bio}
+              </p>
+            </div>
+
+            {/* Certificate Section */}
+            {application.certificate && (
+              <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-6">
+                  <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                    <Award size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-white italic">PROFESSIONAL CERTIFICATE</h3>
+                    <p className="text-zinc-500 text-sm font-medium">Verified document uploaded by trainer</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setIsCertificateModalOpen(true)}
+                  className="bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-2xl px-8 h-12 font-black text-xs"
+                >
+                  VIEW DOCUMENT
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Experience & Pricing */}
+          <div className="space-y-8">
+            {/* Quick Stats Card */}
+            <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 space-y-6">
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 bg-zinc-900 rounded-xl flex items-center justify-center text-primary border border-white/5">
+                    <Briefcase size={20} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-500 font-black tracking-widest uppercase block">Experience</span>
+                    <p className="text-white font-black text-xl italic">{application.experience.toUpperCase()}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 bg-zinc-900 rounded-xl flex items-center justify-center text-amber-500 border border-white/5">
+                    <Star size={20} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-500 font-black tracking-widest uppercase block">Initial Rating</span>
+                    <p className="text-white font-black text-xl italic">0.0 / 5.0</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pricing Card */}
+            <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 space-y-6">
+              <h3 className="text-xl font-black text-white italic text-center">MONTHLY PRICING</h3>
+
+              <div className="space-y-4">
+                <div className="bg-zinc-900/50 border border-white/5 p-5 rounded-3xl flex justify-between items-center group hover:border-primary/30 transition-colors">
+                  <span className="text-zinc-500 font-black text-xs tracking-widest uppercase">BASIC</span>
+                  <span className="text-white font-black text-xl italic">₹{application.price?.basic?.toLocaleString() || '0'}</span>
+                </div>
+                <div className="bg-zinc-900/50 border border-white/5 p-5 rounded-3xl flex justify-between items-center group hover:border-primary/30 transition-colors">
+                  <span className="text-primary font-black text-xs tracking-widest uppercase">PREMIUM</span>
+                  <span className="text-white font-black text-xl italic">₹{application.price?.premium?.toLocaleString() || '0'}</span>
+                </div>
+                <div className="bg-zinc-900/50 border border-white/5 p-5 rounded-3xl flex justify-between items-center group hover:border-primary/30 transition-colors">
+                  <span className="text-amber-500 font-black text-xs tracking-widest uppercase">PRO</span>
+                  <span className="text-white font-black text-xl italic">₹{application.price?.pro?.toLocaleString() || '0'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Decision Bar */}
+            <div className="flex flex-col gap-3">
+              <Button
+                onClick={handleVerify}
+                disabled={loading}
+                className="bg-primary hover:bg-primary/90 text-black font-black italic rounded-[1.5rem] h-14 w-full text-lg shadow-[0_10px_30px_rgba(var(--primary),0.3)]"
+              >
+                {loading ? <Loader2 className="animate-spin" /> : "APPROVE TRAINER"}
+              </Button>
+              <Button
+                onClick={() => setIsRejectModalOpen(true)}
+                disabled={loading}
+                className="bg-white/5 hover:bg-red-500/10 text-zinc-500 hover:text-red-500 border border-white/5 hover:border-red-500/20 rounded-[1.5rem] h-14 w-full font-black text-xs tracking-widest"
+              >
+                REJECT APPLICATION
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Certificate Modal */}
+        <Dialog open={isCertificateModalOpen} onOpenChange={setIsCertificateModalOpen}>
+          <DialogContent className="bg-[#0a0a0a] border-white/10 text-white max-w-4xl p-2 rounded-[2.5rem]">
+            <div className="p-8 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-black italic flex items-center gap-3">
+                  <FileCheck className="text-primary" size={28} />
+                  CREDENTIAL DOCUMENT
+                </h3>
+              </div>
+              <div className="bg-zinc-900 rounded-3xl overflow-hidden border border-white/5 flex items-center justify-center min-h-[500px]">
+                {application.certificate?.match(/\.(jpeg|jpg|gif|png)$/i) ? (
+                  <img
+                    src={application.certificate}
+                    alt="Certificate"
+                    className="max-h-[70vh] w-auto object-contain"
+                  />
+                ) : (
+                  <iframe
+                    src={application.certificate}
+                    title="Certificate"
+                    className="w-full h-[70vh] bg-white border-none"
+                  />
                 )}
               </div>
-              {/* Certificate Modal */}
-              {application.certificate && (
-                <Dialog open={isCertificateModalOpen} onOpenChange={setIsCertificateModalOpen}>
-                  <DialogContent className="bg-[#111827] border-[#4B8B9B]/30 text-white max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-semibold flex items-center">
-                        <FileCheck className="h-5 w-5 mr-2 text-green-500" />
-                        Trainer Certificate
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div className="py-4 flex justify-center items-center">
-                      {/* If it's an image, show image. If PDF, show iframe. */}
-                      {application.certificate.match(/\.(jpeg|jpg|gif|png)$/i) ? (
-                        <img
-                          src={application.certificate}
-                          alt="Trainer Certificate"
-                          className="max-h-[400px] rounded-lg border border-[#4B8B9B]/30"
-                        />
-                      ) : (
-                        <iframe
-                          src={application.certificate}
-                          title="Trainer Certificate"
-                          className="w-full h-[400px] rounded-lg border border-[#4B8B9B]/30 bg-white"
-                        />
-                      )}
-                    </div>
-                    <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsCertificateModalOpen(false)}
-                        className="text-gray-400 border-gray-600 hover:bg-gray-700/50"
-                      >
-                        Close
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              )}
+              <div className="flex justify-end">
+                <Button
+                  onClick={() => setIsCertificateModalOpen(false)}
+                  className="bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-2xl px-12 h-14 font-black"
+                >
+                  CLOSE
+                </Button>
+              </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-[#4B8B9B]/20">
-              <Button
-                variant="outline"
-                onClick={handleBack}
-                className="text-gray-400 border-gray-600 hover:bg-gray-700/50 hover:text-white px-6 py-2"
-              >
-                Cancel
-              </Button>
-              {application.profileStatus !== 'approved' && (
-                <>
-                  <Button
-                    variant="destructive"
-                    onClick={() => setIsRejectModalOpen(true)}
-                    disabled={loading}
-                    className="bg-red-600 text-white px-8 py-2 rounded-lg hover:bg-red-700 transition duration-300 shadow-lg"
-                  >
-                    <XCircle className="h-5 w-5 mr-2" />
-                    Reject Trainer
-                  </Button>
-                  <Button
-                    onClick={handleVerify}
-                    disabled={loading}
-                    className="bg-[#001C30] text-white px-8 py-2 rounded-lg hover:bg-gradient-to-r hover:from-[#001C30] hover:to-[#1F2A44] transition duration-300 shadow-lg"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Verifying...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-5 w-5 mr-2" />
-                        Verify Trainer
-                      </>
-                    )}
-                  </Button>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          </DialogContent>
+        </Dialog>
 
         {/* Reject Modal */}
         <Dialog open={isRejectModalOpen} onOpenChange={setIsRejectModalOpen}>
-          <DialogContent className="bg-[#111827] border-[#4B8B9B]/30 text-white">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold flex items-center">
-                <XCircle className="h-5 w-5 mr-2 text-red-500" />
-                Reject Trainer Application
+          <DialogContent className="bg-[#0a0a0a] border-white/10 text-white rounded-[2.5rem] p-8">
+            <DialogHeader className="space-y-4">
+              <DialogTitle className="text-3xl font-black italic flex items-center gap-3">
+                <XCircle className="text-red-500" size={32} />
+                REJECT APPLICATION
               </DialogTitle>
+              <p className="text-zinc-500 font-medium leading-relaxed">
+                Please provide a detailed reason for rejecting <span className="text-white font-bold">{application.name}</span>.
+                This will be shared with the applicant.
+              </p>
             </DialogHeader>
-            <div className="py-4">
-              <Label htmlFor="rejectReason" className="text-white mb-2 block">
-                Reason for Rejection
-              </Label>
+            <div className="py-8">
               <Textarea
-                id="rejectReason"
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Please provide a reason for rejecting this application"
-                className="bg-gray-700 border-gray-600 text-white"
-                rows={4}
+                placeholder="Indicate why the application was not approved..."
+                className="bg-zinc-900/50 border-white/10 text-white rounded-3xl p-6 min-h-[150px] focus:border-red-500/50 transition-colors"
                 required
               />
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex flex-col sm:flex-row gap-3">
               <Button
-                variant="outline"
                 onClick={() => setIsRejectModalOpen(false)}
-                className="text-gray-400 border-gray-600 hover:bg-gray-700/50"
+                className="bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-2xl px-8 h-12 font-black text-xs"
               >
-                Cancel
+                CANCEL
               </Button>
               <Button
-                variant="destructive"
                 onClick={handleReject}
-                disabled={loading}
-                className="bg-red-600 hover:bg-red-700"
+                disabled={loading || !rejectReason.trim()}
+                className="bg-red-500 hover:bg-red-600 text-white rounded-2xl px-8 h-12 font-black text-xs shadow-[0_10px_30px_rgba(239,68,68,0.3)]"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Rejecting...
-                  </>
-                ) : (
-                  'Confirm Rejection'
-                )}
+                {loading ? <Loader2 className="animate-spin mr-2" /> : "CONFIRM REJECTION"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 

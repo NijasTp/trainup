@@ -1,28 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Search, Eye, ChevronLeft, ChevronRight, Loader2, Users, Calendar } from "lucide-react";
+import { Search, Eye, ChevronLeft, ChevronRight, Loader2, Calendar, UserX } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getUsers } from "@/services/adminService";
 import type { IUser } from "@/interfaces/admin/IUserManagement";
-import Badge from "@/components/admin/ui/Badge";
-import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/admin/ui/Table";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { Input } from "@/components/ui/input";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<IUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [isBannedFilter, setIsBannedFilter] = useState<string>("all");
-  const [isVerifiedFilter, setIsVerifiedFilter] = useState<string>("all");
   const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const usersPerPage = 8;
+  const usersPerPage = 10;
   const navigate = useNavigate();
-
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -33,16 +30,14 @@ const UserManagement = () => {
           usersPerPage,
           searchQuery,
           isBannedFilter,
-          isVerifiedFilter,
+          undefined,
           startDate,
-          endDate
+          undefined
         );
         setUsers(users);
         setTotal(total);
         setTotalPages(totalPages);
-        setError(null);
       } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to fetch users. Please try again.");
         setUsers([]);
         setTotalPages(1);
       } finally {
@@ -51,7 +46,7 @@ const UserManagement = () => {
     };
 
     fetchUsers();
-  }, [currentPage, searchQuery, isBannedFilter, isVerifiedFilter, startDate, endDate]);
+  }, [currentPage, searchQuery, isBannedFilter, startDate]);
 
   const handleSearch = () => {
     setSearchQuery(searchInput);
@@ -76,147 +71,148 @@ const UserManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white/90 flex items-center gap-2">
-              <Users className="h-6 w-6 text-brand-500" />
-              User Management
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Total {total} users registered</p>
+            <h1 className="text-3xl font-black text-white italic">USER MANAGEMENT</h1>
+            <p className="text-gray-500">Total {total} users registered in the system</p>
           </div>
         </div>
 
-        {/* Filters Card */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
+        <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
+          <div className="p-6 border-b border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative w-full md:w-96 group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
+              <Input
                 placeholder="Search users..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                className="bg-white/5 border-white/10 h-12 pl-12 rounded-xl text-white outline-none focus:ring-0"
               />
             </div>
-            <select
-              value={isBannedFilter}
-              onChange={(e) => setIsBannedFilter(e.target.value)}
-              className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="banned">Banned</option>
-            </select>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full pl-10 px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none"
-              />
+            <div className="flex gap-2 w-full md:w-auto">
+              <select
+                value={isBannedFilter}
+                onChange={(e) => setIsBannedFilter(e.target.value)}
+                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-gray-300 outline-none focus:ring-1 focus:ring-primary/50"
+              >
+                <option value="all" className="bg-[#1a1a1a]">All Status</option>
+                <option value="active" className="bg-[#1a1a1a]">Active</option>
+                <option value="banned" className="bg-[#1a1a1a]">Banned</option>
+              </select>
+              <div className="relative hidden lg:block">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-gray-300 outline-none focus:ring-1 focus:ring-primary/50"
+                />
+              </div>
+              <button
+                onClick={handleSearch}
+                className="p-3 bg-primary text-black rounded-xl hover:bg-primary/90 transition-all font-bold text-xs px-6"
+              >
+                FILTER
+              </button>
             </div>
-            <button
-              onClick={handleSearch}
-              className="w-full py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              Apply Filters
-            </button>
           </div>
-        </div>
 
-        {/* Users Table */}
-        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
-          <div className="max-w-full overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
-                <TableRow>
-                  <TableCell isHeader className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</TableCell>
-                  <TableCell isHeader className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contact</TableCell>
-                  <TableCell isHeader className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</TableCell>
-                  <TableCell isHeader className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Joined</TableCell>
-                  <TableCell isHeader className="px-6 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</TableCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="px-6 py-20 text-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-brand-500 mx-auto" />
-                      <p className="mt-2 text-gray-500">Loading users...</p>
-                    </TableCell>
-                  </TableRow>
-                ) : users.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="px-6 py-20 text-center">
-                      <Users className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-                      <p className="text-gray-500">No users found matching your criteria</p>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  users.map((user) => (
-                    <TableRow key={user._id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
-                      <TableCell className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-brand-600 font-bold">
-                            {user.name.charAt(0)}
+          <div className="overflow-x-auto min-h-[400px]">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+                <Loader2 className="animate-spin text-primary" size={40} />
+                <p className="text-zinc-500 font-bold animate-pulse tracking-widest">LOADING USERS...</p>
+              </div>
+            ) : users.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+                <UserX className="text-zinc-700" size={60} />
+                <p className="text-zinc-500 font-bold">NO USERS FOUND</p>
+              </div>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+                    <th className="px-8 py-4">User</th>
+                    <th className="px-8 py-4">Contact</th>
+                    <th className="px-8 py-4">Status</th>
+                    <th className="px-8 py-4">Joined</th>
+                    <th className="px-8 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {users.map((user) => (
+                    <motion.tr
+                      key={user._id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="hover:bg-white/[0.02] transition-colors group"
+                    >
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-primary font-black text-lg overflow-hidden shrink-0">
+                            {user.profileImage ? (
+                              <img src={user.profileImage} className="w-full h-full object-cover" />
+                            ) : (
+                              user.name.charAt(0).toUpperCase()
+                            )}
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</p>
-                            <p className="text-xs text-gray-500">XP: {user.xp || 0}</p>
+                          <div className="min-w-0">
+                            <p className="font-bold text-white truncate">{user.name}</p>
+                            <p className="text-[10px] text-gray-500 font-black tracking-widest">XP: {user.xp || 0}</p>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">{user.email}</p>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap">
-                        <Badge color={user.isBanned ? "error" : "success"}>
-                          {user.isBanned ? "Banned" : "Active"}
+                      </td>
+                      <td className="px-8 py-6">
+                        <p className="text-sm text-gray-400 font-medium">{user.email}</p>
+                      </td>
+                      <td className="px-8 py-6">
+                        <Badge className={`${user.isBanned ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'} border-0 font-black text-[10px]`}>
+                          {user.isBanned ? "BANNED" : "ACTIVE"}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-2 text-gray-500 text-sm font-medium">
+                          <Calendar className="h-4 w-4 text-gray-700" />
+                          {new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
                         <button
                           onClick={() => handleViewUser(user._id)}
-                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-brand-500 transition-colors"
-                          title="View Details"
+                          className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white transition-all flex items-center justify-center ml-auto opacity-0 group-hover:opacity-100"
                         >
                           <Eye className="h-5 w-5" />
                         </button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
 
           {/* Pagination */}
           {!loading && totalPages > 1 && (
-            <div className="px-6 py-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-transparent">
-              <span className="text-sm text-gray-500">
-                Page {currentPage} of {totalPages}
-              </span>
-              <div className="flex items-center gap-2">
+            <div className="p-6 border-t border-white/10 flex items-center justify-between">
+              <p className="text-sm text-gray-500 font-bold">
+                PAGE {currentPage} OF {totalPages}
+              </p>
+              <div className="flex gap-2">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="p-2 border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-50 hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                  className="p-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-all font-bold"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft size={20} />
                 </button>
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="p-2 border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-50 hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                  className="p-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-all font-bold"
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight size={20} />
                 </button>
               </div>
             </div>
