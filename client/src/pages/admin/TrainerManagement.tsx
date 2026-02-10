@@ -1,5 +1,5 @@
 import React, { useState, useEffect, type ChangeEvent } from "react";
-import { Search, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, FileText, Star, Mail, Phone, Calendar, Users } from "lucide-react";
+import { Search, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, FileText, Star, Mail, Phone, Calendar, Users, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getTrainerApplication, getTrainerById, getTrainers, toggleTrainerBan } from "@/services/adminService";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const TrainerManagement = () => {
   const [response, setResponse] = useState<TrainerResponse>({ trainers: [], total: 0, page: 1, totalPages: 1 });
@@ -34,29 +35,29 @@ const TrainerManagement = () => {
   const trainersPerPage = 5;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchTrainers = async () => {
-      setLoading(true);
-      try {
-        const res = await getTrainers(
-          currentPage,
-          trainersPerPage,
-          searchQuery,
-          isBannedFilter,
-          isVerifiedFilter,
-          startDate,
-          endDate
-        );
-        setResponse(res as TrainerResponse);
-        setError(null);
-      } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to fetch trainers. Please try again.");
-        setResponse({ trainers: [], total: 0, page: 1, totalPages: 1 });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTrainers = async () => {
+    setLoading(true);
+    try {
+      const res = await getTrainers(
+        currentPage,
+        trainersPerPage,
+        searchQuery,
+        isBannedFilter,
+        isVerifiedFilter,
+        startDate,
+        endDate
+      );
+      setResponse(res as TrainerResponse);
+      setError(null);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to fetch trainers. Please try again.");
+      setResponse({ trainers: [], total: 0, page: 1, totalPages: 1 });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchTrainers();
   }, [currentPage, searchQuery, isBannedFilter, isVerifiedFilter, startDate, endDate]);
 
@@ -123,6 +124,15 @@ const TrainerManagement = () => {
             <h1 className="text-3xl font-black text-white italic">TRAINER MANAGEMENT</h1>
             <p className="text-gray-500">Manage and verify platform trainers</p>
           </div>
+          <Button
+            onClick={() => fetchTrainers()}
+            disabled={loading}
+            variant="ghost"
+            className="bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Reload Data
+          </Button>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">

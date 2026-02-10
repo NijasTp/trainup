@@ -128,6 +128,11 @@ export const gymLogout = async () => {
   await API.post('/gym/logout')
 }
 
+export const checkGymSession = async () => {
+  const response = await API.get('/gym/session', { withCredentials: true });
+  return response.data;
+}
+
 export const checkAdminSession = async () => {
   const response = await API.get('/admin/session', { withCredentials: true });
   return response.data;

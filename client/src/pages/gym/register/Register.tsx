@@ -175,6 +175,16 @@ const Register = () => {
                 toast.error('Please fill in all basic details');
                 return;
             }
+
+            // Strong password validation
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            if (!passwordRegex.test(formData.password)) {
+                toast.error('Password must be at least 8 characters long, include uppercase, lowercase, number, and special character', {
+                    duration: 4000
+                });
+                return;
+            }
+
             if (formData.password !== formData.confirmPassword) {
                 toast.error('Passwords do not match');
                 return;

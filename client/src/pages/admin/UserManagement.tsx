@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Search, Eye, ChevronLeft, ChevronRight, Loader2, Calendar, UserX } from "lucide-react";
+import { Search, Eye, ChevronLeft, ChevronRight, Loader2, Calendar, UserX, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getUsers } from "@/services/adminService";
 import type { IUser } from "@/interfaces/admin/IUserManagement";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<IUser[]>([]);
@@ -21,30 +22,30 @@ const UserManagement = () => {
   const usersPerPage = 5;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        const { users, total, totalPages } = await getUsers(
-          currentPage,
-          usersPerPage,
-          searchQuery,
-          isBannedFilter,
-          undefined,
-          startDate,
-          undefined
-        );
-        setUsers(users);
-        setTotal(total);
-        setTotalPages(totalPages);
-      } catch (err: any) {
-        setUsers([]);
-        setTotalPages(1);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const { users, total, totalPages } = await getUsers(
+        currentPage,
+        usersPerPage,
+        searchQuery,
+        isBannedFilter,
+        undefined,
+        startDate,
+        undefined
+      );
+      setUsers(users);
+      setTotal(total);
+      setTotalPages(totalPages);
+    } catch (err: any) {
+      setUsers([]);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUsers();
   }, [currentPage, searchQuery, isBannedFilter, startDate]);
 
@@ -77,6 +78,15 @@ const UserManagement = () => {
             <h1 className="text-3xl font-black text-white italic">USER MANAGEMENT</h1>
             <p className="text-gray-500">Total {total} users registered in the system</p>
           </div>
+          <Button
+            onClick={() => fetchUsers()}
+            disabled={loading}
+            variant="ghost"
+            className="bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Reload Data
+          </Button>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">

@@ -19,6 +19,11 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Aurora from '@/components/ui/Aurora';
+import { useSelector, useDispatch } from 'react-redux';
+import { logoutGymThunk } from '@/redux/slices/gymAuthSlice';
+import type { RootState, AppDispatch } from '@/redux/store';
+import { toast } from 'react-hot-toast';
+import { ROUTES } from '@/constants/routes';
 
 interface SidebarItemProps {
     icon: React.ElementType;
@@ -59,6 +64,19 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const location = useLocation();
     const navigate = useNavigate();
+    const dispatch = useDispatch<AppDispatch>();
+    const { gym } = useSelector((state: RootState) => state.gymAuth);
+
+    const handleLogout = async () => {
+        try {
+            await dispatch(logoutGymThunk()).unwrap();
+            toast.success('Logged out successfully');
+            navigate(ROUTES.GYM_LOGIN);
+        } catch (error) {
+            console.error('Logout failed:', error);
+            navigate(ROUTES.GYM_LOGIN);
+        }
+    };
 
     const menuItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/gym/dashboard' },
@@ -89,7 +107,7 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
             <motion.aside
                 initial={false}
                 animate={{ width: isSidebarOpen ? 280 : 80 }}
-                className="relative z-20 h-screen bg-white/5 backdrop-blur-2xl border-r border-white/10 p-4 flex flex-col gap-8 transition-all duration-300"
+                className="fixed left-0 top-0 z-50 h-screen bg-white/5 backdrop-blur-2xl border-r border-white/10 p-4 flex flex-col gap-8 transition-all duration-300"
             >
                 <div className="flex items-center justify-between px-2">
                     <AnimatePresence>
@@ -126,7 +144,7 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
 
                 <div className="pt-4 border-t border-white/10">
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={handleLogout}
                         className="w-full flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
                     >
                         <LogOut size={20} />
@@ -136,9 +154,12 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
             </motion.aside>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
+            <div
+                className="flex-1 flex flex-col relative z-10 transition-all duration-300 min-h-screen"
+                style={{ marginLeft: isSidebarOpen ? 280 : 80 }}
+            >
                 {/* Top Navbar */}
-                <header className="h-20 bg-white/5 backdrop-blur-md border-b border-white/10 px-8 flex items-center justify-between">
+                <header className="sticky top-0 z-40 h-20 bg-white/5 backdrop-blur-md border-b border-white/10 px-8 flex items-center justify-between">
                     <h2 className="text-xl font-bold text-gray-300 capitalize">
                         {location.pathname.split('/').pop()?.replace('-', ' ') || 'Dashboard'}
                     </h2>
@@ -150,11 +171,17 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
                         </button>
                         <div className="flex items-center gap-4 pl-6 border-l border-white/10">
                             <div className="text-right hidden sm:block">
-                                <p className="text-sm font-bold">Elite Fitness Center</p>
+                                <p className="text-sm font-bold">{gym?.name || 'Elite Fitness Center'}</p>
                                 <p className="text-xs text-gray-500">Gym Manager</p>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/50 border border-white/20 p-0.5">
-                                <div className="w-full h-full rounded-full bg-[#030303] flex items-center justify-center font-bold text-primary">EF</div>
+                                {gym?.logo ? (
+                                    <img src={gym.logo} className="w-full h-full rounded-full object-cover" alt="Logo" />
+                                ) : (
+                                    <div className="w-full h-full rounded-full bg-[#030303] flex items-center justify-center font-bold text-primary">
+                                        {gym?.name?.charAt(0) || 'EF'}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

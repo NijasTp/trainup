@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@/redux/store';
-
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Clock,
     XCircle,
@@ -9,17 +9,36 @@ import {
     LogOut,
     Building2,
     ShieldCheck,
-    Mail
+    Mail,
+    RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
 import { useNavigate } from 'react-router-dom';
-import { logoutGymThunk } from '@/redux/slices/gymAuthSlice';
+import { logoutGymThunk, checkGymSessionThunk } from '@/redux/slices/gymAuthSlice';
+import { toast } from 'react-hot-toast';
 
 const GymStatus = () => {
-    const { gym } = useSelector((state: RootState) => state.gymAuth);
+    const { gym, loading } = useSelector((state: RootState) => state.gymAuth);
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        try {
+            await dispatch(checkGymSessionThunk()).unwrap();
+            toast.success('Status updated');
+        } catch (error) {
+            console.error('Refresh failed:', error);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        handleRefresh();
+    }, []);
 
     const handleLogout = async () => {
         try {
@@ -27,7 +46,6 @@ const GymStatus = () => {
             navigate(ROUTES.GYM_LOGIN);
         } catch (error) {
             console.error('Logout failed:', error);
-            // Fallback redirect if API fails but we want to clear local state
             navigate(ROUTES.GYM_LOGIN);
         }
     };
@@ -37,6 +55,19 @@ const GymStatus = () => {
 
     return (
         <div className="min-h-screen bg-[#030303] text-white flex items-center justify-center p-6 relative overflow-hidden">
+            <div className="absolute top-4 right-4 z-50">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing || loading}
+                    className="text-zinc-500 hover:text-white bg-white/5 border border-white/10 rounded-xl"
+                >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    Refresh Status
+                </Button>
+            </div>
+
             {/* Background elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
                 <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
@@ -65,12 +96,14 @@ const GymStatus = () => {
 
                         <div className="space-y-2">
                             <h1 className="text-3xl md:text-4xl font-black tracking-tight font-outfit">
-                                {isPending ? 'Application Pending' : 'Application Rejected'}
+                                {isPending ? 'Application Pending' : isRejected ? 'Application Rejected' : 'Redirecting...'}
                             </h1>
                             <p className="text-zinc-400 font-medium">
                                 {isPending
                                     ? "Our team is currently reviewing your gym's registration. This typically takes 24-48 hours."
-                                    : "Unfortunately, your application was not approved at this time."
+                                    : isRejected
+                                        ? "Unfortunately, your application was not approved at this time."
+                                        : "Your application is being processed."
                                 }
                             </p>
                         </div>

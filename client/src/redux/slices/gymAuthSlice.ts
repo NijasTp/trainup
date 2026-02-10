@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
-import { gymLogout } from "@/services/authService";
+import { gymLogout, checkGymSession } from "@/services/authService";
 import { Types } from "mongoose";
 
 interface GymType {
@@ -23,6 +23,7 @@ interface GymType {
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
   images: string[] | null;
+  logo: string | null;
 
   isVerified: boolean;
 }
@@ -96,6 +97,23 @@ export const logoutGymThunk = createAsyncThunk(
       await gymLogout();
     } finally {
       dispatch(logoutGym());
+    }
+  }
+);
+
+export const checkGymSessionThunk = createAsyncThunk(
+  "gymAuth/checkGymSessionThunk",
+  async (_, { dispatch }) => {
+    dispatch(setGymLoading(true));
+    try {
+      const data = await checkGymSession();
+      dispatch(loginGym(data));
+      return data;
+    } catch (error) {
+      dispatch(logoutGym());
+      throw error;
+    } finally {
+      dispatch(setGymLoading(false));
     }
   }
 );

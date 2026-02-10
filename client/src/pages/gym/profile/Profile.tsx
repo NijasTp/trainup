@@ -10,7 +10,8 @@ import {
     Loader2,
     Camera,
     Award,
-    FileText
+    FileText,
+    Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,6 +65,12 @@ const Profile = () => {
             ...gymData,
             geoLocation: { ...gymData.geoLocation, coordinates: newCoords }
         });
+    };
+
+    const handleOpeningHoursChange = (index: number, field: string, value: any) => {
+        const newHours = [...gymData.openingHours];
+        newHours[index] = { ...newHours[index], [field]: value };
+        setGymData({ ...gymData, openingHours: newHours });
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'profileImage' | 'gallery' | 'certifications') => {
@@ -304,6 +311,49 @@ const Profile = () => {
                                     <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">No certifications uploaded</p>
                                 </div>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Opening Hours */}
+                    <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
+                        <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
+                            <Clock size={20} className="text-primary" />
+                            Opening Hours
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {gymData.openingHours?.map((oh: any, i: number) => (
+                                <div key={i} className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">{oh.day}</span>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={oh.isClosed}
+                                                onChange={(e) => handleOpeningHoursChange(i, 'isClosed', e.target.checked)}
+                                                className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary/50"
+                                            />
+                                            <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Closed</span>
+                                        </label>
+                                    </div>
+                                    {!oh.isClosed && (
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="time"
+                                                value={oh.open}
+                                                onChange={(e) => handleOpeningHoursChange(i, 'open', e.target.value)}
+                                                className="bg-white/5 border-white/10 h-10 rounded-lg text-xs"
+                                            />
+                                            <span className="text-gray-600 font-bold px-1">to</span>
+                                            <Input
+                                                type="time"
+                                                value={oh.close}
+                                                onChange={(e) => handleOpeningHoursChange(i, 'close', e.target.value)}
+                                                className="bg-white/5 border-white/10 h-10 rounded-lg text-xs"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

@@ -15,7 +15,8 @@ import {
     Loader2,
     ChevronLeft,
     ChevronRight,
-    Building
+    Building,
+    RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -108,6 +109,15 @@ const AdminGymManagement = () => {
                         <h1 className="text-3xl font-black text-white italic">GYM MANAGEMENT</h1>
                         <p className="text-gray-500">Review and manage gym registration applications</p>
                     </div>
+                    <Button
+                        onClick={() => fetchGyms()}
+                        disabled={loading}
+                        variant="ghost"
+                        className="bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white"
+                    >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                        Reload Data
+                    </Button>
                 </div>
 
                 <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
