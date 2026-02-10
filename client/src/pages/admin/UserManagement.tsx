@@ -210,9 +210,9 @@ const UserManagement = () => {
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="p-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-all font-bold"
+                  className="p-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-all font-bold group"
                 >
-                  <ChevronRight size={20} />
+                  <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
             </div>

@@ -247,9 +247,9 @@ const AdminGymManagement = () => {
                                 <button
                                     onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
                                     disabled={page === totalPages}
-                                    className="p-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-all"
+                                    className="p-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-all group"
                                 >
-                                    <ChevronRight size={20} />
+                                    <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
                                 </button>
                             </div>
                         </div>

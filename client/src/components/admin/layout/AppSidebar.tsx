@@ -31,14 +31,14 @@ const SidebarItem = ({ icon: Icon, label, path, active, isOpen, subItems }: Side
         <div className="flex flex-col gap-1">
             <Link to={subItems ? "#" : path} onClick={() => subItems && setIsSubMenuOpen(!isSubMenuOpen)}>
                 <motion.div
-                    whileHover={{ scale: 1.02, x: 5 }}
+                    whileHover={{ scale: 1.02, x: isOpen ? 5 : 0 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${active
+                    className={`flex items-center ${isOpen ? 'gap-4 px-4' : 'justify-center'} py-3 rounded-xl transition-all duration-300 ${active
                         ? 'bg-primary/20 text-primary border border-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)]'
                         : 'text-gray-400 hover:bg-white/5 hover:text-white'
                         }`}
                 >
-                    <Icon className={`h-5 w-5 ${active ? 'text-primary' : ''}`} />
+                    <Icon className={`h-5 w-5 shrink-0 ${active ? 'text-primary' : ''}`} />
                     <AnimatePresence>
                         {isOpen && (
                             <motion.div
@@ -100,7 +100,7 @@ const AppSidebar: React.FC<{ isOpen: boolean; setIsOpen: (val: boolean) => void 
         <motion.aside
             initial={false}
             animate={{ width: isOpen ? 280 : 80 }}
-            className="relative z-20 h-screen bg-white/5 backdrop-blur-2xl border-r border-white/10 p-4 flex flex-col gap-8 transition-all duration-300"
+            className="fixed left-0 top-0 z-50 h-screen bg-[#060606]/80 backdrop-blur-2xl border-r border-white/10 p-4 flex flex-col gap-8 transition-all duration-300"
         >
             <div className="flex items-center justify-between px-2">
                 <AnimatePresence>
@@ -118,7 +118,7 @@ const AppSidebar: React.FC<{ isOpen: boolean; setIsOpen: (val: boolean) => void 
                 </AnimatePresence>
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+                    className={`p-2 hover:bg-white/10 rounded-lg transition-colors text-white ${!isOpen ? 'mx-auto' : ''}`}
                 >
                     {isOpen ? <X size={20} /> : <Menu size={20} />}
                 </button>
@@ -138,9 +138,9 @@ const AppSidebar: React.FC<{ isOpen: boolean; setIsOpen: (val: boolean) => void 
             <div className="pt-4 border-t border-white/10">
                 <Link
                     to="/admin/login"
-                    className="w-full flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                    className={`w-full flex items-center ${isOpen ? 'gap-4 px-4' : 'justify-center'} py-3 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all`}
                 >
-                    <LogOut size={20} />
+                    <LogOut size={20} className="shrink-0" />
                     {isOpen && <span className="font-medium">Logout</span>}
                 </Link>
             </div>

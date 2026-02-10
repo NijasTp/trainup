@@ -27,7 +27,10 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <AppSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
+            <div
+                className="flex-1 flex flex-col relative z-10 overflow-hidden transition-all duration-300"
+                style={{ marginLeft: isSidebarOpen ? 280 : 80 }}
+            >
                 <AppHeader />
 
                 <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
