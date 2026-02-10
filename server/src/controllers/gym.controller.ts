@@ -105,7 +105,7 @@ export class GymController {
 
   async checkSession(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const gymId = req.user!.id
+      const gymId = (req.user as JwtPayload).id
       const gym = await this._gymService.getGymById(gymId)
       if (!gym) throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND)
       res.status(STATUS_CODE.OK).json(gym)
@@ -320,6 +320,7 @@ export class GymController {
           logo?: UploadedFile;
           profileImage?: UploadedFile;
           images?: UploadedFile | UploadedFile[];
+          certifications?: UploadedFile | UploadedFile[];
         }
       );
       res.status(STATUS_CODE.OK).json({ message: 'Profile updated successfully', gym: result });

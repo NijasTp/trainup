@@ -378,8 +378,8 @@ export class GymService implements IGymService {
       profileImage: gym.profileImage || undefined,
       logo: gym.logo || undefined,
       images: gym.images || undefined,
-      trainers: gym.trainers?.map(t => t.toString()) || undefined,
-      members: gym.members?.map(m => m.toString()) || undefined,
+      trainers: gym.trainers?.map((t: any) => t.toString()) || undefined,
+      members: gym.members?.map((m: any) => m.toString()) || undefined,
       announcements:
         gym.announcements?.map(ann => ({
           title: ann.title,
@@ -655,18 +655,7 @@ export class GymService implements IGymService {
   async forgotPassword(email: string): Promise<void> {
     const gym = await this._gymRepo.findByEmail(email)
     if (!gym) throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND)
-    // The otp service will handle generation and mailing
-    // dependent on role 'gym'
-    // But OtpService.requestForgotPasswordOtp needs to be exposed or I need to inject logic here.
-    // OtpService is not injected? It is not in constructor. I will need to inject it or use the interface method requestForgotPasswordOtp if it was exposed.
-    // Wait, GymService constructor has _jwtService and _gymRepo. It does NOT have _otpService.
-    // GymController has _otpService.
-    // So usually Controller calls OtpService for OTP and GymService for data.
-    // But for resetPassword, we need to update the password in GymService.
   }
-
-  // Refined plan: I will handle forgotPassword in Controller using OtpService.
-  // I only need resetPassword in GymService to actually update the password.
 
   async resetPassword(email: string, password: string): Promise<void> {
     const gym = await this._gymRepo.findByEmail(email)
@@ -684,9 +673,6 @@ export class GymService implements IGymService {
   ): Promise<{ members: any[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
     const query: any = { gymId: new mongoose.Types.ObjectId(gymId) };
-
-    // Note: Searching by user name requires a lookup or populating and then filtering if the user model is separate.
-    // For now, let's just fetch all and populate. For large datasets, this should be an aggregation.
 
     const total = await UserGymMembershipModel.countDocuments(query);
     const memberships = await UserGymMembershipModel.find(query)
@@ -778,6 +764,7 @@ export class GymService implements IGymService {
       logo?: UploadedFile;
       profileImage?: UploadedFile;
       images?: UploadedFile | UploadedFile[];
+      certifications?: UploadedFile | UploadedFile[];
     }
   ): Promise<IGym> {
     const updateData: any = { ...data };
@@ -834,6 +821,25 @@ export class GymService implements IGymService {
       }
 
       updateData.images = [...existingImages, ...newImageUrls];
+    }
+
+    if (files?.certifications) {
+      const certsArr = Array.isArray(files.certifications) ? files.certifications : [files.certifications];
+      const uploadPromises = certsArr.map((cert) =>
+        cloudinary.uploader.upload(cert.tempFilePath, {
+          folder: 'trainup/gyms/certifications',
+        })
+      );
+      const results = await Promise.all(uploadPromises);
+      const newCertUrls = results.map((res) => res.secure_url);
+
+      let existingCerts: string[] = [];
+      if (typeof data.certifications === 'string') {
+        try { existingCerts = JSON.parse(data.certifications); } catch (e) { }
+      } else if (Array.isArray(data.certifications)) {
+        existingCerts = data.certifications;
+      }
+      updateData.certifications = [...existingCerts, ...newCertUrls];
     }
 
     const updatedGym = await this._gymRepo.updateGym(gymId, updateData);

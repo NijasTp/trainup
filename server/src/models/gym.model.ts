@@ -34,6 +34,9 @@ export interface IGym extends Document {
   description: string | null;
   rating?: number;
   reviews?: { rating: number; message: string; userId: Types.ObjectId; subscriptionPlan?: string; createdAt: Date }[];
+  tokenVersion: number;
+  trainers: Types.ObjectId[];
+  members: Types.ObjectId[];
 }
 
 const GymSchema = new Schema<IGym>(
