@@ -211,9 +211,9 @@ const TrainerManagement = () => {
                       <td className="px-8 py-6">
                         <div className="space-y-1">
                           <Badge className="bg-primary/20 text-primary border-0 font-black text-[10px]">
-                            {trainer.specialization.toUpperCase()}
+                            {trainer.specialization?.toUpperCase() || "UNSPECIFIED"}
                           </Badge>
-                          <p className="text-xs text-gray-500 font-medium">{trainer.experience} Experience</p>
+                          <p className="text-xs text-gray-500 font-medium">{trainer.experience || "Entry Level"} Experience</p>
                         </div>
                       </td>
                       <td className="px-8 py-6">
@@ -227,7 +227,7 @@ const TrainerManagement = () => {
                       </td>
                       <td className="px-8 py-6">
                         <Badge className={`${trainer.isBanned ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'} border-0 font-black text-[10px]`}>
-                          {trainer.isBanned ? "BANNED" : (trainer.profileStatus === 'approved' ? 'VERIFIED' : trainer.profileStatus.toUpperCase())}
+                          {trainer.isBanned ? "BANNED" : (trainer.profileStatus === 'approved' ? 'VERIFIED' : (trainer.profileStatus?.toUpperCase() || "PENDING"))}
                         </Badge>
                       </td>
                       <td className="px-8 py-6 text-right">

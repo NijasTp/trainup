@@ -155,7 +155,7 @@ const UserManagement = () => {
                             {user.profileImage ? (
                               <img src={user.profileImage} className="w-full h-full object-cover" />
                             ) : (
-                              user.name.charAt(0).toUpperCase()
+                              user.name?.charAt(0).toUpperCase() || "U"
                             )}
                           </div>
                           <div className="min-w-0">

@@ -96,7 +96,7 @@ const AdminGymManagement = () => {
             case 'approved': return <Badge className="bg-green-500/20 text-green-500 border-0">APPROVED</Badge>;
             case 'pending': return <Badge className="bg-yellow-500/20 text-yellow-500 border-0">PENDING</Badge>;
             case 'rejected': return <Badge className="bg-red-500/20 text-red-500 border-0">REJECTED</Badge>;
-            default: return <Badge variant="outline" className="border-white/10 text-gray-400">{status.toUpperCase()}</Badge>;
+            default: return <Badge variant="outline" className="border-white/10 text-gray-400">{(status?.toUpperCase() || 'UNKNOWN')}</Badge>;
         }
     };
 

@@ -63,8 +63,8 @@ const SidebarItem = ({ icon: Icon, label, path, active, isOpen, subItems }: Side
                             key={item.path}
                             to={item.path}
                             className={`px-4 py-2 text-sm rounded-lg transition-colors ${useLocation().pathname === item.path
-                                    ? 'text-primary bg-primary/10'
-                                    : 'text-gray-500 hover:text-white hover:bg-white/5'
+                                ? 'text-primary bg-primary/10'
+                                : 'text-gray-500 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             {item.name}
@@ -89,7 +89,6 @@ const AppSidebar: React.FC<{ isOpen: boolean; setIsOpen: (val: boolean) => void 
             path: '/admin/trainers',
             subItems: [
                 { name: "Trainer Listing", path: "/admin/trainers" },
-                { name: "Trainer Applications", path: "/admin/applications" },
                 { name: "Trainer Rating", path: "/admin/ratings" },
             ]
         },
