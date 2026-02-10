@@ -156,7 +156,7 @@ export class GymService implements IGymService {
       logo: logoUrl,
       images: imageUrls,
       onboardingCompleted: true,
-      verifyStatus: 'pending' // Reset just in case, though it should be pending
+      verifyStatus: 'pending'
     })
 
     if (!gym) {
