@@ -105,7 +105,7 @@ export default function GymLoginForm() {
 
             <div className="mt-6 text-center space-y-2">
                 <p className="text-gray-400 text-sm">Don't have an account?</p>
-                <Link to={ROUTES.GYM_SIGNUP} className="text-sm text-[#176B87] hover:text-[#64CCC5] font-semibold transition-colors">
+                <Link to={'/gym/register'} className="text-sm text-[#176B87] hover:text-[#64CCC5] font-semibold transition-colors">
                     Partner with us
                 </Link>
             </div>

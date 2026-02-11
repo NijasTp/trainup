@@ -141,6 +141,13 @@ export class GymService implements IGymService {
       results.forEach(res => imageUrls.push(res.secure_url));
     }
 
+    logger.info('Upload results:', {
+      certifications: certificationsUrls.length,
+      logo: !!logoUrl,
+      images: imageUrls.length,
+      profileImage: !!profileImageUrl
+    });
+
     const existingGym = await this._gymRepo.findByEmail(data.email!)
     if (!existingGym) {
       throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND)
@@ -528,6 +535,8 @@ export class GymService implements IGymService {
       images?: UploadedFile | UploadedFile[]
     }
   ): Promise<GymLoginResponseDto> {
+    logger.info('Gym reapply attempt for id:', gymId);
+    logger.info('Files received for reapply:', Object.keys(files || {}));
     const certificationsUrls: string[] = []
     let logoUrl: string | undefined
     let profileImageUrl: string | undefined

@@ -11,7 +11,9 @@ import {
     ChevronLeft,
     CheckCircle2,
     FileText,
-    Target
+    Target,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,6 +57,8 @@ const Register = () => {
     const [isCropModalOpen, setIsCropModalOpen] = useState(false);
     const [imageToCrop, setImageToCrop] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const navigate = useNavigate();
 
@@ -246,14 +250,42 @@ const Register = () => {
                                                 <label className="text-sm font-bold text-gray-400 uppercase ml-1">Password</label>
                                                 <div className="relative">
                                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
-                                                    <Input name="password" type="password" value={formData.password} onChange={handleInputChange} className="bg-white/5 border-white/10 h-14 pl-12 rounded-2xl" placeholder="••••••••" />
+                                                    <Input
+                                                        name="password"
+                                                        type={showPassword ? "text" : "password"}
+                                                        value={formData.password}
+                                                        onChange={handleInputChange}
+                                                        className="bg-white/5 border-white/10 h-14 pl-12 pr-12 rounded-2xl"
+                                                        placeholder="••••••••"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                                                    >
+                                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                                    </button>
                                                 </div>
                                             </div>
                                             <div className="group space-y-2">
                                                 <label className="text-sm font-bold text-gray-400 uppercase ml-1">Confirm Password</label>
                                                 <div className="relative">
                                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
-                                                    <Input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleInputChange} className="bg-white/5 border-white/10 h-14 pl-12 rounded-2xl" placeholder="••••••••" />
+                                                    <Input
+                                                        name="confirmPassword"
+                                                        type={showConfirmPassword ? "text" : "password"}
+                                                        value={formData.confirmPassword}
+                                                        onChange={handleInputChange}
+                                                        className="bg-white/5 border-white/10 h-14 pl-12 pr-12 rounded-2xl"
+                                                        placeholder="••••••••"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                                                    >
+                                                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                                    </button>
                                                 </div>
                                             </div>
                                             <div className="group space-y-2">

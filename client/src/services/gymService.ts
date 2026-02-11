@@ -39,9 +39,7 @@ export const verifyGym = async (gymId: string, payload: { verifyStatus: "approve
 
 // Reapply with updated details (multipart)
 export const reapplyGym = async (formData: FormData) => {
-  const res = await API.post('/gym/reapply', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const res = await API.post('/gym/reapply', formData);
   return res.data;
 };
 
@@ -99,9 +97,7 @@ export const getGymById = async (gymId: string) => {
 };
 
 export const updateGymProfile = async (formData: FormData) => {
-  const res = await API.put('/gym/update-profile', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const res = await API.put('/gym/update-profile', formData);
   return res.data;
 };
 
@@ -189,16 +185,12 @@ export const getGymAnnouncements = async (page: number = 1, limit: number = 10, 
 };
 
 export const createAnnouncement = async (formData: FormData) => {
-  const res = await API.post('/gym/announcements', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const res = await API.post('/gym/announcements', formData);
   return res.data;
 };
 
 export const updateAnnouncement = async (id: string, formData: FormData) => {
-  const res = await API.put(`/gym/announcements/${id}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const res = await API.put(`/gym/announcements/${id}`, formData);
   return res.data;
 };
 
