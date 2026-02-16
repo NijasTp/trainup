@@ -40,6 +40,16 @@ const GymStatus = () => {
         handleRefresh();
     }, []);
 
+    useEffect(() => {
+        if (gym?.verifyStatus === 'approved') {
+            toast.success('Application Approved! Redirecting...');
+            const timer = setTimeout(() => {
+                navigate('/gym/dashboard');
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [gym?.verifyStatus, navigate]);
+
     const handleLogout = async () => {
         try {
             await dispatch(logoutGymThunk()).unwrap();
