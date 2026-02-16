@@ -348,13 +348,19 @@ const AdminGymManagement = () => {
 
                             <div>
                                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4 font-outfit">OPENING HOURS</h4>
-                                <div className="bg-white/5 rounded-2xl border border-white/10 p-4 space-y-1">
+                                <div className="grid grid-cols-7 gap-2">
                                     {selectedGym?.openingHours?.map((oh: any, i: number) => (
-                                        <div key={i} className="flex justify-between items-center text-sm py-2 px-2 rounded-lg hover:bg-white/5 transition-colors">
-                                            <span className="font-bold text-gray-300">{oh.day}</span>
-                                            <span className={oh.isClosed ? 'text-red-500 font-black italic text-xs tracking-widest' : 'text-primary font-bold'}>
-                                                {oh.isClosed ? 'CLOSED' : `${oh.open} - ${oh.close}`}
-                                            </span>
+                                        <div key={i} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                                            <span className="text-xs font-black text-gray-500 mb-2">{oh.day.charAt(0)}</span>
+                                            {oh.isClosed ? (
+                                                <span className="text-[10px] font-black text-red-500 tracking-wider">OFF</span>
+                                            ) : (
+                                                <div className="flex flex-col items-center gap-0.5">
+                                                    <span className="text-[10px] font-bold text-primary">{oh.open}</span>
+                                                    <div className="h-px w-3 bg-white/10 my-0.5"></div>
+                                                    <span className="text-[10px] font-bold text-primary">{oh.close}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
