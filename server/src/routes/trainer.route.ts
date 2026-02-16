@@ -23,6 +23,8 @@ router.post('/reset-password', trainerAuthController.resetPassword.bind(trainerA
 router.post('/apply', trainerAuthController.apply.bind(trainerAuthController));
 router.post('/reapply', authMiddleware, roleMiddleware(['trainer']), trainerAuthController.reapply.bind(trainerAuthController));
 router.post('/logout', trainerAuthController.logout.bind(trainerAuthController));
+router.post('/refresh-token', trainerAuthController.refreshAccessToken.bind(trainerAuthController));
+
 
 router.get('/application/:id', authMiddleware, roleMiddleware(['admin']), trainerDashboardController.getTrainerApplication.bind(trainerDashboardController));
 router.get('/get-details', authMiddleware, roleMiddleware(['trainer']), trainerAuthController.getData.bind(trainerAuthController));

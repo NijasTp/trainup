@@ -253,6 +253,28 @@ export class TrainerAuthController {
         }
     }
 
+    async refreshAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const token = req.cookies.refreshToken
+            if (!token) throw new AppError(MESSAGES.INVALID_REQUEST, STATUS_CODE.UNAUTHORIZED)
+            const decoded = this._JwtService.verifyRefreshToken(token) as {
+                id: string
+                role: string
+                tokenVersion: number
+            }
+            // Ensure the role matches
+            if (decoded.role !== Role.TRAINER) {
+                throw new AppError(MESSAGES.INVALID_REQUEST, STATUS_CODE.UNAUTHORIZED);
+            }
+            const accessToken = this._JwtService.generateAccessToken(decoded.id, decoded.role, decoded.tokenVersion)
+            const refreshToken = this._JwtService.generateRefreshToken(decoded.id, decoded.role, decoded.tokenVersion)
+            this._JwtService.setTokens(res, accessToken, refreshToken)
+            res.status(STATUS_CODE.OK).json({ accessToken, refreshToken })
+        } catch (err) {
+            next(err)
+        }
+    }
+
     async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             this._JwtService.clearTokens(res)
@@ -263,3 +285,4 @@ export class TrainerAuthController {
         }
     }
 }
+

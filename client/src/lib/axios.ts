@@ -57,37 +57,50 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (status === 401) {
+    if (status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
       const state = store.getState();
       let role: string | null = null;
+      let refreshUrl: string | null = null;
+      let logoutAction: any = null;
+      let loginPath: string = '/login';
 
-      if (state.userAuth.user) role = "user";
-      else if (state.trainerAuth.trainer) role = "trainer";
-      else if (state.gymAuth.gym) role = "gym";
-      else if (state.adminAuth.admin) role = "admin";
-
-      switch (role) {
-        case "user":
-          store.dispatch(userLogout());
-          window.location.href = "/login";
-          break;
-        case "trainer":
-          store.dispatch(logoutTrainer());
-          window.location.href = "/trainer/login";
-          break;
-        case "gym":
-          store.dispatch(logoutGym());
-          window.location.href = "/gym/login";
-          break;
-        case "admin":
-          store.dispatch(adminLogout());
-          window.location.href = "/admin/login";
-          break;
-        default:
-          window.location.href = "/login";
-          break;
+      if (state.userAuth.user) {
+        role = "user";
+        refreshUrl = "/user/refresh-token";
+        logoutAction = userLogout;
+        loginPath = "/login";
+      } else if (state.trainerAuth.trainer) {
+        role = "trainer";
+        refreshUrl = "/trainer/refresh-token";
+        logoutAction = logoutTrainer;
+        loginPath = "/trainer/login";
+      } else if (state.gymAuth.gym) {
+        role = "gym";
+        refreshUrl = "/gym/refresh-token";
+        logoutAction = logoutGym;
+        loginPath = "/gym/login";
+      } else if (state.adminAuth.admin) {
+        role = "admin";
+        refreshUrl = "/admin/refresh-token";
+        logoutAction = adminLogout;
+        loginPath = "/admin/login";
       }
-      return Promise.reject(error);
+
+      if (refreshUrl && role) {
+        try {
+          await api.post(refreshUrl, {}, { withCredentials: true });
+          return api(originalRequest);
+        } catch (refreshError) {
+          if (logoutAction) store.dispatch(logoutAction());
+          window.location.href = loginPath;
+          return Promise.reject(refreshError);
+        }
+      } else {
+        // Fallback or no role found
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
     }
 
     return Promise.reject(error);

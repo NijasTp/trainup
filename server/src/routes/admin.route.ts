@@ -34,6 +34,8 @@ router.patch("/gyms/:id", authMiddleware, roleMiddleware(['admin']), adminContro
 router.get("/gyms/:id/application", authMiddleware, roleMiddleware(['admin']), adminController.getGymApplication.bind(adminController));
 
 router.post('/logout', authMiddleware, roleMiddleware(['admin']), adminController.logout.bind(adminController))
+router.post('/refresh-token', adminController.refreshAccessToken.bind(adminController));
+
 
 
 export default router;

@@ -25,7 +25,7 @@ export default function LandingPage() {
     <div className="relative bg-black text-white selection:bg-cyan-500/30 font-sans overflow-x-hidden">
 
       {/* Premium Background Layer */}
-      <div className="fixed inset-0 z-0 opacity-40 pointer-events-none">
+      <div className="fixed inset-0 z-0 opacity-40">
         <ColorBends
           colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
           rotation={0}
@@ -38,8 +38,11 @@ export default function LandingPage() {
           noise={0.1}
           transparent
           autoRotate={0}
+          className="pointer-events-none"
+          style={{ pointerEvents: 'none' }}
         />
       </div>
+
 
 
       <div className="relative z-10">

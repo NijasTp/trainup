@@ -6,7 +6,8 @@ import GymLoginForm from '../../components/gym/GymLoginForm';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../redux/store';
 import type { LoginPageProps } from "@/interfaces/user/ILogin";
-import Aurora from '@/components/ui/Aurora';
+import ColorBends from '@/components/ui/ColorBends';
+
 
 const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
   const [activeRole, setActiveRole] = useState<'user' | 'trainer' | 'gym'>(initialRole);
@@ -43,13 +44,22 @@ const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
-      {/* Aurora Background Layer */}
+      {/* ColorBends Background Layer */}
       <div className="absolute inset-0 z-0">
-        <Aurora
-          colorStops={["#7cff67", "#B19EEF", "#5227FF"]}
-          blend={0.5}
-          amplitude={1.0}
-          speed={1}
+        <ColorBends
+          colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
+          rotation={0}
+          speed={0.2}
+          scale={1}
+          frequency={1}
+          warpStrength={1}
+          mouseInfluence={1}
+          parallax={0.5}
+          noise={0.1}
+          transparent
+          autoRotate={0}
+          className="pointer-events-none"
+          style={{ pointerEvents: 'none' }}
         />
         <div className="absolute inset-0 bg-black/60"></div>
       </div>

@@ -101,6 +101,31 @@ export class GymController {
     }
   }
 
+  async refreshAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const token = req.cookies.refreshToken;
+      if (!token) throw new AppError(MESSAGES.INVALID_REQUEST, STATUS_CODE.UNAUTHORIZED);
+
+      const decoded = this._jwtService.verifyRefreshToken(token) as {
+        id: string;
+        role: string;
+        tokenVersion: number;
+      };
+
+      if (decoded.role !== Role.GYM) {
+        throw new AppError(MESSAGES.INVALID_REQUEST, STATUS_CODE.UNAUTHORIZED);
+      }
+
+      const accessToken = this._jwtService.generateAccessToken(decoded.id, decoded.role, decoded.tokenVersion);
+      const refreshToken = this._jwtService.generateRefreshToken(decoded.id, decoded.role, decoded.tokenVersion);
+
+      this._jwtService.setTokens(res, accessToken, refreshToken);
+      res.status(STATUS_CODE.OK).json({ accessToken, refreshToken });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async checkSession(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const gymId = (req.user as JwtPayload).id
