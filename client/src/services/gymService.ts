@@ -1,5 +1,16 @@
 import API from '@/lib/axios'
 
+export const getMyGym = async () => {
+  const res = await API.get('/user/my-gym');
+  return res.data;
+};
+
+export const cancelGymMembership = async (membershipId: string) => {
+  const res = await API.post('/user/gyms/cancel-membership', { membershipId });
+  return res.data;
+};
+
+
 
 export const getGymDetails = async () => {
   const res = await API.get('/gym/get-details')
@@ -224,5 +235,30 @@ export const getUserGymWorkoutTemplates = async (page: number = 1, limit: number
 
 export const getGymDashboardStats = async () => {
   const res = await API.get('/gym/dashboard-stats');
+  return res.data;
+};
+
+// Discovery & Subscription (User Side)
+export const getGymsForUser = async (page: number, limit: number, search: string = '', lat?: number, lng?: number) => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    search
+  });
+  if (lat && lng) {
+    params.set('lat', lat.toString());
+    params.set('lng', lng.toString());
+  }
+  const res = await API.get(`/user/gyms?${params.toString()}`);
+  return res.data;
+};
+
+export const getGymForUser = async (id: string) => {
+  const res = await API.get(`/user/gyms/${id}`);
+  return res.data;
+};
+
+export const getActiveSubscriptionPlans = async (gymId: string) => {
+  const res = await API.get(`/user/gyms/${gymId}/subscription-plans`);
   return res.data;
 };

@@ -42,4 +42,11 @@ export interface IAttendanceRepository {
     totalPages: number;
     total: number;
   }>;
+
+  findAttendance(
+    query: any,
+    sort?: any,
+    populate?: string | string[]
+  ): Promise<IAttendance[]>;
+  countAttendance(query: any): Promise<number>;
 }

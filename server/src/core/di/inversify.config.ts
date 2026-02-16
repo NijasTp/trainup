@@ -15,6 +15,9 @@ import { ITrainerRepository } from "../interfaces/repositories/ITrainerRepositor
 import { ITrainerService } from "../interfaces/services/ITrainerService";
 import { IGymService } from "../interfaces/services/IGymService";
 import { IGymRepository } from "../interfaces/repositories/IGymRepository";
+import { IGymProductRepository } from "../interfaces/repositories/IGymProductRepository";
+import { IGymJobRepository } from "../interfaces/repositories/IGymJobRepository";
+import { IGymTransactionRepository } from "../interfaces/repositories/IGymTransactionRepository";
 import { IJwtService } from "../interfaces/services/IJwtService";
 import { IWorkoutSessionRepository } from "../interfaces/repositories/IWorkoutSessionRepository";
 import { IWorkoutDayRepository } from "../interfaces/repositories/IWorkoutDayRepository";
@@ -71,6 +74,9 @@ import { TrainerClientController } from "../../controllers/trainer.client.contro
 import { TrainerDashboardController } from "../../controllers/trainer.dashboard.controller";
 import { GymController } from "../../controllers/gym.controller";
 import { GymRepository } from "../../repositories/gym.repository";
+import { GymProductRepository } from "../../repositories/gymProduct.repository";
+import { GymJobRepository } from "../../repositories/gymJob.repository";
+import { GymTransactionRepository } from "../../repositories/gymTransaction.repository";
 import { GymService } from "../../services/gym.service";
 import { PassportConfig } from "../../config/passport";
 import { WorkoutController } from "../../controllers/workout.controller";
@@ -199,6 +205,9 @@ container.bind<ITrainerService>(TYPES.ITrainerService).to(TrainerService);
 
 container.bind<GymController>(TYPES.GymController).to(GymController)
 container.bind<IGymRepository>(TYPES.IGymRepository).to(GymRepository);
+container.bind<IGymProductRepository>(TYPES.IGymProductRepository).to(GymProductRepository);
+container.bind<IGymJobRepository>(TYPES.IGymJobRepository).to(GymJobRepository);
+container.bind<IGymTransactionRepository>(TYPES.IGymTransactionRepository).to(GymTransactionRepository);
 container.bind<IGymService>(TYPES.IGymService).to(GymService);
 
 container.bind<IGymReminderService>(TYPES.IGymReminderService).to(GymReminderService);

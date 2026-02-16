@@ -126,6 +126,14 @@ export const MESSAGES = {
   VERIFICATION_APPROVED: "Verification approved successfully",
   VERIFICATION_REJECTED: "Verification rejected",
   USER_STATUS_UPDATED: "User status updated successfully",
+  ONBOARDING_INCOMPLETE: "Onboarding not completed. Please register first.",
+  INVALID_GEOLOCATION: "Invalid geoLocation JSON format",
+  MISSING_GEOLOCATION: "Missing or invalid geoLocation",
+  FAILED_CERTIFICATE_UPLOAD: "Failed to upload certification images",
+  FAILED_LOGO_UPLOAD: "Failed to upload logo",
+  FAILED_PROFILE_IMAGE_UPLOAD: "Failed to upload profile image",
+  FAILED_GALLERY_UPLOAD: "Failed to upload gallery images",
+  GYM_REGISTERED_SUCCESS: "Gym registered successfully",
 };
 
 export const GYM_MESSAGES = {

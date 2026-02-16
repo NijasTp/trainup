@@ -48,7 +48,7 @@ export class GymController {
       const email = req.body.email?.trim().toLowerCase();
       const isVerified = await this._gymAuthService.isVerified(email);
       if (!isVerified) {
-        throw new AppError('Email not verified or verification expired', STATUS_CODE.BAD_REQUEST);
+        throw new AppError(MESSAGES.INVALID_OTP, STATUS_CODE.BAD_REQUEST);
       }
 
       const result: GymLoginResponseDto = await this._gymService.registerGym(
@@ -66,7 +66,6 @@ export class GymController {
       this._jwtService.setTokens(res, result.accessToken, result.refreshToken);
       res.status(STATUS_CODE.CREATED).json({ gym: result.gym });
     } catch (err) {
-      logger.error('Error in register:', err);
       next(err);
     }
   }
@@ -75,9 +74,8 @@ export class GymController {
     try {
       const dto: GymVerifyOtpDto = req.body;
       await this._otpService.verifyOtp(dto.email, dto.otp);
-      res.status(STATUS_CODE.OK).json({ message: 'OTP verified' });
+      res.status(STATUS_CODE.OK).json({ message: MESSAGES.OTP_VERIFIED });
     } catch (err) {
-      logger.info('Error in verifyOtp:', err);
       next(err);
     }
   }

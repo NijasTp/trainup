@@ -52,6 +52,7 @@ export interface IGymRepository {
     data: Partial<ISubscriptionPlan>
   ): Promise<ISubscriptionPlan | null>;
   deleteSubscriptionPlan(planId: string): Promise<void>;
+  countSubscriptionPlans(gymId: string): Promise<number>;
   addMemberToGym(gymId: string, userId: string): Promise<void>
   addTrainer(gymId: string, data: Partial<ITrainer>): Promise<ITrainer>;
   updateTrainer(
@@ -59,10 +60,18 @@ export interface IGymRepository {
     data: Partial<ITrainer>
   ): Promise<ITrainer | null>;
 
+  getMembershipById(membershipId: string): Promise<IUserGymMembership | null>;
+
   updateMember(
     membershipId: string,
     data: Partial<IUserGymMembership>
   ): Promise<IUserGymMembership | null>;
+  getMembershipsPage(
+    gymId: string,
+    page: number,
+    limit: number,
+    search?: string
+  ): Promise<{ memberships: any[]; total: number }>;
 
   createAnnouncement(
     gymId: string,
@@ -109,6 +118,8 @@ export interface IGymRepository {
 
   getGymTotalRevenue(gymId: string): Promise<number>;
   getRecentMembers(gymId: string, limit: number): Promise<IUserGymMembership[]>;
+  getDashboardStats(gymId: string): Promise<any>;
+  countTotalGyms(): Promise<number>;
 
 
 

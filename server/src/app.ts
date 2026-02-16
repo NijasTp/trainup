@@ -22,6 +22,7 @@ import { errorHandler } from "./middlewares/error.midleware";
 import container from "./core/di/inversify.config";
 import { SocketHandler } from "./utils/socketHandler.util";
 import TYPES from "./core/types/types";
+import { logger } from "./utils/logger.util";
 dotenv.config();
 
 const app = express();
@@ -32,10 +33,10 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
+
 app.use(express.json());
 app.use(fileUpload({
   useTempFiles: true,
-  tempFileDir: "/tmp/",
   limits: { fileSize: 5 * 1024 * 1024 },
   abortOnLimit: true,
 }));
