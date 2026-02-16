@@ -407,5 +407,17 @@ export class TransactionRepository implements ITransactionRepository {
     });
   }
 
+  async getTotalPlatformRevenue(): Promise<number> {
+    const transactions = await TransactionModel.find({ status: 'completed' });
+    return transactions.reduce((acc, curr) => acc + (curr.platformFee || 0), 0);
+  }
 
+  async getRecentTransactions(limit: number): Promise<any[]> {
+    return await TransactionModel.find()
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate('userId', 'name')
+      .populate('trainerId', 'name')
+      .lean();
+  }
 }

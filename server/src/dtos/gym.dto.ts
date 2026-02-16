@@ -97,9 +97,9 @@ export interface CreateSubscriptionPlanDto {
   price: number;
   description?: string;
   features: string[];
-  trainerChat: boolean;
-  videoCall: boolean;
-  isCardioIncluded: boolean;
+  trainerChat?: boolean;
+  videoCall?: boolean;
+  isCardioIncluded?: boolean;
 }
 
 
@@ -116,9 +116,9 @@ export interface SubscriptionPlanResponseDto {
   price: number;
   description?: string;
   features: string[];
-  trainerChat: boolean;
-  videoCall: boolean;
-  isCardioIncluded: boolean;
+  trainerChat?: boolean;
+  videoCall?: boolean;
+  isCardioIncluded?: boolean;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -295,6 +295,15 @@ export interface GymSummary {
 
 export interface MyGymResponseDto {
   gym: GymSummary;
+  membership: {
+    _id: string;
+    startDate: Date;
+    endDate: Date;
+    preferredTime: string;
+    planDetails: {
+      name: string;
+      price: number;
+    };
+  };
   members: MemberSummary[];
-  userSubscription: UserSubscription;
 }

@@ -27,4 +27,12 @@ export class UserPlanRepository implements IUserPlanRepository {
   async findAllByUserId(userId: string): Promise<IUserPlan[]> {
     return await UserPlanModel.find({ userId }).exec();
   }
+
+  async findById(id: string): Promise<IUserPlan | null> {
+    return await UserPlanModel.findById(id);
+  }
+
+  async updateById(id: string, updates: Partial<IUserPlan>): Promise<IUserPlan | null> {
+    return await UserPlanModel.findByIdAndUpdate(id, updates, { new: true });
+  }
 }

@@ -7,7 +7,8 @@ import { CreateOrderResponseDto } from '../dtos/payment.dto';
 import { MESSAGES } from '../constants/messages.constants';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
-import { IGymTransaction, GymTransactionModel } from '../models/gymTransaction.model';
+import { IGymTransaction } from '../models/gymTransaction.model';
+import { IGymTransactionRepository } from '../core/interfaces/repositories/IGymTransactionRepository';
 import TYPES from '../core/types/types';
 import { ITransactionService } from '../core/interfaces/services/ITransactionService';
 import { logger } from '../utils/logger.util';
@@ -18,7 +19,10 @@ dotenv.config();
 export class PaymentService implements IPaymentService {
   private _razorpay: Razorpay;
 
-  constructor(@inject(TYPES.ITransactionService) private _transactionService: ITransactionService) {
+  constructor(
+    @inject(TYPES.ITransactionService) private _transactionService: ITransactionService,
+    @inject(TYPES.IGymTransactionRepository) private _gymTransactionRepo: IGymTransactionRepository
+  ) {
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       throw new AppError(MESSAGES.PAYMENT_CONFIG_INCOMPLETE, STATUS_CODE.INTERNAL_SERVER_ERROR);
     }
@@ -65,11 +69,11 @@ export class PaymentService implements IPaymentService {
   }
 
   async findPendingGymTransactionByUser(userId: string): Promise<IGymTransaction | null> {
-    return await GymTransactionModel.findOne({ userId, status: 'pending' });
+    return await this._gymTransactionRepo.findOne({ userId, status: 'pending' });
   }
 
   async markUserPendingGymTransactionsAsFailed(userId: string): Promise<number> {
-    const result = await GymTransactionModel.updateMany({ userId, status: 'pending' }, { status: 'failed' });
+    const result = await this._gymTransactionRepo.updateMany({ userId, status: 'pending' }, { status: 'failed' });
     return result.modifiedCount;
   }
 
@@ -99,7 +103,7 @@ export class PaymentService implements IPaymentService {
   }
 
   async createGymTransaction(data: Partial<IGymTransaction>): Promise<IGymTransaction> {
-    return await GymTransactionModel.create(data);
+    return await this._gymTransactionRepo.create(data);
   }
 
   async updateGymTransactionStatus(
@@ -108,15 +112,14 @@ export class PaymentService implements IPaymentService {
     paymentId?: string,
     signature?: string
   ): Promise<IGymTransaction | null> {
-    return await GymTransactionModel.findOneAndUpdate(
+    return await this._gymTransactionRepo.findOneAndUpdate(
       { razorpayOrderId: orderId },
-      { status, razorpayPaymentId: paymentId, razorpaySignature: signature },
-      { new: true }
+      { status, razorpayPaymentId: paymentId, razorpaySignature: signature }
     );
   }
 
   async findGymTransactionByOrderId(orderId: string): Promise<IGymTransaction | null> {
-    return await GymTransactionModel.findOne({ razorpayOrderId: orderId });
+    return await this._gymTransactionRepo.findOne({ razorpayOrderId: orderId });
   }
 
   async getGymTransactions(
@@ -124,16 +127,7 @@ export class PaymentService implements IPaymentService {
     page: number,
     limit: number
   ): Promise<{ transactions: IGymTransaction[]; totalPages: number }> {
-    const query = { gymId };
-    const transactions = await GymTransactionModel.find(query)
-      .populate('userId', 'name email')
-      .populate('subscriptionPlanId', 'name price duration')
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
-    const total = await GymTransactionModel.countDocuments(query);
-    const totalPages = Math.ceil(total / limit);
-    return { transactions: transactions as IGymTransaction[], totalPages };
+    const { transactions, totalPages } = await this._gymTransactionRepo.find({ gymId }, page, limit);
+    return { transactions, totalPages };
   }
 }

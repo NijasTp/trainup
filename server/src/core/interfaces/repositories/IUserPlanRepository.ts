@@ -6,4 +6,6 @@ export interface IUserPlanRepository {
   updateUserPlan(userId: string, trainerId: string, updates: Partial<IUserPlan>): Promise<IUserPlan | null>;
   deleteUserPlan(userId: string, trainerId: string): Promise<void>;
   findAllByUserId(userId: string): Promise<IUserPlan[]>;
+  findById(id: string): Promise<IUserPlan | null>;
+  updateById(id: string, updates: Partial<IUserPlan>): Promise<IUserPlan | null>;
 }

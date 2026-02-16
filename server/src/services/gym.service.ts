@@ -1,19 +1,18 @@
 import { injectable, inject } from 'inversify'
 import { IGymService } from '../core/interfaces/services/IGymService'
 import { IGymRepository } from '../core/interfaces/repositories/IGymRepository'
+import { IGymProductRepository } from '../core/interfaces/repositories/IGymProductRepository'
+import { IGymJobRepository } from '../core/interfaces/repositories/IGymJobRepository'
+import { IAttendanceRepository } from '../core/interfaces/repositories/IAttendanceRepository'
+import { IWorkoutTemplateRepository } from '../core/interfaces/repositories/IWorkoutTemplateRepository'
 import TYPES from '../core/types/types'
 import bcrypt from 'bcryptjs'
 import { IGym } from '../models/gym.model'
 import { ITrainer } from '../models/trainer.model'
 import { ISubscriptionPlan } from '../models/gymSubscriptionPlan.model'
 import { IGymAnnouncement } from '../models/gymAnnouncement.model'
-import { GymProductModel } from '../models/gymProduct.model'
-import { GymJobModel } from '../models/gymJob.model'
-import { UserGymMembershipModel } from '../models/userGymMembership.model'
-import { AttendanceModel } from '../models/gymAttendence.model'
 import mongoose from 'mongoose'
 import cloudinary from '../config/cloudinary'
-import WorkoutTemplate from '../models/workoutTemplate.model'
 import { IWorkoutTemplate } from '../models/workoutTemplate.model'
 
 import { UploadedFile } from 'express-fileupload'
@@ -40,7 +39,11 @@ import { logger } from '../utils/logger.util'
 export class GymService implements IGymService {
   constructor(
     @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository,
-    @inject(TYPES.IJwtService) private _jwtService: IJwtService
+    @inject(TYPES.IJwtService) private _jwtService: IJwtService,
+    @inject(TYPES.IGymProductRepository) private _productRepo: IGymProductRepository,
+    @inject(TYPES.IGymJobRepository) private _jobRepo: IGymJobRepository,
+    @inject(TYPES.IAttendanceRepository) private _attendanceRepo: IAttendanceRepository,
+    @inject(TYPES.WorkoutTemplateRepository) private _workoutTemplateRepo: IWorkoutTemplateRepository
   ) { }
 
   async registerGym(
@@ -73,7 +76,7 @@ export class GymService implements IGymService {
       } catch (e) {
         logger.error(e)
         throw new AppError(
-          'Invalid geoLocation JSON format',
+          MESSAGES.INVALID_GEOLOCATION,
           STATUS_CODE.BAD_REQUEST
         )
       }
@@ -81,12 +84,12 @@ export class GymService implements IGymService {
       geoLocationObj = data.geoLocation
     } else {
       throw new AppError(
-        'Missing or invalid geoLocation',
+        MESSAGES.MISSING_GEOLOCATION,
         STATUS_CODE.BAD_REQUEST
       )
     }
 
-    let openingHours: any[] = []
+    let openingHours: { day: string; open: string; close: string; isClosed: boolean }[] = []
     if (typeof data.openingHours === 'string') {
       try {
         openingHours = JSON.parse(data.openingHours)
@@ -94,7 +97,7 @@ export class GymService implements IGymService {
         logger.error('Error parsing openingHours:', e)
       }
     } else if (Array.isArray(data.openingHours)) {
-      openingHours = data.openingHours
+      openingHours = data.openingHours as any[]
     }
 
     const geoLocation = {
@@ -107,46 +110,61 @@ export class GymService implements IGymService {
 
     if (files?.certifications) {
       const certs = Array.isArray(files.certifications) ? files.certifications : [files.certifications];
-      const uploadPromises = certs.map(cert =>
-        cloudinary.uploader.upload(cert.tempFilePath, { folder: 'trainup/gyms/certificate' })
-      );
-      const results = await Promise.all(uploadPromises);
-      results.forEach(res => certificationsUrls.push(res.secure_url));
+      try {
+        const uploadPromises = certs.map(cert =>
+          cloudinary.uploader.upload(cert.tempFilePath, { resource_type: 'auto', folder: 'trainup/gyms/certificate' })
+        );
+        const results = await Promise.all(uploadPromises);
+        results.forEach(res => certificationsUrls.push(res.secure_url));
+      } catch (err) {
+        logger.error('Error uploading certifications:', err);
+        throw new AppError(MESSAGES.FAILED_CERTIFICATE_UPLOAD, STATUS_CODE.INTERNAL_SERVER_ERROR);
+      }
     }
 
     if (files?.logo) {
-      const logoUpload = await cloudinary.uploader.upload(files.logo.tempFilePath, { folder: 'trainup/gyms/logos' });
-      logoUrl = logoUpload.secure_url;
+      try {
+        const logoUpload = await cloudinary.uploader.upload(files.logo.tempFilePath, { resource_type: 'image', folder: 'trainup/gyms/logos' });
+        logoUrl = logoUpload.secure_url;
+      } catch (err) {
+        logger.error('Error uploading logo:', err);
+        throw new AppError(MESSAGES.FAILED_LOGO_UPLOAD, STATUS_CODE.INTERNAL_SERVER_ERROR);
+      }
     }
 
     if (files?.profileImage) {
-      const profileUpload = await cloudinary.uploader.upload(
-        files.profileImage.tempFilePath,
-        {
-          folder: 'trainup/gyms/profiles'
-        }
-      )
-      profileImageUrl = profileUpload.secure_url
+      try {
+        const profileUpload = await cloudinary.uploader.upload(
+          files.profileImage.tempFilePath,
+          {
+            resource_type: 'image',
+            folder: 'trainup/gyms/profiles'
+          }
+        )
+        profileImageUrl = profileUpload.secure_url
+      } catch (err) {
+        logger.error('Error uploading profile image:', err);
+        throw new AppError(MESSAGES.FAILED_PROFILE_IMAGE_UPLOAD, STATUS_CODE.INTERNAL_SERVER_ERROR);
+      }
     }
 
     if (files?.images) {
       const imagesArr = Array.isArray(files.images) ? files.images : [files.images];
-      const uploadPromises = imagesArr.map(img =>
-        cloudinary.uploader.upload(img.tempFilePath, {
-          folder: 'trainup/gyms/gallery'
-        })
-      );
+      try {
+        const uploadPromises = imagesArr.map(img =>
+          cloudinary.uploader.upload(img.tempFilePath, {
+            resource_type: 'image',
+            folder: 'trainup/gyms/gallery'
+          })
+        );
 
-      const results = await Promise.all(uploadPromises);
-      results.forEach(res => imageUrls.push(res.secure_url));
+        const results = await Promise.all(uploadPromises);
+        results.forEach(res => imageUrls.push(res.secure_url));
+      } catch (err) {
+        logger.error('Error uploading gallery images:', err);
+        throw new AppError(MESSAGES.FAILED_GALLERY_UPLOAD, STATUS_CODE.INTERNAL_SERVER_ERROR);
+      }
     }
-
-    logger.info('Upload results:', {
-      certifications: certificationsUrls.length,
-      logo: !!logoUrl,
-      images: imageUrls.length,
-      profileImage: !!profileImageUrl
-    });
 
     const existingGym = await this._gymRepo.findByEmail(data.email!)
     if (!existingGym) {
@@ -194,7 +212,12 @@ export class GymService implements IGymService {
   ): Promise<GymLoginResponseDto> {
     const gym = await this._gymRepo.findByEmail(email)
     if (!gym) throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND)
-    const valid = await bcrypt.compare(password, gym.password!)
+
+    if (!gym.onboardingCompleted || !gym.password) {
+      throw new AppError(MESSAGES.ONBOARDING_INCOMPLETE, STATUS_CODE.BAD_REQUEST)
+    }
+
+    const valid = await bcrypt.compare(password, gym.password)
     if (!valid)
       throw new AppError(MESSAGES.LOGIN_FAILED, STATUS_CODE.UNAUTHORIZED)
 
@@ -421,6 +444,11 @@ export class GymService implements IGymService {
     if (!dto.name || !dto.duration || !dto.price) {
       throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST)
     }
+
+    const planCount = await this._gymRepo.countSubscriptionPlans(gymId);
+    if (planCount >= 5) {
+      throw new AppError('Maximum 5 subscription plans allowed per gym', STATUS_CODE.BAD_REQUEST);
+    }
     const rawCreateUnit = ((dto as { durationUnit?: string }).durationUnit as string) || 'month'
     const normalizedUnit = (rawCreateUnit === 'days'
       ? 'day'
@@ -535,8 +563,8 @@ export class GymService implements IGymService {
       images?: UploadedFile | UploadedFile[]
     }
   ): Promise<GymLoginResponseDto> {
-    logger.info('Gym reapply attempt for id:', gymId);
-    logger.info('Files received for reapply:', Object.keys(files || {}));
+    logger.info(`Gym reapply attempt for id: ${gymId}`);
+    logger.info(`Files received for reapply: ${JSON.stringify(Object.keys(files || {}))}`);
     const certificationsUrls: string[] = []
     let logoUrl: string | undefined
     let profileImageUrl: string | undefined
@@ -680,28 +708,15 @@ export class GymService implements IGymService {
     limit: number,
     search: string
   ): Promise<{ members: any[]; total: number; totalPages: number }> {
-    const skip = (page - 1) * limit;
-    const query: any = { gymId: new mongoose.Types.ObjectId(gymId) };
-
-    const total = await UserGymMembershipModel.countDocuments(query);
-    const memberships = await UserGymMembershipModel.find(query)
-      .populate('userId', 'name email profileImage')
-      .populate('planId', 'name price duration durationUnit')
-      .sort({ joinedAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    let filteredMembers = memberships;
-    if (search) {
-      filteredMembers = memberships.filter((m: any) =>
-        m.userId?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        m.userId?.email?.toLowerCase().includes(search.toLowerCase())
-      );
-    }
+    const { memberships, total } = await this._gymRepo.getMembershipsPage(
+      gymId,
+      page,
+      limit,
+      search
+    );
 
     return {
-      members: filteredMembers,
+      members: memberships,
       total,
       totalPages: Math.ceil(total / limit)
     };
@@ -715,13 +730,14 @@ export class GymService implements IGymService {
     const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
     const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
 
-    const records = await AttendanceModel.find({
-      gymId: new mongoose.Types.ObjectId(gymId),
-      date: { $gte: startOfDay, $lte: endOfDay }
-    })
-      .populate('userId', 'name email profileImage')
-      .sort({ checkInTime: -1 })
-      .lean();
+    const records = await this._attendanceRepo.findAttendance(
+      {
+        gymId: new mongoose.Types.ObjectId(gymId),
+        date: { $gte: startOfDay, $lte: endOfDay }
+      },
+      { checkInTime: -1 },
+      'userId' // Populate userId
+    );
 
     // Stats
     const todayEntries = records.length;
@@ -729,7 +745,7 @@ export class GymService implements IGymService {
     // Weekly average (simplified: last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const weeklyCount = await AttendanceModel.countDocuments({
+    const weeklyCount = await this._attendanceRepo.countAttendance({
       gymId: new mongoose.Types.ObjectId(gymId),
       date: { $gte: sevenDaysAgo }
     });
@@ -865,6 +881,15 @@ export class GymService implements IGymService {
     data: any,
     files?: UploadedFile[]
   ): Promise<any> {
+    const existing = await this._productRepo.findOne({
+      gymId: new mongoose.Types.ObjectId(gymId),
+      name: { $regex: new RegExp(`^${data.name}$`, 'i') }
+    });
+
+    if (existing) {
+      throw new AppError('Product with this name already exists', STATUS_CODE.BAD_REQUEST);
+    }
+
     const imageUrls: string[] = [];
     if (files && files.length > 0) {
       for (const file of files) {
@@ -875,13 +900,12 @@ export class GymService implements IGymService {
       }
     }
 
-    const product = new GymProductModel({
+    return await this._productRepo.create({
       ...data,
       gymId: new mongoose.Types.ObjectId(gymId),
-      images: imageUrls
+      images: imageUrls,
+      isAvailable: true
     });
-
-    return await product.save();
   }
 
   async getGymProducts(
@@ -891,7 +915,6 @@ export class GymService implements IGymService {
     search: string,
     category: string
   ): Promise<{ products: any[]; total: number; totalPages: number }> {
-    const skip = (page - 1) * limit;
     const query: any = { gymId: new mongoose.Types.ObjectId(gymId) };
 
     if (search) {
@@ -905,20 +928,7 @@ export class GymService implements IGymService {
       query.category = category;
     }
 
-    const [products, total] = await Promise.all([
-      GymProductModel.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      GymProductModel.countDocuments(query)
-    ]);
-
-    return {
-      products,
-      total,
-      totalPages: Math.ceil(total / limit)
-    };
+    return await this._productRepo.find(query, page, limit);
   }
 
   async updateProduct(
@@ -927,8 +937,17 @@ export class GymService implements IGymService {
     data: any,
     files?: UploadedFile[]
   ): Promise<any> {
-    const product = await GymProductModel.findOne({ _id: productId, gymId: new mongoose.Types.ObjectId(gymId) });
+    const product = await this._productRepo.findOne({ _id: productId, gymId: new mongoose.Types.ObjectId(gymId) });
     if (!product) throw new AppError('Product not found', STATUS_CODE.NOT_FOUND);
+
+    if (data.name && data.name !== product.name) {
+      const existing = await this._productRepo.findOne({
+        gymId: new mongoose.Types.ObjectId(gymId),
+        name: { $regex: new RegExp(`^${data.name}$`, 'i') },
+        _id: { $ne: productId }
+      });
+      if (existing) throw new AppError('Product with this name already exists', STATUS_CODE.BAD_REQUEST);
+    }
 
     const imageUrls = [...(data.existingImages || product.images)];
 
@@ -942,34 +961,24 @@ export class GymService implements IGymService {
     }
 
     delete data.existingImages;
-    Object.assign(product, { ...data, images: imageUrls });
-    return await product.save();
+    return await this._productRepo.update(productId, { ...data, images: imageUrls });
   }
 
   async deleteProduct(productId: string, gymId: string): Promise<void> {
-    const result = await GymProductModel.deleteOne({ _id: productId, gymId: new mongoose.Types.ObjectId(gymId) });
-    if (result.deletedCount === 0) throw new AppError('Product not found', STATUS_CODE.NOT_FOUND);
+    const result = await this._productRepo.updateOne(
+      { _id: productId, gymId: new mongoose.Types.ObjectId(gymId) },
+      { $set: { isAvailable: false } }
+    );
+    if (result.matchedCount === 0) throw new AppError('Product not found', STATUS_CODE.NOT_FOUND);
   }
 
   // Jobs
-  async createJob(
-    gymId: string,
-    data: any
-  ): Promise<any> {
-    const job = new GymJobModel({
-      ...data,
-      gymId: new mongoose.Types.ObjectId(gymId)
-    });
-    return await job.save();
-  }
-
   async getGymJobs(
     gymId: string,
     page: number,
     limit: number,
     search: string
   ): Promise<{ jobs: any[]; total: number; totalPages: number }> {
-    const skip = (page - 1) * limit;
     const query: any = { gymId: new mongoose.Types.ObjectId(gymId) };
 
     if (search) {
@@ -979,20 +988,7 @@ export class GymService implements IGymService {
       ];
     }
 
-    const [jobs, total] = await Promise.all([
-      GymJobModel.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      GymJobModel.countDocuments(query)
-    ]);
-
-    return {
-      jobs,
-      total,
-      totalPages: Math.ceil(total / limit)
-    };
+    return await this._jobRepo.find(query, page, limit);
   }
 
   async updateJob(
@@ -1000,17 +996,16 @@ export class GymService implements IGymService {
     gymId: string,
     data: any
   ): Promise<any> {
-    const job = await GymJobModel.findOneAndUpdate(
+    const job = await this._jobRepo.findOneAndUpdate(
       { _id: jobId, gymId: new mongoose.Types.ObjectId(gymId) },
-      { $set: data },
-      { new: true }
+      { $set: data }
     );
     if (!job) throw new AppError('Job not found', STATUS_CODE.NOT_FOUND);
     return job;
   }
 
   async deleteJob(jobId: string, gymId: string): Promise<void> {
-    const result = await GymJobModel.deleteOne({ _id: jobId, gymId: new mongoose.Types.ObjectId(gymId) });
+    const result = await this._jobRepo.deleteOne({ _id: jobId, gymId: new mongoose.Types.ObjectId(gymId) });
     if (result.deletedCount === 0) throw new AppError('Job not found', STATUS_CODE.NOT_FOUND);
   }
 
@@ -1019,12 +1014,11 @@ export class GymService implements IGymService {
     gymId: string,
     data: any
   ): Promise<any> {
-    const template = new WorkoutTemplate({
+    return await this._workoutTemplateRepo.create({
       ...data,
       createdBy: new mongoose.Types.ObjectId(gymId),
       creatorModel: 'Gym'
     });
-    return await template.save();
   }
 
   async getGymWorkoutTemplates(
@@ -1033,27 +1027,13 @@ export class GymService implements IGymService {
     limit: number,
     search: string
   ): Promise<{ templates: any[]; total: number; totalPages: number }> {
-    const skip = (page - 1) * limit;
     const query: any = { createdBy: new mongoose.Types.ObjectId(gymId), creatorModel: 'Gym' };
 
     if (search) {
       query.title = { $regex: search, $options: 'i' };
     }
 
-    const [templates, total] = await Promise.all([
-      WorkoutTemplate.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      WorkoutTemplate.countDocuments(query)
-    ]);
-
-    return {
-      templates,
-      total,
-      totalPages: Math.ceil(total / limit)
-    };
+    return await this._workoutTemplateRepo.find(query, page, limit);
   }
 
   async updateWorkoutTemplate(
@@ -1061,69 +1041,29 @@ export class GymService implements IGymService {
     gymId: string,
     data: any
   ): Promise<any> {
-    const template = await WorkoutTemplate.findOneAndUpdate(
-      { _id: templateId, createdBy: new mongoose.Types.ObjectId(gymId), creatorModel: 'Gym' },
-      { $set: data },
-      { new: true }
+    const template = await this._workoutTemplateRepo.update(
+      templateId,
+      data
     );
     if (!template) throw new AppError('Workout template not found', STATUS_CODE.NOT_FOUND);
     return template;
   }
 
   async deleteWorkoutTemplate(templateId: string, gymId: string): Promise<void> {
-    const result = await WorkoutTemplate.deleteOne({
-      _id: templateId,
-      createdBy: new mongoose.Types.ObjectId(gymId),
-      creatorModel: 'Gym'
+    await this._workoutTemplateRepo.delete(templateId);
+  }
+
+  async createJob(
+    gymId: string,
+    data: any
+  ): Promise<any> {
+    return await this._jobRepo.create({
+      ...data,
+      gymId: new mongoose.Types.ObjectId(gymId)
     });
-    if (result.deletedCount === 0) throw new AppError('Workout template not found', STATUS_CODE.NOT_FOUND);
   }
 
   async getGymDashboardStats(gymId: string): Promise<any> {
-    const gymObjectId = new mongoose.Types.ObjectId(gymId);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const endOfToday = new Date(today);
-    endOfToday.setHours(23, 59, 59, 999);
-
-    const [
-      memberCount,
-      activePlansCount,
-      todayAttendance,
-      productCount,
-      recentAnnouncements,
-      totalRevenue
-    ] = await Promise.all([
-      UserGymMembershipModel.countDocuments({ gymId: gymObjectId }),
-      this._gymRepo.listSubscriptionPlans(gymId, 1, 1, '', 'true').then(res => res.total),
-      AttendanceModel.countDocuments({ gymId: gymObjectId, date: { $gte: today, $lte: endOfToday } }),
-      GymProductModel.countDocuments({ gymId: gymObjectId }),
-      this._gymRepo.getAnnouncementsByGym(gymId, 1, 3, '').then(res => res.announcements),
-      this._gymRepo.getGymTotalRevenue(gymId)
-    ]);
-
-    // Mock revenue data for the last 12 months for the chart
-    // In a real scenario, this would be aggregated from GymTransactionModel
-    const monthlyRevenue = [40, 70, 45, 90, 65, 80, 50, 85, 60, 95, 75, 100];
-
-    return {
-      stats: [
-        { title: 'Total Members', value: memberCount, icon: 'Users', trend: '+12%', color: 'from-blue-500 to-cyan-500' },
-        { title: 'Active Plans', value: activePlansCount, icon: 'CreditCard', trend: '+3%', color: 'from-purple-500 to-pink-500' },
-        { title: 'Today Attendance', value: todayAttendance, icon: 'CalendarCheck', trend: '+18%', color: 'from-orange-500 to-amber-500' },
-        { title: 'Store Products', value: productCount, icon: 'Package', trend: 'Stable', color: 'from-primary to-indigo-500' },
-      ],
-      revenueAnalytics: {
-        currentMonth: totalRevenue,
-        monthlyData: monthlyRevenue
-      },
-      announcements: recentAnnouncements.map(ann => ({
-        id: (ann as any)._id,
-        title: ann.title,
-        description: ann.description,
-        date: new Date(ann.createdAt!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      }))
-    };
+    return await this._gymRepo.getDashboardStats(gymId);
   }
 }
-

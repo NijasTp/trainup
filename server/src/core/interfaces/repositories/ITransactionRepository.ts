@@ -50,4 +50,6 @@ export interface ITransactionRepository {
   ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }>;
   getAllTransactionsForExport(): Promise<ITransactionDTO[]>;
   getGraphData(filter: 'day' | 'week' | 'month' | 'year'): Promise<unknown[]>;
+  getTotalPlatformRevenue(): Promise<number>;
+  getRecentTransactions(limit: number): Promise<any[]>;
 }

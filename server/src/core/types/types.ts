@@ -117,6 +117,9 @@ const TYPES = {
   GymAuthController: Symbol.for("GymAuthController"),
 
   IWalletRepository: Symbol.for("IWalletRepository"),
+  IGymProductRepository: Symbol.for("IGymProductRepository"),
+  IGymJobRepository: Symbol.for("IGymJobRepository"),
+  IGymTransactionRepository: Symbol.for("IGymTransactionRepository"),
 };
 
 

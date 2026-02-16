@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { IAttendanceRepository } from '../core/interfaces/repositories/IAttendanceRepository';
-import { IAttendance,AttendanceModel } from '../models/gymAttendence.model';
+import { IAttendance, AttendanceModel } from '../models/gymAttendence.model';
 import { Types } from 'mongoose';
 
 @injectable()
@@ -115,5 +115,21 @@ export class AttendanceRepository implements IAttendanceRepository {
       totalPages: Math.ceil(total / limit),
       total,
     };
+  }
+
+  async findAttendance(
+    query: any,
+    sort: any = { checkInTime: -1 },
+    populate?: string | string[]
+  ): Promise<IAttendance[]> {
+    let mQuery = AttendanceModel.find(query).sort(sort);
+    if (populate) {
+      mQuery = mQuery.populate(populate as any);
+    }
+    return await mQuery.lean();
+  }
+
+  async countAttendance(query: any): Promise<number> {
+    return await AttendanceModel.countDocuments(query);
   }
 }

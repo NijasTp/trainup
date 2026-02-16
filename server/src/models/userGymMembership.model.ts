@@ -12,6 +12,17 @@ export interface IUserGymMembership extends Document {
   paymentStatus: 'paid' | 'pending' | 'overdue';
   preferredTime?: string;
   price: number;
+  planDetails?: {
+    name: string;
+    duration: number;
+    durationUnit: 'day' | 'month' | 'year';
+    price: number;
+    description?: string;
+    features: string[];
+    trainerChat: boolean;
+    videoCall: boolean;
+    isCardioIncluded: boolean;
+  };
   refundedAmount: number;
   cancellationDate: Date | null;
   createdAt: Date;
@@ -30,6 +41,17 @@ const userGymMembershipSchema: Schema<IUserGymMembership> = new Schema(
     paymentStatus: { type: String, enum: ['paid', 'pending', 'overdue'], default: 'pending' },
     preferredTime: { type: String, default: 'Anytime' },
     price: { type: Number, required: true },
+    planDetails: {
+      name: { type: String },
+      duration: { type: Number },
+      durationUnit: { type: String, enum: ['day', 'month', 'year'] },
+      price: { type: Number },
+      description: { type: String },
+      features: [{ type: String }],
+      trainerChat: { type: Boolean },
+      videoCall: { type: Boolean },
+      isCardioIncluded: { type: Boolean },
+    },
     refundedAmount: { type: Number, default: 0 },
     cancellationDate: { type: Date, default: null },
   },

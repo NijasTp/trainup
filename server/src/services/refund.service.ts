@@ -5,9 +5,8 @@ import { IUserPlanRepository } from '../core/interfaces/repositories/IUserPlanRe
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
 import { GYM_MESSAGES, MESSAGES } from '../constants/messages.constants';
+import { IGymRepository } from '../core/interfaces/repositories/IGymRepository';
 import { logger } from '../utils/logger.util';
-import { UserGymMembershipModel } from '../models/userGymMembership.model';
-import { UserPlanModel } from '../models/userPlan.model';
 
 import { IWalletRepository } from '../core/interfaces/repositories/IWalletRepository';
 
@@ -15,7 +14,8 @@ import { IWalletRepository } from '../core/interfaces/repositories/IWalletReposi
 export class RefundService implements IRefundService {
     constructor(
         @inject(TYPES.IUserPlanRepository) private _userPlanRepo: IUserPlanRepository,
-        @inject(TYPES.IWalletRepository) private _walletRepo: IWalletRepository
+        @inject(TYPES.IWalletRepository) private _walletRepo: IWalletRepository,
+        @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository
     ) { }
 
 
@@ -41,7 +41,7 @@ export class RefundService implements IRefundService {
     }
 
     async applyGymRefund(membershipId: string, userId: string): Promise<RefundResult> {
-        const membership = await UserGymMembershipModel.findById(membershipId);
+        const membership = await this._gymRepo.getMembershipById(membershipId);
 
         if (!membership) {
             throw new AppError(GYM_MESSAGES.MEMBERSHIP_NOT_FOUND, STATUS_CODE.NOT_FOUND);
@@ -62,10 +62,11 @@ export class RefundService implements IRefundService {
         );
 
         // Update membership with refund info
-        membership.status = 'cancelled';
-        membership.cancellationDate = new Date();
-        membership.refundedAmount = refundResult.refundAmount;
-        await membership.save();
+        await this._gymRepo.updateMember(membershipId, {
+            status: 'cancelled',
+            cancellationDate: new Date(),
+            refundedAmount: refundResult.refundAmount
+        });
 
         // Credit user wallet
         if (refundResult.refundAmount > 0) {
@@ -85,7 +86,7 @@ export class RefundService implements IRefundService {
 
 
     async applyTrainerRefund(userPlanId: string, userId: string): Promise<RefundResult> {
-        const userPlan = await UserPlanModel.findById(userPlanId);
+        const userPlan = await this._userPlanRepo.findById(userPlanId);
 
         if (!userPlan) {
             throw new AppError(MESSAGES.NOT_FOUND, STATUS_CODE.NOT_FOUND);
@@ -96,15 +97,16 @@ export class RefundService implements IRefundService {
         }
 
         // Calculate total days from duration (months)
-        const startDate = userPlan.createdAt;
+        const startDate = userPlan.createdAt as Date;
         const endDate = userPlan.expiryDate;
 
         const refundResult = this.calculateRefund(startDate, endDate, userPlan.amount);
 
         // Update user plan with refund info
-        userPlan.cancellationDate = new Date();
-        userPlan.refundedAmount = refundResult.refundAmount;
-        await userPlan.save();
+        await this._userPlanRepo.updateById(userPlanId, {
+            cancellationDate: new Date(),
+            refundedAmount: refundResult.refundAmount
+        });
 
         // Credit user wallet
         if (refundResult.refundAmount > 0) {

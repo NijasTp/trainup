@@ -9,6 +9,7 @@ import {
   UserGymMembershipModel
 } from '../models/userGymMembership.model'
 import { GymModel } from '../models/gym.model'
+import { SubscriptionPlanModel } from '../models/gymSubscriptionPlan.model'
 
 @injectable()
 export class UserRepository implements IUserRepository {
@@ -199,12 +200,28 @@ export class UserRepository implements IUserRepository {
     endDate: Date,
     preferredTime?: string
   ): Promise<IUserGymMembership> {
+    const plan = await SubscriptionPlanModel.findById(planId).lean()
+
     const update = {
       planId: new Types.ObjectId(planId),
       subscriptionStartDate: startDate,
       subscriptionEndDate: endDate,
       preferredTime: preferredTime ?? 'Anytime',
-      status: 'active'
+      status: 'active',
+      price: plan?.price || 0,
+      planDetails: plan
+        ? {
+          name: plan.name,
+          duration: plan.duration,
+          durationUnit: plan.durationUnit,
+          price: plan.price,
+          description: plan.description,
+          features: plan.features,
+          trainerChat: plan.trainerChat,
+          videoCall: plan.videoCall,
+          isCardioIncluded: plan.isCardioIncluded
+        }
+        : undefined
     }
 
     const membership = await UserGymMembershipModel.findOneAndUpdate(
@@ -234,8 +251,24 @@ export class UserRepository implements IUserRepository {
   }
 
   async updatePassword(email: string, hashedPassword: string): Promise<void> {
-    await UserModel.findOneAndUpdate({ email }, { password: hashedPassword })
+    await UserModel.findOneAndUpdate({ email }, { password: hashedPassword });
+  }
+
+  async getGrowthStats(days: number): Promise<{ date: string; count: number }[]> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const stats = await UserModel.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    return stats.map(g => ({ date: g._id, count: g.count }));
   }
 }
-
-

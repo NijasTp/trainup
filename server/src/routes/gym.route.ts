@@ -3,12 +3,9 @@ import container from "../core/di/inversify.config";
 import { GymController } from "../controllers/gym.controller";
 import TYPES from "../core/types/types";
 import { authMiddleware, roleMiddleware } from "../middlewares/auth.middleware";
-import fileUpload from "express-fileupload";
 
 const router = express.Router();
 const gymController = container.get<GymController>(TYPES.GymController);
-
-
 
 
 // Pre-registration Auth
@@ -17,7 +14,7 @@ const gymAuthController = container.get<GymAuthController>(TYPES.GymAuthControll
 
 router.post("/auth/request-otp", gymAuthController.requestOtp.bind(gymAuthController));
 router.post("/auth/verify-otp", gymAuthController.verifyOtp.bind(gymAuthController));
-router.post("/register", fileUpload({ useTempFiles: true }), gymController.register.bind(gymController));
+router.post("/register", gymController.register.bind(gymController));
 
 // Dashboard Stats
 router.get("/dashboard-stats", authMiddleware, roleMiddleware(['gym']), gymController.getDashboardStats.bind(gymController));
@@ -32,14 +29,14 @@ router.post('/reset-password', gymController.resetPassword.bind(gymController));
 
 // Gym protected
 router.get('/get-details', authMiddleware, roleMiddleware(['gym']), gymController.getData.bind(gymController))
-router.put('/update-profile', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), gymController.updateProfile.bind(gymController));
+router.put('/update-profile', authMiddleware, roleMiddleware(['gym']), gymController.updateProfile.bind(gymController));
 router.get('/members', authMiddleware, roleMiddleware(['gym']), gymController.getMembers.bind(gymController));
 router.get('/attendance', authMiddleware, roleMiddleware(['gym']), gymController.getAttendance.bind(gymController));
 
 // Products
 router.get('/products', authMiddleware, roleMiddleware(['gym']), gymController.getProducts.bind(gymController));
-router.post('/products', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), gymController.createProduct.bind(gymController));
-router.put('/products/:id', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), gymController.updateProduct.bind(gymController));
+router.post('/products', authMiddleware, roleMiddleware(['gym']), gymController.createProduct.bind(gymController));
+router.put('/products/:id', authMiddleware, roleMiddleware(['gym']), gymController.updateProduct.bind(gymController));
 router.delete('/products/:id', authMiddleware, roleMiddleware(['gym']), gymController.deleteProduct.bind(gymController));
 
 // Jobs
@@ -55,12 +52,9 @@ router.put('/workout-templates/:id', authMiddleware, roleMiddleware(['gym']), gy
 router.delete('/workout-templates/:id', authMiddleware, roleMiddleware(['gym']), gymController.deleteWorkoutTemplate.bind(gymController));
 
 
-
-
-
 router.get("/announcements", authMiddleware, gymController.getAnnouncements.bind(gymController));
-router.post("/announcements", authMiddleware, fileUpload({ useTempFiles: true }), gymController.createAnnouncement.bind(gymController));
-router.put("/announcements/:id", authMiddleware, fileUpload({ useTempFiles: true }), gymController.updateAnnouncement.bind(gymController));
+router.post("/announcements", authMiddleware, gymController.createAnnouncement.bind(gymController));
+router.put("/announcements/:id", authMiddleware, gymController.updateAnnouncement.bind(gymController));
 router.delete("/announcements/:id", authMiddleware, gymController.deleteAnnouncement.bind(gymController));
 
 router.post('/subscription-plans', authMiddleware, roleMiddleware(['gym']), gymController.createSubscriptionPlan.bind(gymController))
@@ -78,10 +72,10 @@ router.post('/reapply', authMiddleware, roleMiddleware(['gym']), gymController.r
 import { GymEquipmentController } from "../controllers/gymEquipment.controller";
 const equipmentController = container.get<GymEquipmentController>(TYPES.GymEquipmentController);
 
-router.post('/equipment', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), equipmentController.createEquipment.bind(equipmentController));
+router.post('/equipment', authMiddleware, roleMiddleware(['gym']), equipmentController.createEquipment.bind(equipmentController));
 router.get('/equipment', authMiddleware, roleMiddleware(['gym']), equipmentController.getEquipments.bind(equipmentController));
 router.get('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.getEquipmentById.bind(equipmentController));
-router.put('/equipment/:id', authMiddleware, roleMiddleware(['gym']), fileUpload({ useTempFiles: true }), equipmentController.updateEquipment.bind(equipmentController));
+router.put('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.updateEquipment.bind(equipmentController));
 router.delete('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.deleteEquipment.bind(equipmentController));
 router.patch('/equipment/:id/availability', authMiddleware, roleMiddleware(['gym']), equipmentController.toggleAvailability.bind(equipmentController));
 
@@ -91,4 +85,4 @@ router.post('/equipment-categories', authMiddleware, roleMiddleware(['gym']), eq
 router.get('/equipment-categories', authMiddleware, roleMiddleware(['gym']), equipmentController.getCategories.bind(equipmentController));
 router.delete('/equipment-categories/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.deleteCategory.bind(equipmentController));
 
-export default router
+export default router;

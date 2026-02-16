@@ -17,6 +17,8 @@ import {
 } from '../models/gymAnnouncement.model'
 import { GymResponseDto, AnnouncementDto, GymListingDto, MyGymResponseDto, UserSubscription, GymSummary, MemberSummary } from '../dtos/gym.dto'
 import { GymTransactionModel } from '../models/gymTransaction.model'
+import { AttendanceModel } from '../models/gymAttendence.model'
+import { GymProductModel } from '../models/gymProduct.model'
 import { IUser } from '../models/user.model'
 
 @injectable()
@@ -201,6 +203,12 @@ export class GymRepository implements IGymRepository {
     await SubscriptionPlanModel.findByIdAndDelete(planId)
   }
 
+  async countSubscriptionPlans(gymId: string): Promise<number> {
+    return await SubscriptionPlanModel.countDocuments({
+      gymId: new Types.ObjectId(gymId)
+    })
+  }
+
   async addTrainer(gymId: string, data: Partial<ITrainer>): Promise<ITrainer> {
     const trainer = await TrainerModel.create({
       ...data,
@@ -219,6 +227,10 @@ export class GymRepository implements IGymRepository {
     return TrainerModel.findByIdAndUpdate(trainerId, data, { new: true })
   }
 
+  async getMembershipById(membershipId: string): Promise<IUserGymMembership | null> {
+    return await UserGymMembershipModel.findById(membershipId).lean() as IUserGymMembership | null
+  }
+
   async updateMember(
     membershipId: string,
     data: Partial<IUserGymMembership>
@@ -226,6 +238,39 @@ export class GymRepository implements IGymRepository {
     return UserGymMembershipModel.findByIdAndUpdate(membershipId, data, {
       new: true
     })
+  }
+
+  async getMembershipsPage(
+    gymId: string,
+    page: number,
+    limit: number,
+    search?: string
+  ): Promise<{ memberships: any[]; total: number }> {
+    const skip = (page - 1) * limit
+    const query: any = { gymId: new Types.ObjectId(gymId) }
+
+    const total = await UserGymMembershipModel.countDocuments(query)
+    const memberships = await UserGymMembershipModel.find(query)
+      .populate('userId', 'name email profileImage')
+      .populate('planId', 'name price duration durationUnit')
+      .sort({ joinedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean()
+
+    let filteredMemberships = memberships
+    if (search) {
+      filteredMemberships = memberships.filter(
+        (m: any) =>
+          m.userId?.name?.toLowerCase().includes(search.toLowerCase()) ||
+          m.userId?.email?.toLowerCase().includes(search.toLowerCase())
+      )
+    }
+
+    return {
+      memberships: filteredMemberships,
+      total
+    }
   }
 
   async addMemberToGym(gymId: string, userId: string): Promise<void> {
@@ -476,15 +521,6 @@ export class GymRepository implements IGymRepository {
 
     const plan = membership.planId
 
-    const userSubscription: UserSubscription = {
-      planName: plan?.name ?? 'N/A',
-      planPrice: plan?.price ?? 0,
-      planDuration: plan?.duration ?? 0,
-      planDurationUnit: plan?.durationUnit ?? 'month',
-      subscribedAt: membership.subscriptionStartDate ?? membership.createdAt,
-      preferredTime: membership.preferredTime ?? 'Anytime',
-    }
-
     const gymSummary: GymSummary = {
       _id: gym._id.toString(),
       name: gym.name ?? 'Unknown Gym',
@@ -508,7 +544,16 @@ export class GymRepository implements IGymRepository {
     return {
       gym: gymSummary,
       members,
-      userSubscription
+      membership: {
+        _id: membership._id.toString(),
+        startDate: (membership.subscriptionStartDate ?? membership.createdAt) as Date,
+        endDate: membership.subscriptionEndDate as Date,
+        preferredTime: membership.preferredTime ?? 'Anytime',
+        planDetails: {
+          name: plan?.name ?? 'N/A',
+          price: plan?.price ?? 0
+        }
+      }
     }
   }
 
@@ -568,6 +613,157 @@ export class GymRepository implements IGymRepository {
       .limit(limit)
       .populate('userId', 'name email')
       .lean() as Promise<IUserGymMembership[]>
+  }
+
+  async getDashboardStats(gymId: string): Promise<any> {
+    const gymObjectId = new mongoose.Types.ObjectId(gymId)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const endOfToday = new Date(today)
+    endOfToday.setHours(23, 59, 59, 999)
+
+    const [
+      gym,
+      memberCount,
+      activePlansCount,
+      todayAttendance,
+      productCount,
+      recentAnnouncements,
+      totalRevenue,
+      membershipDist
+    ] = await Promise.all([
+      GymModel.findById(gymObjectId),
+      UserGymMembershipModel.countDocuments({
+        gymId: gymObjectId,
+        status: 'active'
+      }),
+      SubscriptionPlanModel.countDocuments({ gymId: gymObjectId }),
+      AttendanceModel.countDocuments({
+        gymId: gymObjectId,
+        date: { $gte: today, $lte: endOfToday }
+      }),
+      GymProductModel.countDocuments({ gymId: gymObjectId, isAvailable: true }),
+      GymAnnouncementModel.find({ gymId: gymObjectId })
+        .sort({ createdAt: -1 })
+        .limit(5),
+      GymTransactionModel.aggregate([
+        { $match: { gymId: gymObjectId, status: 'completed' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]).then(res => res[0]?.total || 0),
+      UserGymMembershipModel.aggregate([
+        { $match: { gymId: gymObjectId, status: 'active' } },
+        { $group: { _id: '$planId', count: { $sum: 1 } } },
+        {
+          $lookup: {
+            from: 'subscriptionplans',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'plan'
+          }
+        },
+        { $unwind: '$plan' },
+        { $project: { name: '$plan.name', count: 1 } }
+      ])
+    ])
+
+    const twelveMonthsAgo = new Date()
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11)
+    twelveMonthsAgo.setDate(1)
+    twelveMonthsAgo.setHours(0, 0, 0, 0)
+
+    const revenueAggregation = await GymTransactionModel.aggregate([
+      {
+        $match: {
+          gymId: gymObjectId,
+          status: 'completed',
+          createdAt: { $gte: twelveMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: '$createdAt' },
+            year: { $year: '$createdAt' }
+          },
+          total: { $sum: '$amount' }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ])
+
+    // Map aggregation results to last 12 months array
+    const monthlyRevenue = new Array(12).fill(0)
+    const months: string[] = []
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date()
+      d.setMonth(d.getMonth() - i)
+      const m = d.getMonth() + 1
+      const y = d.getFullYear()
+
+      const found = revenueAggregation.find(
+        r => r._id.month === m && r._id.year === y
+      )
+      monthlyRevenue[11 - i] = found ? found.total / 1000 : 0 // In 'k' as expected by frontend
+      months.push(
+        d.toLocaleString('default', { month: 'short' }).toUpperCase()
+      )
+    }
+
+    return {
+      stats: [
+        {
+          title: 'Total Members',
+          value: memberCount,
+          icon: 'Users',
+          trend: '+12%',
+          color: 'from-blue-500 to-cyan-500'
+        },
+        {
+          title: 'Active Plans',
+          value: activePlansCount,
+          icon: 'CreditCard',
+          trend: '+3%',
+          color: 'from-purple-500 to-pink-500'
+        },
+        {
+          title: 'Today Attendance',
+          value: todayAttendance,
+          icon: 'CalendarCheck',
+          trend: '+18%',
+          color: 'from-orange-500 to-amber-500'
+        },
+        {
+          title: 'Store Products',
+          value: productCount,
+          icon: 'Package',
+          trend: 'Stable',
+          color: 'from-primary to-indigo-500'
+        }
+      ],
+      revenueAnalytics: {
+        currentMonth: totalRevenue,
+        monthlyData: monthlyRevenue
+      },
+      announcements: recentAnnouncements.map((ann: any) => ({
+        id: (ann as any)._id,
+        title: ann.title,
+        description: ann.description,
+        date: new Date(ann.createdAt!).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        })
+      })),
+      membershipDistribution: membershipDist
+    }
+  }
+
+  async getDashboardStats(gymId: string): Promise<any> {
+    // ... existing ...
+  }
+
+  async countTotalGyms(): Promise<number> {
+    return await GymModel.countDocuments();
   }
 
   mapToResponseDto(gym: IGym): GymResponseDto {

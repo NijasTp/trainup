@@ -47,4 +47,5 @@ export interface IUserRepository {
   ): Promise<IUserGymMembership>;
   removeTrainer(userId: string): Promise<void>;
   updatePassword(email: string, hashedPassword: string): Promise<void>;
+  getGrowthStats(days: number): Promise<{ date: string; count: number }[]>;
 }

@@ -348,15 +348,10 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
   }
 
   async getPlanDistribution(trainerId: string): Promise<Array<{ plan: string; count: number }>> {
-    const trainer = await TrainerModel.findById(trainerId).select('clients').exec();
-    if (!trainer) {
-      throw new Error('Trainer not found');
-    }
-
     const distribution = await UserModel.aggregate([
       {
         $match: {
-          _id: { $in: trainer.clients },
+          trainerId: new Types.ObjectId(trainerId),
           trainerPlan: { $in: ['basic', 'premium', 'pro'] }
         }
       },
@@ -376,5 +371,21 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     }));
   }
 
+  async getGrowthStats(days: number): Promise<{ date: string; count: number }[]> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
 
+    const stats = await TrainerModel.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    return stats.map(g => ({ date: g._id, count: g.count }));
+  }
 }

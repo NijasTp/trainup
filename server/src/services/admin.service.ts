@@ -9,17 +9,19 @@ import { AdminLoginRequestDto, AdminLoginResponseDto } from '../dtos/admin.dto';
 import { MESSAGES } from '../constants/messages.constants';
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
-import { UserModel } from '../models/user.model';
-import { TrainerModel } from '../models/trainer.model';
-import { GymModel } from '../models/gym.model';
-import { TransactionModel } from '../models/transaction.model';
+import { IUserRepository } from '../core/interfaces/repositories/IUserRepository';
+import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepository';
+import { IGymRepository } from '../core/interfaces/repositories/IGymRepository';
 
 @injectable()
 export class AdminService implements IAdminService {
   constructor(
     @inject(TYPES.IAdminRepository) private _adminRepository: IAdminRepository,
     @inject(TYPES.IJwtService) private _jwtService: IJwtService,
-    @inject(TYPES.ITransactionRepository) private _transactionRepository: ITransactionRepository
+    @inject(TYPES.ITransactionRepository) private _transactionRepository: ITransactionRepository,
+    @inject(TYPES.IUserRepository) private _userRepo: IUserRepository,
+    @inject(TYPES.ITrainerRepository) private _trainerRepo: ITrainerRepository,
+    @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository
   ) { }
 
   async login(dto: AdminLoginRequestDto): Promise<AdminLoginResponseDto> {
@@ -67,46 +69,19 @@ export class AdminService implements IAdminService {
   }
 
   async getDashboardStats(): Promise<unknown> {
-    const totalUsers = await UserModel.countDocuments();
-    const totalTrainers = await TrainerModel.countDocuments();
-    const totalGyms = await GymModel.countDocuments();
+    const totalUsers = await this._userRepo.count();
+    const totalTrainers = await this._trainerRepo.count('', 'all', 'all'); // Adjusted to match interface
+    const totalGyms = await this._gymRepo.countTotalGyms();
 
     // Calculate total revenue (Platform Profit)
-    const transactions = await TransactionModel.find({ status: 'completed' });
-    const totalRevenue = transactions.reduce((acc, curr) => acc + (curr.platformFee || 0), 0);
+    const totalRevenue = await this._transactionRepository.getTotalPlatformRevenue();
 
     // Recent transactions
-    const recentTransactions = await TransactionModel.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('userId', 'name')
-      .populate('trainerId', 'name');
+    const recentTransactions = await this._transactionRepository.getRecentTransactions(5);
 
     // Growth stats (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const userGrowth = await UserModel.aggregate([
-      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
-
-    const trainerGrowth = await TrainerModel.aggregate([
-      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
+    const userGrowth = await this._userRepo.getGrowthStats(30);
+    const trainerGrowth = await this._trainerRepo.getGrowthStats(30);
 
     return {
       totalUsers,
@@ -114,8 +89,8 @@ export class AdminService implements IAdminService {
       totalGyms,
       totalRevenue,
       recentTransactions,
-      userGrowth: userGrowth.map(g => ({ date: g._id, count: g.count })),
-      trainerGrowth: trainerGrowth.map(g => ({ date: g._id, count: g.count })),
+      userGrowth,
+      trainerGrowth,
     };
   }
 
@@ -138,74 +113,8 @@ export class AdminService implements IAdminService {
       return await this._transactionRepository.getGraphData(filter);
     }
 
-    const Model = type === 'users' ? UserModel : TrainerModel;
-    const now = new Date();
-    let groupBy: Record<string, unknown>;
-    let startDate: Date;
-
-    switch (filter) {
-      case 'day':
-        startDate = new Date(now.setDate(now.getDate() - 30));
-        groupBy = {
-          year: { $year: '$createdAt' },
-          month: { $month: '$createdAt' },
-          day: { $dayOfMonth: '$createdAt' }
-        };
-        break;
-      case 'week':
-        startDate = new Date(now.setDate(now.getDate() - 90));
-        groupBy = {
-          year: { $year: '$createdAt' },
-          week: { $week: '$createdAt' }
-        };
-        break;
-      case 'month':
-        startDate = new Date(now.setFullYear(now.getFullYear() - 1));
-        groupBy = {
-          year: { $year: '$createdAt' },
-          month: { $month: '$createdAt' }
-        };
-        break;
-      case 'year':
-      default:
-        startDate = new Date(now.setFullYear(now.getFullYear() - 5));
-        groupBy = {
-          year: { $year: '$createdAt' }
-        };
-        break;
-    }
-
-    const data = await Model.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: startDate }
-        }
-      },
-      {
-        $group: {
-          _id: groupBy,
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1, '_id.week': 1 } }
-    ]);
-
-    return data.map(item => {
-      let label = '';
-      if (filter === 'day') {
-        label = `${item._id.day}/${item._id.month}`;
-      } else if (filter === 'week') {
-        label = `Week ${item._id.week}`;
-      } else if (filter === 'month') {
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        label = `${monthNames[item._id.month - 1]} ${item._id.year}`;
-      } else {
-        label = `${item._id.year}`;
-      }
-      return {
-        date: label,
-        count: item.count
-      };
-    });
+    const repo = type === 'users' ? this._userRepo : this._trainerRepo;
+    const days = filter === 'day' ? 30 : filter === 'week' ? 90 : filter === 'month' ? 365 : 1825;
+    return await repo.getGrowthStats(days);
   }
 }
