@@ -23,6 +23,8 @@ const Profile = () => {
     const [saving, setSaving] = useState(false);
     const [gymData, setGymData] = useState<any>({
         name: '',
+        email: '',
+        phone: '',
         address: '',
         geoLocation: { coordinates: [0, 0] },
         openingHours: [],
@@ -46,7 +48,7 @@ const Profile = () => {
         try {
             setLoading(true);
             const data = await getGymDetails();
-            setGymData(data.gym || data);
+            setGymData(data.gymDetails || data.gym || data);
         } catch (error) {
             toast.error('Failed to fetch profile details');
         } finally {
@@ -77,6 +79,16 @@ const Profile = () => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
+        // Validation for Max 5
+        if (type === 'gallery' && (gymData.images.length + files.length) > 5) {
+            toast.error('Maximum 5 gallery images allowed');
+            return;
+        }
+        if (type === 'certifications' && (gymData.certifications.length + files.length) > 5) {
+            toast.error('Maximum 5 certifications allowed');
+            return;
+        }
+
         const formData = new FormData();
         if (type === 'gallery' || type === 'certifications') {
             Array.from(files).forEach(file => formData.append(type === 'gallery' ? 'images' : 'certifications', file));
@@ -99,6 +111,8 @@ const Profile = () => {
             setSaving(true);
             const formData = new FormData();
             formData.append('name', gymData.name);
+            formData.append('email', gymData.email);
+            formData.append('phone', gymData.phone);
             formData.append('address', gymData.address);
             formData.append('description', gymData.description);
             formData.append('geoLocation', JSON.stringify(gymData.geoLocation));
@@ -111,6 +125,41 @@ const Profile = () => {
         } finally {
             setSaving(false);
         }
+    };
+
+    const detectLocation = () => {
+        if (!navigator.geolocation) {
+            toast.error("Geolocation is not supported by your browser");
+            return;
+        }
+
+        toast.loading("Detecting location...", { id: 'geo' });
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                try {
+                    // Reverse geocoding using OpenStreetMap Nominatim (Free)
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                    const data = await res.json();
+
+                    setGymData(prev => ({
+                        ...prev,
+                        address: data.display_name,
+                        geoLocation: { type: 'Point', coordinates: [longitude, latitude] }
+                    }));
+                    toast.success("Location detected", { id: 'geo' });
+                } catch (err) {
+                    setGymData(prev => ({
+                        ...prev,
+                        geoLocation: { type: 'Point', coordinates: [longitude, latitude] }
+                    }));
+                    toast.success("Coordinates detected", { id: 'geo' });
+                }
+            },
+            (error) => {
+                toast.error("Unable to retrieve location", { id: 'geo' });
+            }
+        );
     };
 
     const removeImage = async (imageUrl: string, type: 'images' | 'certifications' = 'images') => {
@@ -209,6 +258,29 @@ const Profile = () => {
                                         value={gymData.name || ''}
                                         onChange={handleInputChange}
                                         className="bg-white/5 border-white/10 h-12 rounded-xl text-white"
+                                        placeholder="Gym Name"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1">Email Address</label>
+                                    <Input
+                                        name="email"
+                                        value={gymData.email || ''}
+                                        readOnly
+                                        className="bg-white/5 border-white/10 h-12 rounded-xl text-gray-400 cursor-not-allowed"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1">Phone Number</label>
+                                    <Input
+                                        name="phone"
+                                        value={gymData.phone || ''}
+                                        onChange={handleInputChange}
+                                        className="bg-white/5 border-white/10 h-12 rounded-xl text-white"
+                                        placeholder="Phone"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -224,12 +296,21 @@ const Profile = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1">Full Address</label>
+                                <div className="flex justify-between items-center">
+                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1">Full Address</label>
+                                    <button
+                                        onClick={detectLocation}
+                                        className="text-[10px] text-primary font-black uppercase hover:underline flex items-center gap-1"
+                                    >
+                                        <MapPin size={10} /> Detect Location
+                                    </button>
+                                </div>
                                 <Input
                                     name="address"
                                     value={gymData.address || ''}
                                     onChange={handleInputChange}
                                     className="bg-white/5 border-white/10 h-12 rounded-xl text-white"
+                                    placeholder="Gym Address"
                                 />
                             </div>
 

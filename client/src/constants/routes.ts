@@ -37,6 +37,9 @@ export const ROUTES = {
 
   CALLBACK: "/callback",
   USER_WISHLIST: "/wishlist",
+  USER_GYMS: '/gyms',
+  USER_INDIVIDUAL_GYM: '/gyms/:id',
+  USER_GYM_DASHBOARD: '/gym-dashboard',
   USER_NOT_FOUND: "*",
 
   // Trainer Routes
@@ -83,14 +86,9 @@ export const ROUTES = {
   ADMIN_GYMS: "/admin/gyms",
 
 
-  // Gym Management Routes (New)
+  // Gym Management Routes
   GYM_DASHBOARD: "/gym/dashboard",
-  GYM_STORE: "/gym/store",
-  GYM_POST_HIRING: "/gym/hiring",
-  GYM_EMPLOYEES: "/gym/employees",
-  GYM_EMPLOYEE_DETAILS: "/gym/employees/:id",
   GYM_PROFILE: "/gym/profile",
-  GYM_CREATE_SUBSCRIPTION: "/gym/subscriptions/create",
   GYM_LOGIN: "/gym/login",
   GYM_REGISTER: "/gym/register",
   GYM_ONBOARDING: "/gym/onboarding",
@@ -99,4 +97,22 @@ export const ROUTES = {
   GYM_RESET_PASSWORD: "/gym/reset-password",
   GYM_STATUS: "/gym/status",
   GYM_REAPPLY: "/gym/reapply",
+  GYM_PLANS: "/gym/plans",
+  GYM_PLANS_CREATE: "/gym/plans/create",
+  GYM_PLANS_EDIT: "/gym/plans/edit/:id",
+  GYM_EQUIPMENT: "/gym/equipment",
+  GYM_MEMBERS: "/gym/members",
+  GYM_ATTENDANCE: "/gym/attendance",
+  GYM_STORE: "/gym/store",
+  GYM_STORE_CREATE: "/gym/store/create",
+  GYM_STORE_EDIT: "/gym/store/edit/:id",
+  GYM_ANNOUNCEMENTS: "/gym/announcements",
+  GYM_ANNOUNCEMENTS_CREATE: "/gym/announcements/create",
+  GYM_ANNOUNCEMENTS_EDIT: "/gym/announcements/edit/:id",
+  GYM_JOBS: "/gym/jobs",
+  GYM_JOBS_CREATE: "/gym/jobs/create",
+  GYM_JOBS_EDIT: "/gym/jobs/edit/:id",
+  GYM_WORKOUTS: "/gym/workouts",
+  GYM_WORKOUTS_CREATE: "/gym/workouts/create",
+  GYM_WORKOUTS_EDIT: "/gym/workouts/edit/:id",
 };

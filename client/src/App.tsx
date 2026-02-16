@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { ROUTES } from './constants/routes';
+import { Role } from './constants/role';
 import Login from './pages/user/Login';
 import Signup from './pages/user/Signup';
 import VerifyOtp from './pages/user/VerifyOtp';
@@ -71,6 +72,9 @@ import ProfileCompletion from './pages/user/ProfileCompletion';
 import UserNotifications from './pages/user/UserNotifications';
 import TrainerNotifications from './pages/trainer/TrainerNotifications';
 import ProgressPage from './pages/user/Progress';
+import GymListing from './pages/user/GymListing';
+import IndividualGym from './pages/user/IndividualGym';
+import UserGymDashboard from './pages/user/UserGymDashboard';
 import WishlistPage from './pages/user/WishlistPage';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import AdminRatingManagement from './pages/admin/AdminRatingManagement';
@@ -83,6 +87,7 @@ import GymDashboardPage from './pages/gym/dashboard/Dashboard';
 import GymProfilePage from './pages/gym/profile/Profile';
 import GymEquipmentPage from './pages/gym/equipment/Equipment';
 import GymPlansPage from './pages/gym/plans/Plans';
+import AddPlanPage from './pages/gym/plans/AddPlanPage';
 import GymMembersPage from './pages/gym/members/Members';
 import GymAttendancePage from './pages/gym/attendance/Attendance';
 import GymStorePage from './pages/gym/store/Store';
@@ -102,7 +107,7 @@ function App() {
       <Routes>
         <Route path={ROUTES.CHOOSE_LOGIN} element={<RoleSelectionPage />} />
         <Route path={ROUTES.GLOBAL_LOGIN} element={<RoleSelectionPage />} />
-        <Route path={ROUTES.USER_LOGIN} element={<Login initialRole="user" />} />
+        <Route path={ROUTES.USER_LOGIN} element={<Login initialRole={Role.USER} />} />
         <Route path={ROUTES.USER_FORGOT_PASSWORD} element={<PreventLoggedIn><ForgotPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_NEW_PASSWORD} element={<PreventLoggedIn><NewPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_SIGNUP} element={<PreventLoggedIn><Signup /></PreventLoggedIn>} />
@@ -118,6 +123,7 @@ function App() {
         <Route path={ROUTES.USER_COMPLETE_PROFILE} element={<ProtectedRoute><ProfileCompletion /></ProtectedRoute>} />
         <Route path={ROUTES.USER_TRAINER_PAGE} element={<ProtectedRoute><Trainers /></ProtectedRoute>} />
         <Route path={ROUTES.USER_INDIVIDUAL_TRAINER} element={<ProtectedRoute><TrainerPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_INDIVIDUAL_GYM} element={<ProtectedRoute><IndividualGym /></ProtectedRoute>} />
         <Route path={ROUTES.MY_TRAINER_PROFILE} element={<ProtectedRoute><MyTrainerProfile /></ProtectedRoute>} />
         <Route path={ROUTES.MY_TRAINER_SESSIONS} element={<ProtectedRoute><UserSessions /></ProtectedRoute>} />
         <Route path={ROUTES.MY_TRAINER_CHAT} element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
@@ -135,11 +141,13 @@ function App() {
         <Route path={ROUTES.USER_DIET} element={<ProtectedRoute><Diets /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_DIET} element={<ProtectedRoute><UserAddDiet /></ProtectedRoute>} />
         <Route path={ROUTES.USER_PROGRESS} element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_GYMS} element={<ProtectedRoute><GymListing /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_GYM_DASHBOARD} element={<ProtectedRoute><UserGymDashboard /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WISHLIST} element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
 
 
         {/* Trainer Routes */}
-        <Route path={ROUTES.TRAINER_LOGIN} element={<Login initialRole="trainer" />} />
+        <Route path={ROUTES.TRAINER_LOGIN} element={<Login initialRole={Role.TRAINER} />} />
         <Route path={ROUTES.TRAINER_FORGOT_PASSWORD} element={<TrainerPreventLoggedIn><TrainerForgotPassword /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_FORGOT_PASSWORD_VERIFY_OTP} element={<TrainerPreventLoggedIn><TrainerForgotPasswordVerifyOtp /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_RESET_PASSWORD} element={<TrainerPreventLoggedIn><TrainerResetPassword /></TrainerPreventLoggedIn>} />
@@ -181,7 +189,7 @@ function App() {
         <Route path={ROUTES.ADMIN_EDIT_TEMPLATE} element={<AdminProtectedRoute><EditTemplate /></AdminProtectedRoute>} />
 
         {/* Gym Management Routes */}
-        <Route path={ROUTES.GYM_LOGIN} element={<Login initialRole="gym" />} />
+        <Route path={ROUTES.GYM_LOGIN} element={<Login initialRole={Role.GYM} />} />
         <Route path={ROUTES.GYM_REGISTER} element={<GymOtpVerification />} />
         <Route path={ROUTES.GYM_ONBOARDING} element={<GymRegister />} />
         <Route path={ROUTES.GYM_STATUS} element={<GymProtectedRoute><GymStatus /></GymProtectedRoute>} />
@@ -191,7 +199,8 @@ function App() {
           <Route path="dashboard" element={<GymDashboardPage />} />
           <Route path="profile" element={<GymProfilePage />} />
           <Route path="plans" element={<GymPlansPage />} />
-          <Route path="plans/edit/:id" element={<GymPlansPage />} />
+          <Route path="plans/create" element={<AddPlanPage />} />
+          <Route path="plans/edit/:id" element={<AddPlanPage />} />
           <Route path="equipment" element={<GymEquipmentPage />} />
           <Route path="members" element={<GymMembersPage />} />
           <Route path="attendance" element={<GymAttendancePage />} />

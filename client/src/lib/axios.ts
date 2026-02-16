@@ -4,12 +4,11 @@ import { logout as adminLogout } from "@/redux/slices/adminAuthSlice";
 import { logoutTrainer } from "@/redux/slices/trainerAuthSlice";
 import { logoutGym } from "@/redux/slices/gymAuthSlice";
 import axios from "axios";
-import toast from "react-hot-toast"; 
+import toast from "react-hot-toast";
 
 const api = axios.create({
   baseURL: "/api",
   withCredentials: true,
-  headers: { "Content-Type": "application/json" },
 });
 
 api.interceptors.response.use(

@@ -162,7 +162,7 @@ const Register = () => {
             if (logo) data.append('logo', logo);
             showcaseImages.forEach(img => data.append('images', img));
             certifications.forEach(cert => data.append('certifications', cert));
-
+            console.log('Sending FormData:', Object.fromEntries(data.entries()));
             await registerGym(data);
             toast.success('Registration submitted! waiting for admin approval.');
             navigate('/gym/login');
