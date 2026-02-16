@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import PrismaticBurst from '@/components/ui/PrismaticBurst'
+import ColorBends from '@/components/ui/ColorBends'
+
 import HeroSection from './HeroSection'
 import FeatureSection from './FeatureSection'
 import CTASection from './CTASection'
@@ -25,25 +26,21 @@ export default function LandingPage() {
 
       {/* Premium Background Layer */}
       <div className="fixed inset-0 z-0 opacity-40 pointer-events-none">
-        <PrismaticBurst
-          intensity={1.5}
+        <ColorBends
+          colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
+          rotation={0}
           speed={0.2}
-          animationType="rotate3d"
-          colors={[
-            '#000000',
-            '#051923',
-            '#1b002e',
-            '#003554',
-            '#006494',
-            '#0582ca',
-            '#003554',
-            '#051923',
-            '#000000',
-          ]}
-          distort={0.5}
-          mixBlendMode="screen"
+          scale={1}
+          frequency={1}
+          warpStrength={1}
+          mouseInfluence={1}
+          parallax={0.5}
+          noise={0.1}
+          transparent
+          autoRotate={0}
         />
       </div>
+
 
       <div className="relative z-10">
 
