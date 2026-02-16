@@ -24,6 +24,7 @@ import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { Link, useNavigate } from "react-router-dom";
 import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";
+import { getGymsForUser } from "@/services/gymService";
 import { ROUTES } from "@/constants/routes";
 import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/IHomePage";
 import Aurora from "@/components/ui/Aurora";
@@ -93,6 +94,7 @@ const AnimatedNumber = ({ value }: { value: number }) => {
 
 export default function HomePage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
+  const [gyms, setGyms] = useState<any[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -166,6 +168,14 @@ export default function HomePage() {
       } catch (err: any) {
         console.error("Failed to fetch diet:", err);
         toast.error("Failed to fetch diet");
+      }
+
+      // Fetch gyms
+      try {
+        const gymResponse = await getGymsForUser(1, 3);
+        setGyms(gymResponse.gyms || []);
+      } catch (err: any) {
+        console.error("Failed to fetch gyms:", err);
       }
 
     } catch (error) {
@@ -413,6 +423,80 @@ export default function HomePage() {
                         className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-6"
                       >
                         Profile
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* Elite Gyms Section */}
+        <section className="space-y-6">
+          <div className="flex items-end justify-between px-2">
+            <div className="space-y-1">
+              <h2 className="text-3xl font-black tracking-tight">Elite Gyms</h2>
+              <p className="text-gray-500 font-medium">Top-rated fitness centers near you</p>
+            </div>
+            <Link to={ROUTES.USER_GYMS}>
+              <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all">
+                Explore All Gyms <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {isLoading ? (
+              [1, 2, 3].map((i) => (
+                <div key={i} className="h-[400px] rounded-3xl bg-white/5 animate-pulse border border-white/10" />
+              ))
+            ) : gyms.length === 0 ? (
+              <div className="col-span-full py-20 text-center space-y-4">
+                <Dumbbell className="h-16 w-16 mx-auto text-white/10" />
+                <p className="text-gray-500 text-xl font-medium">No gyms found in your area.</p>
+              </div>
+            ) : (
+              gyms.slice(0, 3).map((gym: any) => (
+                <motion.div
+                  key={gym._id}
+                  variants={itemVariants}
+                  whileHover={{ y: -10 }}
+                  className="group relative h-[450px] rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
+                >
+                  <img
+                    src={gym.profileImage || "/placeholder.svg"}
+                    alt={gym.name}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+                  <div className="absolute top-4 right-4 h-10 w-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10">
+                    <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                    <span className="ml-1 text-xs font-bold">{gym.avgRating || 0}</span>
+                  </div>
+
+                  <div className="absolute bottom-0 left-0 right-0 p-8 space-y-4">
+                    <div>
+                      <h4 className="text-2xl font-black text-white">{gym.name}</h4>
+                      <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <span className="truncate">{gym.address || "Location Available"}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">Starting from</p>
+                        <p className="text-xl font-black text-primary">
+                          ₹{gym.minPlanPrice || "---"}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => navigate(ROUTES.USER_INDIVIDUAL_GYM.replace(':id', gym._id))}
+                        className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-6"
+                      >
+                        Explore
                       </Button>
                     </div>
                   </div>

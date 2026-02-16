@@ -220,9 +220,19 @@ const Store = () => {
                                                     <Badge className="bg-black/80 backdrop-blur-md text-white border-white/10 text-[10px] uppercase font-black px-2 py-0.5 tracking-tighter">
                                                         {product.category}
                                                     </Badge>
-                                                    <Badge className={`${product.isAvailable ? 'bg-green-500/80' : 'bg-red-500/80'} backdrop-blur-md text-white border-0 text-[10px] uppercase font-black px-2 py-0.5 tracking-tighter`}>
-                                                        {product.isAvailable ? 'In Stock' : 'Out of stock'}
-                                                    </Badge>
+                                                    {product.stock === 0 || !product.isAvailable ? (
+                                                        <Badge className="bg-red-500/80 backdrop-blur-md text-white border-0 text-[10px] uppercase font-black px-2 py-0.5 tracking-tighter">
+                                                            Out of stock
+                                                        </Badge>
+                                                    ) : product.stock < 5 ? (
+                                                        <Badge className="bg-orange-500/80 backdrop-blur-md text-white border-0 text-[10px] uppercase font-black px-2 py-0.5 tracking-tighter animate-pulse">
+                                                            Low Stock
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge className="bg-green-500/80 backdrop-blur-md text-white border-0 text-[10px] uppercase font-black px-2 py-0.5 tracking-tighter">
+                                                            In Stock
+                                                        </Badge>
+                                                    )}
                                                 </div>
                                                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button

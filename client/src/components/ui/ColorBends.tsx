@@ -77,7 +77,7 @@ void main() {
     } else {
         vec2 s = q;
         for (int k = 0; k < 3; ++k) {
-            s -= 0.01;
+            s -= 0.1;
             vec2 r = sin(1.5 * (s.yx * uFrequency) + 2.0 * cos(s * uFrequency));
             float m0 = length(r + sin(5.0 * r.y * uFrequency - 3.0 * t + float(k)) / 4.0);
             float kBelow = clamp(uWarpStrength, 0.0, 1.0);
@@ -254,6 +254,7 @@ export default function ColorBends({
     material.uniforms.uNoise.value = noise;
 
     const toVec3 = (hex: string) => {
+      if (!hex) return new THREE.Vector3(0, 0, 0);
       const h = hex.replace('#', '').trim();
       const v =
         h.length === 3
