@@ -9,7 +9,7 @@ import { Role } from '../constants/role'
 import { logger } from '../utils/logger.util'
 import { MESSAGES } from '../constants/messages.constants'
 import { AppError } from '../utils/appError.util'
-import { UploadedFile } from 'express-fileupload'
+
 import {
     TrainerLoginDto,
     TrainerLoginResponseDto,
@@ -110,10 +110,9 @@ export class TrainerAuthController {
     async apply(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const dto: TrainerApplyDto = req.body
-            const { certificate, profileImage } = req.files as {
-                certificate?: UploadedFile
-                profileImage?: UploadedFile
-            }
+            const files = req.files as unknown as { [fieldname: string]: Express.Multer.File[] };
+            const certificate = files?.certificate?.[0];
+            const profileImage = files?.profileImage?.[0];
 
             if (!certificate) throw new AppError(MESSAGES.CERTIFICATE_REQUIRED, STATUS_CODE.BAD_REQUEST)
 
@@ -157,10 +156,10 @@ export class TrainerAuthController {
         try {
             const dto: TrainerReapplyDto = req.body
             const trainerId = (req.user as JwtPayload).id
-            const { certificate, profileImage } = req.files as {
-                certificate?: UploadedFile
-                profileImage?: UploadedFile
-            }
+            const files = req.files as unknown as { [fieldname: string]: Express.Multer.File[] };
+            const certificate = files?.certificate?.[0];
+            const profileImage = files?.profileImage?.[0];
+
             if (!certificate) throw new AppError(MESSAGES.CERTIFICATE_REQUIRED, STATUS_CODE.BAD_REQUEST)
 
             let priceData = typeof dto.price === 'string' ? JSON.parse(dto.price) : dto.price
@@ -231,9 +230,10 @@ export class TrainerAuthController {
                 }
             }
 
-            let profileImage: UploadedFile | undefined
-            if (req.files?.profileImage) {
-                profileImage = Array.isArray(req.files.profileImage) ? req.files.profileImage[0] : (req.files.profileImage as UploadedFile)
+            let profileImage: Express.Multer.File | undefined
+            if (req.files) {
+                const files = req.files as unknown as { [fieldname: string]: Express.Multer.File[] };
+                profileImage = files.profileImage?.[0];
             }
             const result = await this._trainerService.updateProfile(trainerId, updateData, profileImage)
             res.status(STATUS_CODE.OK).json({ trainer: result, message: 'Profile updated successfully' })

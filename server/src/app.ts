@@ -4,7 +4,7 @@ import userRoutes from "./routes/user.route";
 import adminRoutes from "./routes/admin.route";
 import { Server as HttpServer } from "http";
 import { Server as SocketServer } from "socket.io";
-import fileUpload from 'express-fileupload';
+
 import trainerRoutes from './routes/trainer.route'
 import gymRoutes from './routes/gym.route'
 import workoutRoutes from './routes/workout.route'
@@ -35,11 +35,7 @@ app.use(cors({
 app.use(cookieParser());
 
 app.use(express.json());
-app.use(fileUpload({
-  useTempFiles: true,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  abortOnLimit: true,
-}));
+
 
 const httpServer = new HttpServer(app);
 const io = new SocketServer(httpServer, {

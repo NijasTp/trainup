@@ -4,7 +4,7 @@ import TYPES from '../core/types/types'
 import { ITrainerService } from '../core/interfaces/services/ITrainerService'
 import { ITransactionService } from '../core/interfaces/services/ITransactionService'
 import { IWeeklyScheduleService } from '../core/interfaces/services/IWeeklyScheduleService'
-import { UploadedFile } from 'express-fileupload'
+
 import { IOTPService } from '../core/interfaces/services/IOtpService'
 import {
   IJwtService,
@@ -266,10 +266,9 @@ export class TrainerController {
   async apply(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: TrainerApplyDto = req.body
-      const { certificate, profileImage } = req.files as {
-        certificate?: UploadedFile
-        profileImage?: UploadedFile
-      }
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] }
+      const certificate = files?.certificate?.[0]
+      const profileImage = files?.profileImage?.[0]
 
       if (!certificate)
         throw new AppError(
@@ -322,10 +321,9 @@ export class TrainerController {
     try {
       const dto: TrainerReapplyDto = req.body
       const trainerId = (req.user as JwtPayload).id
-      const { certificate, profileImage } = req.files as {
-        certificate?: UploadedFile
-        profileImage?: UploadedFile
-      }
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] }
+      const certificate = files?.certificate?.[0]
+      const profileImage = files?.profileImage?.[0]
       if (!certificate)
         throw new AppError(
           MESSAGES.CERTIFICATE_REQUIRED,
@@ -677,10 +675,10 @@ export class TrainerController {
   }
   async uploadChatFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      if (!req.files || !req.files.file) {
+      if (!req.file) {
         throw new AppError('No file uploaded', STATUS_CODE.BAD_REQUEST)
       }
-      const file = req.files.file as UploadedFile
+      const file = req.file
       const fileUrl = await this._userService.uploadChatFile(file)
       res.status(STATUS_CODE.OK).json({ fileUrl })
     } catch (err) {
@@ -692,11 +690,10 @@ export class TrainerController {
     try {
       const trainerId = (req.user as JwtPayload).id
       const updateData = req.body
-      let profileImage: UploadedFile | undefined;
-      if (req.files?.profileImage) {
-        profileImage = Array.isArray(req.files.profileImage)
-          ? req.files.profileImage[0]
-          : (req.files.profileImage as UploadedFile);
+      let profileImage: Express.Multer.File | undefined;
+      if (req.files) {
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] }
+        profileImage = files.profileImage?.[0]
       }
 
       const result = await this._trainerService.updateProfile(trainerId, updateData, profileImage)

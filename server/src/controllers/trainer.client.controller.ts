@@ -11,7 +11,7 @@ import { STATUS_CODE } from '../constants/status'
 import { logger } from '../utils/logger.util'
 import { AppError } from '../utils/appError.util'
 import { MESSAGES } from '../constants/messages.constants'
-import { UploadedFile } from 'express-fileupload'
+
 import {
     GetClientsQueryDto,
     GetClientsResponseDto,
@@ -127,10 +127,10 @@ export class TrainerClientController {
 
     async uploadChatFile(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            if (!req.files || !req.files.file) {
+            if (!req.file) {
                 throw new AppError('No file uploaded', STATUS_CODE.BAD_REQUEST)
             }
-            const file = req.files.file as UploadedFile
+            const file = req.file
             const fileUrl = await this._userService.uploadChatFile(file)
             res.status(STATUS_CODE.OK).json({ fileUrl })
         } catch (err) {

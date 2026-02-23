@@ -5,7 +5,7 @@ import TYPES from '../core/types/types';
 import { IGymService } from '../core/interfaces/services/IGymService';
 import { IGymAuthService } from '../core/interfaces/services/IGymAuthService';
 import { IOTPService } from '../core/interfaces/services/IOtpService';
-import { UploadedFile } from 'express-fileupload';
+
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService';
 import { STATUS_CODE } from '../constants/status';
 import { MESSAGES } from '../constants/messages.constants';
@@ -51,13 +51,14 @@ export class GymController {
         throw new AppError(MESSAGES.INVALID_OTP, STATUS_CODE.BAD_REQUEST);
       }
 
+      const files = req.files as unknown as { [fieldname: string]: Express.Multer.File[] };
       const result: GymLoginResponseDto = await this._gymService.registerGym(
         req.body,
-        req.files as {
-          certifications?: UploadedFile | UploadedFile[];
-          logo?: UploadedFile;
-          profileImage?: UploadedFile;
-          images?: UploadedFile | UploadedFile[];
+        {
+          certifications: files?.certifications,
+          logo: files?.logo?.[0],
+          profileImage: files?.profileImage?.[0],
+          images: files?.images
         }
       );
 
@@ -208,14 +209,15 @@ export class GymController {
   async reapply(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const user = req.user as { id: string; role: string };
+      const files = req.files as unknown as { [fieldname: string]: Express.Multer.File[] };
       const result: GymLoginResponseDto = await this._gymService.reapplyGym(
         user.id,
         req.body,
-        req.files as {
-          certifications?: UploadedFile | UploadedFile[];
-          logo?: UploadedFile;
-          profileImage?: UploadedFile;
-          images?: UploadedFile | UploadedFile[];
+        {
+          certifications: files?.certifications,
+          logo: files?.logo?.[0],
+          profileImage: files?.profileImage?.[0],
+          images: files?.images
         }
       );
       this._jwtService.setTokens(res, result.accessToken, result.refreshToken);
@@ -262,7 +264,7 @@ export class GymController {
     try {
       const gymId = (req.user as JwtPayload).id;
       const dto: CreateAnnouncementDto = req.body;
-      const imageFile = req.files?.image as UploadedFile;
+      const imageFile = req.file;
 
       if (!dto.title || !dto.description) {
         throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
@@ -281,7 +283,7 @@ export class GymController {
       const gymId = (req.user as JwtPayload).id;
       const { id } = req.params;
       const dto: UpdateAnnouncementDto = req.body;
-      const imageFile = req.files?.image as UploadedFile;
+      const imageFile = req.file;
 
       const announcement = await this._gymService.updateAnnouncement(id, gymId, dto, imageFile);
 
@@ -336,14 +338,15 @@ export class GymController {
   async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const gymId = (req.user as JwtPayload).id;
+      const files = req.files as unknown as { [fieldname: string]: Express.Multer.File[] };
       const result = await this._gymService.updateGymProfile(
         gymId,
         req.body,
-        req.files as {
-          logo?: UploadedFile;
-          profileImage?: UploadedFile;
-          images?: UploadedFile | UploadedFile[];
-          certifications?: UploadedFile | UploadedFile[];
+        {
+          logo: files?.logo?.[0],
+          profileImage: files?.profileImage?.[0],
+          images: files?.images,
+          certifications: files?.certifications
         }
       );
       res.status(STATUS_CODE.OK).json({ message: 'Profile updated successfully', gym: result });
@@ -383,7 +386,8 @@ export class GymController {
   async createProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const gymId = (req.user as JwtPayload).id;
-      const productFiles = req.files && req.files.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
+      const files = req.files as unknown as { [fieldname: string]: Express.Multer.File[] };
+      const productFiles = files?.images || [];
       const result = await this._gymService.createProduct(gymId, req.body, productFiles);
       res.status(STATUS_CODE.CREATED).json(result);
     } catch (err) {
@@ -406,7 +410,8 @@ export class GymController {
     try {
       const gymId = (req.user as JwtPayload).id;
       const { id } = req.params;
-      const productFiles = req.files && req.files.images ? (Array.isArray(req.files.images) ? req.files.images : [req.files.images]) : [];
+      const files = req.files as unknown as { [fieldname: string]: Express.Multer.File[] };
+      const productFiles = files?.images || [];
 
       // Parse multi-value arrays from form-data if needed
       if (req.body.existingImages && typeof req.body.existingImages === 'string') {

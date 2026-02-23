@@ -21,7 +21,7 @@ export class GymEquipmentController {
             const dto: CreateEquipmentDto = {
                 gymId,
                 name: req.body.name,
-                image: files?.image,
+                image: req.file,
                 categoryId: req.body.categoryId,
                 categoryName: req.body.categoryName,
                 available: req.body.available === 'true' || req.body.available === true,
@@ -68,7 +68,7 @@ export class GymEquipmentController {
 
             const dto: UpdateEquipmentDto = {
                 name: req.body.name,
-                image: files?.image || req.body.image,
+                image: req.file || req.body.image,
                 categoryId: req.body.categoryId,
                 available: req.body.available !== undefined ? (req.body.available === 'true' || req.body.available === true) : undefined,
             };

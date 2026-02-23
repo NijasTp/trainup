@@ -16,6 +16,7 @@ export const ROUTES = {
   USER_COMPLETE_PROFILE: "/complete-profile",
   USER_TRAINER_PAGE: '/trainers',
   USER_INDIVIDUAL_TRAINER: '/trainers/:id',
+  USER_TRAINER_PRICING: '/trainers/:id/pricing',
   MY_TRAINER_PROFILE: '/my-trainer/profile',
   MY_TRAINER_SESSIONS: '/my-trainer/sessions',
   MY_TRAINER_CHAT: '/my-trainer/chat/:id',
