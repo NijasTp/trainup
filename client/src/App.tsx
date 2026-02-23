@@ -41,6 +41,7 @@ import TemplateManagement from './pages/admin/TemplateManagement';
 import UserProfile from './pages/user/UserProfile';
 import UserDashboard from './pages/user/UserDashboard';
 import TrainerPage from './pages/user/IndividualTrainer';
+import TrainerPricingPage from './pages/user/TrainerPricing';
 import MyTrainerProfile from './pages/user/MyTrainer';
 import TrainerUserDetails from './pages/trainer/TrainerUserDetails';
 import TrainerAddWorkoutPage from './pages/trainer/TrainerAddWorkoutPage';
@@ -142,6 +143,7 @@ function App() {
         <Route path={ROUTES.USER_ADD_DIET} element={<ProtectedRoute><UserAddDiet /></ProtectedRoute>} />
         <Route path={ROUTES.USER_PROGRESS} element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYMS} element={<ProtectedRoute><GymListing /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_TRAINER_PRICING} element={<ProtectedRoute><TrainerPricingPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYM_DASHBOARD} element={<ProtectedRoute><UserGymDashboard /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WISHLIST} element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
 

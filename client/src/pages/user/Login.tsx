@@ -65,7 +65,7 @@ const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
       </div>
 
       <div className="relative z-10 w-full max-w-md mx-auto px-4">
-        <div className="backdrop-blur-xl bg-gray-900/60 rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5 transition-all duration-300">
+        <div>
           <div className="pt-12 px-8 pb-4">
             <h1 className="text-center text-4xl font-black tracking-tighter text-white mb-8">
               TRAIN<span className="text-[#176B87]">UP</span>

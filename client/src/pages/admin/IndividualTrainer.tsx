@@ -28,7 +28,7 @@ import {
 } from "lucide-react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { getTrainerApplication, getTrainerById, toggleTrainerBan, verifyTrainer } from "@/services/adminService"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import type { ITrainer } from "@/interfaces/admin/individualTrainer"

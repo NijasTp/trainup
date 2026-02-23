@@ -29,7 +29,6 @@ import API from "@/lib/axios";
 import { getIndividualTrainer } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import SubscriptionModal from "@/components/ui/SubscriptionModal";
 import TrainerReviews from "@/components/user/reviews/TrainerReviews";
 import Aurora from "@/components/ui/Aurora";
 
@@ -105,9 +104,11 @@ export default function TrainerPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [imageLoaded, setImageLoaded] = useState(false);
-    const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [checkingPendingTransaction, setCheckingPendingTransaction] = useState(false);
+
+    const isSameTrainer = user?.assignedTrainer === id;
+    const hasTrainer = !!user?.assignedTrainer;
 
     useEffect(() => {
         document.title = "TrainUp - Trainer Profile";
@@ -159,109 +160,6 @@ export default function TrainerPage() {
             console.error("Failed to check pending transactions:", error);
             return false;
         }
-    };
-
-    const handleSubscribe = async (planType: string, duration: number) => {
-        if (!trainer) return;
-
-        setShowSubscriptionModal(false);
-        const script = document.createElement("script");
-        script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.async = true;
-        document.body.appendChild(script);
-
-        script.onload = async () => {
-            try {
-                const trainerPrice = trainer.price;
-                const basePrice = trainerPrice[planType as keyof typeof trainerPrice];
-                const totalAmount = basePrice * duration;
-
-                const response = await API.post("/payment/create-order", {
-                    amount: totalAmount,
-                    currency: "INR",
-                    receipt: `booking_${Date.now()}`,
-                    trainerId: trainer._id,
-                    planType,
-                    duration
-                });
-                const order = response.data;
-
-                const options = {
-                    key: import.meta.env.VITE_RAZORPAY_KEY,
-                    amount: order.amount,
-                    currency: order.currency,
-                    name: "TrainUp",
-                    description: `${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan - ${trainer?.name}`,
-                    image: import.meta.env.VITE_LOGO_URL || "/logo.png",
-                    order_id: order.id,
-                    handler: async (response: any) => {
-                        try {
-                            const verifyResponse = await API.post("/payment/verify-payment", {
-                                orderId: response.razorpay_order_id,
-                                paymentId: response.razorpay_payment_id,
-                                signature: response.razorpay_signature,
-                                trainerId: id,
-                                planType: planType,
-                                amount: totalAmount,
-                                duration: duration
-                            });
-                            if (verifyResponse.data.success) {
-                                toast.success("Payment successful! Subscription confirmed.");
-                                navigate("/my-trainer/profile");
-                            } else {
-                                toast.error("Payment verification failed");
-                            }
-                        } catch (err) {
-                            console.error("Payment verification failed:", err);
-                            toast.error("Failed to verify payment");
-                        }
-                    },
-                    prefill: {
-                        name: trainer?.name || "",
-                        email: trainer?.email || "",
-                        contact: trainer?.phone || "",
-                    },
-                    theme: {
-                        color: "#3b82f6",
-                    },
-                    modal: {
-                        ondismiss: async () => {
-                            try {
-                                await API.post("/payment/cleanup-pending");
-                                toast.info("Payment cancelled");
-                            } catch (error) {
-                                console.error("Failed to cleanup on dismiss:", error);
-                            }
-                        }
-                    }
-                };
-
-                const rzp = new (window as unknown as { Razorpay: new (options: any) => any }).Razorpay(options);
-                rzp.on("payment.failed", async () => {
-                    try {
-                        await API.post("/payment/cleanup-pending");
-                        toast.error("Payment failed. Please try again.");
-                    } catch (error) {
-                        console.error("Failed to cleanup on failure:", error);
-                    }
-                });
-                rzp.open();
-            } catch (err: any) {
-                console.error("Failed to create order:", err);
-                if (err.response?.data?.message) {
-                    toast.error(err.response.data.message);
-                } else {
-                    toast.error("Failed to initiate payment");
-                }
-            } finally {
-                document.body.removeChild(script);
-            }
-        };
-
-        script.onerror = () => {
-            toast.error("Failed to load Razorpay SDK");
-            document.body.removeChild(script);
-        };
     };
 
     const handleChat = () => {
@@ -319,7 +217,9 @@ export default function TrainerPage() {
             return;
         }
 
-        setShowSubscriptionModal(true);
+        if (trainer) {
+            navigate(`/trainers/${trainer._id}/pricing`);
+        }
     };
 
     if (isLoading) {
@@ -365,9 +265,6 @@ export default function TrainerPage() {
             </div>
         );
     }
-
-    const isSameTrainer = user?.assignedTrainer === id;
-    const hasTrainer = !!user?.assignedTrainer;
 
     return (
         <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
@@ -735,13 +632,6 @@ export default function TrainerPage() {
                 </div>
             </main>
 
-            <SubscriptionModal
-                isOpen={showSubscriptionModal}
-                onClose={() => setShowSubscriptionModal(false)}
-                onSubscribe={handleSubscribe}
-                prices={trainer.price}
-                trainerName={trainer.name}
-            />
             <SiteFooter />
         </div>
     );
