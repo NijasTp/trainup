@@ -37,7 +37,6 @@ export default function Profile() {
     setError(null);
     try {
       const response = await getProfilePageData();
-      console.log(response)
       setProfile(response.user);
     } catch (err) {
       setError("Failed to fetch profile");
