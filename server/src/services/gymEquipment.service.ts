@@ -61,7 +61,7 @@ export class GymEquipmentService implements IGymEquipmentService {
 
         let imageUrl: string | null = null;
         if (dto.image) {
-            const upload = await cloudinary.uploader.upload(dto.image.tempFilePath, {
+            const upload = await cloudinary.uploader.upload(dto.image.path, {
                 folder: 'trainup/gyms/equipment'
             });
             imageUrl = upload.secure_url;
@@ -92,7 +92,7 @@ export class GymEquipmentService implements IGymEquipmentService {
     async updateEquipment(id: string, dto: UpdateEquipmentDto): Promise<EquipmentResponseDto | null> {
         let imageUrl: string | undefined;
         if (dto.image && typeof dto.image !== 'string') {
-            const upload = await cloudinary.uploader.upload(dto.image.tempFilePath, {
+            const upload = await cloudinary.uploader.upload((dto.image as Express.Multer.File).path, {
                 folder: 'trainup/gyms/equipment'
             });
             imageUrl = upload.secure_url;

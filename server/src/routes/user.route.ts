@@ -9,6 +9,7 @@ import { UserReviewController } from '../controllers/user.review.controller'
 import { UserChatController } from '../controllers/user.chat.controller'
 import { authMiddleware, roleMiddleware } from '../middlewares/auth.middleware'
 import { checkSubscriptionExpiry } from '../middlewares/checkSubscription.middleware'
+import { upload } from '../utils/multer.util'
 
 const router = express.Router()
 
@@ -68,6 +69,7 @@ router.put(
   '/update-profile',
   authMiddleware,
   roleMiddleware(['user']),
+  upload.single('profileImage'),
   userProfileController.updateProfile.bind(userProfileController)
 )
 
@@ -137,9 +139,9 @@ router.get('/gym/ratings/:id', authMiddleware, userReviewController.getGymRating
 router.put('/review/:id', authMiddleware, userReviewController.editReview.bind(userReviewController))
 router.delete('/review/:id', authMiddleware, userReviewController.deleteReview.bind(userReviewController))
 
-router.post('/chat/upload', authMiddleware, userChatController.uploadChatFile.bind(userChatController))
+router.post('/chat/upload', authMiddleware, upload.single('file'), userChatController.uploadChatFile.bind(userChatController))
 
-router.post('/progress', authMiddleware, userProfileController.addProgress.bind(userProfileController))
+router.post('/progress', authMiddleware, upload.array('photo', 6), userProfileController.addProgress.bind(userProfileController))
 router.get('/progress', authMiddleware, userProfileController.getProgress.bind(userProfileController))
 router.get('/progress/compare', authMiddleware, userProfileController.compareProgress.bind(userProfileController))
 

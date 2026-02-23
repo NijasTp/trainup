@@ -17,7 +17,7 @@ import {
     UserResponseDto
 } from '../dtos/user.dto'
 import { logger } from '../utils/logger.util'
-import { UploadedFile } from 'express-fileupload'
+
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 
@@ -204,14 +204,14 @@ export class UserService implements IUserService {
     async updateProfile(
         userId: string,
         updateData: Partial<IUser>,
-        files?: { profileImage?: UploadedFile }
+        files?: { profileImage?: Express.Multer.File }
     ): Promise<UserResponseDto> {
         let profileImageUrl: string | undefined;
 
         if (files?.profileImage) {
             logger.info('Processing profile image upload...');
             const file = files.profileImage;
-            const result = await cloudinary.uploader.upload(file.tempFilePath, {
+            const result = await cloudinary.uploader.upload(file.path, {
                 folder: "trainup/users/profiles",
                 transformation: [
                     { width: 600, height: 600, crop: "limit" },
@@ -464,8 +464,8 @@ export class UserService implements IUserService {
         }
     }
 
-    async uploadChatFile(file: UploadedFile): Promise<string> {
-        const result = await cloudinary.uploader.upload(file.tempFilePath, {
+    async uploadChatFile(file: Express.Multer.File): Promise<string> {
+        const result = await cloudinary.uploader.upload(file.path, {
             folder: "trainup/chat/files",
             resource_type: "auto",
         });

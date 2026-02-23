@@ -1,12 +1,12 @@
 import { IGymEquipmentCategory } from '../../../models/gymEquipmentCategory.model';
 import { IGymEquipment } from '../../../models/gymEquipment.model';
 
-import { UploadedFile } from 'express-fileupload';
+
 
 export interface CreateEquipmentDto {
     gymId: string;
     name: string;
-    image?: UploadedFile;
+    image?: Express.Multer.File;
     categoryId: string;
     categoryName?: string; // For creating new category
     available?: boolean;
@@ -14,7 +14,7 @@ export interface CreateEquipmentDto {
 
 export interface UpdateEquipmentDto {
     name?: string;
-    image?: UploadedFile | string;
+    image?: Express.Multer.File | string;
     categoryId?: string;
     available?: boolean;
 }

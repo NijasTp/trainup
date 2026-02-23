@@ -3,7 +3,7 @@ import { IProgressService } from "../core/interfaces/services/IProgressService";
 import { IProgressRepository } from "../core/interfaces/repositories/IProgressRepository";
 import TYPES from "../core/types/types";
 import { IProgress } from "../models/progress.model";
-import { UploadedFile } from "express-fileupload";
+
 import { v2 as cloudinary } from 'cloudinary';
 import { AppError } from "../utils/appError.util";
 import { STATUS_CODE } from "../constants/status";
@@ -15,7 +15,7 @@ export class ProgressService implements IProgressService {
         @inject(TYPES.IProgressRepository) private _progressRepo: IProgressRepository
     ) { }
 
-    async addProgress(userId: string, date: Date, notes?: string, photos?: UploadedFile[]): Promise<IProgress> {
+    async addProgress(userId: string, date: Date, notes?: string, photos?: Express.Multer.File[]): Promise<IProgress> {
         let photoUrls: string[] = [];
 
         // Check if entry exists for this date
@@ -26,7 +26,7 @@ export class ProgressService implements IProgressService {
 
         if (photos && photos.length > 0) {
             const uploadPromises = photos.map(photo =>
-                cloudinary.uploader.upload(photo.tempFilePath, {
+                cloudinary.uploader.upload(photo.path, {
                     folder: "trainup/users/progress",
                     transformation: [
                         { width: 1000, crop: "limit" },

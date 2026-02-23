@@ -6,6 +6,7 @@ import { TrainerScheduleController } from "../controllers/trainer.schedule.contr
 import { TrainerClientController } from "../controllers/trainer.client.controller";
 import { TrainerDashboardController } from "../controllers/trainer.dashboard.controller";
 import { authMiddleware, roleMiddleware } from "../middlewares/auth.middleware";
+import { upload } from "../utils/multer.util";
 
 const router = Router();
 const trainerAuthController = container.get<TrainerAuthController>(TYPES.TrainerAuthController);
@@ -20,8 +21,8 @@ router.post('/resend-otp', trainerAuthController.resendOtp.bind(trainerAuthContr
 router.post('/forgot-password', trainerAuthController.forgotPassword.bind(trainerAuthController));
 router.post('/forgot-password-resend-otp', trainerAuthController.forgotPasswordResendOtp.bind(trainerAuthController));
 router.post('/reset-password', trainerAuthController.resetPassword.bind(trainerAuthController));
-router.post('/apply', trainerAuthController.apply.bind(trainerAuthController));
-router.post('/reapply', authMiddleware, roleMiddleware(['trainer']), trainerAuthController.reapply.bind(trainerAuthController));
+router.post('/apply', upload.fields([{ name: 'certificate', maxCount: 1 }, { name: 'profileImage', maxCount: 1 }]), trainerAuthController.apply.bind(trainerAuthController));
+router.post('/reapply', authMiddleware, roleMiddleware(['trainer']), upload.fields([{ name: 'certificate', maxCount: 1 }, { name: 'profileImage', maxCount: 1 }]), trainerAuthController.reapply.bind(trainerAuthController));
 router.post('/logout', trainerAuthController.logout.bind(trainerAuthController));
 router.post('/refresh-token', trainerAuthController.refreshAccessToken.bind(trainerAuthController));
 
@@ -38,7 +39,7 @@ router.get('/dashboard-stats', authMiddleware, (req, res, next) =>
 router.patch('/availability', authMiddleware, (req, res, next) =>
     trainerScheduleController.updateAvailability(req, res, next)
 )
-router.put('/profile', authMiddleware, (req, res, next) =>
+router.put('/profile', authMiddleware, upload.fields([{ name: 'profileImage', maxCount: 1 }]), (req, res, next) =>
     trainerAuthController.updateProfile(req, res, next)
 )
 router.post('/change-password', authMiddleware, (req, res, next) =>
@@ -66,7 +67,7 @@ router.get('/chat/messages/:clientId', authMiddleware, roleMiddleware(['trainer'
 router.get('/chat/unread-counts', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getUnreadCounts.bind(trainerClientController));
 router.put('/chat/read/:clientId', authMiddleware, roleMiddleware(['trainer']), trainerClientController.markMessagesAsRead.bind(trainerClientController));
 router.get('/user-plan/:id', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getUserPlan.bind(trainerClientController));
-router.post('/chat/upload', authMiddleware, roleMiddleware(['trainer']), trainerClientController.uploadChatFile.bind(trainerClientController));
+router.post('/chat/upload', authMiddleware, roleMiddleware(['trainer']), upload.single('file'), trainerClientController.uploadChatFile.bind(trainerClientController));
 router.get('/chats', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getConversations.bind(trainerClientController));
 
 export default router;

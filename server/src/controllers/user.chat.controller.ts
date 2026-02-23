@@ -6,10 +6,13 @@ import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService
 import { STATUS_CODE } from '../constants/status'
 import { logger } from '../utils/logger.util'
 
+import { IUserService } from '../core/interfaces/services/IUserService'
+
 @injectable()
 export class UserChatController {
     constructor(
         @inject(TYPES.IMessageService) private _messageService: IMessageService,
+        @inject(TYPES.IUserService) private _userService: IUserService,
     ) { }
 
     async getChatMessages(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -26,7 +29,11 @@ export class UserChatController {
 
     async uploadChatFile(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            res.status(STATUS_CODE.OK).json({ message: 'File uploaded' })
+            if (!req.file) {
+                throw new Error('No file uploaded')
+            }
+            const url = await this._userService.uploadChatFile(req.file)
+            res.status(STATUS_CODE.OK).json({ url })
         } catch (err) {
             next(err)
         }

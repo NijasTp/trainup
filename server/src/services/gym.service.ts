@@ -15,7 +15,7 @@ import mongoose from 'mongoose'
 import cloudinary from '../config/cloudinary'
 import { IWorkoutTemplate } from '../models/workoutTemplate.model'
 
-import { UploadedFile } from 'express-fileupload'
+
 import { IJwtService } from '../core/interfaces/services/IJwtService'
 import {
   GymLoginResponseDto,
@@ -49,10 +49,10 @@ export class GymService implements IGymService {
   async registerGym(
     data: Partial<IGym>,
     files: {
-      certifications?: UploadedFile | UploadedFile[]
-      logo?: UploadedFile
-      profileImage?: UploadedFile
-      images?: UploadedFile | UploadedFile[]
+      certifications?: Express.Multer.File | Express.Multer.File[]
+      logo?: Express.Multer.File
+      profileImage?: Express.Multer.File
+      images?: Express.Multer.File | Express.Multer.File[]
     }
   ): Promise<GymLoginResponseDto> {
     const certificationsUrls: string[] = []
@@ -112,7 +112,7 @@ export class GymService implements IGymService {
       const certs = Array.isArray(files.certifications) ? files.certifications : [files.certifications];
       try {
         const uploadPromises = certs.map(cert =>
-          cloudinary.uploader.upload(cert.tempFilePath, { resource_type: 'auto', folder: 'trainup/gyms/certificate' })
+          cloudinary.uploader.upload(cert.path, { resource_type: 'auto', folder: 'trainup/gyms/certificate' })
         );
         const results = await Promise.all(uploadPromises);
         results.forEach(res => certificationsUrls.push(res.secure_url));
@@ -124,7 +124,7 @@ export class GymService implements IGymService {
 
     if (files?.logo) {
       try {
-        const logoUpload = await cloudinary.uploader.upload(files.logo.tempFilePath, { resource_type: 'image', folder: 'trainup/gyms/logos' });
+        const logoUpload = await cloudinary.uploader.upload(files.logo.path, { resource_type: 'image', folder: 'trainup/gyms/logos' });
         logoUrl = logoUpload.secure_url;
       } catch (err) {
         logger.error('Error uploading logo:', err);
@@ -135,7 +135,7 @@ export class GymService implements IGymService {
     if (files?.profileImage) {
       try {
         const profileUpload = await cloudinary.uploader.upload(
-          files.profileImage.tempFilePath,
+          files.profileImage.path,
           {
             resource_type: 'image',
             folder: 'trainup/gyms/profiles'
@@ -152,7 +152,7 @@ export class GymService implements IGymService {
       const imagesArr = Array.isArray(files.images) ? files.images : [files.images];
       try {
         const uploadPromises = imagesArr.map(img =>
-          cloudinary.uploader.upload(img.tempFilePath, {
+          cloudinary.uploader.upload(img.path, {
             resource_type: 'image',
             folder: 'trainup/gyms/gallery'
           })
@@ -340,12 +340,12 @@ export class GymService implements IGymService {
   async createAnnouncement(
     gymId: string,
     dto: CreateAnnouncementDto,
-    imageFile?: UploadedFile
+    imageFile?: Express.Multer.File
   ): Promise<IGymAnnouncement> {
     let imageUrl: string | undefined
 
     if (imageFile) {
-      const upload = await cloudinary.uploader.upload(imageFile.tempFilePath, {
+      const upload = await cloudinary.uploader.upload(imageFile.path, {
         folder: 'trainup/gyms/announcements'
       })
       imageUrl = upload.secure_url
@@ -370,12 +370,12 @@ export class GymService implements IGymService {
     announcementId: string,
     gymId: string,
     dto: UpdateAnnouncementDto,
-    imageFile?: UploadedFile
+    imageFile?: Express.Multer.File
   ): Promise<IGymAnnouncement | null> {
     let imageUrl: string | undefined
 
     if (imageFile) {
-      const upload = await cloudinary.uploader.upload(imageFile.tempFilePath, {
+      const upload = await cloudinary.uploader.upload(imageFile.path, {
         folder: 'trainup/gyms/announcements'
       })
       imageUrl = upload.secure_url
@@ -557,10 +557,10 @@ export class GymService implements IGymService {
     gymId: string,
     data: Partial<IGym>,
     files: {
-      certifications?: UploadedFile | UploadedFile[]
-      logo?: UploadedFile
-      profileImage?: UploadedFile
-      images?: UploadedFile | UploadedFile[]
+      certifications?: Express.Multer.File | Express.Multer.File[]
+      logo?: Express.Multer.File
+      profileImage?: Express.Multer.File
+      images?: Express.Multer.File | Express.Multer.File[]
     }
   ): Promise<GymLoginResponseDto> {
     logger.info(`Gym reapply attempt for id: ${gymId}`);
@@ -609,21 +609,21 @@ export class GymService implements IGymService {
 
     if (files?.certifications) {
       const certs = Array.isArray(files.certifications) ? files.certifications : [files.certifications];
-      const uploadPromises = certs.map(cert => cloudinary.uploader.upload(cert.tempFilePath, { folder: 'trainup/gyms/certificate' }));
+      const uploadPromises = certs.map(cert => cloudinary.uploader.upload(cert.path, { folder: 'trainup/gyms/certificate' }));
       const results = await Promise.all(uploadPromises);
       update.certifications = results.map(res => res.secure_url);
     }
     if (files?.logo) {
-      const logoUpload = await cloudinary.uploader.upload(files.logo.tempFilePath, { folder: 'trainup/gyms/logos' });
+      const logoUpload = await cloudinary.uploader.upload(files.logo.path, { folder: 'trainup/gyms/logos' });
       update.logo = logoUpload.secure_url;
     }
     if (files?.profileImage) {
-      const profileUpload = await cloudinary.uploader.upload(files.profileImage.tempFilePath, { folder: 'trainup/gyms/profiles' })
+      const profileUpload = await cloudinary.uploader.upload(files.profileImage.path, { folder: 'trainup/gyms/profiles' })
       update.profileImage = profileUpload.secure_url
     }
     if (files?.images) {
       const imagesArr = Array.isArray(files.images) ? files.images : [files.images];
-      const uploadPromises = imagesArr.map(img => cloudinary.uploader.upload(img.tempFilePath, { folder: 'trainup/gyms/gallery' }));
+      const uploadPromises = imagesArr.map(img => cloudinary.uploader.upload(img.path, { folder: 'trainup/gyms/gallery' }));
       const results = await Promise.all(uploadPromises);
       update.images = results.map(res => res.secure_url);
     }
@@ -781,15 +781,13 @@ export class GymService implements IGymService {
 
   async updateGymProfile(
 
-
-
     gymId: string,
     data: Partial<IGym>,
     files?: {
-      logo?: UploadedFile;
-      profileImage?: UploadedFile;
-      images?: UploadedFile | UploadedFile[];
-      certifications?: UploadedFile | UploadedFile[];
+      logo?: Express.Multer.File;
+      profileImage?: Express.Multer.File;
+      images?: Express.Multer.File | Express.Multer.File[];
+      certifications?: Express.Multer.File | Express.Multer.File[];
     }
   ): Promise<IGym> {
     const updateData: any = { ...data };
@@ -813,14 +811,14 @@ export class GymService implements IGymService {
 
     // Handle file uploads
     if (files?.logo) {
-      const logoUpload = await cloudinary.uploader.upload(files.logo.tempFilePath, {
+      const logoUpload = await cloudinary.uploader.upload(files.logo.path, {
         folder: 'trainup/gyms/logos',
       });
       updateData.logo = logoUpload.secure_url;
     }
 
     if (files?.profileImage) {
-      const profileUpload = await cloudinary.uploader.upload(files.profileImage.tempFilePath, {
+      const profileUpload = await cloudinary.uploader.upload(files.profileImage.path, {
         folder: 'trainup/gyms/profiles',
       });
       updateData.profileImage = profileUpload.secure_url;
@@ -829,7 +827,7 @@ export class GymService implements IGymService {
     if (files?.images) {
       const imagesArr = Array.isArray(files.images) ? files.images : [files.images];
       const uploadPromises = imagesArr.map((img) =>
-        cloudinary.uploader.upload(img.tempFilePath, {
+        cloudinary.uploader.upload(img.path, {
           folder: 'trainup/gyms/gallery',
         })
       );
@@ -851,7 +849,7 @@ export class GymService implements IGymService {
     if (files?.certifications) {
       const certsArr = Array.isArray(files.certifications) ? files.certifications : [files.certifications];
       const uploadPromises = certsArr.map((cert) =>
-        cloudinary.uploader.upload(cert.tempFilePath, {
+        cloudinary.uploader.upload(cert.path, {
           folder: 'trainup/gyms/certifications',
         })
       );
@@ -879,7 +877,7 @@ export class GymService implements IGymService {
   async createProduct(
     gymId: string,
     data: any,
-    files?: UploadedFile[]
+    files?: Express.Multer.File[]
   ): Promise<any> {
     const existing = await this._productRepo.findOne({
       gymId: new mongoose.Types.ObjectId(gymId),
@@ -893,7 +891,7 @@ export class GymService implements IGymService {
     const imageUrls: string[] = [];
     if (files && files.length > 0) {
       for (const file of files) {
-        const upload = await cloudinary.uploader.upload(file.tempFilePath, {
+        const upload = await cloudinary.uploader.upload(file.path, {
           folder: `gyms/${gymId}/products`
         });
         imageUrls.push(upload.secure_url);
@@ -935,7 +933,7 @@ export class GymService implements IGymService {
     productId: string,
     gymId: string,
     data: any,
-    files?: UploadedFile[]
+    files?: Express.Multer.File[]
   ): Promise<any> {
     const product = await this._productRepo.findOne({ _id: productId, gymId: new mongoose.Types.ObjectId(gymId) });
     if (!product) throw new AppError('Product not found', STATUS_CODE.NOT_FOUND);
@@ -953,7 +951,7 @@ export class GymService implements IGymService {
 
     if (files && files.length > 0) {
       for (const file of files) {
-        const upload = await cloudinary.uploader.upload(file.tempFilePath, {
+        const upload = await cloudinary.uploader.upload(file.path, {
           folder: `gyms/${gymId}/products`
         });
         imageUrls.push(upload.secure_url);

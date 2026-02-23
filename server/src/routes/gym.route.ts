@@ -3,6 +3,7 @@ import container from "../core/di/inversify.config";
 import { GymController } from "../controllers/gym.controller";
 import TYPES from "../core/types/types";
 import { authMiddleware, roleMiddleware } from "../middlewares/auth.middleware";
+import { upload } from "../utils/multer.util";
 
 const router = express.Router();
 const gymController = container.get<GymController>(TYPES.GymController);
@@ -14,7 +15,12 @@ const gymAuthController = container.get<GymAuthController>(TYPES.GymAuthControll
 
 router.post("/auth/request-otp", gymAuthController.requestOtp.bind(gymAuthController));
 router.post("/auth/verify-otp", gymAuthController.verifyOtp.bind(gymAuthController));
-router.post("/register", gymController.register.bind(gymController));
+router.post("/register", upload.fields([
+    { name: 'certifications', maxCount: 10 },
+    { name: 'logo', maxCount: 1 },
+    { name: 'profileImage', maxCount: 1 },
+    { name: 'images', maxCount: 10 }
+]), gymController.register.bind(gymController));
 
 // Dashboard Stats
 router.get("/dashboard-stats", authMiddleware, roleMiddleware(['gym']), gymController.getDashboardStats.bind(gymController));
@@ -31,14 +37,19 @@ router.post('/reset-password', gymController.resetPassword.bind(gymController));
 
 // Gym protected
 router.get('/get-details', authMiddleware, roleMiddleware(['gym']), gymController.getData.bind(gymController))
-router.put('/update-profile', authMiddleware, roleMiddleware(['gym']), gymController.updateProfile.bind(gymController));
+router.put('/update-profile', authMiddleware, roleMiddleware(['gym']), upload.fields([
+    { name: 'certifications', maxCount: 10 },
+    { name: 'logo', maxCount: 1 },
+    { name: 'profileImage', maxCount: 1 },
+    { name: 'images', maxCount: 10 }
+]), gymController.updateProfile.bind(gymController));
 router.get('/members', authMiddleware, roleMiddleware(['gym']), gymController.getMembers.bind(gymController));
 router.get('/attendance', authMiddleware, roleMiddleware(['gym']), gymController.getAttendance.bind(gymController));
 
 // Products
 router.get('/products', authMiddleware, roleMiddleware(['gym']), gymController.getProducts.bind(gymController));
-router.post('/products', authMiddleware, roleMiddleware(['gym']), gymController.createProduct.bind(gymController));
-router.put('/products/:id', authMiddleware, roleMiddleware(['gym']), gymController.updateProduct.bind(gymController));
+router.post('/products', authMiddleware, roleMiddleware(['gym']), upload.fields([{ name: 'images', maxCount: 5 }]), gymController.createProduct.bind(gymController));
+router.put('/products/:id', authMiddleware, roleMiddleware(['gym']), upload.fields([{ name: 'images', maxCount: 5 }]), gymController.updateProduct.bind(gymController));
 router.delete('/products/:id', authMiddleware, roleMiddleware(['gym']), gymController.deleteProduct.bind(gymController));
 
 // Jobs
@@ -55,8 +66,8 @@ router.delete('/workout-templates/:id', authMiddleware, roleMiddleware(['gym']),
 
 
 router.get("/announcements", authMiddleware, gymController.getAnnouncements.bind(gymController));
-router.post("/announcements", authMiddleware, gymController.createAnnouncement.bind(gymController));
-router.put("/announcements/:id", authMiddleware, gymController.updateAnnouncement.bind(gymController));
+router.post("/announcements", authMiddleware, upload.single('image'), gymController.createAnnouncement.bind(gymController));
+router.put("/announcements/:id", authMiddleware, upload.single('image'), gymController.updateAnnouncement.bind(gymController));
 router.delete("/announcements/:id", authMiddleware, gymController.deleteAnnouncement.bind(gymController));
 
 router.post('/subscription-plans', authMiddleware, roleMiddleware(['gym']), gymController.createSubscriptionPlan.bind(gymController))
@@ -68,16 +79,21 @@ router.delete('/subscription-plan/:id', authMiddleware, roleMiddleware(['gym']),
 
 
 // Reapply
-router.post('/reapply', authMiddleware, roleMiddleware(['gym']), gymController.reapply.bind(gymController))
+router.post('/reapply', authMiddleware, roleMiddleware(['gym']), upload.fields([
+    { name: 'certifications', maxCount: 10 },
+    { name: 'logo', maxCount: 1 },
+    { name: 'profileImage', maxCount: 1 },
+    { name: 'images', maxCount: 10 }
+]), gymController.reapply.bind(gymController))
 
 // Equipment
 import { GymEquipmentController } from "../controllers/gymEquipment.controller";
 const equipmentController = container.get<GymEquipmentController>(TYPES.GymEquipmentController);
 
-router.post('/equipment', authMiddleware, roleMiddleware(['gym']), equipmentController.createEquipment.bind(equipmentController));
+router.post('/equipment', authMiddleware, roleMiddleware(['gym']), upload.single('image'), equipmentController.createEquipment.bind(equipmentController));
 router.get('/equipment', authMiddleware, roleMiddleware(['gym']), equipmentController.getEquipments.bind(equipmentController));
 router.get('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.getEquipmentById.bind(equipmentController));
-router.put('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.updateEquipment.bind(equipmentController));
+router.put('/equipment/:id', authMiddleware, roleMiddleware(['gym']), upload.single('image'), equipmentController.updateEquipment.bind(equipmentController));
 router.delete('/equipment/:id', authMiddleware, roleMiddleware(['gym']), equipmentController.deleteEquipment.bind(equipmentController));
 router.patch('/equipment/:id/availability', authMiddleware, roleMiddleware(['gym']), equipmentController.toggleAvailability.bind(equipmentController));
 

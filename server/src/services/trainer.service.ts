@@ -12,7 +12,7 @@ import { ITrainer } from '../models/trainer.model'
 import bcrypt from 'bcryptjs'
 import { IOTPService } from '../core/interfaces/services/IOtpService'
 import { IJwtService } from '../core/interfaces/services/IJwtService'
-import { UploadedFile } from 'express-fileupload'
+
 import { logger } from '../utils/logger.util'
 import {
   TrainerLoginResponseDto,
@@ -120,7 +120,7 @@ export class TrainerService implements ITrainerService {
 
     try {
       const certificateUploadResult = await cloudinary.uploader.upload(
-        (trainerData.certificate as UploadedFile).tempFilePath,
+        (trainerData.certificate as Express.Multer.File).path,
         { resource_type: 'auto', folder: 'trainer_certificates' }
       )
       certificateUrl = certificateUploadResult.secure_url
@@ -131,9 +131,9 @@ export class TrainerService implements ITrainerService {
         status: err.http_code,
         details: error,
         fileInfo: {
-          name: trainerData.certificate.name,
-          size: trainerData.certificate.size,
-          mimetype: trainerData.certificate.mimetype
+          name: (trainerData.certificate as Express.Multer.File).originalname,
+          size: (trainerData.certificate as Express.Multer.File).size,
+          mimetype: (trainerData.certificate as Express.Multer.File).mimetype
         }
       })
       throw new AppError(
@@ -144,7 +144,7 @@ export class TrainerService implements ITrainerService {
 
     try {
       const profileImageUploadResult = await cloudinary.uploader.upload(
-        (trainerData.profileImage as UploadedFile).tempFilePath,
+        (trainerData.profileImage as Express.Multer.File).path,
         { resource_type: 'image', folder: 'trainer_profile_images' }
       )
       profileImageUrl = profileImageUploadResult.secure_url
@@ -215,7 +215,7 @@ export class TrainerService implements ITrainerService {
     if (trainerData.certificate) {
       try {
         const certificateUploadResult = await cloudinary.uploader.upload(
-          (trainerData.certificate as UploadedFile).tempFilePath,
+          (trainerData.certificate as Express.Multer.File).path,
           { resource_type: 'auto', folder: 'trainer_certificates' }
         )
         trainerToUpdate.certificate = certificateUploadResult.secure_url
@@ -232,7 +232,7 @@ export class TrainerService implements ITrainerService {
     if (trainerData.profileImage) {
       try {
         const profileImageUploadResult = await cloudinary.uploader.upload(
-          (trainerData.profileImage as UploadedFile).tempFilePath,
+          (trainerData.profileImage as Express.Multer.File).path,
           { resource_type: 'image', folder: 'trainer_profile_images' }
         )
         trainerToUpdate.profileImage = profileImageUploadResult.secure_url
@@ -445,7 +445,7 @@ export class TrainerService implements ITrainerService {
     if (profileImage) {
       try {
         const uploadResult = await cloudinary.uploader.upload(
-          (profileImage as UploadedFile).tempFilePath,
+          (profileImage as Express.Multer.File).path,
           { resource_type: 'image', folder: 'trainer_profile_images' }
         )
         updateFields.profileImage = uploadResult.secure_url

@@ -2,7 +2,7 @@ import { IGym } from '../../../models/gym.model';
 import { ITrainer } from '../../../models/trainer.model';
 import { ISubscriptionPlan } from '../../../models/gymSubscriptionPlan.model';
 import { IGymAnnouncement } from '../../../models/gymAnnouncement.model';
-import { UploadedFile } from 'express-fileupload';
+
 import {
   GymLoginResponseDto,
   GymResponseDto,
@@ -20,10 +20,10 @@ export interface IGymService {
   registerGym(
     data: Partial<IGym>,
     files: {
-      certifications?: UploadedFile | UploadedFile[];
-      logo?: UploadedFile;
-      profileImage?: UploadedFile;
-      images?: UploadedFile | UploadedFile[];
+      certifications?: Express.Multer.File | Express.Multer.File[];
+      logo?: Express.Multer.File;
+      profileImage?: Express.Multer.File;
+      images?: Express.Multer.File | Express.Multer.File[];
     }
   ): Promise<GymLoginResponseDto>;
 
@@ -33,10 +33,10 @@ export interface IGymService {
     gymId: string,
     data: Partial<IGym>,
     files: {
-      certifications?: UploadedFile | UploadedFile[];
-      logo?: UploadedFile;
-      profileImage?: UploadedFile;
-      images?: UploadedFile | UploadedFile[]
+      certifications?: Express.Multer.File | Express.Multer.File[];
+      logo?: Express.Multer.File;
+      profileImage?: Express.Multer.File;
+      images?: Express.Multer.File | Express.Multer.File[]
     }
   ): Promise<GymLoginResponseDto>;
 
@@ -143,7 +143,7 @@ export interface IGymService {
   createAnnouncement(
     gymId: string,
     dto: CreateAnnouncementDto,
-    imageFile?: UploadedFile
+    imageFile?: Express.Multer.File
   ): Promise<IGymAnnouncement>;
 
   getGymAnnouncements(
@@ -157,7 +157,7 @@ export interface IGymService {
     announcementId: string,
     gymId: string,
     dto: UpdateAnnouncementDto,
-    imageFile?: UploadedFile
+    imageFile?: Express.Multer.File
   ): Promise<IGymAnnouncement | null>;
 
   deleteAnnouncement(announcementId: string, gymId: string): Promise<void>;
@@ -190,10 +190,10 @@ export interface IGymService {
     gymId: string,
     data: Partial<IGym>,
     files?: {
-      logo?: UploadedFile;
-      profileImage?: UploadedFile;
-      images?: UploadedFile | UploadedFile[];
-      certifications?: UploadedFile | UploadedFile[];
+      logo?: Express.Multer.File;
+      profileImage?: Express.Multer.File;
+      images?: Express.Multer.File | Express.Multer.File[];
+      certifications?: Express.Multer.File | Express.Multer.File[];
     }
   ): Promise<IGym>;
 
@@ -201,7 +201,7 @@ export interface IGymService {
   createProduct(
     gymId: string,
     data: any,
-    files?: UploadedFile[]
+    files?: Express.Multer.File[]
   ): Promise<any>;
 
   getGymProducts(
@@ -216,7 +216,7 @@ export interface IGymService {
     productId: string,
     gymId: string,
     data: any,
-    files?: UploadedFile[]
+    files?: Express.Multer.File[]
   ): Promise<any>;
 
   deleteProduct(productId: string, gymId: string): Promise<void>;

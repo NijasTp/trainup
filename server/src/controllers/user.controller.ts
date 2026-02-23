@@ -38,7 +38,7 @@ import {
 import { MESSAGES } from '../constants/messages.constants'
 import { AppError } from '../utils/appError.util'
 import { IGymService } from '../core/interfaces/services/IGymService'
-import { UploadedFile } from 'express-fileupload'
+
 import { IProgressService } from '../core/interfaces/services/IProgressService'
 import { IReviewService } from '../core/interfaces/services/IReviewService'
 
@@ -365,7 +365,7 @@ export class UserController implements IUserController {
       const updatedUser = await this._userService.updateProfile(
         userId,
         updateData,
-        req.files as { profileImage?: UploadedFile }
+        req.file ? { profileImage: req.file } : undefined
       )
 
       res.status(STATUS_CODE.OK).json({ user: updatedUser })
@@ -809,10 +809,10 @@ export class UserController implements IUserController {
 
   async uploadChatFile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      if (!req.files || !req.files.file) {
+      if (!req.file) {
         throw new AppError('No file uploaded', STATUS_CODE.BAD_REQUEST)
       }
-      const file = req.files.file as UploadedFile
+      const file = req.file
       const fileUrl = await this._userService.uploadChatFile(file)
       res.status(STATUS_CODE.OK).json({ fileUrl })
     } catch (err) {
@@ -874,13 +874,13 @@ export class UserController implements IUserController {
     try {
       const userId = (req.user as JwtPayload).id
       const { date, notes } = req.body
-      let photos: UploadedFile[] = []
+      let photos: Express.Multer.File[] = []
 
       if (req.files) {
-        if (Array.isArray(req.files.photos)) {
-          photos = req.files.photos
-        } else if (req.files.photos) {
-          photos = [req.files.photos as UploadedFile]
+        if (Array.isArray(req.files)) {
+          photos = req.files as Express.Multer.File[]
+        } else {
+          photos = Object.values(req.files).reduce((acc: Express.Multer.File[], val) => acc.concat(val), []);
         }
       }
 

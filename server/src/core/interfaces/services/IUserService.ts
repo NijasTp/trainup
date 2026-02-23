@@ -4,7 +4,7 @@ import {
   LoginResponseDto,
   UserResponseDto
 } from '../../../dtos/user.dto'
-import { UploadedFile } from 'express-fileupload'
+
 
 export interface IUserService {
   registerUser(
@@ -35,7 +35,7 @@ export interface IUserService {
   updateProfile(
     userId: string,
     updateData: Partial<IUser>,
-    files?: { profileImage?: UploadedFile }
+    files?: { profileImage?: Express.Multer.File }
   ): Promise<UserResponseDto>
   updateUserStatus(id: string, updateData: Partial<IUser>): Promise<UserResponseDto>
   updateUserTrainerId(userId: string, trainerId: string): Promise<void>
@@ -59,6 +59,6 @@ export interface IUserService {
   ): Promise<void>
   removeUserTrainer(userId: string): Promise<void>
   getAssignedTrainerId(userId: string): Promise<string | null>
-  uploadChatFile(file: unknown): Promise<string>
+  uploadChatFile(file: Express.Multer.File): Promise<string>
   toggleWorkoutTemplate(userId: string, templateId: string): Promise<boolean>
 }

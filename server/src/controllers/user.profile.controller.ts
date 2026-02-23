@@ -10,7 +10,7 @@ import { logger } from '../utils/logger.util'
 import { MESSAGES } from '../constants/messages.constants'
 import { AppError } from '../utils/appError.util'
 import { AddWeightDto } from '../dtos/user.dto'
-import { UploadedFile } from 'express-fileupload'
+
 
 @injectable()
 export class UserProfileController {
@@ -79,7 +79,7 @@ export class UserProfileController {
             const updatedUser = await this._userService.updateProfile(
                 userId,
                 updateData,
-                req.files as { profileImage?: UploadedFile }
+                req.file ? { profileImage: req.file } : undefined
             )
             res.status(STATUS_CODE.OK).json({ user: updatedUser })
         } catch (err) {
@@ -120,8 +120,8 @@ export class UserProfileController {
         try {
             const userId = (req.user as JwtPayload).id
             const { notes } = req.body
-            const files = req.files as { photo?: UploadedFile[] } // Depending on how files are structured in req
-            const photoArray = files ? Object.values(files).flat() as UploadedFile[] : []
+
+            const photoArray = req.files as Express.Multer.File[] || []
 
             const progress = await this._progressService.addProgress(
                 userId,
