@@ -36,11 +36,13 @@ import { updateUser } from "@/redux/slices/userAuthSlice";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { getProfile, updateProfile } from "@/services/userService";
 import { z } from "zod";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import API from "@/lib/axios";
 import Aurora from "@/components/ui/Aurora";
+import { motion, AnimatePresence } from "framer-motion";
+import { ShieldAlert, Utensils, HeartPulse, Info, Flame } from "lucide-react";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").trim(),
@@ -69,6 +71,8 @@ const profileSchema = z.object({
     (val) => !val || (Number(val) >= 30 && Number(val) <= 300),
     { message: "Goal weight must be between 30-300 kg" }
   ),
+  medicalConditions: z.string().max(500, "Medical conditions must be less than 500 characters").optional(),
+  dietaryPreferences: z.string().max(500, "Dietary preferences must be less than 500 characters").optional(),
 });
 
 export type ProfileFormData = z.infer<typeof profileSchema>;
@@ -104,7 +108,9 @@ export default function EditProfile() {
     equipment: false,
     isPrivate: false,
     todaysWeight: "",
-    goalWeight: ""
+    goalWeight: "",
+    medicalConditions: "",
+    dietaryPreferences: ""
   });
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -201,7 +207,9 @@ export default function EditProfile() {
         equipment: userProfile.equipment || false,
         isPrivate: userProfile.isPrivate || false,
         todaysWeight: userProfile.currentWeight?.toString() || "",
-        goalWeight: userProfile.goalWeight?.toString() || ""
+        goalWeight: userProfile.goalWeight?.toString() || "",
+        medicalConditions: userProfile.medicalConditions === "haven't given" ? "" : (userProfile.medicalConditions || ""),
+        dietaryPreferences: userProfile.dietaryPreferences === "haven't given" ? "" : (userProfile.dietaryPreferences || "")
       });
       setProfileImagePreview(userProfile.profileImage || "");
     } catch (err) {
@@ -259,6 +267,8 @@ export default function EditProfile() {
       submitData.append('isPrivate', validatedData.isPrivate?.toString() || 'false');
       if (validatedData.todaysWeight) submitData.append('todaysWeight', validatedData.todaysWeight);
       if (validatedData.goalWeight) submitData.append('goalWeight', validatedData.goalWeight);
+      if (validatedData.medicalConditions) submitData.append('medicalConditions', validatedData.medicalConditions);
+      if (validatedData.dietaryPreferences) submitData.append('dietaryPreferences', validatedData.dietaryPreferences);
       if (profileImageFile) {
         submitData.append('profileImage', profileImageFile);
       }
@@ -346,120 +356,119 @@ export default function EditProfile() {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
             {/* Profile Image Upload */}
-            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                  <Camera className="h-6 w-6 text-primary" />
-                  Profile Picture
+            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+              <CardHeader className="p-8 border-b border-white/5">
+                <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-xl">
+                    <Camera className="h-6 w-6 text-primary" />
+                  </div>
+                  Identity Image
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col items-center space-y-4">
-                <Avatar className="h-32 w-32">
-                  <AvatarImage src={profileImagePreview} />
-                  <AvatarFallback className="text-4xl">
-                    {formData.name ? formData.name[0]?.toUpperCase() : 'U'}
-                  </AvatarFallback>
-                </Avatar>
+              <CardContent className="p-8 flex flex-col items-center space-y-6">
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full group-hover:bg-primary/30 transition-colors" />
+                  <Avatar className="h-40 w-40 relative border-4 border-[#030303] shadow-2xl">
+                    <AvatarImage src={profileImagePreview} className="object-cover" />
+                    <AvatarFallback className="text-4xl font-black italic bg-gradient-to-br from-primary/20 to-accent/20">
+                      {formData.name ? formData.name[0]?.toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <label htmlFor="profileImage" className="absolute bottom-2 right-2 p-3 bg-white text-black rounded-2xl cursor-pointer shadow-xl hover:scale-110 transition-transform active:scale-95 border-4 border-[#030303]">
+                    <Upload className="h-5 w-5" />
+                    <Input id="profileImage" type="file" accept="image/*" onChange={handleImageChange} className="sr-only" />
+                  </label>
+                </div>
 
-                <div className="flex items-center gap-4">
-                  <Label htmlFor="profileImage" className="cursor-pointer">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
-                      <Upload className="h-4 w-4" />
-                      <span className="text-sm font-medium">Upload Photo</span>
-                    </div>
-                    <Input
-                      id="profileImage"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="sr-only"
-                    />
-                  </Label>
-
+                <div className="flex flex-col items-center gap-2">
                   {profileImagePreview && (
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        setProfileImagePreview("");
-                      }}
+                      onClick={() => setProfileImagePreview("")}
+                      className="text-xs font-bold text-red-500 uppercase tracking-widest hover:bg-red-500/10 rounded-full px-6"
                     >
-                      Remove
+                      Remove Photo
                     </Button>
                   )}
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    Optimal format: JPG or PNG (max. 5MB)
+                  </p>
                 </div>
-
-                <p className="text-xs text-muted-foreground text-center">
-                  JPG, PNG or GIF (max. 5MB)
-                </p>
               </CardContent>
             </Card>
 
             {/* Personal Information */}
-            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                  <User className="h-6 w-6 text-primary" />
-                  Personal Information
+            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+              <CardHeader className="p-8 border-b border-white/5">
+                <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-xl">
+                    <User className="h-6 w-6 text-primary" />
+                  </div>
+                  Personal Profile
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="font-medium">Full Name *</Label>
+              <CardContent className="p-8 space-y-8">
+                <div className="grid gap-8 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <Label htmlFor="name" className="text-xs font-bold text-gray-400 uppercase tracking-widest">Full Name *</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => handleInputChange("name", e.target.value)}
-                      className={`bg-transparent border-border/50 ${errors.name ? 'border-destructive' : ''}`}
+                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-700 ${errors.name ? 'border-red-500' : ''}`}
                       placeholder="Enter your full name"
                     />
-                    {errors.name && (
-                      <p className="text-sm text-destructive">{errors.name}</p>
-                    )}
+                    <AnimatePresence>
+                      {errors.name && (
+                        <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="text-xs font-bold text-red-500 uppercase tracking-widest">{errors.name}</motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="font-medium">Phone Number</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="phone" className="text-xs font-bold text-gray-400 uppercase tracking-widest">Phone Network</Label>
                     <Input
                       id="phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
-                      className={`bg-transparent border-border/50 ${errors.phone ? 'border-destructive' : ''}`}
+                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-700 ${errors.phone ? 'border-red-500' : ''}`}
                       placeholder="+91 9876543210"
                     />
-                    {errors.phone && (
-                      <p className="text-sm text-destructive">{errors.phone}</p>
-                    )}
+                    <AnimatePresence>
+                      {errors.phone && (
+                        <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="text-xs font-bold text-red-500 uppercase tracking-widest">{errors.phone}</motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="age" className="font-medium">Age</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="age" className="text-xs font-bold text-gray-400 uppercase tracking-widest">Biological Age</Label>
                     <Input
                       id="age"
                       type="number"
                       value={formData.age}
                       onChange={(e) => handleInputChange("age", e.target.value)}
-                      className={`bg-transparent border-border/50 ${errors.age ? 'border-destructive' : ''}`}
+                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-700 ${errors.age ? 'border-red-500' : ''}`}
                       placeholder="25"
-                      min="13"
-                      max="100"
                     />
-                    {errors.age && (
-                      <p className="text-sm text-destructive">{errors.age}</p>
-                    )}
+                    <AnimatePresence>
+                      {errors.age && (
+                        <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="text-xs font-bold text-red-500 uppercase tracking-widest">{errors.age}</motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="gender" className="font-medium">Gender</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="gender" className="text-xs font-bold text-gray-400 uppercase tracking-widest">Gender Identity</Label>
                     <Select value={formData.gender || undefined} onValueChange={(value) => handleInputChange("gender", value)}>
-                      <SelectTrigger className="bg-transparent border-border/50">
+                      <SelectTrigger className="h-14 bg-white/5 border-white/10 rounded-2xl text-lg font-bold focus:ring-primary focus:border-primary shadow-none">
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                      <SelectContent className="bg-[#0f172a] border-white/10 text-white rounded-2xl p-2 font-bold">
+                        <SelectItem value="male" className="rounded-xl hover:bg-primary/20">Male</SelectItem>
+                        <SelectItem value="female" className="rounded-xl hover:bg-primary/20">Female</SelectItem>
+                        <SelectItem value="other" className="rounded-xl hover:bg-primary/20">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -472,18 +481,20 @@ export default function EditProfile() {
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             {/* Physical Information */}
-            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                  <Weight className="h-6 w-6 text-primary" />
-                  Physical Information
+            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+              <CardHeader className="p-8 border-b border-white/5">
+                <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-xl">
+                    <Weight className="h-6 w-6 text-primary" />
+                  </div>
+                  Physical Dimensions
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="height" className="font-medium flex items-center gap-2">
-                      <Ruler className="h-4 w-4" />
+              <CardContent className="p-8 space-y-8">
+                <div className="grid gap-8 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <Label htmlFor="height" className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                      <Ruler className="h-4 w-4 text-primary" />
                       Height (cm)
                     </Label>
                     <Input
@@ -491,18 +502,18 @@ export default function EditProfile() {
                       type="number"
                       value={formData.height}
                       onChange={(e) => handleInputChange("height", e.target.value)}
-                      className={`bg-transparent border-border/50 ${errors.height ? 'border-destructive' : ''}`}
+                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold ${errors.height ? 'border-red-500' : ''}`}
                       placeholder="170"
-                      min="100"
-                      max="250"
                     />
-                    {errors.height && (
-                      <p className="text-sm text-destructive">{errors.height}</p>
-                    )}
+                    <AnimatePresence>
+                      {errors.height && (
+                        <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-xs font-bold text-red-500 uppercase tracking-widest">{errors.height}</motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="todaysWeight" className="font-medium flex items-center gap-2">
-                      <Scale className="h-4 w-4" />
+                  <div className="space-y-3">
+                    <Label htmlFor="todaysWeight" className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                      <Scale className="h-4 w-4 text-primary" />
                       Current Weight (kg)
                     </Label>
                     <Input
@@ -511,18 +522,18 @@ export default function EditProfile() {
                       step="0.1"
                       value={formData.todaysWeight}
                       onChange={(e) => handleInputChange("todaysWeight", e.target.value)}
-                      className={`bg-transparent border-border/50 ${errors.todaysWeight ? 'border-destructive' : ''}`}
+                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold ${errors.todaysWeight ? 'border-red-500' : ''}`}
                       placeholder="70.5"
-                      min="30"
-                      max="300"
                     />
-                    {errors.todaysWeight && (
-                      <p className="text-sm text-destructive">{errors.todaysWeight}</p>
-                    )}
+                    <AnimatePresence>
+                      {errors.todaysWeight && (
+                        <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-xs font-bold text-red-500 uppercase tracking-widest">{errors.todaysWeight}</motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="goalWeight" className="font-medium flex items-center gap-2">
-                      <Target className="h-4 w-4" />
+                  <div className="space-y-3 md:col-span-2">
+                    <Label htmlFor="goalWeight" className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                      <Target className="h-4 w-4 text-primary" />
                       Goal Weight (kg)
                     </Label>
                     <Input
@@ -531,14 +542,32 @@ export default function EditProfile() {
                       step="0.1"
                       value={formData.goalWeight}
                       onChange={(e) => handleInputChange("goalWeight", e.target.value)}
-                      className={`bg-transparent border-border/50 ${errors.goalWeight ? 'border-destructive' : ''}`}
+                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold ${errors.goalWeight ? 'border-red-500' : ''}`}
                       placeholder="65.0"
-                      min="30"
-                      max="300"
                     />
-                    {errors.goalWeight && (
-                      <p className="text-sm text-destructive">{errors.goalWeight}</p>
-                    )}
+                    <AnimatePresence>
+                      {errors.goalWeight && (
+                        <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-xs font-bold text-red-500 uppercase tracking-widest">{errors.goalWeight}</motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4">
+                  <Label htmlFor="medicalConditions" className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4 text-red-500" />
+                    Medical Conditions & Injuries
+                  </Label>
+                  <textarea
+                    id="medicalConditions"
+                    value={formData.medicalConditions}
+                    onChange={(e) => handleInputChange("medicalConditions", e.target.value)}
+                    className="w-full min-h-[120px] p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent text-gray-200 font-medium placeholder:text-gray-600 transition-all resize-none"
+                    placeholder="List any injuries, chronic conditions, or medications your trainer should know about... (e.g., Lower back pain, Asthma)"
+                  />
+                  <div className="flex items-start gap-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest bg-white/5 p-3 rounded-xl border border-white/5">
+                    <Info className="h-3 w-3 text-primary shrink-0 mt-0.5" />
+                    This information helps us tailor your workouts for safety and effectiveness.
                   </div>
                 </div>
               </CardContent>
@@ -547,50 +576,62 @@ export default function EditProfile() {
         );
       case 3:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            {/* Fitness Information */}
-            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                  <Activity className="h-6 w-6 text-primary" />
-                  Fitness Information
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+              <CardHeader className="p-8 border-b border-white/5">
+                <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-xl">
+                    <Activity className="h-6 w-6 text-primary" />
+                  </div>
+                  Optimization Goals
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <Label className="font-medium">Fitness Goals</Label>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {formData.goals!.map((goal, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="font-medium bg-primary/10 hover:bg-primary/20 transition-all duration-300 flex items-center gap-1"
-                      >
-                        {goal}
-                        <button
-                          type="button"
-                          onClick={() => removeGoal(goal)}
-                          className="ml-1 hover:text-destructive"
+              <CardContent className="p-8 space-y-10">
+                <div className="space-y-6">
+                  <Label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <HeartPulse className="h-4 w-4 text-primary" /> Selective Objectives
+                  </Label>
+                  <div className="flex flex-wrap gap-3">
+                    <AnimatePresence>
+                      {formData.goals!.map((goal, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.8, opacity: 0 }}
                         >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
+                          <Badge
+                            className="h-10 px-5 rounded-xl font-bold uppercase tracking-widest text-[10px] bg-primary text-black flex items-center gap-2 hover:bg-white transition-colors"
+                          >
+                            {goal}
+                            <button
+                              type="button"
+                              onClick={() => removeGoal(goal)}
+                              className="hover:scale-125 transition-transform"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
-                  <div className="flex gap-2">
+
+                  <div className="flex gap-3">
                     <Input
                       value={newGoal}
                       onChange={(e) => setNewGoal(e.target.value)}
-                      placeholder="Add a custom goal"
-                      className="bg-transparent border-border/50"
+                      placeholder="Define custom objective..."
+                      className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-700"
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addGoal())}
                     />
-                    <Button type="button" onClick={addGoal} variant="outline" size="icon">
-                      <Plus className="h-4 w-4" />
+                    <Button type="button" onClick={addGoal} className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-2xl flex items-center justify-center shrink-0">
+                      <Plus className="h-6 w-6" />
                     </Button>
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Quick add popular goals:</p>
+
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none">Standard Protocols:</p>
                     <div className="flex flex-wrap gap-2">
                       {goalOptions.filter(goal => !formData.goals!.includes(goal)).map((goal) => (
                         <Button
@@ -599,9 +640,9 @@ export default function EditProfile() {
                           variant="outline"
                           size="sm"
                           onClick={() => addPredefinedGoal(goal)}
-                          className="text-xs"
+                          className="h-9 px-4 border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 hover:border-white/20 transition-all bg-transparent"
                         >
-                          <Plus className="h-3 w-3 mr-1" />
+                          <Plus className="h-3 w-3 mr-1 text-primary" />
                           {goal}
                         </Button>
                       ))}
@@ -609,31 +650,48 @@ export default function EditProfile() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="activityLevel" className="font-medium">Activity Level</Label>
-                  <Select value={formData.activityLevel} onValueChange={(value) => handleInputChange("activityLevel", value)}>
-                    <SelectTrigger className="bg-transparent border-border/50">
-                      <SelectValue placeholder="Select your activity level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {activityLevels.map((level) => (
-                        <SelectItem key={level.value} value={level.value}>
-                          {level.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <div className="space-y-6 pt-6 border-t border-white/5">
+                  <div className="space-y-3">
+                    <Label htmlFor="activityLevel" className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                      <Flame className="h-4 w-4 text-primary" /> Metabolic Activity
+                    </Label>
+                    <Select value={formData.activityLevel} onValueChange={(value) => handleInputChange("activityLevel", value)}>
+                      <SelectTrigger className="h-14 bg-white/5 border-white/10 rounded-2xl text-lg font-bold focus:ring-primary focus:border-primary shadow-none">
+                        <SelectValue placeholder="Select activity intensity" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#0f172a] border-white/10 text-white rounded-2xl p-2 font-bold max-w-[400px]">
+                        {activityLevels.map((level) => (
+                          <SelectItem key={level.value} value={level.value} className="rounded-xl hover:bg-primary/20 whitespace-normal p-3">
+                            {level.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
+                  <div className="space-y-4 pt-4">
+                    <Label htmlFor="dietaryPreferences" className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                      <Utensils className="h-4 w-4 text-green-500" />
+                      Dietary Preferences & Allergies
+                    </Label>
+                    <textarea
+                      id="dietaryPreferences"
+                      value={formData.dietaryPreferences}
+                      onChange={(e) => handleInputChange("dietaryPreferences", e.target.value)}
+                      className="w-full min-h-[120px] p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent text-gray-200 font-medium placeholder:text-gray-600 transition-all resize-none"
+                      placeholder="List any preferences (Vegan, Keto, etc.) or allergies (Nuts, Shellfish)..."
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-4 bg-white/5 p-6 rounded-3xl border border-white/10 group/check hover:border-primary/50 transition-all">
                     <Checkbox
                       id="equipment"
                       checked={formData.equipment}
                       onCheckedChange={(checked) => handleInputChange("equipment", checked)}
+                      className="h-6 w-6 rounded-lg border-2 border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
-                    <Label htmlFor="equipment" className="font-medium">
-                      I have access to gym equipment
+                    <Label htmlFor="equipment" className="text-sm font-bold uppercase tracking-widest cursor-pointer group-hover/check:text-primary transition-colors">
+                      Full Hardware Access (Gym Equipment)
                     </Label>
                   </div>
                 </div>
@@ -643,47 +701,58 @@ export default function EditProfile() {
         );
       case 4:
         return (
-          <div className="space-y-6">
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
             {/* Privacy Settings */}
-            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                  {formData.isPrivate ? <EyeOff className="h-6 w-6 text-primary" /> : <Eye className="h-6 w-6 text-primary" />}
-                  Privacy Settings
+            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+              <CardHeader className="p-8 border-b border-white/5">
+                <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-xl">
+                    {formData.isPrivate ? <EyeOff className="h-6 w-6 text-primary" /> : <Eye className="h-6 w-6 text-primary" />}
+                  </div>
+                  System Privacy
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center space-x-2">
+              <CardContent className="p-8 space-y-6">
+                <div className="flex items-center space-x-4 bg-white/5 p-6 rounded-3xl border border-white/10 group/priv hover:border-primary/50 transition-all">
                   <Checkbox
                     id="isPrivate"
                     checked={formData.isPrivate}
                     onCheckedChange={(checked) => handleInputChange("isPrivate", checked)}
+                    className="h-6 w-6 rounded-lg border-2 border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
-                  <Label htmlFor="isPrivate" className="font-medium">
-                    Make my profile private
+                  <Label htmlFor="isPrivate" className="text-sm font-bold uppercase tracking-widest cursor-pointer group-hover/priv:text-primary transition-colors">
+                    stealth mode (Private Profile)
                   </Label>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  When enabled, your profile information will only be visible to you and your assigned trainer.
-                </p>
+                <div className="flex items-start gap-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest bg-white/5 p-4 rounded-2xl border border-white/5">
+                  <Info className="h-3 w-3 text-primary shrink-0 mt-0.5" />
+                  Visibility Restricted: When enabled, your profile metrics and history will only be accessible to your assigned coach and system administrators.
+                </div>
               </CardContent>
             </Card>
 
             {/* Security */}
-            <Card className="bg-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                  <Key className="h-6 w-6 text-primary" />
-                  Security
+            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+              <CardHeader className="p-8 border-b border-white/5">
+                <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-xl">
+                    <Key className="h-6 w-6 text-primary" />
+                  </div>
+                  Cyber Security
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <Button variant="outline" className="hover:bg-primary/5" onClick={() => setOpen(true)} type="button">
+              <CardContent className="p-8 space-y-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setOpen(true)}
+                  type="button"
+                  className="h-14 w-full md:w-auto px-8 border-white/10 rounded-2xl font-black italic uppercase tracking-widest hover:bg-white hover:text-black transition-all"
+                >
                   <Key className="h-4 w-4 mr-2" />
-                  Change Password
+                  Rotate Password
                 </Button>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Update your account password for better security
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                  Recommendation: Update credentials bi-monthly for maximum network security.
                 </p>
               </CardContent>
             </Card>
@@ -697,21 +766,13 @@ export default function EditProfile() {
   if (isLoading) {
     return (
       <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-        {/* Background Visuals */}
         <div className="absolute inset-0 z-0">
-          <Aurora
-            colorStops={["#020617", "#0f172a", "#020617"]}
-            amplitude={1.1}
-            blend={0.6}
-          />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+          <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
         </div>
         <SiteHeader />
-        <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6">
-          <div className="relative">
-            <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-          </div>
-          <p className="text-muted-foreground font-medium">Loading your profile...</p>
+        <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6 z-10">
+          <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <p className="text-gray-400 font-black italic uppercase tracking-widest animate-pulse">Retrieving Profile Matrix...</p>
         </div>
       </div>
     );
@@ -719,103 +780,94 @@ export default function EditProfile() {
 
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-      {/* Background Visuals */}
-      <div className="absolute inset-0 z-0">
-        <Aurora
-          colorStops={["#020617", "#0f172a", "#020617"]}
-          amplitude={1.1}
-          blend={0.6}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 z-0 text-white shadow-inner">
+        <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
       </div>
+
       <SiteHeader />
 
-      <main className="relative container mx-auto px-4 py-12 space-y-8">
-        <div className="text-center space-y-6 mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
-            <User className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Edit Profile</span>
-          </div>
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-            Update Your Profile
+      <main className="relative container mx-auto px-4 py-12 space-y-12 z-10">
+        <div className="text-center space-y-6 max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-6 py-2 bg-primary/10 rounded-full border border-primary/20 text-primary uppercase font-black italic tracking-widest text-[10px]"
+          >
+            <User className="h-3 w-3" /> Profile Synchronization
+          </motion.div>
+
+          <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">
+            Refine Your <span className="text-primary">Identity</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Step {currentStep} of {totalSteps}
+
+          <p className="text-lg text-gray-400 font-medium italic max-w-2xl mx-auto">
+            Step {currentStep} of {totalSteps}: {
+              currentStep === 1 ? "Personal Profile" :
+                currentStep === 2 ? "Body Dimensions" :
+                  currentStep === 3 ? "Fitness Protocol" :
+                    "System Security"
+            }
           </p>
         </div>
 
-        {/* Stepper */}
-        <div className="max-w-4xl mx-auto mb-12">
+        {/* Dynamic Stepper */}
+        <div className="max-w-3xl mx-auto relative px-8 py-4">
+          <div className="absolute top-1/2 left-8 right-8 h-1 bg-white/5 -translate-y-1/2 rounded-full" />
+          <div
+            className="absolute top-1/2 left-8 h-1 bg-primary -translate-y-1/2 rounded-full transition-all duration-500 shadow-[0_0_15px_rgba(var(--primary),0.5)]"
+            style={{ width: `calc(${((currentStep - 1) / (totalSteps - 1)) * 100}% - 4px)` }}
+          />
           <div className="relative flex justify-between">
-            <div className="absolute top-1/2 left-0 w-full h-1 bg-muted -z-10 -translate-y-1/2 rounded-full" />
-            <div
-              className="absolute top-1/2 left-0 h-1 bg-primary -z-10 -translate-y-1/2 rounded-full transition-all duration-300"
-              style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
-            />
             {[1, 2, 3, 4].map((step) => (
               <div
                 key={step}
-                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${step <= currentStep
-                  ? "bg-primary border-primary text-primary-foreground"
-                  : "bg-background border-muted text-muted-foreground"
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center border-4 transition-all duration-500 ${step <= currentStep
+                  ? "bg-primary border-primary text-black scale-110 shadow-2xl"
+                  : "bg-[#111] border-white/5 text-gray-600"
                   }`}
               >
-                {step < currentStep ? <Check className="h-5 w-5" /> : step}
+                {step < currentStep ? <Check className="h-6 w-6 stroke-[4]" /> : <span className="font-black italic text-lg">{step}</span>}
               </div>
             ))}
-          </div>
-          <div className="flex justify-between mt-2 text-sm text-muted-foreground px-2">
-            <span>Personal</span>
-            <span>Body Metrics</span>
-            <span>Fitness</span>
-            <span>Account</span>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
           {renderStep()}
 
-          <div className="flex gap-4 justify-between pt-6">
+          <div className="max-w-4xl mx-auto flex items-center justify-between gap-6 pt-12 pb-24">
             <Button
               type="button"
-              variant="outline"
-              onClick={(e) => {
-                e.preventDefault();
-                currentStep === 1 ? navigate('/profile') : prevStep();
-              }}
-              className="hover:bg-muted/5"
+              variant="ghost"
+              onClick={prevStep}
+              disabled={currentStep === 1 || isSubmitting}
+              className="h-16 px-10 rounded-2xl font-black italic uppercase tracking-widest text-gray-500 hover:text-white transition-all disabled:opacity-0"
             >
-              {currentStep === 1 ? 'Cancel' : 'Previous'}
+              Back
             </Button>
 
             {currentStep < totalSteps ? (
               <Button
                 type="button"
-                key="next-btn"
-                onClick={(e) => {
-                  e.preventDefault();
-                  nextStep();
-                }}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={nextStep}
+                className="h-16 px-12 rounded-2xl bg-white text-black hover:bg-gray-200 transition-all font-black italic uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.2)] flex items-center gap-3"
               >
-                Next <ChevronRight className="ml-2 h-4 w-4" />
+                Next Protocol <ArrowRight className="h-5 w-5" />
               </Button>
             ) : (
               <Button
                 type="submit"
-                key="submit-btn"
-                disabled={isSaving}
-                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-8"
+                disabled={isSubmitting}
+                className="h-16 px-16 rounded-2xl bg-primary text-black hover:bg-white transition-all font-black italic uppercase tracking-widest shadow-[0_0_30px_rgba(var(--primary),0.3)] disabled:opacity-50 flex items-center gap-3"
               >
-                {isSaving ? (
+                {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                     Saving...
                   </>
                 ) : (
                   <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
+                    Commit Changes <Check className="h-5 w-5" />
                   </>
                 )}
               </Button>

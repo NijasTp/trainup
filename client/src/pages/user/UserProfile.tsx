@@ -2,7 +2,25 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Award, Calendar, Flame, Lock, Mail, Phone, Trophy, User, CreditCard, ArrowRight, Eye } from "lucide-react";
+import {
+  Award,
+  Flame,
+  Lock,
+  Mail,
+  Phone,
+  Trophy,
+  User,
+  CreditCard,
+  ArrowRight,
+  Eye,
+  Activity,
+  Target,
+  Scale,
+  Ruler,
+  Calendar,
+  ShieldAlert,
+  Utensils
+} from "lucide-react";
 import { toast } from "sonner";
 import { getProfilePageData } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
@@ -12,14 +30,13 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import API from "@/lib/axios";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-
-import type { Transaction } from "@/interfaces/user/IUserTransactions";
 import Aurora from "@/components/ui/Aurora";
 import MagicBento from './MagicBento';
+import { motion } from "framer-motion";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTransactionsLoading, setIsTransactionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +73,6 @@ export default function Profile() {
       setTransactions(response.data.transactions || []);
     } catch (err: any) {
       console.error("Failed to fetch transactions:", err);
-
     } finally {
       setIsTransactionsLoading(false);
     }
@@ -64,14 +80,10 @@ export default function Profile() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'bg-green-500/10 text-green-600 border-green-500/20';
-      case 'failed':
-        return 'bg-red-500/10 text-red-600 border-red-500/20';
-      case 'pending':
-        return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
-      default:
-        return 'bg-gray-500/10 text-gray-600 border-gray-500/20';
+      case 'completed': return 'bg-green-500/10 text-green-400 border-green-500/20';
+      case 'failed': return 'bg-red-500/10 text-red-400 border-red-500/20';
+      case 'pending': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+      default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
     }
   };
 
@@ -79,318 +91,216 @@ export default function Profile() {
     return new Date(dateString).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: 'numeric'
     });
   };
+
+  const MetricCard = ({ icon: Icon, title, value, label }: any) => (
+    <div className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col gap-2 hover:bg-white/10 transition-all group">
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-primary/20 rounded-xl group-hover:scale-110 transition-transform">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{label}</span>
+      </div>
+      <div>
+        <h4 className="text-sm font-medium text-gray-400">{title}</h4>
+        <p className="text-xl font-black italic uppercase tracking-tight">{value || "Not specified"}</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
       {/* Background Visuals */}
       <div className="absolute inset-0 z-0">
-        <Aurora
-          colorStops={["#020617", "#0f172a", "#020617"]}
-          amplitude={1.1}
-          blend={0.6}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+        <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
       </div>
 
       <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
 
-        <div className="text-center space-y-6 mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
-            <User className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Your Fitness Profile</span>
-          </div>
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-            Your Fitness Journey
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Track your progress and manage your fitness details
-          </p>
-        </div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex flex-col items-center justify-center py-16 space-y-4">
+      <main className="relative container mx-auto px-4 py-12 space-y-12 flex-1 z-10">
+        {/* Header Section */}
+        <section className="flex flex-col md:flex-row items-center justify-between gap-8 bg-white/5 backdrop-blur-2xl border border-white/10 p-8 md:p-12 rounded-[3rem] shadow-2xl">
+          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
             <div className="relative">
-              <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-              <div className="absolute inset-0 w-12 h-12 border-2 border-transparent border-t-accent rounded-full animate-pulse"></div>
-            </div>
-            <p className="text-muted-foreground font-medium">Loading your profile...</p>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className="text-center py-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-destructive/10 rounded-full border border-destructive/20 mb-4">
-              <span className="text-destructive font-medium">{error}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Profile Content */}
-        {!isLoading && !error && profile && (
-          <div className="space-y-8">
-            <Card className="relative group bg-card/40 backdrop-blur-sm border-border/50 max-w-4xl mx-auto overflow-hidden hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <div className="w-24 h-24 rounded-full ring-4 ring-primary/10 overflow-hidden shadow-xl">
-                      {profile.profileImage ? (
-                        <img
-                          src={profile.profileImage}
-                          alt={profile.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                          <User className="h-12 w-12 text-primary/70" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full border-4 border-card flex items-center justify-center shadow-lg">
-                      <Flame className="h-5 w-5 text-white" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <CardTitle className="text-3xl font-bold text-foreground">{profile.name}</CardTitle>
-                    <p className="text-muted-foreground mt-1">Member since {new Date(profile.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long' })}</p>
-                    {profile.isPrivate && (
-                      <div className="flex items-center gap-2 text-muted-foreground mt-2">
-                        <Lock className="h-4 w-4 text-accent" />
-                        <span className="text-sm">Private Profile</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <Button
-                  onClick={() => navigate("/edit-profile")}
-                  className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
-                >
-                  Edit Profile
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-8">
-                {/* Dynamic Metrics Grid */}
-                <MagicBento
-                  textAutoHide={true}
-                  enableStars
-                  enableSpotlight
-                  enableBorderGlow={true}
-                  enableTilt={false}
-                  enableMagnetism={false}
-                  clickEffect
-                  spotlightRadius={400}
-                  particleCount={12}
-                  glowColor="132, 0, 255"
-                  disableAnimations={false}
-                  items={[
-                    {
-                      title: 'Gender',
-                      description: profile.gender || 'Not specified',
-                      label: 'Personal',
-                      color: '#060010'
-                    },
-                    {
-                      title: 'Age',
-                      description: profile.age ? `${profile.age} years` : 'Not added',
-                      label: 'Personal',
-                      color: '#060010'
-                    },
-                    {
-                      title: 'Height',
-                      description: profile.height ? `${profile.height} cm` : 'Not added',
-                      label: 'Fitness',
-                      color: '#060010'
-                    },
-                    {
-                      title: 'Weight',
-                      description: profile.weight ? `${profile.weight} kg` : 'Not added',
-                      label: 'Fitness',
-                      color: '#060010'
-                    },
-                    {
-                      title: 'Current Streak',
-                      description: `${reduxUser?.streak ?? profile.streak ?? 0} days`,
-                      label: 'Activity',
-                      color: '#060010'
-                    },
-                    {
-                      title: 'Experience (XP)',
-                      description: `${reduxUser?.xp ?? profile.xp ?? 0} points`,
-                      label: 'Progress',
-                      color: '#060010'
-                    }
-                  ]}
-                />
-
-                {/* Additional Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-border/50">
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                      <Mail className="h-5 w-5 text-primary" />
-                      Contact details
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg">
-                        <Mail className="h-5 w-5 text-primary" />
-                        <span className="text-foreground">{profile.email}</span>
-                      </div>
-                      <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg">
-                        <Phone className="h-5 w-5 text-primary" />
-                        <span className="text-foreground">{profile.phone || 'No phone added'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-primary" />
-                      Assigned Trainer
-                    </h3>
-                    <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg">
-                      <User className="h-5 w-5 text-primary" />
-                      <span className="text-foreground">{profile.assignedTrainer || 'No trainer assigned'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold flex items-center gap-2">
-                    <Award className="h-5 w-5 text-primary" />
-                    Achievements
-                  </h3>
-                  <div className="flex flex-wrap gap-2 p-4 bg-muted/10 rounded-xl border border-border/20">
-                    {profile.achievements && profile.achievements.length > 0 ? (
-                      profile.achievements.map((achievement, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="px-4 py-2 font-medium bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
-                        >
-                          {achievement}
-                        </Badge>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground text-sm italic">No achievements unlocked yet. Keep working out!</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
-                    Account Details
-                  </h3>
-                  <div className="flex items-center gap-3 bg-muted/20 p-3 rounded-lg">
-                    <span className="text-foreground">
-                      Joined: {new Date(profile.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Transaction History Section */}
-            <Card className="relative group bg-card/40 backdrop-blur-sm border-border/50 max-w-4xl mx-auto overflow-hidden hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                  <CreditCard className="h-6 w-6 text-primary" />
-                  Recent Transactions
-                </CardTitle>
-                <Button
-                  variant="outline"
-                  className="hover:bg-primary/5"
-                  onClick={() => navigate('/transactions')}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View All
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {isTransactionsLoading ? (
-                  <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                    <div className="relative">
-                      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                    </div>
-                    <p className="text-muted-foreground font-medium">Loading transactions...</p>
-                  </div>
-                ) : transactions.length === 0 ? (
-                  <div className="text-center py-8">
-                    <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-muted-foreground">No transactions found</p>
-                    <p className="text-sm text-muted-foreground/70 mt-2">Your payment history will appear here</p>
-                  </div>
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full ring-4 ring-primary/20 overflow-hidden shadow-2xl">
+                {profile?.profileImage ? (
+                  <img src={profile.profileImage} alt={profile.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="space-y-4">
-                    {transactions.map((transaction) => (
-                      <div
-                        key={transaction._id}
-                        className="flex items-center justify-between p-4 bg-muted/20 rounded-lg hover:bg-muted/30 transition-all duration-300"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            {transaction.trainerId?.profileImage ? (
-                              <img
-                                src={transaction.trainerId.profileImage}
-                                alt={transaction.trainerId.name}
-                                className="w-12 h-12 rounded-full object-cover"
-                              />
-                            ) : (
-                              <User className="h-6 w-6 text-primary" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-foreground">
-                              {transaction.trainerId?.name || 'Trainer Subscription'}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {transaction.months} month{transaction.months > 1 ? 's' : ''} subscription
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDate(transaction.createdAt)}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-foreground">
-                            ₹{transaction.amount.toLocaleString()}
-                          </div>
-                          <Badge className={`text-xs ${getStatusColor(transaction.status)}`}>
-                            {transaction.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                    {transactions.length === 5 && (
-                      <div className="text-center pt-4">
-                        <Button
-                          variant="ghost"
-                          className="text-primary hover:text-primary/80"
-                          onClick={() => navigate('/transactions')}
-                        >
-                          View All Transactions
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                      </div>
-                    )}
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <User className="h-16 w-16 text-primary/70" />
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -bottom-2 -right-2 bg-primary rounded-2xl px-4 py-2 border-4 border-[#030303] flex items-center gap-2 shadow-xl"
+              >
+                <Flame className="h-5 w-5 text-black fill-black" />
+                <span className="text-black font-black italic">{profile?.streak || 0} DAY STREAK</span>
+              </motion.div>
+            </div>
 
+            <div className="space-y-2">
+              <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">
+                {profile?.name}
+              </h1>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                <Badge className="bg-primary/20 text-primary border-primary/30 py-1 px-4 rounded-full font-bold uppercase tracking-widest text-[10px]">
+                  {profile?.goal || 'FITNESS ENTHUSIAST'}
+                </Badge>
+                <Badge variant="outline" className="border-white/10 text-gray-400 py-1 px-4 rounded-full font-bold uppercase tracking-widest text-[10px]">
+                  XP: {profile?.xp || 0}
+                </Badge>
+              </div>
+            </div>
           </div>
-        )}
+
+          <Button
+            onClick={() => navigate("/edit-profile")}
+            className="h-16 px-10 rounded-2xl bg-white text-black hover:bg-gray-200 transition-all font-black italic uppercase tracking-widest text-sm"
+          >
+            Edit Profile
+          </Button>
+        </section>
+
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-24 space-y-4">
+            <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <p className="text-gray-400 font-bold uppercase tracking-widest animate-pulse">Synchronizing Data...</p>
+          </div>
+        ) : profile ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column: Metrics & Progress */}
+            <div className="lg:col-span-2 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <MetricCard icon={Activity} title="Activity Level" value={profile.activityLevel} label="FITNESS" />
+                <MetricCard icon={Target} title="Primary Goal" value={profile.goal} label="TARGET" />
+                <MetricCard icon={Ruler} title="Height" value={profile.height ? `${profile.height} cm` : null} label="BODY" />
+                <MetricCard icon={Scale} title="Current Weight" value={profile.weight ? `${profile.weight} kg` : null} label="BODY" />
+              </div>
+
+              {/* Health & Preferences */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-white/5 border border-white/10 rounded-[2.5rem]">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4 text-red-500" /> Medical Conditions
+                  </h3>
+                  <p className="text-lg font-medium text-gray-200 italic">
+                    {profile.medicalConditions === "haven't given" || !profile.medicalConditions ? "No medical details shared yet." : profile.medicalConditions}
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <Utensils className="h-4 w-4 text-green-500" /> Dietary Preferences
+                  </h3>
+                  <p className="text-lg font-medium text-gray-200 italic">
+                    {profile.dietaryPreferences === "haven't given" || !profile.dietaryPreferences ? "No dietary preferences listed." : profile.dietaryPreferences}
+                  </p>
+                </div>
+              </div>
+
+              {/* Achievements */}
+              <section className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-3xl font-black italic uppercase tracking-tighter">Your Achievements</h2>
+                  <Trophy className="h-8 w-8 text-primary opacity-50" />
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {profile.achievements && profile.achievements.length > 0 ? (
+                    profile.achievements.map((achievement, i) => (
+                      <div key={i} className="p-4 bg-white/5 border border-white/10 rounded-3xl text-center space-y-2 hover:border-primary/50 transition-colors">
+                        <Award className="h-8 w-8 text-primary mx-auto" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest leading-none block">{achievement}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full p-8 text-center bg-white/5 border border-dashed border-white/10 rounded-3xl">
+                      <p className="text-gray-500 font-medium italic">No achievements unlocked yet. Time to hit the gym!</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
+
+            {/* Right Column: Info & Transactions */}
+            <div className="space-y-8">
+              {/* Contact Info */}
+              <div className="bg-primary/5 border border-primary/20 p-8 rounded-[2.5rem] space-y-6">
+                <h3 className="text-xl font-black italic uppercase">Contact Credentials</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <Mail className="h-5 w-5 text-primary" />
+                    <div className="overflow-hidden">
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Email Address</p>
+                      <p className="font-bold truncate">{profile.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <Phone className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Phone Number</p>
+                      <p className="font-bold">{profile.phone || "Not linked"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Transactions */}
+              <div className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-black italic uppercase">Payments</h3>
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/transactions')} className="text-primary font-bold uppercase text-[10px] tracking-widest hover:bg-primary/10">
+                    View All <ArrowRight className="ml-1 h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {isTransactionsLoading ? (
+                    <div className="flex justify-center py-4"><div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" /></div>
+                  ) : transactions.length > 0 ? (
+                    transactions.map((tx: any) => (
+                      <div key={tx._id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 group hover:border-white/10 transition-colors">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter truncate w-32">
+                            {tx.trainerId?.name || "Premium Plan"}
+                          </span>
+                          <span className="text-[10px] text-gray-500">{formatDate(tx.createdAt)}</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-black italic">₹{tx.amount}</p>
+                          <span className={getStatusColor(tx.status) + " text-[8px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-widest"}>
+                            {tx.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-gray-500 italic text-center py-4">No recent payments found.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Membership Status */}
+              <div className="bg-gradient-to-br from-gray-900 to-black border border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+                  <ShieldAlert className="h-20 w-20" />
+                </div>
+                <div className="relative z-10 space-y-4">
+                  <h3 className="text-xl font-black italic uppercase">Account Status</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                    <span className="text-sm font-bold uppercase tracking-widest">Active Member</span>
+                  </div>
+                  <p className="text-xs text-gray-500 leading-relaxed font-medium">Your profile is fully synchronized with our cloud network.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </main>
+
       <SiteFooter />
     </div>
   );

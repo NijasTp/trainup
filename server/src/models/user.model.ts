@@ -46,6 +46,8 @@ export interface IUser extends Document {
   height?: number;
   age?: number;
   gender?: string;
+  medicalConditions?: string;
+  dietaryPreferences?: string;
   profileImage?: string;
   activeWorkoutTemplates: IActiveTemplate[];
   activeWorkoutTemplate?: Types.ObjectId | string | null; // Deprecated
@@ -97,6 +99,8 @@ const userSchema: Schema<IUser> = new Schema(
     height: { type: Number, default: null },
     age: { type: Number, default: null },
     gender: { type: String, enum: ["male", "female", "other"] },
+    medicalConditions: { type: String, default: "haven't given" },
+    dietaryPreferences: { type: String, default: "haven't given" },
     profileImage: { type: String },
     activeWorkoutTemplates: {
       type: [{

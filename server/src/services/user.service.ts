@@ -454,6 +454,8 @@ export class UserService implements IUserService {
             height: user.height,
             age: user.age,
             gender: user.gender,
+            medicalConditions: user.medicalConditions,
+            dietaryPreferences: user.dietaryPreferences,
             activeWorkoutTemplates: user.activeWorkoutTemplates?.map(t => ({
                 templateId: t.templateId.toString(),
                 startDate: t.startDate

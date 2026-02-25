@@ -345,6 +345,8 @@ export class UserController implements IUserController {
         gender?: string;
         equipment?: string | boolean;
         isPrivate?: string | boolean;
+        medicalConditions?: string;
+        dietaryPreferences?: string;
       };
 
       const updateData = {
@@ -358,7 +360,9 @@ export class UserController implements IUserController {
         activityLevel: dto.activityLevel || undefined,
         gender: dto.gender || undefined,
         equipment: dto.equipment === true || dto.equipment === 'true',
-        isPrivate: dto.isPrivate === true || dto.isPrivate === 'true'
+        isPrivate: dto.isPrivate === true || dto.isPrivate === 'true',
+        medicalConditions: dto.medicalConditions || undefined,
+        dietaryPreferences: dto.dietaryPreferences || undefined
       }
 
       logger.info(`Update Profile Files: ${req.files ? Object.keys(req.files).join(', ') : 'none'}`);

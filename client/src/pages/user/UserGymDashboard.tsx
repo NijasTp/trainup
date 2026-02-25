@@ -13,7 +13,8 @@ import {
     LogOut,
     ArrowUpRight,
     Dumbbell,
-    Navigation
+    Navigation,
+    Utensils
 } from "lucide-react";
 import { toast } from "sonner";
 import { getMyGym, getUserGymAnnouncements, cancelGymMembership } from "@/services/gymService";
@@ -195,10 +196,14 @@ export default function UserGymDashboard() {
                                 <h3 className="text-xl font-black flex items-center gap-3 text-white">
                                     <Navigation className="h-5 w-5 text-primary" /> Navigation
                                 </h3>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     <Link to={ROUTES.USER_WISHLIST} className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 flex flex-col items-center gap-2">
                                         <Heart className="h-5 w-5 text-red-500" />
                                         <span className="text-xs font-bold">Wishlist</span>
+                                    </Link>
+                                    <Link to="/diets" className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 flex flex-col items-center gap-2">
+                                        <Utensils className="h-5 w-5 text-green-500" />
+                                        <span className="text-xs font-bold">Diet</span>
                                     </Link>
                                     <Link to="/gym-shop" className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 flex flex-col items-center gap-2">
                                         <ShoppingBag className="h-5 w-5 text-blue-500" />

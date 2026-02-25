@@ -13,13 +13,11 @@ import {
   Menu,
   X,
   Dumbbell,
-  Utensils,
   LayoutDashboard,
   User,
   Settings,
   LogOut,
   MessageSquare,
-  Heart,
   Activity
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -194,8 +192,6 @@ export const SiteHeader: React.FC = () => {
     { name: "My Trainer", path: "/my-trainer/profile", icon: MessageSquare, show: !!user?.assignedTrainer },
     { name: "Trainers", path: "/trainers", icon: Users, show: true },
     { name: "Workouts", path: "/workouts", icon: Dumbbell, show: true },
-    { name: "Diet", path: "/diets", icon: Utensils, show: true },
-    { name: "Wishlist", path: "/wishlist", icon: Heart, show: true },
   ].filter(link => link.show)
 
   return (

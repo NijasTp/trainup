@@ -13,15 +13,15 @@ export class QueueService implements IQueueService {
         this._redisConnection = new IORedis(process.env.REDIS_URL || "redis://127.0.0.1:6379", {
             maxRetriesPerRequest: null,
             retryStrategy: (times) => {
-                if (times % 100 === 0) {
-                    logger.warn("Redis connection failing. Notification queue will be inactive.");
+                if (times % 5000 === 0) {
+                    logger.warn("Redis connection failing. Notification queue will be inactive. Ensure Redis is running.");
                 }
-                return Math.min(times * 100, 15000); 
+                return Math.min(times * 1000, 60000);
             }
         });
 
         this._redisConnection.on("error", (_err) => {
-           
+
         });
 
         const originalDuplicate = this._redisConnection.duplicate.bind(this._redisConnection);

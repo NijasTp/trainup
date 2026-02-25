@@ -39,6 +39,8 @@ export class UserDto {
       height: user.height,
       age: user.age,
       gender: user.gender,
+      medicalConditions: user.medicalConditions,
+      dietaryPreferences: user.dietaryPreferences,
       activeWorkoutTemplates: user.activeWorkoutTemplates?.map(t => ({
         templateId: t.templateId.toString(),
         startDate: t.startDate
@@ -135,6 +137,8 @@ export class UserResponseDto {
   age?: number;
   trainerPlan?: 'basic' | 'premium' | 'pro';
   gender?: string;
+  medicalConditions?: string;
+  dietaryPreferences?: string;
   activeWorkoutTemplates?: ActiveTemplateDto[];
   activeWorkoutTemplate?: string;
   workoutTemplateStartDate?: Date;

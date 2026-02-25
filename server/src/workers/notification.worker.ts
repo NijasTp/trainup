@@ -14,10 +14,10 @@ export class NotificationWorker {
         this._redisConnection = new IORedis(process.env.REDIS_URL || "redis://127.0.0.1:6379", {
             maxRetriesPerRequest: null,
             retryStrategy: (times) => {
-                if (times % 100 === 0) {
+                if (times % 5000 === 0) {
                     logger.warn("Redis connection failing (Worker). Notification queue will be inactive.");
                 }
-                return Math.min(times * 500, 30000);
+                return Math.min(times * 1000, 60000);
             }
         });
 
