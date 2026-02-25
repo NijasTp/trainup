@@ -10,6 +10,9 @@ export interface IUserPlan extends Document {
   expiryDate: Date;
   duration: number; // in months
   amount: number; // total paid
+  trainerNameSnapshot?: string;
+  planNameSnapshot?: string;
+  priceSnapshot?: number;
   refundedAmount: number;
   cancellationDate: Date | null;
   createdAt: Date;
@@ -25,6 +28,9 @@ export const UserPlanSchema = new Schema<IUserPlan>({
   expiryDate: { type: Date, required: true },
   duration: { type: Number, required: true },
   amount: { type: Number, required: true },
+  trainerNameSnapshot: { type: String },
+  planNameSnapshot: { type: String },
+  priceSnapshot: { type: Number },
   refundedAmount: { type: Number, default: 0 },
   cancellationDate: { type: Date, default: null },
 }, { timestamps: true });

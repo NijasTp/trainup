@@ -4,6 +4,8 @@ import TYPES from "../core/types/types";
 import { TemplateController } from "../controllers/template.controller";
 import { authMiddleware, roleMiddleware } from "../middlewares/auth.middleware";
 import { Role } from "../constants/role";
+import { upload } from "../utils/multer.util";
+
 
 const router = Router();
 const controller = container.get<TemplateController>(TYPES.TemplateController);
@@ -13,15 +15,19 @@ router.post(
     "/workout",
     authMiddleware,
     roleMiddleware([Role.ADMIN]),
+    upload.single('image'),
     controller.createWorkoutTemplate.bind(controller)
 );
+
 
 router.patch(
     "/workout/:id",
     authMiddleware,
     roleMiddleware([Role.ADMIN]),
+    upload.single('image'),
     controller.updateWorkoutTemplate.bind(controller)
 );
+
 
 router.delete(
     "/workout/:id",

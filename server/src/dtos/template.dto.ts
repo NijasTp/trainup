@@ -4,6 +4,9 @@ export class WorkoutTemplateExerciseDto {
     image?: string;
     sets: number;
     reps?: string;
+    weight?: string;
+    rest?: string;
+    notes?: string;
 }
 
 export class WorkoutTemplateDayDto {
@@ -14,15 +17,21 @@ export class WorkoutTemplateDayDto {
 export class CreateWorkoutTemplateRequestDto {
     title: string;
     description: string;
-    duration: number;
-    goal: string;
-    equipment: boolean;
+    image: string;
+    type: 'one-time' | 'series';
+    durationDays: number;
+    difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
+    requiredEquipment: string[];
+    isPublic: boolean;
     days: WorkoutTemplateDayDto[];
+    createdById?: string;
+    createdByType?: 'Admin' | 'Trainer' | 'Gym';
+    gymId?: string;
 }
 
 export class WorkoutTemplateResponseDto extends CreateWorkoutTemplateRequestDto {
     _id: string;
-    createdBy: string;
+    popularityCount: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -62,7 +71,10 @@ export class TemplateQueryDto {
     page?: number;
     limit?: number;
     search?: string;
+    difficultyLevel?: string;
+    type?: string;
     goal?: string;
+    bodyType?: string;
     equipment?: boolean;
 }
 

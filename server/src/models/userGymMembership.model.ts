@@ -23,6 +23,9 @@ export interface IUserGymMembership extends Document {
     videoCall: boolean;
     isCardioIncluded: boolean;
   };
+  gymNameSnapshot?: string;
+  planNameSnapshot?: string;
+  priceSnapshot?: number;
   refundedAmount: number;
   cancellationDate: Date | null;
   createdAt: Date;
@@ -52,6 +55,9 @@ const userGymMembershipSchema: Schema<IUserGymMembership> = new Schema(
       videoCall: { type: Boolean },
       isCardioIncluded: { type: Boolean },
     },
+    gymNameSnapshot: { type: String },
+    planNameSnapshot: { type: String },
+    priceSnapshot: { type: Number },
     refundedAmount: { type: Number, default: 0 },
     cancellationDate: { type: Date, default: null },
   },

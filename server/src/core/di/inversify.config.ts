@@ -45,6 +45,8 @@ import { IVideoCallRepository } from "../interfaces/repositories/IVideoCallRepos
 import { IProgressRepository } from "../interfaces/repositories/IProgressRepository";
 import { IProgressService } from "../interfaces/services/IProgressService";
 import { IWalletRepository } from "../interfaces/repositories/IWalletRepository";
+import { IUserGymMembershipRepository } from "../interfaces/repositories/IUserGymMembershipRepository";
+import { IUserSubscriptionService } from "../interfaces/services/IUserSubscriptionService";
 
 
 // Implementations
@@ -139,6 +141,9 @@ import { IQueueService } from "../interfaces/services/IQueueService";
 import { QueueService } from "../../services/queue.service";
 import { SocketHandler } from "../../utils/socketHandler.util";
 import { WalletRepository } from "../../repositories/wallet.repository";
+import { UserGymMembershipRepository } from "../../repositories/userGymMembership.repository";
+import { UserSubscriptionService } from "../../services/userSubscription.service";
+import { SubscriptionController } from "../../controllers/userSubscription.controller";
 
 
 
@@ -288,6 +293,9 @@ container.bind<IGymAuthService>(TYPES.IGymAuthService).to(GymAuthService).inSing
 container.bind<GymAuthController>(TYPES.GymAuthController).to(GymAuthController).inSingletonScope();
 
 container.bind<IWalletRepository>(TYPES.IWalletRepository).to(WalletRepository).inSingletonScope();
+container.bind<IUserGymMembershipRepository>(TYPES.IUserGymMembershipRepository).to(UserGymMembershipRepository);
+container.bind<IUserSubscriptionService>(TYPES.IUserSubscriptionService).to(UserSubscriptionService);
+container.bind<SubscriptionController>(TYPES.SubscriptionController).to(SubscriptionController);
 
 
 export default container;

@@ -12,20 +12,24 @@ import API from "@/lib/axios";
 import { toast } from "react-toastify";
 import type { IExercise, IWorkoutTemplate, WgerExercise } from "@/interfaces/admin/adminAddTemplates";
 import { Badge } from "@/components/ui/badge";
+import ImageCropper from "@/components/common/ImageCropper";
+import { ImagePlus, Hash, Layers, Trophy, Settings } from "lucide-react";
+
 
 const WorkoutTemplateForm = () => {
     const { id } = useParams<{ id?: string }>();
     const navigate = useNavigate();
-    const [formData, setFormData] = useState<IWorkoutTemplate>({
+    const [formData, setFormData] = useState<IWorkoutTemplate & { imageFile?: Blob }>({
         title: "",
         description: "",
-        duration: 7,
-        goal: "",
-        equipment: false,
-
-        days: [],
-        difficulty: 'Intermediate'
-    });
+        image: "",
+        type: 'series',
+        durationDays: 7,
+        difficultyLevel: 'intermediate',
+        requiredEquipment: [],
+        isPublic: true,
+        days: []
+    } as any);
     const [searchQuery, setSearchQuery] = useState("");
     const [allSearchResults, setAllSearchResults] = useState<WgerExercise[]>([]);
     const [displayedSearchResults, setDisplayedSearchResults] = useState<WgerExercise[]>([]);
@@ -34,6 +38,9 @@ const WorkoutTemplateForm = () => {
     const [page, setPage] = useState<number>(1);
     const [perPage] = useState<number>(5);
     const [activeDayIndex, setActiveDayIndex] = useState<number | null>(null);
+    const [tempImage, setTempImage] = useState<string | null>(null);
+    const [showCropper, setShowCropper] = useState(false);
+
 
     useEffect(() => {
         if (id) {
@@ -141,9 +148,25 @@ const WorkoutTemplateForm = () => {
         });
     };
 
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setTempImage(reader.result as string);
+                setShowCropper(true);
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    };
+
+    const handleCropComplete = (croppedBlob: Blob) => {
+        setFormData(prev => ({ ...prev, imageFile: croppedBlob, image: URL.createObjectURL(croppedBlob) }));
+        setShowCropper(false);
+    };
+
     const handleSave = async () => {
-        if (!formData.title || !formData.goal) {
-            toast.error("Please fill in all required fields");
+        if (!formData.title || !formData.image) {
+            toast.error("Please fill in all required fields (Title and Image are mandatory)");
             return;
         }
         if (formData.days.length === 0) {
@@ -153,11 +176,28 @@ const WorkoutTemplateForm = () => {
 
         setSaving(true);
         try {
+            const data = new FormData();
+            Object.keys(formData).forEach(key => {
+                if (key === 'days') {
+                    data.append('days', JSON.stringify(formData.days));
+                } else if (key === 'requiredEquipment') {
+                    data.append('requiredEquipment', JSON.stringify(formData.requiredEquipment));
+                } else if (key === 'imageFile') {
+                    data.append('image', formData.imageFile as Blob, 'template.jpg');
+                } else if (key !== 'image' && formData[key as keyof typeof formData] !== undefined) {
+                    data.append(key, String(formData[key as keyof typeof formData]));
+                }
+            });
+
             if (id) {
-                await API.patch(`/template/workout/${id}`, formData);
+                await API.patch(`/template/workout/${id}`, data, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
                 toast.success("Template updated successfully");
             } else {
-                await API.post("/template/workout", formData);
+                await API.post("/template/workout", data, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
                 toast.success("Template created successfully");
             }
             navigate("/admin/templates");
@@ -167,6 +207,7 @@ const WorkoutTemplateForm = () => {
             setSaving(false);
         }
     };
+
 
     return (
         <AdminLayout>
@@ -198,89 +239,146 @@ const WorkoutTemplateForm = () => {
                                     <FileText className="h-5 w-5 text-primary" /> Basic Information
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="p-6 space-y-6">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-400">Template Title</label>
+                            <CardContent className="p-6 space-y-8">
+                                {/* Image Upload Section */}
+                                <div className="space-y-4">
+                                    <label className="text-sm font-black text-gray-500 uppercase tracking-widest italic flex items-center gap-2">
+                                        <ImagePlus size={16} className="text-cyan-500" />
+                                        Template Banner Image (Mandatory)
+                                    </label>
+                                    <div className="relative group cursor-pointer aspect-video rounded-3xl overflow-hidden border-2 border-dashed border-white/10 hover:border-cyan-500/50 transition-all bg-black/40">
+                                        {formData.image ? (
+                                            <div className="relative h-full w-full">
+                                                <img src={formData.image} alt="Template" className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                                                    <Button onClick={() => document.getElementById('imageInput')?.click()} variant="outline" className="bg-white/10 border-white/20 text-white font-black italic uppercase text-[10px]">Change Image</Button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div onClick={() => document.getElementById('imageInput')?.click()} className="flex flex-col items-center justify-center h-full gap-4 text-gray-500 group-hover:text-cyan-400 transition-colors">
+                                                <ImagePlus size={40} className="opacity-20 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                                                <p className="font-black uppercase tracking-widest text-[10px]">Select High-Resolution Banner</p>
+                                            </div>
+                                        )}
+                                        <input id="imageInput" type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <div className="space-y-4">
+                                        <label className="text-sm font-black text-gray-500 uppercase tracking-widest italic">Template Title</label>
                                         <Input
                                             name="title"
                                             value={formData.title}
                                             onChange={handleInputChange}
                                             placeholder="e.g., Ultimate Hypertrophy"
-                                            className="bg-slate-950 border-slate-800 text-white focus:ring-primary"
+                                            className="bg-black/40 border-white/10 h-14 rounded-2xl text-white font-black italic uppercase text-sm focus:ring-1 focus:ring-cyan-500/50"
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-400">Goal</label>
-                                        <Select value={formData.goal} onValueChange={(v) => setFormData(p => ({ ...p, goal: v }))}>
-                                            <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
-                                                <SelectValue placeholder="Select Goal" />
+                                    <div className="space-y-4">
+                                        <label className="text-sm font-black text-gray-500 uppercase tracking-widest italic">Template Type</label>
+                                        <Select value={formData.type} onValueChange={(v: 'one-time' | 'series') => setFormData(p => ({ ...p, type: v, durationDays: v === 'one-time' ? 1 : 7 }))}>
+                                            <SelectTrigger className="bg-black/40 border-white/10 h-14 rounded-2xl text-white font-black italic uppercase text-sm">
+                                                <SelectValue placeholder="Select Type" />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                                                <SelectItem value="Weight Loss">Weight Loss</SelectItem>
-                                                <SelectItem value="Muscle Gain">Muscle Gain</SelectItem>
-                                                <SelectItem value="Strength">Strength</SelectItem>
-                                                <SelectItem value="Endurance">Endurance</SelectItem>
+                                            <SelectContent className="bg-zinc-900 border-white/10 text-white">
+                                                <SelectItem value="one-time">One-Time Session</SelectItem>
+                                                <SelectItem value="series">Series / Program</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
                                 </div>
 
-                                <div className="grid md:grid-cols-3 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-400">Equipment</label>
-                                        <div className="flex items-center gap-2 h-10">
-                                            <label className="relative inline-flex items-center cursor-pointer">
+                                <div className="grid md:grid-cols-3 gap-8">
+                                    <div className="space-y-4">
+                                        <label className="text-sm font-black text-gray-500 uppercase tracking-widest italic">Difficulty Level</label>
+                                        <Select
+                                            value={formData.difficultyLevel}
+                                            onValueChange={(v: 'beginner' | 'intermediate' | 'advanced') => setFormData(p => ({ ...p, difficultyLevel: v }))}
+                                        >
+                                            <SelectTrigger className="bg-black/40 border-white/10 h-14 rounded-2xl text-white font-black italic uppercase text-sm">
+                                                <SelectValue placeholder="Difficulty" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-zinc-900 border-white/10 text-white">
+                                                <SelectItem value="beginner">Beginner</SelectItem>
+                                                <SelectItem value="intermediate">Intermediate</SelectItem>
+                                                <SelectItem value="advanced">Advanced</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <label className="text-sm font-black text-gray-500 uppercase tracking-widest italic">Cycle Duration (Days)</label>
+                                        <div className="relative group">
+                                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                                            <Input
+                                                type="number"
+                                                name="durationDays"
+                                                disabled={formData.type === 'one-time'}
+                                                value={formData.durationDays}
+                                                onChange={handleInputChange}
+                                                className="bg-black/40 border-white/10 h-14 pl-12 rounded-2xl text-white font-black italic uppercase text-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <label className="text-sm font-black text-gray-500 uppercase tracking-widest italic">Visibility</label>
+                                        <div className="flex items-center gap-3 h-14 bg-black/40 border border-white/10 rounded-2xl px-4">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase italic tracking-widest mr-auto">Public Catalog</span>
+                                            <label className="relative inline-flex items-center cursor-pointer scale-90">
                                                 <input
                                                     type="checkbox"
-                                                    checked={formData.equipment}
-                                                    onChange={(e) => setFormData(p => ({ ...p, equipment: e.target.checked }))}
+                                                    checked={formData.isPublic}
+                                                    onChange={(e) => setFormData(p => ({ ...p, isPublic: e.target.checked }))}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                                                <span className="ms-3 text-sm font-medium text-white">{formData.equipment ? "Required" : "None"}</span>
+                                                <div className="w-11 h-6 bg-white/5 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white/20 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
                                             </label>
                                         </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-400">Difficulty</label>
-                                        <Select
-                                            value={formData.difficulty}
-                                            onValueChange={(v: 'Beginner' | 'Intermediate' | 'Advanced') => setFormData(p => ({ ...p, difficulty: v }))}
-                                        >
-                                            <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
-                                                <SelectValue placeholder="Difficulty" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                                                <SelectItem value="Beginner">Beginner</SelectItem>
-                                                <SelectItem value="Intermediate">Intermediate</SelectItem>
-                                                <SelectItem value="Advanced">Advanced</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-400">Cycle Duration (Days)</label>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="text-sm font-black text-gray-500 uppercase tracking-widest italic flex items-center gap-2">
+                                        <Settings size={16} className="text-cyan-500" />
+                                        Required Equipment
+                                    </label>
+                                    <div className="flex flex-wrap gap-2 min-h-[50px] p-4 bg-black/40 border border-white/10 rounded-2xl">
+                                        {formData.requiredEquipment.map((eq, i) => (
+                                            <Badge key={i} className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 gap-1 pr-1 font-black italic uppercase text-[9px] tracking-widest">
+                                                {eq}
+                                                <X size={10} className="cursor-pointer hover:text-white" onClick={() => setFormData(p => ({ ...p, requiredEquipment: p.requiredEquipment.filter((_, j) => i !== j) }))} />
+                                            </Badge>
+                                        ))}
                                         <Input
-                                            type="number"
-                                            name="duration"
-                                            value={formData.duration}
-                                            onChange={handleInputChange}
-                                            className="bg-slate-950 border-slate-800 text-white"
+                                            placeholder="Add equipment (Press Enter)..."
+                                            className="flex-1 bg-transparent border-0 h-6 text-[10px] font-black italic uppercase text-white focus-visible:ring-0 p-0"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    const val = (e.currentTarget.value).trim();
+                                                    if (val && !formData.requiredEquipment.includes(val)) {
+                                                        setFormData(p => ({ ...p, requiredEquipment: [...p.requiredEquipment, val] }));
+                                                        e.currentTarget.value = '';
+                                                    }
+                                                    e.preventDefault();
+                                                }
+                                            }}
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-400">Description</label>
+                                <div className="space-y-4">
+                                    <label className="text-sm font-black text-gray-500 uppercase tracking-widest italic">Program Blueprint (Description)</label>
                                     <Textarea
                                         name="description"
                                         value={formData.description}
                                         onChange={handleInputChange}
-                                        placeholder="Briefly describe this program..."
-                                        className="bg-slate-950 border-slate-800 text-white min-h-[100px]"
+                                        placeholder="Briefly describe this program architecture..."
+                                        className="bg-black/40 border-white/10 text-white min-h-[120px] rounded-2xl font-black italic uppercase text-xs p-6 tracking-wide"
                                     />
                                 </div>
                             </CardContent>
+
+
                         </Card>
 
                         <div className="space-y-4">
@@ -423,8 +521,9 @@ const WorkoutTemplateForm = () => {
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-slate-400">Equipment</span>
-                                    <span className="text-primary font-bold">{formData.equipment ? 'Required' : 'None'}</span>
+                                    <span className="text-cyan-500 font-bold">{formData.requiredEquipment.length} Items</span>
                                 </div>
+
                             </div>
 
                             <div className="mt-8 pt-8 border-t border-slate-800 space-y-4">
@@ -439,8 +538,17 @@ const WorkoutTemplateForm = () => {
                     </div>
                 </div>
             </div>
+            {showCropper && tempImage && (
+                <ImageCropper
+                    image={tempImage}
+                    onCropComplete={handleCropComplete}
+                    onCancel={() => setShowCropper(false)}
+                    aspectRatio={16 / 9}
+                />
+            )}
         </AdminLayout>
     );
 };
+
 
 export default WorkoutTemplateForm;

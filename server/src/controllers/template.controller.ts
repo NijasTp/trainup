@@ -7,6 +7,9 @@ import { JwtPayload } from "../core/interfaces/services/IJwtService";
 import { CreateWorkoutTemplateRequestDto, CreateDietTemplateRequestDto, TemplateQueryDto } from "../dtos/template.dto";
 import { AppError } from "../utils/appError.util";
 import { MESSAGES } from "../constants/messages.constants";
+import cloudinary from "../config/cloudinary";
+import fs from "fs";
+
 
 @injectable()
 export class TemplateController {
@@ -16,7 +19,29 @@ export class TemplateController {
     async createWorkoutTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const adminId = (req.user as JwtPayload).id;
-            const dto: CreateWorkoutTemplateRequestDto = req.body;
+            const body = req.body;
+
+            // Handle file upload to Cloudinary
+            let imageUrl = body.image;
+            if (req.file) {
+                const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+                    folder: 'workout_templates'
+                });
+                imageUrl = uploadResult.secure_url;
+                fs.unlinkSync(req.file.path); // Clean up temp file
+            }
+
+            if (!imageUrl) throw new AppError("Template image is mandatory", STATUS_CODE.BAD_REQUEST);
+
+            const dto: CreateWorkoutTemplateRequestDto = {
+                ...body,
+                image: imageUrl,
+                days: typeof body.days === 'string' ? JSON.parse(body.days) : body.days,
+                requiredEquipment: typeof body.requiredEquipment === 'string' ? JSON.parse(body.requiredEquipment) : body.requiredEquipment,
+                durationDays: parseInt(body.durationDays),
+                isPublic: body.isPublic === 'true' || body.isPublic === true
+            };
+
             const result = await this._templateService.createWorkoutTemplate(adminId, dto);
             res.status(STATUS_CODE.CREATED).json(result);
         } catch (err) {
@@ -27,13 +52,34 @@ export class TemplateController {
     async updateWorkoutTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { id } = req.params;
-            const dto: Partial<CreateWorkoutTemplateRequestDto> = req.body;
+            const body = req.body;
+
+            // Handle file upload to Cloudinary if new image provided
+            let imageUrl = body.image;
+            if (req.file) {
+                const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+                    folder: 'workout_templates'
+                });
+                imageUrl = uploadResult.secure_url;
+                fs.unlinkSync(req.file.path);
+            }
+
+            const dto: Partial<CreateWorkoutTemplateRequestDto> = {
+                ...body,
+                image: imageUrl,
+                days: body.days ? (typeof body.days === 'string' ? JSON.parse(body.days) : body.days) : undefined,
+                requiredEquipment: body.requiredEquipment ? (typeof body.requiredEquipment === 'string' ? JSON.parse(body.requiredEquipment) : body.requiredEquipment) : undefined,
+                durationDays: body.durationDays ? parseInt(body.durationDays) : undefined,
+                isPublic: body.isPublic !== undefined ? (body.isPublic === 'true' || body.isPublic === true) : undefined
+            };
+
             const result = await this._templateService.updateWorkoutTemplate(id, dto);
             res.status(STATUS_CODE.OK).json(result);
         } catch (err) {
             next(err);
         }
     }
+
 
     async deleteWorkoutTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {

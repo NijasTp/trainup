@@ -14,7 +14,9 @@ import videoCallRoutes from './routes/videoCall.route'
 import gymAttendanceRoutes from './routes/gymAttendance.route'
 import notificationRoutes from './routes/notification.route'
 import templateRoutes from './routes/template.route'
+import subscriptionRoutes from './routes/userSubscription.route'
 import dotenv from "dotenv";
+
 import cookieParser from 'cookie-parser';
 import BASE_ROUTE from "./constants/baseRoute";
 import cors from 'cors';
@@ -64,6 +66,8 @@ app.use(BASE_ROUTE.VIDEO_CALL, videoCallRoutes);
 app.use(BASE_ROUTE.ATTENDANCE, gymAttendanceRoutes);
 app.use(BASE_ROUTE.NOTIFICATION, notificationRoutes)
 app.use(BASE_ROUTE.TEMPLATE, templateRoutes);
+app.use(BASE_ROUTE.SUBSCRIPTION, subscriptionRoutes);
+
 
 app.use(errorHandler);
 

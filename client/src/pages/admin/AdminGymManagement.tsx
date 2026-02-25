@@ -348,23 +348,35 @@ const AdminGymManagement = () => {
 
                             <div>
                                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4 font-outfit">OPENING HOURS</h4>
-                                <div className="grid grid-cols-7 gap-2">
+                                <div className="space-y-3">
                                     {selectedGym?.openingHours?.map((oh: any, i: number) => (
-                                        <div key={i} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                                            <span className="text-xs font-black text-gray-500 mb-2">{oh.day.charAt(0)}</span>
+                                        <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 font-black text-gray-400 text-sm">
+                                                    {oh.day.charAt(0).toUpperCase()}{oh.day.slice(1, 3)}
+                                                </div>
+                                                
+                                            </div>
+
                                             {oh.isClosed ? (
-                                                <span className="text-[10px] font-black text-red-500 tracking-wider">OFF</span>
+                                                <Badge className="bg-red-500/20 text-red-500 border-0 font-black tracking-widest text-[10px]">CLOSED</Badge>
                                             ) : (
-                                                <div className="flex flex-col items-center gap-0.5">
-                                                    <span className="text-[10px] font-bold text-primary">{oh.open}</span>
-                                                    <div className="h-px w-3 bg-white/10 my-0.5"></div>
-                                                    <span className="text-[10px] font-bold text-primary">{oh.close}</span>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="text-right">
+                                                        <p className="text-[10px] font-black text-gray-500 uppercase">Open</p>
+                                                        <p className="font-bold text-primary">{oh.open}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-gray-500 uppercase">Close</p>
+                                                        <p className="font-bold text-primary">{oh.close}</p>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
                                     ))}
                                 </div>
                             </div>
+
                         </section>
                     </div>
 

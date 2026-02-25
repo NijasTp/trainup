@@ -71,7 +71,9 @@ import TrainerEditProfile from './pages/trainer/TrainerEditProfile';
 import ProfileCompletion from './pages/user/ProfileCompletion';
 
 import UserNotifications from './pages/user/UserNotifications';
+import SubscriptionDetails from './pages/user/SubscriptionDetails';
 import TrainerNotifications from './pages/trainer/TrainerNotifications';
+
 import ProgressPage from './pages/user/Progress';
 import GymListing from './pages/user/GymListing';
 import IndividualGym from './pages/user/IndividualGym';
@@ -145,7 +147,9 @@ function App() {
         <Route path={ROUTES.USER_GYMS} element={<ProtectedRoute><GymListing /></ProtectedRoute>} />
         <Route path={ROUTES.USER_TRAINER_PRICING} element={<ProtectedRoute><TrainerPricingPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYM_DASHBOARD} element={<ProtectedRoute><UserGymDashboard /></ProtectedRoute>} />
+        <Route path="/my-subscriptions" element={<ProtectedRoute><SubscriptionDetails /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WISHLIST} element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
+
 
 
         {/* Trainer Routes */}

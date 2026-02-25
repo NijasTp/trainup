@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
-import { Search, ChevronLeft, ChevronRight, Loader2, FileText, Plus, Eye, Edit, Trash, Dumbbell, Utensils, Calendar, Sparkles } from "lucide-react";
+import { Dialog, DialogContent, DialogClose, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Search, ChevronLeft, ChevronRight, Loader2, FileText, Plus, Eye, Edit, Trash, Dumbbell, Utensils, Calendar, Sparkles, Clock, Users, Layers, Trophy } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import API from "@/lib/axios";
@@ -19,16 +19,14 @@ const TemplateManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<IWorkoutTemplate | IDietTemplate | null>(null);
-  const templatesPerPage = 10;
+  const templatesPerPage = 9; // Grid friendly
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTemplates = async () => {
       setLoading(true);
       try {
-        const endpoint = templateType === "workout"
-          ? '/template/workout'
-          : '/template/diet';
+        const endpoint = templateType === "workout" ? '/template/workout' : '/template/diet';
         const apiResponse = await API.get(endpoint, {
           params: {
             page: currentPage,
@@ -76,12 +74,10 @@ const TemplateManagement = () => {
     navigate(`/admin/templates/${template._id}/${templateType}/edit`);
   };
 
-  const handleDeleteTemplate = async (id: string) => {
+  const handleDeleteTemplate = async (id: string | any) => {
     if (!window.confirm("Are you sure you want to delete this template?")) return;
     try {
-      const endpoint = templateType === "workout"
-        ? `/template/workout/${id}`
-        : `/template/diet/${id}`;
+      const endpoint = templateType === "workout" ? `/template/workout/${id}` : `/template/diet/${id}`;
       await API.delete(endpoint);
       setSearchQuery(""); // Trigger refetch
       setCurrentPage(1);
@@ -92,360 +88,179 @@ const TemplateManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
-            <h1 className="text-4xl font-black text-white italic tracking-tight">TEMPLATE ASSETS</h1>
-            <p className="text-gray-500 font-medium">Manage master workout and nutrition blueprints</p>
+            <h1 className="text-4xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
+              <Layers className="text-cyan-500 h-10 w-10" />
+              Elite Blueprint <span className="text-cyan-500">Vault</span>
+            </h1>
+            <p className="text-gray-500 font-black uppercase tracking-widest text-[10px] italic">
+              Management Core / Template Architecture V2.0
+            </p>
           </div>
           <Button
             onClick={handleAddTemplate}
-            className="bg-primary hover:bg-primary/90 text-black font-black italic rounded-2xl h-12 px-8 shadow-[0_10px_20px_rgba(var(--primary),0.2)]"
+            className="bg-cyan-500 hover:bg-cyan-400 text-black font-black italic uppercase text-xs px-8 h-12 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all hover:scale-105 active:scale-95"
           >
-            <Plus className="mr-2 h-5 w-5" />
-            CREATE NEW {templateType.toUpperCase()}
+            <Plus className="mr-2 h-4 w-4" /> Synthesize New {templateType === 'workout' ? 'Program' : 'Diet'}
           </Button>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
-          <div className="p-8 border-b border-white/10 flex flex-col lg:flex-row gap-6 items-center justify-between bg-white/[0.02]">
-            <div className="flex items-center gap-2 p-1.5 bg-zinc-900/50 rounded-2xl border border-white/5 w-full lg:w-auto">
-              <button
-                onClick={() => { setTemplateType("workout"); setCurrentPage(1); }}
-                className={`flex-1 lg:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all flex items-center justify-center gap-2 ${templateType === "workout" ? "bg-primary text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
-              >
-                <Dumbbell size={14} />
-                WORKOUTS
-              </button>
-              <button
-                onClick={() => { setTemplateType("diet"); setCurrentPage(1); }}
-                className={`flex-1 lg:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all flex items-center justify-center gap-2 ${templateType === "diet" ? "bg-primary text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
-              >
-                <Utensils size={14} />
-                DIETS
-              </button>
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-4 w-full lg:flex-1 lg:max-w-2xl">
-              <div className="relative flex-1 group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
-                <Input
-                  placeholder={`Search ${templateType} templates...`}
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="bg-zinc-900/50 border-white/5 h-12 pl-12 rounded-2xl text-white outline-none focus:ring-1 focus:ring-primary/20"
-                />
-              </div>
-              <Button onClick={handleSearch} className="bg-white/5 hover:bg-white/10 text-white font-black italic rounded-2xl h-12 px-8 border border-white/5">
-                FILTER
-              </Button>
-            </div>
+        {/* Search and Filters */}
+        <div className="grid md:grid-cols-4 gap-6">
+          <div className="md:col-span-2 relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyan-500 transition-colors h-5 w-5" />
+            <Input
+              placeholder={`SEARCH ${templateType.toUpperCase()} ARCHITECTURE...`}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="bg-black/40 border-white/10 h-14 pl-12 rounded-2xl text-white font-black italic uppercase text-sm focus:ring-1 focus:ring-cyan-500/50"
+            />
           </div>
-
-          <div className="overflow-x-auto min-h-[450px]">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center h-[450px] gap-4">
-                <Loader2 className="animate-spin text-primary" size={40} />
-                <p className="text-zinc-500 font-black animate-pulse tracking-widest uppercase">Fetching Blueprints...</p>
-              </div>
-            ) : response.templates.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[450px] gap-4">
-                <FileText className="text-zinc-700" size={60} />
-                <p className="text-zinc-500 font-black tracking-widest uppercase">No templates found</p>
-              </div>
-            ) : (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-                    <th className="px-8 py-5">Blueprint Details</th>
-                    {templateType === "workout" ? (
-                      <>
-                        <th className="px-8 py-5">Composition</th>
-                        <th className="px-8 py-5">Goal Focus</th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="px-8 py-5">Meal Count</th>
-                        <th className="px-8 py-5">Energy Density</th>
-                      </>
-                    )}
-                    <th className="px-8 py-5">Status</th>
-                    <th className="px-8 py-5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  <AnimatePresence mode="popLayout">
-                    {response.templates.map((template, idx) => (
-                      <motion.tr
-                        layout
-                        key={template._id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="hover:bg-white/[0.02] transition-colors group cursor-pointer"
-                        onClick={() => handleViewTemplate(template)}
-                      >
-                        <td className="px-8 py-6">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center text-primary shadow-xl group-hover:scale-110 group-hover:bg-primary group-hover:text-black transition-all shrink-0">
-                              {templateType === "workout" ? <Dumbbell size={20} /> : <Utensils size={20} />}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-black text-white italic tracking-tight uppercase truncate">
-                                {templateType === "workout" ? (template as IWorkoutTemplate).title : (template as IDietTemplate).title}
-                              </p>
-                              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2">
-                                <Calendar size={12} />
-                                {new Date(template.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-
-                        {templateType === "workout" ? (
-                          <>
-                            <td className="px-8 py-6">
-                              <span className="text-sm font-bold text-gray-400">
-                                {((template as IWorkoutTemplate).days || []).reduce((acc, day) => acc + (day.exercises?.length || 0), 0)} EXERCISES
-                              </span>
-                            </td>
-                            <td className="px-8 py-6">
-                              <Badge className="bg-zinc-900 text-primary border-primary/20 font-black text-[10px] tracking-widest">
-                                {(template as IWorkoutTemplate).goal?.toUpperCase() || "GENERAL"}
-                              </Badge>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="px-8 py-6">
-                              <span className="text-sm font-bold text-gray-400">
-                                {((template as IDietTemplate).days || []).reduce((acc, day) => acc + (day.meals?.length || 0), 0)} MEALS
-                              </span>
-                            </td>
-                            <td className="px-8 py-6">
-                              <span className="text-sm font-black text-white italic">
-                                {((template as IDietTemplate).days || []).reduce((acc, day) => acc + (day.meals || []).reduce((sum, meal) => sum + (meal.calories || 0), 0), 0)} KCAL
-                              </span>
-                            </td>
-                          </>
-                        )}
-
-                        <td className="px-8 py-6">
-                          <Badge className="bg-emerald-500/10 text-emerald-500 border-0 font-black text-[10px]">
-                            VERIFIED
-                          </Badge>
-                        </td>
-
-                        <td className="px-8 py-6 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleViewTemplate(template); }}
-                              className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-gray-400 hover:text-white transition-all flex items-center justify-center"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleEditTemplate(template); }}
-                              className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-primary hover:bg-primary/10 transition-all flex items-center justify-center"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(template._id); }}
-                              className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 hover:bg-red-500/10 text-red-500 transition-all flex items-center justify-center"
-                            >
-                              <Trash className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                </tbody>
-              </table>
-            )}
+          <div className="flex bg-black/40 border border-white/10 rounded-2xl p-1.5 h-14">
+            <button
+              onClick={() => { setTemplateType('workout'); setCurrentPage(1); }}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-xl font-black italic uppercase text-[10px] transition-all ${templateType === 'workout' ? 'bg-cyan-500 text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
+            >
+              <Dumbbell size={14} /> Training
+            </button>
+            <button
+              onClick={() => { setTemplateType('diet'); setCurrentPage(1); }}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-xl font-black italic uppercase text-[10px] transition-all ${templateType === 'diet' ? 'bg-cyan-500 text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
+            >
+              <Utensils size={14} /> Nutrition
+            </button>
           </div>
-
-          {/* Pagination */}
-          {!loading && response.totalPages > 1 && (
-            <div className="p-8 border-t border-white/10 flex items-center justify-between bg-white/[0.01]">
-              <p className="text-[10px] text-gray-500 font-black tracking-widest uppercase">
-                PAGE {currentPage} OF {response.totalPages}
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="h-10 px-6 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-all font-black"
-                >
-                  <ChevronLeft size={16} className="mr-2" /> PREV
-                </Button>
-                <Button
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === response.totalPages}
-                  className="h-10 px-6 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-30 hover:bg-white/10 transition-all font-black"
-                >
-                  NEXT <ChevronRight size={16} className="ml-2" />
-                </Button>
-              </div>
-            </div>
-          )}
+          <Button onClick={handleSearch} className="h-14 rounded-2xl bg-white/5 border border-white/10 text-white font-black italic uppercase text-xs hover:bg-white/10">
+            Filter Search
+          </Button>
         </div>
 
-        {/* Template Details Dialog */}
-        <Dialog open={!!selectedTemplate} onOpenChange={() => setSelectedTemplate(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0a0b] border-white/10 text-white rounded-[2.5rem] p-0 overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)]">
-            <div className="relative p-10 space-y-8">
-              <div className="flex justify-between items-start">
-                <div className="space-y-2">
-                  <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-2 font-black text-[10px] tracking-widest uppercase mb-2">
-                    {templateType === "workout" ? "WORKOUT ARCHIVE" : "NUTRITION PLAN"}
-                  </Badge>
-                  <h2 className="text-4xl font-black italic text-white uppercase tracking-tight">
-                    {templateType === "workout" ? (selectedTemplate as IWorkoutTemplate)?.title : (selectedTemplate as IDietTemplate)?.title}
-                  </h2>
-                  <p className="text-gray-500 font-medium">
-                    {templateType === "workout" ? (selectedTemplate as IWorkoutTemplate)?.description : (selectedTemplate as IDietTemplate)?.description || "Complete platform master blueprint for elite training results."}
-                  </p>
-                </div>
-                <DialogClose className="h-12 w-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all">
-                  <Trash className="rotate-45 h-6 w-6" />
-                </DialogClose>
-              </div>
+        {/* Template Grid */}
+        {loading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="aspect-[4/5] rounded-[2.5rem] bg-white/5 animate-pulse border border-white/10" />
+            ))}
+          </div>
+        ) : response.templates.length > 0 ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {response.templates.map((template, idx) => (
+              <motion.div
+                key={template._id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.05 }}
+                className="group flex flex-col bg-black/40 border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-cyan-500/30 transition-all duration-500 shadow-2xl"
+              >
+                <div className="relative aspect-video overflow-hidden">
+                  {(template as any).image ? (
+                    <img src={(template as any).image} alt={template.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-cyan-900/20 to-black flex items-center justify-center">
+                      <Dumbbell size={40} className="text-cyan-500/20" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60" />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-6 rounded-3xl bg-zinc-900/50 border border-white/5 space-y-4">
-                  <div className="flex items-center gap-3 text-primary">
-                    <Sparkles size={18} />
-                    <span className="text-[10px] font-black tracking-widest uppercase">Overview Metrics</span>
+                  {/* Difficulty Badge */}
+                  <div className="absolute top-6 left-6">
+                    <Badge className={`font-black italic uppercase text-[8px] tracking-[0.2em] px-4 py-1.5 rounded-full border-0 ${(template as any).difficultyLevel === 'beginner' ? 'bg-green-500/10 text-green-400' :
+                        (template as any).difficultyLevel === 'intermediate' ? 'bg-cyan-500/10 text-cyan-400' :
+                          'bg-rose-500/10 text-rose-400'
+                      }`}>
+                      {(template as any).difficultyLevel || 'STANDARD'}
+                    </Badge>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-zinc-500 font-black uppercase">Goal focus</p>
-                      <p className="text-lg font-black italic text-white uppercase">{(selectedTemplate as any)?.goal || "OPTIMIZE"}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-zinc-500 font-black uppercase">Complexity</p>
-                      <p className="text-lg font-black italic text-emerald-500 uppercase">ELITE</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6 rounded-3xl bg-zinc-900/50 border border-white/5 space-y-4">
-                  <div className="flex items-center gap-3 text-primary">
-                    <Calendar size={18} />
-                    <span className="text-[10px] font-black tracking-widest uppercase">Internal Ref</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-zinc-500 font-black uppercase">Blueprint ID</p>
-                      <p className="text-xs font-mono text-zinc-400 truncate">{selectedTemplate?._id.slice(-8).toUpperCase()}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-zinc-500 font-black uppercase">Last Updated</p>
-                      <p className="text-xs font-bold text-zinc-400">{new Date(selectedTemplate?.createdAt || "").toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="h-px flex-1 bg-white/10" />
-                  <span className="text-[10px] font-black text-zinc-500 tracking-[0.3em] uppercase whitespace-nowrap">Program Structure</span>
-                  <div className="h-px flex-1 bg-white/10" />
+                  {/* Action Overlay */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                    <Button size="icon" variant="outline" onClick={() => handleViewTemplate(template)} className="h-12 w-12 bg-white/10 border-white/20 text-white rounded-2xl hover:bg-cyan-500 hover:text-black hover:border-cyan-500 transition-all scale-75 group-hover:scale-100"><Eye size={20} /></Button>
+                    <Button size="icon" variant="outline" onClick={() => handleEditTemplate(template)} className="h-12 w-12 bg-white/10 border-white/20 text-white rounded-2xl hover:bg-cyan-500 hover:text-black hover:border-cyan-500 transition-all scale-75 group-hover:scale-100 delay-75"><Edit size={20} /></Button>
+                    <Button size="icon" variant="outline" onClick={() => handleDeleteTemplate(template._id)} className="h-12 w-12 bg-white/10 border-white/20 text-white rounded-2xl hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all scale-75 group-hover:scale-100 delay-150"><Trash size={20} /></Button>
+                  </div>
                 </div>
-
-                <div className="space-y-8">
-                  {selectedTemplate?.days?.map((day: any, dIdx: number) => (
-                    <div key={dIdx} className="space-y-4">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-black font-black italic">
-                          D{day.dayNumber || dIdx + 1}
-                        </div>
-                        <h4 className="text-lg font-black text-white italic uppercase">Protocol Phase {day.dayNumber}</h4>
+                <div className="p-8 flex-1 space-y-4">
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-black text-white italic uppercase tracking-tight group-hover:text-cyan-400 transition-colors truncate">{template.title}</h3>
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <Clock size={12} className="text-cyan-500" />
+                        <span className="text-[10px] font-black uppercase italic tracking-widest">{(template as any).durationDays || (template as any).duration} DAYS</span>
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {templateType === "workout" ? (
-                          (day.exercises || []).map((exercise: IExercise, eIdx: number) => (
-                            <motion.div
-                              key={eIdx}
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: eIdx * 0.1 }}
-                              className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-primary/20 transition-all group/card"
-                            >
-                              <div className="flex justify-between items-start mb-4">
-                                <h5 className="text-white font-black italic uppercase group-hover:text-primary transition-colors">{exercise.name}</h5>
-                                <Badge className="bg-primary/10 text-primary border-0 rounded-lg text-[9px] font-black">{exercise.sets} SETS</Badge>
-                              </div>
-                              <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="p-3 rounded-2xl bg-black/40 border border-white/5">
-                                  <p className="text-[9px] text-zinc-500 font-black uppercase mb-0.5 tracking-tighter">Resistance</p>
-                                  <p className="text-xs font-bold text-white tracking-widest uppercase">{exercise.reps || "MAX"}</p>
-                                </div>
-                                <div className="p-3 rounded-2xl bg-black/40 border border-white/5">
-                                  <p className="text-[9px] text-zinc-500 font-black uppercase mb-0.5 tracking-tighter">Recovery</p>
-                                  <p className="text-xs font-bold text-white tracking-widest uppercase">{exercise.rest || "60S"}</p>
-                                </div>
-                              </div>
-                              {exercise.notes && <p className="text-[10px] text-zinc-500 font-medium italic">"{exercise.notes}"</p>}
-                            </motion.div>
-                          ))
-                        ) : (
-                          (day.meals || []).map((meal: TemplateMeal, mIdx: number) => (
-                            <motion.div
-                              key={mIdx}
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: mIdx * 0.1 }}
-                              className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-primary/20 transition-all group/card"
-                            >
-                              <div className="flex justify-between items-start mb-4">
-                                <div className="space-y-1">
-                                  <span className="text-[9px] font-black text-primary tracking-widest uppercase">{meal.time}</span>
-                                  <h5 className="text-white font-black italic uppercase group-hover:text-primary transition-colors">{meal.name}</h5>
-                                </div>
-                                <Badge className="bg-primary/10 text-primary border-0 rounded-lg text-[9px] font-black tracking-widest">{meal.calories} KCAL</Badge>
-                              </div>
-                              <div className="grid grid-cols-3 gap-2 mb-4">
-                                <div className="p-2 rounded-xl bg-black/40 border border-white/5 text-center">
-                                  <p className="text-[8px] text-zinc-500 font-black uppercase mb-0.5">PRO</p>
-                                  <p className="text-[10px] font-bold text-emerald-500">{meal.protein}g</p>
-                                </div>
-                                <div className="p-2 rounded-xl bg-black/40 border border-white/5 text-center">
-                                  <p className="text-[8px] text-zinc-500 font-black uppercase mb-0.5">CAR</p>
-                                  <p className="text-[10px] font-bold text-amber-500">{meal.carbs}g</p>
-                                </div>
-                                <div className="p-2 rounded-xl bg-black/40 border border-white/5 text-center">
-                                  <p className="text-[8px] text-zinc-500 font-black uppercase mb-0.5">FAT</p>
-                                  <p className="text-[10px] font-bold text-red-500">{meal.fats}g</p>
-                                </div>
-                              </div>
-                              {meal.notes && <p className="text-[10px] text-zinc-500 font-medium italic">"{meal.notes}"</p>}
-                            </motion.div>
-                          ))
-                        )}
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <Trophy size={12} className="text-cyan-500" />
+                        <span className="text-[10px] font-black uppercase italic tracking-widest">{(template as any).type || 'SESSION'}</span>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                  <p className="text-gray-500 text-[10px] font-bold leading-relaxed line-clamp-2 uppercase italic tracking-wide">{template.description || "Experimental blueprint architecture for peak physical output."}</p>
                 </div>
-              </div>
+                <div className="px-8 py-6 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
+                  <div className="flex items-center gap-2">
+                    <Users size={12} className="text-cyan-500/50" />
+                    <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{(template as any).popularityCount || 0} OPERATORS</span>
+                  </div>
+                  <span className="text-[9px] font-black text-gray-600 uppercase italic">REF: {template._id?.toString().slice(-6).toUpperCase()}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="h-80 flex flex-col items-center justify-center gap-4 bg-black/20 rounded-[3rem] border-2 border-dashed border-white/5">
+            <Layers size={48} className="text-gray-800" />
+            <p className="font-black uppercase italic text-gray-600 tracking-[0.3em] text-xs">No assets found in secure vault</p>
+          </div>
+        )}
 
-              <div className="pt-6 border-t border-white/10 flex justify-end">
-                <Button
-                  onClick={() => handleEditTemplate(selectedTemplate!)}
-                  className="bg-primary hover:bg-primary/90 text-black font-black italic rounded-2xl h-14 px-10 text-lg shadow-[0_10px_30px_rgba(var(--primary),0.3)] transition-all transform hover:-translate-y-1 active:scale-95"
-                >
-                  INITIALIZE EDITOR
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {/* Pagination */}
+        {response.totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 pt-12">
+            {Array.from({ length: response.totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`h-12 w-12 rounded-2xl font-black italic transition-all transform active:scale-95 ${currentPage === i + 1 ? 'bg-cyan-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)]' : 'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-white border border-white/5'}`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* View Template Dialog Placeholder - Keeping simple for now to avoid bloat */}
+      <Dialog open={!!selectedTemplate} onOpenChange={() => setSelectedTemplate(null)}>
+        <DialogContent className="max-w-4xl bg-black border-white/10 text-white rounded-[2.5rem] p-0 overflow-hidden shadow-2xl">
+          <div className="aspect-video relative">
+            <img src={(selectedTemplate as any)?.image} className="w-full h-full object-cover" alt="" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+            <div className="absolute bottom-10 left-10 space-y-2">
+              <Badge className="bg-cyan-500 text-black font-black italic rounded-full px-4 py-1 uppercase text-[10px]">{(selectedTemplate as any)?.difficultyLevel || 'ELITE'}</Badge>
+              <h2 className="text-5xl font-black italic uppercase tracking-tighter">{(selectedTemplate as any)?.title}</h2>
+            </div>
+          </div>
+          <div className="p-10 space-y-8">
+            <p className="text-gray-400 font-medium italic leading-relaxed">{(selectedTemplate as any)?.description}</p>
+            <div className="flex justify-between items-center pt-8 border-t border-white/10">
+              <div className="flex gap-10">
+                <div>
+                  <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Duration</p>
+                  <p className="text-xl font-black italic text-cyan-400 uppercase">{(selectedTemplate as any)?.durationDays || (selectedTemplate as any)?.duration} Days</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Architecture</p>
+                  <p className="text-xl font-black italic text-cyan-400 uppercase">{(selectedTemplate as any)?.type || 'Series'}</p>
+                </div>
+              </div>
+              <Button onClick={() => handleEditTemplate(selectedTemplate!)} className="bg-white text-black font-black italic rounded-2xl h-14 px-10 hover:bg-cyan-500 transition-colors uppercase">Enter Editor</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

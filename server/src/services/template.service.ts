@@ -29,7 +29,11 @@ export class TemplateService implements ITemplateService {
 
     // Workout Templates
     async createWorkoutTemplate(adminId: string, dto: CreateWorkoutTemplateRequestDto): Promise<WorkoutTemplateResponseDto> {
-        const template = await this._workoutTemplateRepo.create({ ...dto, createdBy: adminId });
+        const template = await this._workoutTemplateRepo.create({
+            ...dto,
+            createdById: adminId,
+            createdByType: 'Admin'
+        });
         return this.mapWorkoutToDto(template);
     }
 
@@ -51,9 +55,9 @@ export class TemplateService implements ITemplateService {
     async listWorkoutTemplates(query: TemplateQueryDto): Promise<PaginatedWorkoutTemplatesDto> {
         const filter: FilterQuery<IWorkoutTemplate> = {};
         if (query.search) filter.title = { $regex: query.search, $options: "i" };
+        if (query.difficultyLevel) filter.difficultyLevel = query.difficultyLevel;
+        if (query.type) filter.type = query.type;
         if (query.goal) filter.goal = query.goal;
-        if (query.equipment !== undefined) filter.equipment = query.equipment;
-        if (query.bodyType) filter.bodyType = query.bodyType;
 
         const result = await this._workoutTemplateRepo.find(filter, query.page || 1, query.limit || 10);
         return {
@@ -140,12 +144,17 @@ export class TemplateService implements ITemplateService {
             _id: t._id.toString(),
             title: t.title,
             description: t.description || "",
-            duration: t.duration,
-            goal: t.goal,
-            equipment: t.equipment,
-            bodyType: t.bodyType,
-            days: t.days,
-            createdBy: t.createdBy.toString(),
+            image: t.image,
+            type: t.type,
+            durationDays: t.durationDays,
+            difficultyLevel: t.difficultyLevel,
+            requiredEquipment: t.requiredEquipment,
+            isPublic: t.isPublic,
+            popularityCount: t.popularityCount,
+            days: t.days as any,
+            createdById: t.createdById.toString(),
+            createdByType: t.createdByType,
+            gymId: t.gymId?.toString(),
             createdAt: t.createdAt,
             updatedAt: t.updatedAt
         };

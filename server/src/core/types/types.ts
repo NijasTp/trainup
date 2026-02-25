@@ -120,6 +120,9 @@ const TYPES = {
   IGymProductRepository: Symbol.for("IGymProductRepository"),
   IGymJobRepository: Symbol.for("IGymJobRepository"),
   IGymTransactionRepository: Symbol.for("IGymTransactionRepository"),
+  IUserGymMembershipRepository: Symbol.for("IUserGymMembershipRepository"),
+  IUserSubscriptionService: Symbol.for("IUserSubscriptionService"),
+  SubscriptionController: Symbol.for("SubscriptionController"),
 };
 
 

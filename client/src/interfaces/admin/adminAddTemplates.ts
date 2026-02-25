@@ -4,6 +4,9 @@ export interface IExercise {
     image?: string;
     sets: number;
     reps?: string;
+    weight?: string;
+    rest?: string;
+    notes?: string;
 }
 
 export interface IWorkoutTemplateDay {
@@ -15,12 +18,16 @@ export interface IWorkoutTemplate {
     _id?: string;
     title: string;
     description: string;
-    duration: number;
-    goal: string;
-    equipment: boolean;
+    image: string;
+    type: 'one-time' | 'series';
+    durationDays: number;
+    difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
+    requiredEquipment: string[];
+    isPublic: boolean;
     days: IWorkoutTemplateDay[];
-    difficulty?: 'Beginner' | 'Intermediate' | 'Advanced';
-    image?: string;
+    createdById?: string;
+    createdByType?: 'Admin' | 'Trainer' | 'Gym';
+    gymId?: string;
 }
 
 export interface WgerExerciseData {

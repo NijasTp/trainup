@@ -25,7 +25,8 @@ import {
   ChevronRight,
   Check,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  ArrowRight
 } from "lucide-react";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from "@/lib/cropImage";

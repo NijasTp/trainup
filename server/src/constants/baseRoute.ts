@@ -12,6 +12,8 @@ const BASE_ROUTE = {
     ATTENDANCE: '/api/attendance',
     NOTIFICATION: '/api/notifications',
     TEMPLATE: '/api/template',
+    SUBSCRIPTION: '/api/subscription',
 }
+
 
 export default BASE_ROUTE;

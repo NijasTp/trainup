@@ -41,7 +41,9 @@ export const ROUTES = {
   USER_GYMS: '/gyms',
   USER_INDIVIDUAL_GYM: '/gyms/:id',
   USER_GYM_DASHBOARD: '/gym-dashboard',
+  USER_SUBSCRIPTIONS: '/my-subscriptions',
   USER_NOT_FOUND: "*",
+
 
   // Trainer Routes
   TRAINER_LOGIN: "/trainer/login",
