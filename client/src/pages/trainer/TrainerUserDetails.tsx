@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Dumbbell, Apple, MessageSquare, Video, Calendar as CalendarIcon, Star, Crown, Camera, ChevronRight, X } from "lucide-react";
+import { ArrowLeft, Dumbbell, Apple, MessageSquare, Video, Calendar as CalendarIcon, Star, Crown, Camera, ChevronRight, X, AlertCircle } from "lucide-react";
 import API from "@/lib/axios";
 import { toast } from "sonner";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
@@ -197,100 +197,150 @@ export default function TrainerUserDetails() {
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-3">
-                        <Button
-                            size="lg"
-                            className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
-                            onClick={() => setIsProgressOpen(true)}
-                        >
-                            <Camera className="h-4 w-4 mr-2" />
-                            View Progress Photos
-                        </Button>
-                    </div>
+                    {!isExpired && (
+                        <div className="flex flex-wrap gap-3">
+                            <Button
+                                size="lg"
+                                className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                                onClick={() => setIsProgressOpen(true)}
+                            >
+                                <Camera className="h-4 w-4 mr-2" />
+                                View Progress Photos
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
-                <div className="grid gap-8 lg:grid-cols-3">
-                    {/* Main Content Column */}
-                    <div className="lg:col-span-2 space-y-8">
-
-                        {/* Metrics Cards */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <Card className="bg-card/50 border-border/50">
-                                <CardContent className="p-6 text-center space-y-1">
-                                    <p className="text-sm font-medium text-muted-foreground">Height</p>
-                                    <p className="text-2xl font-bold">{user.height ? `${user.height} cm` : '-'}</p>
-                                </CardContent>
-                            </Card>
-                            <Card className="bg-card/50 border-border/50">
-                                <CardContent className="p-6 text-center space-y-1">
-                                    <p className="text-sm font-medium text-muted-foreground">Weight</p>
-                                    <p className="text-2xl font-bold">{user.weight ? `${user.weight} kg` : '-'}</p>
-                                </CardContent>
-                            </Card>
-                            <Card className="bg-card/50 border-border/50">
-                                <CardContent className="p-6 text-center space-y-1">
-                                    <p className="text-sm font-medium text-muted-foreground">Age</p>
-                                    <p className="text-2xl font-bold">-</p>
-                                </CardContent>
-                            </Card>
-                            <Card className="bg-card/50 border-border/50">
-                                <CardContent className="p-6 text-center space-y-1">
-                                    <p className="text-sm font-medium text-muted-foreground">BMI</p>
-                                    <p className="text-2xl font-bold text-primary">
-                                        {user.height && user.weight
-                                            ? (user.weight / ((user.height / 100) ** 2)).toFixed(1)
-                                            : '-'}
+                {isExpired ? (
+                    <div className="flex flex-col items-center justify-center py-20 px-4">
+                        <Card className="w-full max-w-2xl border-2 border-destructive/20 bg-destructive/5 overflow-hidden">
+                            <div className="bg-destructive p-8 flex flex-col items-center text-center text-white space-y-4">
+                                <div className="p-4 bg-white/20 rounded-full">
+                                    <AlertCircle className="h-12 w-12" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-3xl font-bold">Access Restricted</h2>
+                                    <p className="text-destructive-foreground font-medium text-lg opacity-90">
+                                        This user's subscription has ended. Details are hidden.
                                     </p>
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        {/* Contact Info */}
-                        <Card className="border-border/50 bg-card/50">
-                            <CardHeader>
-                                <CardTitle className="text-lg">Contact Information</CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-1">
-                                    <p className="text-sm font-medium text-muted-foreground">Email Address</p>
-                                    <p className="font-medium">{user.email}</p>
                                 </div>
-                                <div className="space-y-1">
-                                    <p className="text-sm font-medium text-muted-foreground">Phone Number</p>
-                                    <p className="font-medium">{user.phone}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-sm font-medium text-muted-foreground">Subscription Started</p>
-                                    <p className="font-medium">{user.subscriptionStartDate ? new Date(user.subscriptionStartDate).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                            <CardContent className="p-8 text-center space-y-6">
+                                <p className="text-muted-foreground leading-relaxed">
+                                    To resume managing this client and view their progress, workouts, and diet data, the client must renew their subscription plan.
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                    <Button
+                                        variant="outline"
+                                        className="border-destructive/20 hover:bg-destructive/10 text-destructive h-12"
+                                        onClick={() => navigate("/trainer/clients")}
+                                    >
+                                        <ArrowLeft className="h-4 w-4 mr-2" />
+                                        Return to Directory
+                                    </Button>
+                                    <Button
+                                        className="bg-primary h-12"
+                                        onClick={() => handleStartChat()}
+                                    >
+                                        <MessageSquare className="h-4 w-4 mr-2" />
+                                        Message Client
+                                    </Button>
                                 </div>
                             </CardContent>
                         </Card>
 
+                        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl opacity-50 grayscale transition-all hover:grayscale-0">
+                            <Card className="border-border/50 bg-card/10 backdrop-blur-sm">
+                                <CardContent className="p-6 text-center space-y-2">
+                                    <Dumbbell className="h-8 w-8 mx-auto text-primary/40" />
+                                    <h4 className="font-semibold">Workouts Locked</h4>
+                                </CardContent>
+                            </Card>
+                            <Card className="border-border/50 bg-card/10 backdrop-blur-sm">
+                                <CardContent className="p-6 text-center space-y-2">
+                                    <Apple className="h-8 w-8 mx-auto text-primary/40" />
+                                    <h4 className="font-semibold">Diet Plan Locked</h4>
+                                </CardContent>
+                            </Card>
+                            <Card className="border-border/50 bg-card/10 backdrop-blur-sm">
+                                <CardContent className="p-6 text-center space-y-2">
+                                    <Video className="h-8 w-8 mx-auto text-primary/40" />
+                                    <h4 className="font-semibold">Sessions Locked</h4>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
+                ) : (
+                    <div className="grid gap-8 lg:grid-cols-3">
+                        {/* Main Content Column */}
+                        <div className="lg:col-span-2 space-y-8">
+                            {/* Metrics Cards */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <Card className="bg-card/50 border-border/50">
+                                    <CardContent className="p-6 text-center space-y-1">
+                                        <p className="text-sm font-medium text-muted-foreground">Height</p>
+                                        <p className="text-2xl font-bold">{user.height ? `${user.height} cm` : '-'}</p>
+                                    </CardContent>
+                                </Card>
+                                <Card className="bg-card/50 border-border/50">
+                                    <CardContent className="p-6 text-center space-y-1">
+                                        <p className="text-sm font-medium text-muted-foreground">Weight</p>
+                                        <p className="text-2xl font-bold">{user.weight ? `${user.weight} kg` : '-'}</p>
+                                    </CardContent>
+                                </Card>
+                                <Card className="bg-card/50 border-border/50">
+                                    <CardContent className="p-6 text-center space-y-1">
+                                        <p className="text-sm font-medium text-muted-foreground">Age</p>
+                                        <p className="text-2xl font-bold">-</p>
+                                    </CardContent>
+                                </Card>
+                                <Card className="bg-card/50 border-border/50">
+                                    <CardContent className="p-6 text-center space-y-1">
+                                        <p className="text-sm font-medium text-muted-foreground">BMI</p>
+                                        <p className="text-2xl font-bold text-primary">
+                                            {user.height && user.weight
+                                                ? (user.weight / ((user.height / 100) ** 2)).toFixed(1)
+                                                : '-'}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            </div>
 
-                    {/* Sidebar Column */}
-                    <div className="space-y-6">
-                        {/* Quick Actions */}
-                        <Card className="border-border/50 shadow-sm">
-                            <CardHeader>
-                                <CardTitle className="text-lg">Management</CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid gap-3">
-                                <Button
-                                    variant="outline"
-                                    className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    asChild={!isExpired}
-                                    disabled={isExpired}
-                                >
-                                    {isExpired ? (
-                                        <div className="flex items-center w-full">
-                                            <div className="p-1.5 rounded-md bg-blue-500/10 mr-3 opacity-50">
-                                                <Dumbbell className="h-4 w-4 text-blue-500" />
-                                            </div>
-                                            Workouts (Expired)
-                                            <X className="ml-auto h-4 w-4 opacity-50" />
-                                        </div>
-                                    ) : (
+                            {/* Contact Info */}
+                            <Card className="border-border/50 bg-card/50">
+                                <CardHeader>
+                                    <CardTitle className="text-lg">Contact Information</CardTitle>
+                                </CardHeader>
+                                <CardContent className="grid gap-4 md:grid-cols-2">
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-muted-foreground">Email Address</p>
+                                        <p className="font-medium">{user.email}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-muted-foreground">Phone Number</p>
+                                        <p className="font-medium">{user.phone}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-muted-foreground">Subscription Started</p>
+                                        <p className="font-medium">{user.subscriptionStartDate ? new Date(user.subscriptionStartDate).toLocaleDateString() : 'N/A'}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Sidebar Column */}
+                        <div className="space-y-6">
+                            {/* Quick Actions */}
+                            <Card className="border-border/50 shadow-sm">
+                                <CardHeader>
+                                    <CardTitle className="text-lg">Management</CardTitle>
+                                </CardHeader>
+                                <CardContent className="grid gap-3">
+                                    <Button
+                                        variant="outline"
+                                        className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5"
+                                        asChild
+                                    >
                                         <Link to={`/trainer/workout/${id}`}>
                                             <div className="p-1.5 rounded-md bg-blue-500/10 mr-3">
                                                 <Dumbbell className="h-4 w-4 text-blue-500" />
@@ -298,23 +348,12 @@ export default function TrainerUserDetails() {
                                             Workouts
                                             <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
                                         </Link>
-                                    )}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    asChild={!isExpired}
-                                    disabled={isExpired}
-                                >
-                                    {isExpired ? (
-                                        <div className="flex items-center w-full">
-                                            <div className="p-1.5 rounded-md bg-green-500/10 mr-3 opacity-50">
-                                                <Apple className="h-4 w-4 text-green-500" />
-                                            </div>
-                                            Diet Plan (Expired)
-                                            <X className="ml-auto h-4 w-4 opacity-50" />
-                                        </div>
-                                    ) : (
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5"
+                                        asChild
+                                    >
                                         <Link to={`/trainer/diet/${id}`}>
                                             <div className="p-1.5 rounded-md bg-green-500/10 mr-3">
                                                 <Apple className="h-4 w-4 text-green-500" />
@@ -322,38 +361,26 @@ export default function TrainerUserDetails() {
                                             Diet Plan
                                             <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
                                         </Link>
-                                    )}
-                                </Button>
-                                {user.trainerPlan !== 'basic' && (
-                                    <Button
-                                        variant="outline"
-                                        className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        onClick={handleStartChat}
-                                        disabled={isExpired}
-                                    >
-                                        <div className={`p-1.5 rounded-md bg-amber-500/10 mr-3 ${isExpired ? 'opacity-50' : ''}`}>
-                                            <MessageSquare className="h-4 w-4 text-amber-500" />
-                                        </div>
-                                        {isExpired ? 'Messages (Expired)' : 'Messages'}
-                                        {isExpired ? <X className="ml-auto h-4 w-4 opacity-50" /> : <ChevronRight className="ml-auto h-4 w-4 opacity-50" />}
                                     </Button>
-                                )}
-                                {user.trainerPlan === 'pro' && (
-                                    <Button
-                                        variant="outline"
-                                        className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        asChild={!isExpired}
-                                        disabled={isExpired}
-                                    >
-                                        {isExpired ? (
-                                            <div className="flex items-center w-full">
-                                                <div className="p-1.5 rounded-md bg-purple-500/10 mr-3 opacity-50">
-                                                    <Video className="h-4 w-4 text-purple-500" />
-                                                </div>
-                                                Video Sessions (Expired)
-                                                <X className="ml-auto h-4 w-4 opacity-50" />
+                                    {user.trainerPlan !== 'basic' && (
+                                        <Button
+                                            variant="outline"
+                                            className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5"
+                                            onClick={handleStartChat}
+                                        >
+                                            <div className="p-1.5 rounded-md bg-amber-500/10 mr-3">
+                                                <MessageSquare className="h-4 w-4 text-amber-500" />
                                             </div>
-                                        ) : (
+                                            Messages
+                                            <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                    )}
+                                    {user.trainerPlan === 'pro' && (
+                                        <Button
+                                            variant="outline"
+                                            className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5"
+                                            asChild
+                                        >
                                             <Link to="/trainer/sessions">
                                                 <div className="p-1.5 rounded-md bg-purple-500/10 mr-3">
                                                     <Video className="h-4 w-4 text-purple-500" />
@@ -361,57 +388,57 @@ export default function TrainerUserDetails() {
                                                 Video Sessions
                                                 <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
                                             </Link>
-                                        )}
-                                    </Button>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Plan Details Sidebar */}
-                        {userPlan && (
-                            <Card className="bg-gradient-to-br from-card/80 to-card/40 border-border/50">
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Current Plan</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Type</span>
-                                        <span className="font-semibold capitalize">{userPlan.planType}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground">Expires</span>
-                                        <span className={`font-medium ${isExpired ? 'text-red-500' : ''}`}>{new Date(userPlan.expiryDate).toLocaleDateString()}</span>
-                                    </div>
-
-                                    <div className="pt-4 border-t border-border/50 space-y-2">
-                                        {userPlan.planType !== 'basic' && (
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="flex items-center gap-2">
-                                                    <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                                                    Messages
-                                                </span>
-                                                <Badge variant="outline" className="font-normal">
-                                                    {userPlan.planType === 'premium' ? `${userPlan.messagesLeft} left` : 'Unlimited'}
-                                                </Badge>
-                                            </div>
-                                        )}
-                                        {userPlan.planType === 'pro' && (
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="flex items-center gap-2">
-                                                    <Video className="h-3.5 w-3.5 text-primary" />
-                                                    Video Calls
-                                                </span>
-                                                <Badge variant="outline" className="font-normal">
-                                                    {userPlan.videoCallsLeft} left
-                                                </Badge>
-                                            </div>
-                                        )}
-                                    </div>
+                                        </Button>
+                                    )}
                                 </CardContent>
                             </Card>
-                        )}
+
+                            {/* Plan Details Sidebar */}
+                            {userPlan && (
+                                <Card className="bg-gradient-to-br from-card/80 to-card/40 border-border/50">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">Current Plan</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground">Type</span>
+                                            <span className="font-semibold capitalize">{userPlan.planType}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground">Expires</span>
+                                            <span className={`font-medium ${isExpired ? 'text-red-500' : ''}`}>{new Date(userPlan.expiryDate).toLocaleDateString()}</span>
+                                        </div>
+
+                                        <div className="pt-4 border-t border-border/50 space-y-2">
+                                            {userPlan.planType !== 'basic' && (
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="flex items-center gap-2">
+                                                        <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                                                        Messages
+                                                    </span>
+                                                    <Badge variant="outline" className="font-normal">
+                                                        {userPlan.planType === 'premium' ? `${userPlan.messagesLeft} left` : 'Unlimited'}
+                                                    </Badge>
+                                                </div>
+                                            )}
+                                            {userPlan.planType === 'pro' && (
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="flex items-center gap-2">
+                                                        <Video className="h-3.5 w-3.5 text-primary" />
+                                                        Video Calls
+                                                    </span>
+                                                    <Badge variant="outline" className="font-normal">
+                                                        {userPlan.videoCallsLeft} left
+                                                    </Badge>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
             </main>
 
             {/* Progress Photos Modal */}

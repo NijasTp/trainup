@@ -110,10 +110,7 @@ export default function TrainerChatPage() {
 
             setClient(clientData);
 
-            const messagesResponse = await API.get(`/trainer/chat/messages/${clientId}`);
-            setMessages(messagesResponse.data.messages);
-
-            // Fetch plan to check expiry
+            // Fetch plan to check expiry FIRST
             try {
                 const planResponse = await API.get(`/trainer/user-plan/${clientId}`);
                 setUserPlan(planResponse.data.plan);
@@ -121,8 +118,25 @@ export default function TrainerChatPage() {
                 console.error("Failed to fetch plan in chat:", planErr);
             }
 
+            // Fetch messages, but handle 402 (payment required/expired) specifically
+            try {
+                const messagesResponse = await API.get(`/trainer/chat/messages/${clientId}`);
+                setMessages(messagesResponse.data.messages);
+            } catch (msgErr: any) {
+                if (msgErr.response?.status === 402) {
+                    console.warn("Messages blocked due to subscription expiry");
+                    setMessages([]); // Ensure messages are cleared or kept empty
+                } else {
+                    throw msgErr; // Re-throw other errors to be caught by main catch
+                }
+            }
+
             // Mark messages as read
-            await API.put(`/trainer/chat/read/${clientId}`);
+            try {
+                await API.put(`/trainer/chat/read/${clientId}`);
+            } catch (readErr) {
+                console.error("Failed to mark messages as read:", readErr);
+            }
 
             socketRef.current = io(import.meta.env.VITE_API_URL, {
                 withCredentials: true,

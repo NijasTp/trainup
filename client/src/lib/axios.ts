@@ -4,7 +4,7 @@ import { logout as adminLogout } from "@/redux/slices/adminAuthSlice";
 import { logoutTrainer } from "@/redux/slices/trainerAuthSlice";
 import { logoutGym } from "@/redux/slices/gymAuthSlice";
 import axios from "axios";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 
 const api = axios.create({
   baseURL: "/api",
@@ -21,6 +21,8 @@ api.interceptors.response.use(
       toast.error("Requested resource not found");
     } else if (status === 500) {
       toast.error("Internal server error. Please try again later.");
+    } else if (status === 402) {
+      toast.error(error.response?.data?.message || "Subscription expired");
     }
 
     if (status === 403) {

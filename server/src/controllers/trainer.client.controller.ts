@@ -88,7 +88,7 @@ export class TrainerClientController {
             // Check if subscription is expired
             const plan = await this._userPlanService.getUserPlan(clientId, trainerId)
             if (!plan || new Date(plan.expiryDate) < new Date()) {
-                throw new AppError('Client subscription has expired', STATUS_CODE.FORBIDDEN)
+                throw new AppError('Client subscription has expired', STATUS_CODE.PAYMENT_REQUIRED)
             }
 
             const messages = await this._messageService.getMessages(trainerId, clientId)
