@@ -35,7 +35,7 @@ export default function WorkoutTemplates() {
     setIsLoading(true);
     try {
       const response = await getWorkoutTemplates({ search, limit: 12 });
-      setTemplates(response.templates || []);
+      setTemplates(response?.templates || []);
     } catch (err) {
       toast.error("Failed to fetch workout templates");
     } finally {

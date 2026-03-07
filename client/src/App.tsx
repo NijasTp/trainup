@@ -78,6 +78,7 @@ import SubscriptionDetails from './pages/user/SubscriptionDetails';
 import TrainerNotifications from './pages/trainer/TrainerNotifications';
 
 import ProgressPage from './pages/user/Progress';
+import TemplateDetails from './pages/user/TemplateDetails';
 import GymListing from './pages/user/GymListing';
 import IndividualGym from './pages/user/IndividualGym';
 import UserGymDashboard from './pages/user/UserGymDashboard';
@@ -139,6 +140,7 @@ function App() {
 
         <Route path={ROUTES.USER_WORKOUTS_PAGE} element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADMIN_WORKOUT_TEMPLATES} element={<ProtectedRoute><WorkoutTemplates /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_TEMPLATE_DETAILS} element={<ProtectedRoute><TemplateDetails /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_WORKOUT} element={<ProtectedRoute><AddWorkoutPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_WORKOUT_SESSION} element={<ProtectedRoute><AddSessionPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_EDIT_WORKOUT_SESSION} element={<ProtectedRoute><EditSessionPage /></ProtectedRoute>} />

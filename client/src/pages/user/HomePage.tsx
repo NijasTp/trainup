@@ -28,6 +28,8 @@ import { getGymsForUser } from "@/services/gymService";
 import { ROUTES } from "@/constants/routes";
 import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/IHomePage";
 import Aurora from "@/components/ui/Aurora";
+import { getWorkoutTemplates } from "@/services/templateService";
+import type { IWorkoutTemplate } from "@/interfaces/template/IWorkoutTemplate";
 
 import { useSelector } from "react-redux";
 import ProfileCompletionModal from "@/components/user/general/ProfileCompletionModal";
@@ -96,6 +98,7 @@ export default function HomePage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [gyms, setGyms] = useState<any[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
+  const [templates, setTemplates] = useState<IWorkoutTemplate[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -176,6 +179,15 @@ export default function HomePage() {
         setGyms(gymResponse.gyms || []);
       } catch (err: any) {
         console.error("Failed to fetch gyms:", err);
+      }
+
+      // Fetch popular templates
+      try {
+        const goal = user?.goals && user.goals.length > 0 ? user.goals[0] : undefined;
+        const templateResponse = await getWorkoutTemplates({ limit: 6, goal });
+        setTemplates(templateResponse.templates || []);
+      } catch (err: any) {
+        console.error("Failed to fetch templates:", err);
       }
 
     } catch (error) {
@@ -350,6 +362,71 @@ export default function HomePage() {
               </p>
             </div>
           </GlassCard>
+        </section>
+
+        {/* Popular Templates Carousel */}
+        <section className="space-y-6 pt-4">
+          <div className="flex items-end justify-between px-2">
+            <div className="space-y-1">
+              <h2 className="text-3xl font-black tracking-tight uppercase italic">Popular <span className="text-primary">Blueprints</span></h2>
+              <p className="text-gray-500 font-medium">Elite training templates by industry experts</p>
+            </div>
+            <Link to={ROUTES.USER_ADMIN_WORKOUT_TEMPLATES}>
+              <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all">
+                See More <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="relative group">
+            {/* Carousel Container */}
+            <div className="flex overflow-x-auto pb-8 gap-6 scrollbar-hide snap-x snap-mandatory">
+              {isLoading ? (
+                [1, 2, 3].map((i) => (
+                  <div key={i} className="min-w-[300px] md:min-w-[400px] h-64 rounded-3xl bg-white/5 animate-pulse border border-white/10" />
+                ))
+              ) : templates.length === 0 ? (
+                <div className="w-full py-20 text-center bg-white/5 rounded-3xl border border-white/10">
+                  <Dumbbell className="h-12 w-12 mx-auto text-white/10 mb-4" />
+                  <p className="text-gray-500 text-lg font-medium">No templates found.</p>
+                </div>
+              ) : (
+                templates.map((template) => (
+                  <motion.div
+                    key={template._id}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => navigate(ROUTES.USER_TEMPLATE_DETAILS.replace(":id", template._id))}
+                    className="min-w-[300px] md:min-w-[400px] group relative h-64 rounded-[2.5rem] overflow-hidden border border-white/10 bg-slate-900 cursor-pointer snap-start flex-shrink-0"
+                  >
+                    <img
+                      src={template.image || "https://images.unsplash.com/photo-1541534741688-6078c64b52d3?q=80&w=800&auto=format&fit=crop"}
+                      alt={template.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+
+                    <div className="absolute top-6 right-6">
+                      <Badge className="bg-primary/20 backdrop-blur-md text-primary border-primary/20 text-[10px] font-black tracking-widest px-3 py-1 uppercase italic">
+                        {template.difficulty || "Expert"}
+                      </Badge>
+                    </div>
+
+                    <div className="absolute bottom-6 left-6 right-6 space-y-2">
+                      <h3 className="text-2xl font-black italic tracking-tighter text-white uppercase line-clamp-1 group-hover:text-primary transition-colors">
+                        {template.name}
+                      </h3>
+                      <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+                        <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> {template.duration} DAYS</span>
+                        <span className="flex items-center gap-1.5 uppercase tracking-wider"><Target className="h-4 w-4 text-primary" /> {template.goal}</span>
+                      </div>
+                    </div>
+
+                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </div>
         </section>
 
         {/* Featured Trainers */}
@@ -661,8 +738,8 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-      </motion.main>
+      </motion.main >
       <SiteFooter />
-    </div>
+    </div >
   );
 }

@@ -1,24 +1,20 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Plus,
-    Dumbbell,
     Trash2,
     Edit3,
     X,
     PlusCircle,
     Zap,
-    Target,
-    Settings2,
-    Lock,
-    ChevronRight,
     ClipboardList,
     Search,
     Loader2,
     AlertCircle,
     ChevronLeft,
     Calendar,
-    Layout
+    Layout,
+    Plus,
+    Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,8 +46,8 @@ const WorkoutTemplates = () => {
         try {
             setLoading(true);
             const data = await getGymWorkoutTemplates(page, 9, searchTerm);
-            setTemplates(data.templates);
-            setTotalPages(data.totalPages);
+            setTemplates(data.templates || []);
+            setTotalPages(data.totalPages || 1);
         } catch (error) {
             toast.error('Failed to load templates');
         } finally {

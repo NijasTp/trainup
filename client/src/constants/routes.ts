@@ -26,6 +26,7 @@ export const ROUTES = {
 
   USER_WORKOUTS_PAGE: '/workouts',
   USER_ADMIN_WORKOUT_TEMPLATES: '/workouts/browse',
+  USER_TEMPLATE_DETAILS: '/workouts/details/:id',
   USER_ADD_WORKOUT: '/workouts/add',
   USER_ADD_WORKOUT_SESSION: '/workouts/add-session',
   USER_EDIT_WORKOUT_SESSION: '/workouts/:id',
