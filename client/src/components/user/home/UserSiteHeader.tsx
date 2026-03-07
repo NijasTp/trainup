@@ -18,7 +18,8 @@ import {
   Settings,
   LogOut,
   MessageSquare,
-  Activity
+  Activity,
+  CreditCard
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -331,6 +332,10 @@ export const SiteHeader: React.FC = () => {
                 <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:text-cyan-400 transition-colors" onClick={() => navigate("/profile")}>
                   <User className="h-4 w-4 mr-2" />
                   <span className="text-xs font-bold uppercase italic tracking-tighter">Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:text-cyan-400 transition-colors" onClick={() => navigate("/my-subscriptions")}>
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  <span className="text-xs font-bold uppercase italic tracking-tighter">My Subscriptions</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:text-cyan-400 transition-colors" onClick={() => navigate("/settings")}>
                   <Settings className="h-4 w-4 mr-2" />

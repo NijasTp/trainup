@@ -47,6 +47,9 @@ import TrainerUserDetails from './pages/trainer/TrainerUserDetails';
 import TrainerAddWorkoutPage from './pages/trainer/TrainerAddWorkoutPage';
 import TrainerAddSessionPage from './pages/trainer/TrainerAddSessionPage';
 import TrainerUserDietPage from './pages/trainer/TrainerUserDiet';
+import TrainerTemplateManagement from "./pages/trainer/TrainerTemplateManagement";
+import AdminAddWorkoutTemplate from "./pages/admin/AdminAddWorkoutTemplate";
+import EditAdminTemplate from "./pages/admin/EditAdminTemplate";
 import WorkoutTemplateForm from './pages/admin/AdminAddWorkoutTemplate';
 import WorkoutTemplates from './pages/user/WorkoutTemplates';
 import NewDietTemplate from './pages/admin/AdminAddDietTemplate';
@@ -177,6 +180,12 @@ function App() {
         <Route path={ROUTES.TRAINER_CLIENT_SESSION} element={<TrainerProtectedRoute><TrainerAddSessionPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_DIET} element={<TrainerProtectedRoute><TrainerUserDietPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CHATS} element={<TrainerProtectedRoute><TrainerChats /></TrainerProtectedRoute>} />
+
+        {/* Trainer Template Management */}
+        <Route path="/trainer/templates" element={<TrainerProtectedRoute><TrainerTemplateManagement /></TrainerProtectedRoute>} />
+        <Route path="/trainer/templates/new/workout" element={<TrainerProtectedRoute><AdminAddWorkoutTemplate mode="trainer" /></TrainerProtectedRoute>} />
+        <Route path="/trainer/templates/new/diet" element={<TrainerProtectedRoute><NewDietTemplate mode="trainer" /></TrainerProtectedRoute>} />
+        <Route path="/trainer/templates/:id/:template/edit" element={<TrainerProtectedRoute><EditAdminTemplate mode="trainer" /></TrainerProtectedRoute>} />
 
         {/* Admin Routes */}
         <Route path={ROUTES.ADMIN_LOGIN} element={<AdminPreventLoggedIn><AdminLogin /></AdminPreventLoggedIn>} />

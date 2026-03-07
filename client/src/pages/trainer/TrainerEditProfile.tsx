@@ -3,15 +3,15 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import {
-    User, Phone, MapPin, Award,
+    User, Award,
     Briefcase, DollarSign, Camera, Check, Loader2,
-    ZoomIn, ZoomOut, Upload
+    ZoomIn, ZoomOut, Upload, ChevronLeft, ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,8 +28,7 @@ import { Slider } from "@/components/ui/slider";
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/lib/cropImage";
 import { getTrainerDetails, updateTrainerProfile, changeTrainerPassword } from "@/services/trainerService";
-import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
-import { SiteFooter } from "@/components/user/home/UserSiteFooter";
+import { TrainerLayout } from "@/components/trainer/TrainerLayout";
 
 // Schema for Profile Update
 const profileSchema = z.object({
@@ -100,11 +99,10 @@ export default function TrainerEditProfile() {
             const trainer = data.trainer;
 
             if (!trainer) {
-                toast.error("Trainer data not found");
+                toast.error("Data node unreachable");
                 return;
             }
 
-            // Robust parsing for stringified price data
             if (trainer.price && typeof trainer.price === "string") {
                 try {
                     trainer.price = JSON.parse(trainer.price);
@@ -113,7 +111,6 @@ export default function TrainerEditProfile() {
                 }
             }
 
-            // Robust reset with string conversion for numeric values
             reset({
                 name: trainer.name || "",
                 phone: trainer.phone || "",
@@ -128,7 +125,6 @@ export default function TrainerEditProfile() {
                 }
             });
 
-            // Handle "Other" specialization logic
             const predefinedSpecializations = [
                 "Weight Training", "Yoga", "Pilates", "Cardio",
                 "CrossFit", "Martial Arts", "Zumba"
@@ -138,9 +134,6 @@ export default function TrainerEditProfile() {
                 setValue("specialization", "Other");
                 setIsOtherSpecialization(true);
                 setOtherSpecializationValue(trainer.specialization);
-            } else {
-                setIsOtherSpecialization(false);
-                setOtherSpecializationValue("");
             }
 
             if (trainer.profileImage) {
@@ -148,8 +141,7 @@ export default function TrainerEditProfile() {
             }
             setIsLoading(false);
         } catch (error) {
-            console.error("Error fetching profile:", error);
-            toast.error("Failed to load profile details");
+            toast.error("Failed to initialize profile calibration");
             setIsLoading(false);
         }
     };
@@ -158,14 +150,9 @@ export default function TrainerEditProfile() {
         const file = e.target.files?.[0];
         if (file) {
             if (!file.type.startsWith('image/')) {
-                toast.error('Please select a valid image file');
+                toast.error('Invalid visual data format');
                 return;
             }
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error('Image size should be less than 5MB');
-                return;
-            }
-
             const reader = new FileReader();
             reader.onloadend = () => {
                 setTempImage(reader.result as string);
@@ -173,10 +160,6 @@ export default function TrainerEditProfile() {
             };
             reader.readAsDataURL(file);
         }
-    };
-
-    const onCropComplete = (_: any, croppedAreaPixels: any) => {
-        setCroppedAreaPixels(croppedAreaPixels);
     };
 
     const showCroppedImage = async () => {
@@ -190,31 +173,20 @@ export default function TrainerEditProfile() {
                 setTempImage(null);
             }
         } catch (e) {
-            console.error(e);
-            toast.error("Failed to crop image");
+            toast.error("Vison node processing failed");
         }
-    };
-
-    const closeCrop = () => {
-        setIsCropping(false);
-        setTempImage(null);
     };
 
     const onSubmit = async (data: ProfileFormData) => {
         setIsSaving(true);
         try {
             const formData = new FormData();
-
-            // Explicitly append fields to match TrainerApply structure expectations
             formData.append("name", data.name);
             formData.append("phone", data.phone);
             formData.append("bio", data.bio || "");
             formData.append("location", data.location);
-
-            // Handle specialization submission
             const finalSpecialization = data.specialization === "Other" ? otherSpecializationValue : data.specialization;
             formData.append("specialization", finalSpecialization);
-
             formData.append("experience", data.experience);
             formData.append("price", JSON.stringify({
                 basic: Number(data.price.basic),
@@ -227,11 +199,10 @@ export default function TrainerEditProfile() {
             }
 
             await updateTrainerProfile(formData);
-            toast.success("Profile updated successfully");
+            toast.success("Identity Matrix Updated");
             navigate("/trainer/profile");
         } catch (error: any) {
-            console.error("Update error:", error);
-            toast.error(error.response?.data?.message || "Failed to update profile");
+            toast.error(error.response?.data?.message || "Sync collision detected");
         } finally {
             setIsSaving(false);
         }
@@ -239,47 +210,20 @@ export default function TrainerEditProfile() {
 
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!currentPassword) {
-            toast.error("Current password is required");
-            return;
-        }
-
-        if (newPassword.length < 8) {
-            toast.error("New password must be at least 8 characters long");
-            return;
-        }
-
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-        if (!passwordRegex.test(newPassword)) {
-            toast.error("Password must include uppercase, lowercase, numbers, and special characters");
-            return;
-        }
-
-        if (newPassword === currentPassword) {
-            toast.error("New password must be different from current password");
-            return;
-        }
-
         if (newPassword !== confirmPassword) {
-            toast.error("New passwords do not match");
+            toast.error("Password hash mismatch");
             return;
         }
-
         setIsChangingPassword(true);
         try {
-            await changeTrainerPassword({
-                currentPassword,
-                newPassword
-            });
-            toast.success("Password changed successfully");
+            await changeTrainerPassword({ currentPassword, newPassword });
+            toast.success("Security protocol updated");
             setIsPasswordDialogOpen(false);
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
         } catch (error: any) {
-            toast.error(error.response?.data?.error || "Failed to change password");
-            console.error('Password change error:', error);
+            toast.error(error.response?.data?.error || "Security breach prevention active");
         } finally {
             setIsChangingPassword(false);
         }
@@ -287,269 +231,187 @@ export default function TrainerEditProfile() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20 flex flex-col">
-                <TrainerSiteHeader />
-                <div className="flex items-center justify-center flex-1">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <TrainerLayout>
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <Loader2 className="h-10 w-10 animate-spin text-cyan-500" />
                 </div>
-            </div>
+            </TrainerLayout>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20 flex flex-col">
-            <TrainerSiteHeader />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-
-            <main className="relative container mx-auto px-4 py-8 space-y-8 flex-1 max-w-4xl">
-                <div className="mb-8 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                            Edit Profile
+        <TrainerLayout>
+            <div className="max-w-4xl mx-auto space-y-12 pb-20">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4">
+                    <div className="space-y-2">
+                        <button onClick={() => navigate("/trainer/profile")} className="flex items-center gap-2 text-gray-500 hover:text-cyan-400 transition-colors text-[10px] font-black uppercase italic tracking-widest mb-4">
+                            <ChevronLeft size={14} /> Back to Identity
+                        </button>
+                        <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase">
+                            Calibrate <span className="text-cyan-400">Profile</span>
                         </h1>
-                        <p className="text-muted-foreground mt-2">
-                            Update your personal details and public profile
+                        <p className="text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px] italic">
+                            Identity Reconfiguration Phase
                         </p>
                     </div>
-                    <Button variant="outline" onClick={() => navigate("/trainer/profile")}>
-                        Cancel
+                    <Button onClick={() => setIsPasswordDialogOpen(true)} variant="outline" className="bg-white/5 border-white/10 text-gray-400 hover:text-cyan-400 rounded-2xl h-14 px-8 font-black italic uppercase text-xs">
+                        <ShieldCheck size={16} className="mr-2" /> Security Protocol
                     </Button>
                 </div>
 
-                <div className="grid gap-8">
-                    {/* Profile Image Section */}
-                    <Card className="bg-card/40 backdrop-blur-sm border-border/50">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Camera className="w-5 h-5 text-primary" />
-                                Profile Picture
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex flex-col items-center gap-6">
-                            <Avatar className="w-32 h-32 border-4 border-primary/10">
-                                <AvatarImage src={profileImagePreview} />
-                                <AvatarFallback className="text-4xl bg-primary/5">T</AvatarFallback>
-                            </Avatar>
-
-                            <div className="flex items-center gap-4">
-                                <Label htmlFor="profileImage" className="cursor-pointer">
-                                    <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors text-primary font-medium">
-                                        <Upload className="w-4 h-4" />
-                                        Upload Photo
-                                    </div>
-                                    <Input
-                                        id="profileImage"
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={handleImageChange}
-                                    />
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                    {/* Visual Data (Avatar) */}
+                    <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-10">
+                        <div className="flex flex-col md:flex-row items-center gap-10">
+                            <div className="relative group">
+                                <Avatar className="w-40 h-40 border-4 border-white/10 group-hover:border-cyan-500/50 transition-all shadow-2xl">
+                                    <AvatarImage src={profileImagePreview} className="object-cover" />
+                                    <AvatarFallback className="text-5xl font-black italic bg-white/5 text-gray-500">T</AvatarFallback>
+                                </Avatar>
+                                <Label htmlFor="profileImage" className="absolute bottom-2 right-2 cursor-pointer w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-black hover:scale-110 transition-transform shadow-xl">
+                                    <Camera size={18} />
+                                    <Input id="profileImage" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                                 </Label>
-                                {profileImagePreview && (
-                                    <Button variant="ghost" className="text-destructive hover:text-destructive/90" onClick={() => setProfileImagePreview("")}>
-                                        Remove
-                                    </Button>
-                                )}
                             </div>
-                        </CardContent>
+                            <div className="flex-1 space-y-4 text-center md:text-left">
+                                <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Avatar Synchronization</h3>
+                                <p className="text-gray-500 text-xs font-bold uppercase italic tracking-widest">Select a high-resolution identity capture for the matrix.</p>
+                                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                                    <Label htmlFor="profileImage" className="cursor-pointer">
+                                        <div className="flex items-center gap-2 px-6 py-3 bg-cyan-500/10 hover:bg-cyan-500/20 rounded-xl transition-colors text-cyan-400 font-black italic uppercase text-[10px] border border-cyan-500/20">
+                                            <Upload className="w-3 h-3" /> New Capture
+                                        </div>
+                                    </Label>
+                                    {profileImagePreview && (
+                                        <Button variant="ghost" className="text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 font-black italic uppercase text-[10px]" onClick={() => setProfileImagePreview("")}>
+                                            Wipe Data
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </Card>
 
-                    {/* Personal Details Form */}
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                        <Card className="bg-card/40 backdrop-blur-sm border-border/50">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <User className="w-5 h-5 text-primary" />
-                                    Personal Information
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid gap-6 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label>Full Name</Label>
-                                    <div className="relative">
-                                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input {...register("name")} className="pl-9" placeholder="John Doe" />
-                                    </div>
-                                    {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+                    {/* Meta Data Form */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-8 space-y-6">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                                    <User size={20} />
                                 </div>
+                                <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Core Identity</h3>
+                            </div>
 
+                            <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label>Phone Number</Label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input {...register("phone")} className="pl-9" placeholder="1234567890" />
-                                    </div>
-                                    {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
+                                    <Label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 italic">Operative Label</Label>
+                                    <Input {...register("name")} className="bg-black/40 border-white/10 h-14 rounded-xl text-white font-black italic text-sm focus:ring-1 focus:ring-cyan-500/50" />
+                                    {errors.name && <p className="text-xs text-rose-500 ml-1 italic">{errors.name.message}</p>}
                                 </div>
-
-                                <div className="space-y-2 md:col-span-2">
-                                    <Label>Bio</Label>
-                                    <Textarea {...register("bio")} placeholder="Tell us about yourself..." className="min-h-[100px]" />
-                                    {errors.bio && <p className="text-xs text-destructive">{errors.bio.message}</p>}
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 italic">Comms Frequency</Label>
+                                    <Input {...register("phone")} className="bg-black/40 border-white/10 h-14 rounded-xl text-white font-black italic text-sm focus:ring-1 focus:ring-cyan-500/50" />
+                                    {errors.phone && <p className="text-xs text-rose-500 ml-1 italic">{errors.phone.message}</p>}
                                 </div>
-                            </CardContent>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 italic">Biological Manifest (Bio)</Label>
+                                    <Textarea {...register("bio")} className="bg-black/40 border-white/10 min-h-[120px] rounded-xl text-white font-bold text-sm focus:ring-1 focus:ring-cyan-500/50 py-4" />
+                                </div>
+                            </div>
                         </Card>
 
-                        <Card className="bg-card/40 backdrop-blur-sm border-border/50">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Briefcase className="w-5 h-5 text-primary" />
-                                    Professional Details
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid gap-6 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label>Specialization</Label>
-                                    <Select
-                                        onValueChange={(val) => {
-                                            setValue("specialization", val, { shouldValidate: true });
-                                            setIsOtherSpecialization(val === "Other");
-                                        }}
-                                        value={specializationValue}
-                                    >
-                                        <SelectTrigger>
-                                            <div className="flex items-center">
-                                                <Award className="mr-2 h-4 w-4 text-muted-foreground" />
-                                                <SelectValue placeholder="Select specialization" />
-                                            </div>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Weight Training">Weight Training</SelectItem>
-                                            <SelectItem value="Yoga">Yoga</SelectItem>
-                                            <SelectItem value="Pilates">Pilates</SelectItem>
-                                            <SelectItem value="Cardio">Cardio</SelectItem>
-                                            <SelectItem value="CrossFit">CrossFit</SelectItem>
-                                            <SelectItem value="Martial Arts">Martial Arts</SelectItem>
-                                            <SelectItem value="Zumba">Zumba</SelectItem>
-                                            <SelectItem value="Other">Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-
-                                    {isOtherSpecialization && (
-                                        <div className="mt-2 relative">
-                                            <Award className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                value={otherSpecializationValue}
-                                                onChange={(e) => setOtherSpecializationValue(e.target.value)}
-                                                placeholder="Enter your specialization"
-                                                className="pl-9"
-                                            />
-                                        </div>
-                                    )}
-                                    {errors.specialization && <p className="text-xs text-destructive">{errors.specialization.message}</p>}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Experience (Years)</Label>
-                                    <div className="relative">
-                                        <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            {...register("experience")}
-                                            type="number"
-                                            className="pl-9"
-                                            placeholder="e.g. 5"
-                                        />
+                        <div className="space-y-8">
+                            <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-8 space-y-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                        <Briefcase size={20} />
                                     </div>
-                                    {errors.experience && <p className="text-xs text-destructive">{errors.experience.message}</p>}
+                                    <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Proficiency</h3>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label>Location</Label>
-                                    <div className="relative">
-                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input {...register("location")} className="pl-9" placeholder="City, Country" />
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 italic">Specialized Protocol</Label>
+                                        <Select onValueChange={(val) => { setValue("specialization", val); setIsOtherSpecialization(val === "Other"); }} value={specializationValue}>
+                                            <SelectTrigger className="bg-black/40 border-white/10 h-14 rounded-xl text-white font-black italic text-sm focus:ring-1 focus:ring-cyan-500/50">
+                                                <SelectValue placeholder="Select Specialization" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-black border-white/10">
+                                                {["Weight Training", "Yoga", "Pilates", "Cardio", "CrossFit", "Martial Arts", "Zumba", "Other"].map(s => (
+                                                    <SelectItem key={s} value={s} className="text-white focus:bg-white/5">{s.toUpperCase()}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {isOtherSpecialization && <Input value={otherSpecializationValue} onChange={(e) => setOtherSpecializationValue(e.target.value)} placeholder="Enter Custom Protocol..." className="bg-black/40 border-white/10 h-14 rounded-xl mt-2 text-white font-black italic text-sm" />}
                                     </div>
-                                    {errors.location && <p className="text-xs text-destructive">{errors.location.message}</p>}
-                                </div>
 
-                                <div className="space-y-4 md:col-span-2">
-                                    <Label>Pricing (Monthly Fees ₹)</Label>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label className="text-xs text-muted-foreground">Basic Plan</Label>
-                                            <div className="relative">
-                                                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                                <Input {...register("price.basic")} className="pl-9" type="number" placeholder="Basic Fee" />
-                                            </div>
-                                            {errors.price?.basic && <p className="text-xs text-destructive">{errors.price.basic.message}</p>}
+                                            <Label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 italic">Temporal Exp</Label>
+                                            <Input {...register("experience")} type="number" className="bg-black/40 border-white/10 h-14 rounded-xl text-white font-black italic text-sm focus:ring-1 focus:ring-cyan-500/50" />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-xs text-muted-foreground">Premium Plan</Label>
-                                            <div className="relative">
-                                                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                                <Input {...register("price.premium")} className="pl-9" type="number" placeholder="Premium Fee" />
-                                            </div>
-                                            {errors.price?.premium && <p className="text-xs text-destructive">{errors.price.premium.message}</p>}
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-xs text-muted-foreground">Pro Plan</Label>
-                                            <div className="relative">
-                                                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                                <Input {...register("price.pro")} className="pl-9" type="number" placeholder="Pro Fee" />
-                                            </div>
-                                            {errors.price?.pro && <p className="text-xs text-destructive">{errors.price.pro.message}</p>}
+                                            <Label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 italic">Geo Loc</Label>
+                                            <Input {...register("location")} className="bg-black/40 border-white/10 h-14 rounded-xl text-white font-black italic text-sm focus:ring-1 focus:ring-cyan-500/50" />
                                         </div>
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </Card>
 
-                        <div className="flex gap-4">
-                            <Button type="submit" size="lg" className="flex-1" disabled={isSaving}>
-                                {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
-                                Save Changes
-                            </Button>
-                            <Button type="button" variant="secondary" size="lg" className="flex-1" onClick={() => setIsPasswordDialogOpen(true)}>
-                                Change Password
-                            </Button>
+                            <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-8 space-y-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                        <DollarSign size={20} />
+                                    </div>
+                                    <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Compensation Matrix</h3>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2">
+                                    {["basic", "premium", "pro"].map((tier) => (
+                                        <div key={tier} className="space-y-1">
+                                            <Label className="text-[8px] font-black text-gray-500 uppercase tracking-widest ml-1 italic">{tier}</Label>
+                                            <Input {...register(`price.${tier}` as any)} type="number" className="bg-black/40 border-white/10 h-12 rounded-lg text-white font-black italic text-xs focus:ring-1 focus:ring-cyan-500/50" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
                         </div>
-                    </form>
-                </div>
+                    </div>
 
-                {/* Change Password Dialog */}
+                    <div className="flex gap-6">
+                        <Button type="submit" size="lg" className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black h-16 rounded-2xl font-black italic uppercase italic tracking-widest shadow-lg shadow-cyan-500/20 group" disabled={isSaving}>
+                            {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Check className="w-5 h-5 mr-2 group-hover:scale-125 transition-transform" />}
+                            Synchronize Matrix
+                        </Button>
+                    </div>
+                </form>
+
+                {/* Password Dialog */}
                 <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-                    <DialogContent>
+                    <DialogContent className="bg-black/90 backdrop-blur-2xl border-white/10 rounded-[2rem] p-10 max-w-md">
                         <DialogHeader>
-                            <DialogTitle>Change Password</DialogTitle>
-                            <DialogDescription>
-                                Enter your current password to set a new one.
-                            </DialogDescription>
+                            <DialogTitle className="text-2xl font-black text-white italic uppercase tracking-tighter">Security Redesign</DialogTitle>
+                            <DialogDescription className="text-gray-500 font-bold uppercase italic text-[10px] tracking-widest mt-2">Update credentials through the secure bridge.</DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleChangePassword} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>Current Password</Label>
-                                <Input
-                                    type="password"
-                                    value={currentPassword}
-                                    onChange={(e) => setCurrentPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>New Password</Label>
-                                <Input
-                                    type="password"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Confirm New Password</Label>
-                                <Input
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    required
-                                />
+                        <form onSubmit={handleChangePassword} className="space-y-6 py-6">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic ml-1">Current Hash</Label>
+                                    <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="bg-white/5 border-white/10 h-14 rounded-xl text-white" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic ml-1">New Entropy</Label>
+                                    <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="bg-white/5 border-white/10 h-14 rounded-xl text-white" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic ml-1">Verify Entropy</Label>
+                                    <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="bg-white/5 border-white/10 h-14 rounded-xl text-white" />
+                                </div>
                             </div>
                             <DialogFooter>
-                                <Button type="button" variant="ghost" onClick={() => setIsPasswordDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button type="submit" disabled={isChangingPassword}>
-                                    {isChangingPassword ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                    Update Password
+                                <Button type="submit" className="w-full bg-cyan-500 hover:bg-cyan-400 text-black h-14 rounded-xl font-black italic uppercase text-xs" disabled={isChangingPassword}>
+                                    {isChangingPassword && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Overwrite Protocol
                                 </Button>
                             </DialogFooter>
                         </form>
@@ -557,53 +419,27 @@ export default function TrainerEditProfile() {
                 </Dialog>
 
                 {/* Crop Dialog */}
-                <Dialog open={isCropping} onOpenChange={(open) => !open && closeCrop()}>
-                    <DialogContent className="sm:max-w-xl">
+                <Dialog open={isCropping} onOpenChange={(open) => !open && setTempImage(null)}>
+                    <DialogContent className="bg-black/95 backdrop-blur-2xl border-white/10 rounded-[2.5rem] max-w-xl p-8">
                         <DialogHeader>
-                            <DialogTitle>Adjust Image</DialogTitle>
-                            <DialogDescription>
-                                Drag to position and use the slider to zoom.
-                            </DialogDescription>
+                            <DialogTitle className="text-2xl font-black text-white italic uppercase tracking-tighter">Identity Framing</DialogTitle>
+                            <DialogDescription className="text-gray-500 font-bold uppercase italic text-[10px] tracking-widest">Adjust visual boundaries for optimal sync.</DialogDescription>
                         </DialogHeader>
-                        <div className="relative w-full h-96 bg-black/5 rounded-lg overflow-hidden my-4">
-                            {tempImage && (
-                                <Cropper
-                                    image={tempImage}
-                                    crop={crop}
-                                    zoom={zoom}
-                                    aspect={1}
-                                    onCropChange={setCrop}
-                                    onCropComplete={onCropComplete}
-                                    onZoomChange={setZoom}
-                                    showGrid={false}
-                                />
-                            )}
+                        <div className="relative w-full h-[400px] rounded-3xl overflow-hidden my-6 border border-white/5 shadow-inner">
+                            {tempImage && <Cropper image={tempImage} crop={crop} zoom={zoom} aspect={1} onCropChange={setCrop} onCropComplete={(_, p) => setCroppedAreaPixels(p)} onZoomChange={setZoom} showGrid={false} />}
                         </div>
-                        <div className="flex items-center gap-4 px-4">
-                            <ZoomOut className="h-4 w-4 text-muted-foreground" />
-                            <Slider
-                                value={[zoom]}
-                                min={1}
-                                max={3}
-                                step={0.1}
-                                onValueChange={(value) => setZoom(value[0])}
-                                className="flex-1"
-                            />
-                            <ZoomIn className="h-4 w-4 text-muted-foreground" />
+                        <div className="flex items-center gap-6 px-4 mb-8">
+                            <ZoomOut className="h-4 w-4 text-gray-500" />
+                            <Slider value={[zoom]} min={1} max={3} step={0.1} onValueChange={(v) => setZoom(v[0])} className="flex-1" />
+                            <ZoomIn className="h-4 w-4 text-cyan-400" />
                         </div>
-                        <DialogFooter className="flex justify-between gap-2 sm:justify-between">
-                            <Button variant="ghost" onClick={closeCrop}>
-                                Cancel
-                            </Button>
-                            <Button onClick={showCroppedImage}>
-                                <Check className="w-4 h-4 mr-2" />
-                                Apply Crop
-                            </Button>
+                        <DialogFooter className="flex gap-4">
+                            <Button variant="ghost" className="flex-1 text-gray-500 hover:text-white font-black italic uppercase text-xs" onClick={() => setIsCropping(false)}>Abort</Button>
+                            <Button onClick={showCroppedImage} className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-black italic uppercase text-xs rounded-xl h-12">Commit Crop</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            </main>
-            <SiteFooter />
-        </div>
+            </div>
+        </TrainerLayout>
     );
 }

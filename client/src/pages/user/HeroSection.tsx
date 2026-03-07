@@ -13,14 +13,7 @@ export default function HeroSection() {
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="relative z-10 max-w-5xl mx-auto space-y-8"
             >
-                <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    className="inline-block px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-xs font-semibold uppercase tracking-widest text-cyan-400 mb-2 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
-                >
-                    Premium Fitness Integration
-                </motion.span>
+             
 
                 <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-black tracking-tighter leading-[0.85] text-white">
                     Train <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-gray-500">smarter.</span><br />

@@ -1,24 +1,41 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { logoutTrainer } from "@/redux/slices/trainerAuthSlice";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     Bell,
     LogOut,
     Users,
     User,
     Calendar,
-    CheckCircle,
     Wallet,
     LayoutDashboard,
-    MessageSquare
+    Activity,
+    Menu,
+    X,
+    Settings,
+    ChevronDown
 } from "lucide-react";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import API from "@/lib/axios";
-import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+import type { RootState } from "@/redux/store";
 
 interface Notification {
     _id: string;
@@ -30,41 +47,39 @@ interface Notification {
 
 export default function TrainerSiteHeader() {
     const navigate = useNavigate();
+    const location = useLocation();
     const dispatch = useDispatch();
+    const trainer = useSelector((state: RootState) => state.trainerAuth.trainer);
 
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [unreadCount, setUnreadCount] = useState(0);
     const [chatUnreadCount, setChatUnreadCount] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const fetchTrainerProfile = async () => {
+    const fetchNotifications = useCallback(async () => {
         try {
-            await API.get("/trainer/get-details");
-        } catch {
-            toast.error("Failed to load profile");
-        }
-    };
-
-    const fetchNotifications = async () => {
-        setLoading(true);
-        try {
+            setLoading(true);
             const { data } = await API.get<{ notifications: Notification[] }>("/notifications");
-            setNotifications(data.notifications || []);
-        } catch {
-            toast.error("Failed to load notifications");
+            const sorted = (data.notifications || []).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            setNotifications(sorted);
+            setUnreadCount(sorted.filter(n => !n.read).length);
+        } catch (err) {
+            console.error("Failed to load notifications");
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const fetchChatUnread = async () => {
+    const fetchChatUnread = useCallback(async () => {
         try {
             const { data } = await API.get<{ counts: { senderId: string; count: number }[] }>("/trainer/chat/unread-counts");
             const total = data.counts.reduce((acc, curr) => acc + curr.count, 0);
             setChatUnreadCount(total);
-        } catch {
-            console.error("Failed to fetch chat unread counts");
+        } catch (err) {
+            console.error("Failed to load chat unread counts");
         }
-    };
+    }, []);
 
     const markAsRead = async (id: string) => {
         try {
@@ -72,6 +87,7 @@ export default function TrainerSiteHeader() {
             setNotifications(prev =>
                 prev.map(n => (n._id === id ? { ...n, read: true } : n))
             );
+            setUnreadCount(c => Math.max(0, c - 1));
         } catch {
             toast.error("Could not mark as read");
         }
@@ -81,7 +97,8 @@ export default function TrainerSiteHeader() {
         try {
             await API.patch("/notifications/read-all");
             setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-            toast.success("All marked as read");
+            setUnreadCount(0);
+            toast.success("All notifications marked as read");
         } catch {
             toast.error("Failed to mark all as read");
         }
@@ -91,7 +108,7 @@ export default function TrainerSiteHeader() {
         try {
             await API.post("/trainer/logout");
             dispatch(logoutTrainer());
-            toast.success("Logged out");
+            toast.success("Logged out successfully");
             navigate("/trainer/login");
         } catch {
             toast.error("Logout failed");
@@ -99,8 +116,7 @@ export default function TrainerSiteHeader() {
     };
 
     useEffect(() => {
-        fetchTrainerProfile();
-        fetchTrainerProfile();
+        if (!trainer) return;
         fetchNotifications();
         fetchChatUnread();
         const int = setInterval(() => {
@@ -108,202 +124,237 @@ export default function TrainerSiteHeader() {
             fetchChatUnread();
         }, 30_000);
         return () => clearInterval(int);
-    }, []);
+    }, [trainer, fetchNotifications, fetchChatUnread]);
 
-    const unreadCount = notifications.filter(n => !n.read).length;
-
-    const navItems = [
-        { label: "Dashboard", icon: LayoutDashboard, path: "/trainer/dashboard" },
-        { label: "Clients", icon: Users, path: "/trainer/clients" },
-        { label: "Transactions", icon: Wallet, path: "/trainer/transactions" },
-        { label: "Profile", icon: User, path: "/trainer/profile" },
-        { label: "Schedule", icon: Calendar, path: "/trainer/weekly-schedule" },
+    const navLinks = [
+        { name: "Dashboard", path: "/trainer/dashboard", icon: LayoutDashboard },
+        { name: "Clients", path: "/trainer/clients", icon: Users },
+        { name: "Schedule", path: "/trainer/weekly-schedule", icon: Calendar },
+        { name: "Blueprints", path: "/trainer/templates", icon: Activity },
     ];
 
+    const trainerName = trainer?.name || "Trainer";
+    const trainerAvatar = trainer?.profileImage;
+
+    const formatDate = (date: string) =>
+        new Date(date).toLocaleString(undefined, {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+
     return (
-        <header className="sticky top-0 z-50 bg-card/90 backdrop-blur-sm border-b border-border/50">
-            <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-                {/* Logo */}
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                    TrainUp <span className="hidden sm:inline">Trainer</span>
-                </h1>
+        <>
+            {/* Ghost spacer to prevent content occlusion */}
+            <div className="h-28 w-full pointer-events-none" />
 
-                {/* Desktop Nav */}
-                <nav className="hidden xl:flex items-center gap-1">
-                    {navItems.map(i => (
-                        <Button
-                            key={i.path}
-                            variant="ghost"
-                            size="sm"
-                            className="hover:bg-primary/10 hover:text-primary"
-                            onClick={() => navigate(i.path)}
+            <header className="fixed top-0 left-0 right-0 z-50 px-6 py-8 pointer-events-none">
+                <nav className="container mx-auto max-w-7xl flex items-center justify-between backdrop-blur-xl bg-black/40 px-8 py-4 rounded-full border border-white/10 shadow-2xl transition-all hover:bg-black/50 pointer-events-auto">
+                    <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate("/trainer/dashboard")}>
+                        <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform">
+                            <Activity className="w-6 h-6 text-cyan-400" />
+                        </div>
+                        <span className="text-2xl font-black tracking-tighter italic text-white group-hover:text-cyan-400 transition-colors uppercase">PRO TRAIN</span>
+                    </div>
+
+                    {/* Desktop Navigation */}
+                    <div className="hidden md:flex items-center gap-8 lg:gap-10">
+                        {navLinks.map((link) => {
+                            const isActive = location.pathname.startsWith(link.path);
+                            return (
+                                <Link
+                                    key={link.path}
+                                    to={link.path}
+                                    className={cn(
+                                        "hover:text-white transition-colors relative group tracking-tighter italic uppercase text-xs lg:text-sm font-bold",
+                                        isActive ? "text-cyan-400" : "text-gray-400"
+                                    )}
+                                >
+                                    {link.name}
+                                    <span className={cn(
+                                        "absolute -bottom-1 left-0 h-0.5 bg-cyan-500 transition-all",
+                                        isActive ? "w-full" : "w-0 group-hover:w-full"
+                                    )} />
+                                </Link>
+                            );
+                        })}
+                        <Link
+                            to="/trainer/chats"
+                            className={cn(
+                                "hover:text-white transition-colors relative group tracking-tighter italic uppercase text-xs lg:text-sm font-bold",
+                                location.pathname.startsWith("/trainer/chats") ? "text-cyan-400" : "text-gray-400"
+                            )}
                         >
-                            <i.icon className="h-4 w-4 mr-1.5" />
-                            {i.label}
-                        </Button>
-                    ))}
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="hover:bg-primary/10 hover:text-primary relative"
-                        onClick={() => navigate("/trainer/chats")}
-                    >
-                        <MessageSquare className="h-4 w-4 mr-1.5" />
-                        Chats
-                        {chatUnreadCount > 0 && (
-                            <Badge
-                                variant="destructive"
-                                className="ml-1 h-4 min-w-[1rem] px-1 text-[10px] flex items-center justify-center rounded-full"
+                            Chats
+                            {chatUnreadCount > 0 && (
+                                <span className="absolute -top-3 -right-3 h-4 min-w-4 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1 shadow-lg shadow-red-500/20">
+                                    {chatUnreadCount}
+                                </span>
+                            )}
+                        </Link>
+                    </div>
+
+                    {/* Right Side Actions */}
+                    <div className="flex items-center gap-4">
+                        {/* Notifications Popover */}
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="relative text-gray-400 hover:text-white transition-colors group"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-cyan-500/50 group-hover:bg-cyan-500/10 transition-all">
+                                        <Bell className="h-5 w-5" />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute top-0 right-0 h-3 w-3 rounded-full bg-red-500 border-2 border-black" />
+                                        )}
+                                    </div>
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                                className="w-80 bg-black/80 backdrop-blur-xl border-white/10 p-0 shadow-2xl overflow-hidden mt-4"
+                                align="end"
                             >
-                                {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
-                            </Badge>
-                        )}
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={handleLogout}
-                    >
-                        <LogOut className="h-4 w-4 mr-1.5" />
-                        Logout
-                    </Button>
-                </nav>
-
-                <div className="flex items-center gap-3">
-                    {/* NOTIFICATIONS*/}
-                    <DropdownMenu.Root>
-                        <DropdownMenu.Trigger className="p-2 rounded hover:bg-muted-foreground/5">
-                            <div className="relative">
-                                <Bell className="h-5 w-5" />
-                                {unreadCount > 0 && (
-                                    <Badge
-                                        variant="destructive"
-                                        className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 text-[10px] flex items-center justify-center"
-                                    >
-                                        {unreadCount > 99 ? "99+" : unreadCount}
-                                    </Badge>
-                                )}
-                            </div>
-                        </DropdownMenu.Trigger>
-
-                        <DropdownMenu.Content
-                            align="end"
-                            className="w-80 rounded-md border bg-popover text-popover-foreground shadow-md overflow-hidden"
-                        >
-                            <div className="flex items-center justify-between px-3 py-2">
-                                <DropdownMenu.Label className="text-sm font-semibold">
-                                    Notifications
-                                </DropdownMenu.Label>
-                                {unreadCount > 0 && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={markAllRead}
-                                        className="h-6 text-xs"
-                                    >
-                                        <CheckCircle className="h-3 w-3 mr-1" />
-                                        Mark all read
-                                    </Button>
-                                )}
-                            </div>
-
-                            <DropdownMenu.Separator className="h-px bg-muted" />
-
-                            <div className="max-h-96 overflow-y-auto">
-                                {loading ? (
-                                    <div className="p-4 text-center text-sm text-muted-foreground">
-                                        Loading…
-                                    </div>
-                                ) : notifications.length === 0 ? (
-                                    <div className="p-4 text-center text-sm text-muted-foreground">
-                                        No notifications
-                                    </div>
-                                ) : (
-                                    notifications.map(n => (
-                                        <DropdownMenu.Item
-                                            key={n._id}
-                                            className={`flex items-start gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent/5 ${n.read ? "opacity-70" : ""
-                                                }`}
-                                            onSelect={() => !n.read && markAsRead(n._id)}
-                                        >
-                                            <Bell className="h-4 w-4 text-accent mt-0.5" />
-                                            <div className="flex-1">
-                                                <div className="font-medium">{n.title || "Notification"}</div>
-                                                <div className="text-xs text-muted-foreground">{n.message}</div>
-                                                <div className="text-xs text-muted-foreground mt-1">
-                                                    {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                                <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5 backdrop-blur-xl">
+                                    <span className="text-xs font-black tracking-widest text-white uppercase italic">Notifications</span>
+                                    {unreadCount > 0 && (
+                                        <button onClick={markAllRead} className="text-[10px] font-bold text-cyan-400 hover:text-white uppercase transition-colors">Mark All Read</button>
+                                    )}
+                                </div>
+                                <div className="max-h-[350px] overflow-y-auto">
+                                    {loading && notifications.length === 0 ? (
+                                        <div className="p-8 text-center">
+                                            <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                                        </div>
+                                    ) : notifications.length === 0 ? (
+                                        <div className="p-12 text-center text-gray-500 text-xs italic">No alerts in your corridor</div>
+                                    ) : (
+                                        notifications.map((n) => (
+                                            <div
+                                                key={n._id}
+                                                onClick={() => !n.read && markAsRead(n._id)}
+                                                className={cn(
+                                                    "p-4 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors group",
+                                                    !n.read && "bg-cyan-500/5"
+                                                )}
+                                            >
+                                                <div className="flex gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-cyan-500/20">
+                                                        <Activity className="h-4 w-4 text-cyan-400" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <p className="text-[13px] font-bold text-white group-hover:text-cyan-400 transition-colors italic">{n.title || "Notification"}</p>
+                                                        <p className="text-xs text-gray-400 leading-relaxed font-light">{n.message}</p>
+                                                        <p className="text-[10px] text-gray-600 font-bold uppercase">{formatDate(n.createdAt)}</p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            {!n.read && <CheckCircle className="h-4 w-4 text-primary" />}
-                                        </DropdownMenu.Item>
-                                    ))
-                                )}
+                                        ))
+                                    )}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+
+                        {/* Profile Dropdown */}
+                        <div className="flex items-center gap-2 ml-2">
+                            <div
+                                onClick={() => navigate("/trainer/profile")}
+                                className="flex items-center gap-2 group cursor-pointer"
+                            >
+                                <Avatar className="h-10 w-10 border border-white/10 group-hover:border-cyan-500/50 transition-all ring-offset-black">
+                                    <AvatarImage src={trainerAvatar} className="object-cover" />
+                                    <AvatarFallback className="bg-cyan-500/20 text-cyan-400 text-xs italic font-black">
+                                        {trainerName[0]?.toUpperCase() ?? "T"}
+                                    </AvatarFallback>
+                                </Avatar>
                             </div>
 
-                            <DropdownMenu.Separator className="h-px bg-muted" />
-                            <DropdownMenu.Item
-                                asChild
-                                className="text-center py-2 text-sm hover:bg-accent/5 cursor-pointer"
-                            >
-                                <Link to="/trainer/notifications" className="block w-full">
-                                    View all notifications
-                                </Link>
-                            </DropdownMenu.Item>
-                        </DropdownMenu.Content>
-                    </DropdownMenu.Root>
-
-                    {/* ---------- MOBILE MENU (Radix) ---------- */}
-                    <DropdownMenu.Root>
-                        <DropdownMenu.Trigger className="xl:hidden p-2 rounded hover:bg-muted-foreground/5">
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </DropdownMenu.Trigger>
-
-                        <DropdownMenu.Content
-                            align="end"
-                            className="w-56 rounded-md border bg-popover text-popover-foreground shadow-md"
-                        >
-                            {navItems.map(i => (
-                                <DropdownMenu.Item
-                                    key={i.path}
-                                    asChild
-                                    className="cursor-pointer"
+                            {/* Dropdown for quick actions */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-white hover:bg-white/5 rounded-xl">
+                                        <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    className="w-56 bg-black/80 backdrop-blur-xl border-white/10 p-1 shadow-2xl mt-4"
+                                    align="end"
                                 >
-                                    <Link to={i.path} className="flex items-center gap-2 px-3 py-2 text-sm">
-                                        <i.icon className="h-4 w-4" />
-                                        {i.label}
+                                    <DropdownMenuLabel className="p-4 bg-white/5 rounded-2xl mb-1">
+                                        <p className="text-xs font-black tracking-widest text-white uppercase italic">{trainerName}</p>
+                                        <p className="text-[10px] text-gray-500 truncate mt-0.5">{trainer?.email}</p>
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator className="bg-white/10" />
+                                    <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:text-cyan-400 transition-colors rounded-xl" onClick={() => navigate("/trainer/profile")}>
+                                        <User className="h-4 w-4 mr-2" />
+                                        <span className="text-xs font-bold uppercase italic tracking-tighter">Profile & Stats</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:text-cyan-400 transition-colors rounded-xl" onClick={() => navigate("/trainer/transactions")}>
+                                        <Wallet className="h-4 w-4 mr-2" />
+                                        <span className="text-xs font-bold uppercase italic tracking-tighter">Transactions</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:text-cyan-400 transition-colors rounded-xl" onClick={() => navigate("/trainer/settings")}>
+                                        <Settings className="h-4 w-4 mr-2" />
+                                        <span className="text-xs font-bold uppercase italic tracking-tighter">Settings</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-white/10" />
+                                    <DropdownMenuItem className="text-red-400 hover:text-red-500 hover:bg-red-500/5 focus:bg-red-500/5 transition-colors rounded-xl" onClick={handleLogout}>
+                                        <LogOut className="h-4 w-4 mr-2" />
+                                        <span className="text-xs font-bold uppercase italic tracking-tighter">Terminate Session</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            {/* Mobile Menu Toggle */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="md:hidden text-gray-400 hover:text-white"
+                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            >
+                                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                            </Button>
+                        </div>
+                    </div>
+                </nav>
+
+                {/* Mobile Menu */}
+                <AnimatePresence>
+                    {isMobileMenuOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="md:hidden container mx-auto max-w-7xl mt-4 pointer-events-auto"
+                        >
+                            <div className="bg-black/90 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 p-6 shadow-2xl space-y-4">
+                                {navLinks.map((link) => (
+                                    <Link
+                                        key={link.path}
+                                        to={link.path}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className={cn(
+                                            "flex items-center justify-between p-4 rounded-2xl transition-all font-black italic uppercase tracking-tighter text-sm",
+                                            location.pathname.startsWith(link.path) ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : "text-gray-400 hover:text-white hover:bg-white/5"
+                                        )}
+                                    >
+                                        {link.name}
                                     </Link>
-                                </DropdownMenu.Item>
-                            ))}
-                            <DropdownMenu.Item
-                                key="/trainer/chats-msg"
-                                asChild
-                                className="cursor-pointer"
-                            >
-                                <Link to="/trainer/chats" className="flex items-center gap-2 px-3 py-2 text-sm">
-                                    <MessageSquare className="h-4 w-4" />
-                                    Chats
-                                    {chatUnreadCount > 0 && (
-                                        <Badge variant="destructive" className="ml-auto h-4 px-1 text-[10px]">
-                                            {chatUnreadCount}
-                                        </Badge>
-                                    )}
-                                </Link>
-                            </DropdownMenu.Item>
-                            <DropdownMenu.Separator className="h-px bg-muted" />
-                            <DropdownMenu.Item
-                                className="text-destructive cursor-pointer px-3 py-2 text-sm"
-                                onSelect={handleLogout}
-                            >
-                                <LogOut className="h-4 w-4 mr-2 inline" />
-                                Logout
-                            </DropdownMenu.Item>
-                        </DropdownMenu.Content>
-                    </DropdownMenu.Root>
-                </div>
-            </div>
-        </header>
+                                ))}
+                                <div className="h-px bg-white/5 my-4" />
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full p-4 rounded-2xl bg-red-500/10 text-red-400 font-black italic uppercase tracking-tighter text-sm text-left"
+                                >
+                                    Log Out
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </header>
+        </>
     );
 }

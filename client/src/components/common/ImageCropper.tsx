@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import Cropper, { Area, Point } from 'react-easy-crop';
+import Cropper, {type Area, type Point } from 'react-easy-crop';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
-import { Camera, Check, X, Crop as CropIcon } from 'lucide-react';
+import { Check, X, Crop as CropIcon } from 'lucide-react';
 
 interface ImageCropperProps {
     image: string;

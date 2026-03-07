@@ -347,28 +347,32 @@ const AdminGymManagement = () => {
                             </div>
 
                             <div>
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4 font-outfit">OPENING HOURS</h4>
-                                <div className="space-y-3">
-                                    {selectedGym?.openingHours?.map((oh: any, i: number) => (
-                                        <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 font-black text-gray-400 text-sm">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-6 flex items-center gap-2">
+                                    <Calendar size={14} className="text-primary" />
+                                    OPERATIONAL LIFECYCLE (HOURS)
+                                </h4>
+                                <div className="space-y-4">
+                                    {(selectedGym?.openingHours || []).map((oh: any, i: number) => (
+                                        <div key={i} className="flex items-center justify-between p-5 rounded-3xl bg-white/5 border border-white/10 hover:border-primary/20 hover:bg-white/[0.08] transition-all group">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-12 w-12 flex items-center justify-center rounded-[1.25rem] bg-black/40 border border-white/10 font-black text-primary text-xs italic group-hover:scale-110 transition-transform">
                                                     {oh.day.charAt(0).toUpperCase()}{oh.day.slice(1, 3)}
                                                 </div>
-                                                
+                                                <span className="text-sm font-black text-white italic uppercase tracking-wider">{oh.day}</span>
                                             </div>
 
                                             {oh.isClosed ? (
-                                                <Badge className="bg-red-500/20 text-red-500 border-0 font-black tracking-widest text-[10px]">CLOSED</Badge>
+                                                <Badge className="bg-rose-500/10 text-rose-500 border border-rose-500/20 font-black tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full italic">OFF-DUTY</Badge>
                                             ) : (
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-8">
                                                     <div className="text-right">
-                                                        <p className="text-[10px] font-black text-gray-500 uppercase">Open</p>
-                                                        <p className="font-bold text-primary">{oh.open}</p>
+                                                        <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-1">OPENING</p>
+                                                        <p className="font-black text-white italic text-base tracking-tighter">{oh.open}</p>
                                                     </div>
+                                                    <div className="h-8 w-px bg-white/10" />
                                                     <div>
-                                                        <p className="text-[10px] font-black text-gray-500 uppercase">Close</p>
-                                                        <p className="font-bold text-primary">{oh.close}</p>
+                                                        <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-1">CLOSING</p>
+                                                        <p className="font-black text-white italic text-base tracking-tighter">{oh.close}</p>
                                                     </div>
                                                 </div>
                                             )}

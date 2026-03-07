@@ -1,6 +1,6 @@
 import type React from "react";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,16 +11,17 @@ import {
   Search,
   Calendar,
   Filter,
-  RefreshCw,
   Wallet,
   TrendingUp,
   ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  Download
 } from "lucide-react";
 import API from "@/lib/axios";
 import { toast } from "sonner";
-import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
-import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-
+import { TrainerLayout } from "@/components/trainer/TrainerLayout";
+import { cn } from "@/lib/utils";
 import type { TransactionResponse } from "@/interfaces/trainer/ITrainerTransactions";
 
 export default function TrainerTransactions() {
@@ -32,7 +33,6 @@ export default function TrainerTransactions() {
     total: 0
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
@@ -40,13 +40,12 @@ export default function TrainerTransactions() {
   const limit = 10;
 
   useEffect(() => {
-    document.title = "TrainUp - Transactions";
+    document.title = "TrainUp - Synergy Ledgers";
     fetchTransactions();
   }, [page, search, statusFilter, planFilter]);
 
   const fetchTransactions = async () => {
     setIsLoading(true);
-    setError(null);
     try {
       const response = await API.get("/trainer/transactions", {
         params: {
@@ -57,13 +56,10 @@ export default function TrainerTransactions() {
           planType: planFilter !== 'all' ? planFilter : undefined
         },
       });
-      console.log(response.data);
       setTransactions(response.data);
-      setIsLoading(false);
     } catch (err: any) {
-      console.error("Failed to fetch transactions:", err);
-      setError("Failed to load transactions");
-      toast.error("Failed to load transactions");
+      toast.error("Failed to calibrate ledger records");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -73,28 +69,12 @@ export default function TrainerTransactions() {
     setPage(1);
   };
 
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
-    setPage(1);
-  };
-
-  const handlePlanFilterChange = (value: string) => {
-    setPlanFilter(value);
-    setPage(1);
-  };
-
-
-
   const getPlanColor = (plan: string) => {
-    switch (plan) {
-      case 'basic':
-        return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
-      case 'premium':
-        return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
-      case 'pro':
-        return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
-      default:
-        return 'bg-gray-500/10 text-gray-600 border-gray-500/20';
+    switch (plan.toLowerCase()) {
+      case 'basic': return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
+      case 'premium': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+      case 'pro': return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+      default: return 'bg-white/5 text-gray-400 border-white/10';
     }
   };
 
@@ -107,270 +87,214 @@ export default function TrainerTransactions() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
   };
 
   const getUserInitials = (name: string) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((word) => word.charAt(0))
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+    return name?.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2) || "U";
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-        <TrainerSiteHeader />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-        <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-            <div className="absolute inset-0 w-16 h-16 border-2 border-transparent border-t-accent rounded-full animate-pulse"></div>
-          </div>
-          <p className="text-muted-foreground font-medium text-lg">Loading transactions...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-        <TrainerSiteHeader />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-        <div className="relative container mx-auto px-4 py-16 text-center space-y-6">
-          <h3 className="text-2xl font-bold text-foreground">Error</h3>
-          <p className="text-muted-foreground text-lg">{error}</p>
-          <Button
-            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
-            onClick={fetchTransactions}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20">
-      <TrainerSiteHeader />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+    <TrainerLayout>
+      <div className="max-w-6xl mx-auto space-y-12 pb-20">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase flex items-center gap-4">
+              <CreditCard className="w-10 h-10 text-cyan-500" /> Synergy <span className="text-cyan-400">Ledger</span>
+            </h1>
+            <p className="text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px] italic">
+              Financial Architecture & Protocol Archives
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <Button variant="outline" className="bg-white/5 border-white/10 text-gray-400 hover:text-white rounded-2xl h-14 px-8 font-black italic uppercase text-xs">
+              <Download size={16} className="mr-2" /> Export Protocol
+            </Button>
+          </div>
+        </div>
 
-      <main className="relative container mx-auto px-4 py-8 space-y-8 flex-1 text-card-foreground">
-        {/* Wallet Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg overflow-hidden relative group">
-            <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500 text-foreground">
-              <Wallet className="h-32 w-32" />
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-8 group relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Wallet size={160} className="text-cyan-400" />
             </div>
-            <CardContent className="p-8 relative z-10">
-              <h2 className="text-4xl font-bold tracking-tight text-foreground">
+            <div className="relative z-10 space-y-4">
+              <div className="flex items-center gap-2 text-cyan-400 bg-cyan-500/10 w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase italic tracking-widest">
+                <TrendingUp size={12} /> Total Revenue
+              </div>
+              <h2 className="text-4xl font-black text-white italic tracking-tighter">
                 {formatAmount(transactions.totalRevenue)}
               </h2>
-              <p className="text-[10px] text-muted-foreground mt-2 italic">* A 10% platform fee is deducted from all subscriptions.</p>
-              <div className="mt-6 flex items-center gap-2 text-primary text-sm bg-primary/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm">
-                <TrendingUp className="h-4 w-4" />
-                <span>Lifetime Earnings</span>
-              </div>
-            </CardContent>
+              <p className="text-[9px] text-gray-500 font-black uppercase italic tracking-widest">* Includes Automated Payout Nodes</p>
+            </div>
           </Card>
 
-          <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg p-6 flex flex-col justify-center">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-green-500/10 text-green-600">
-                <ArrowUpRight className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{transactions.total} Transactions</p>
-              </div>
+          <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-8 flex items-center gap-6">
+            <div className="h-16 w-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+              <ArrowUpRight size={32} />
+            </div>
+            <div>
+              <p className="text-4xl font-black text-white italic tracking-tighter">{transactions.total}</p>
+              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Subscription Cycles</p>
+            </div>
+          </Card>
+
+          <Card className="hidden lg:flex bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-8 items-center gap-6">
+            <div className="h-16 w-16 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20">
+              <Calendar size={32} />
+            </div>
+            <div>
+              <p className="text-lg font-black text-white italic uppercase tracking-tighter">Active Matrix</p>
+              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic tracking-widest">Temporal Sync Enabled</p>
             </div>
           </Card>
         </div>
 
-        {/* Transactions Table */}
-        <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-xl overflow-hidden">
-          <CardHeader className="p-8 pb-0">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border/50">
-              <div className="space-y-1">
-                <h1 className="text-2xl font-bold text-foreground">
-                  Recent Transactions
-                </h1>
-                <p className="text-sm text-muted-foreground">Manage and track your incoming subscriptions</p>
-              </div>
-
-              {/* Filters */}
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative min-w-[240px]">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by user..."
-                    value={search}
-                    onChange={handleSearchChange}
-                    className="pl-10 h-10 bg-background/50 border-border/50 focus:ring-primary/20"
-                  />
-                </div>
-
-                <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-                  <SelectTrigger className="w-40 h-10 bg-background/50 border-border/50">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Transactions</SelectItem>
-                    <SelectItem value="completed">Success</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={planFilter} onValueChange={handlePlanFilterChange}>
-                  <SelectTrigger className="w-40 h-10 bg-background/50 border-border/50">
-                    <SelectValue placeholder="Plan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Plans</SelectItem>
-                    <SelectItem value="basic">Basic</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="pro">Pro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        {/* Filters & Search */}
+        <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="relative flex-1 group">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
+              <Input
+                placeholder="PROBE USER IDENTITY..."
+                value={search}
+                onChange={handleSearchChange}
+                className="bg-black/40 border-white/10 h-16 pl-16 rounded-2xl text-white font-black italic uppercase text-xs focus:ring-1 focus:ring-cyan-500/50"
+              />
             </div>
-          </CardHeader>
+            <div className="flex gap-4">
+              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+                <SelectTrigger className="w-48 bg-black/40 border-white/10 h-16 rounded-2xl text-white font-black italic uppercase text-[10px] focus:ring-1 focus:ring-cyan-500/50">
+                  <Filter size={14} className="mr-2 text-cyan-400" />
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-black border-white/10">
+                  <SelectItem value="all">ALL DEPLOYMENTS</SelectItem>
+                  <SelectItem value="completed">SUCCESS</SelectItem>
+                  <SelectItem value="failed">FAILED</SelectItem>
+                  <SelectItem value="pending">PENDING</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={planFilter} onValueChange={(v) => { setPlanFilter(v); setPage(1); }}>
+                <SelectTrigger className="w-48 bg-black/40 border-white/10 h-16 rounded-2xl text-white font-black italic uppercase text-[10px] focus:ring-1 focus:ring-cyan-500/50">
+                  <SelectValue placeholder="Protocol" />
+                </SelectTrigger>
+                <SelectContent className="bg-black border-white/10">
+                  <SelectItem value="all">ALL PROTOCOLS</SelectItem>
+                  <SelectItem value="basic">BASIC</SelectItem>
+                  <SelectItem value="premium">PREMIUM</SelectItem>
+                  <SelectItem value="pro">PRO</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </Card>
 
+        {/* Records Table-ish List */}
+        <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[3rem] overflow-hidden">
           <CardContent className="p-0">
-            <div className="divide-y divide-border/30">
-              {transactions.transactions.length === 0 ? (
-                <div className="text-center py-12">
-                  <CreditCard className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
-                  <p className="text-muted-foreground text-lg">No transactions found</p>
-                </div>
-              ) : (
-                transactions.transactions.map((transaction) => (
-                  <div
-                    key={transaction._id}
-                    className="group bg-transparent hover:bg-accent/5 transition-all duration-300 p-8"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-6">
-                        <Avatar className="h-14 w-14 border-2 border-primary/10 shadow-inner">
-                          <AvatarImage
-                            src={(typeof transaction.userId === 'object' && transaction.userId.profileImage) || "/placeholder.svg"}
-                            alt={typeof transaction.userId === 'object' ? transaction.userId.name : 'User'}
-                          />
-                          <AvatarFallback className="bg-primary/5 text-primary text-xl font-bold">
-                            {typeof transaction.userId === 'object' ? getUserInitials(transaction.userId.name) : 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-
-                        <div className="space-y-1">
-                          <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                            {typeof transaction.userId === 'object' ? transaction.userId.name : 'Unknown User'}
-                          </h3>
-                          <div className="flex items-center gap-3">
-                            <Badge className={`${getPlanColor(transaction.planType)} hover:bg-transparent font-medium px-2 py-0 border-[0.5px]`}>
-                              {transaction.planType.toUpperCase()}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1.5 border-l border-border/50 pl-3">
-                              <Calendar className="h-3.5 w-3.5" />
-                              {formatDate(transaction.createdAt)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-end gap-3">
-                        <div className="text-2xl font-black text-foreground tabular-nums">
-                          {formatAmount(transaction.trainerEarnings || transaction.amount)}
-                        </div>
-                        <div className="text-[10px] text-muted-foreground text-right">
-                          (After 10% fee: -{formatAmount(transaction.platformFee || (transaction.amount * 0.1))})
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {transaction.status === 'completed' ? (
-                            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                          ) : transaction.status === 'failed' ? (
-                            <div className="h-2 w-2 rounded-full bg-red-500" />
-                          ) : (
-                            <div className="h-2 w-2 rounded-full bg-amber-500" />
-                          )}
-                          <span className={`text-xs font-bold uppercase tracking-widest ${transaction.status === 'completed' ? 'text-green-500' : transaction.status === 'failed' ? 'text-red-500' : 'text-amber-500'}`}>
-                            {transaction.status === 'completed' ? 'Success' : transaction.status}
+            {isLoading ? (
+              <div className="p-40 flex flex-col items-center justify-center gap-4">
+                <div className="w-12 h-12 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 italic">Syncing Ledger Nodes...</p>
+              </div>
+            ) : transactions.transactions.length === 0 ? (
+              <div className="p-40 text-center space-y-4">
+                <CreditCard className="mx-auto h-16 w-16 text-gray-800" />
+                <p className="text-gray-500 font-black italic uppercase tracking-widest text-xs">No Synergy Records Initialized</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-white/5">
+                {transactions.transactions.map((tx: any) => (
+                  <div key={tx._id} className="p-10 hover:bg-white/[0.02] transition-colors flex flex-col md:flex-row md:items-center justify-between gap-8 group">
+                    <div className="flex items-center gap-8">
+                      <Avatar className="h-16 w-16 border-2 border-white/10 group-hover:border-cyan-500/50 transition-all shadow-2xl">
+                        <AvatarImage src={tx.userId?.profileImage} className="object-cover" />
+                        <AvatarFallback className="bg-white/5 text-gray-500 font-black italic text-xl">
+                          {getUserInitials(tx.userId?.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="space-y-1">
+                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter group-hover:text-cyan-400 transition-colors">
+                          {tx.userId?.name || "Unknown Operative"}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-4">
+                          <Badge className={cn("px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest italic border", getPlanColor(tx.planType))}>
+                            {tx.planType} Protocol
+                          </Badge>
+                          <span className="text-[10px] text-gray-600 font-black italic uppercase tracking-wider flex items-center gap-2">
+                            <Calendar size={12} className="text-gray-700" /> {formatDate(tx.createdAt)}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-6 pl-[72px] flex items-center gap-6">
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                        ORDER ID: <span className="text-foreground/70">{transaction.razorpayOrderId}</span>
+                    <div className="flex flex-col md:items-end gap-3">
+                      <div className="text-3xl font-black text-white italic tracking-tighter tabular-nums underline decoration-cyan-500/20 underline-offset-8">
+                        {formatAmount(tx.trainerEarnings || tx.amount)}
                       </div>
-                      {transaction.razorpayPaymentId && (
-                        <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                          PAYMENT: <span className="text-foreground/70">{transaction.razorpayPaymentId}</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "h-2 w-2 rounded-full",
+                          tx.status === 'completed' ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-rose-500"
+                        )} />
+                        <span className={cn(
+                          "text-[10px] font-black uppercase tracking-[0.2em] italic",
+                          tx.status === 'completed' ? "text-emerald-500" : "text-rose-500"
+                        )}>
+                          {tx.status}
+                        </span>
+                      </div>
+                      <p className="text-[8px] text-gray-700 font-black uppercase tracking-widest">RID: {tx.razorpayOrderId?.slice(-12)}</p>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
-
-            {/* Pagination */}
-            <div className="bg-muted/30 p-8 border-t border-border/50">
-              {transactions.totalPages > 1 && (
-                <div className="flex justify-between items-center">
-                  <Button
-                    variant="outline"
-                    disabled={page === 1}
-                    onClick={() => setPage(page - 1)}
-                    className="bg-card border-border/50 hover:bg-accent h-10 px-6 rounded-lg font-medium shadow-sm transition-all text-card-foreground"
-                  >
-                    Previous
-                  </Button>
-
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      {Array.from({ length: transactions.totalPages }, (_, i) => i + 1).map((p) => (
-                        <button
-                          key={p}
-                          onClick={() => setPage(p)}
-                          className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${page === p ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-card text-muted-foreground hover:bg-accent border border-border/50'}`}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                    </div>
-                    <Badge variant="outline" className="h-8 border-border/50 bg-card text-xs uppercase tracking-widest font-bold">
-                      {transactions.total} records
-                    </Badge>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    disabled={page === transactions.totalPages}
-                    onClick={() => setPage(page + 1)}
-                    className="bg-card border-border/50 hover:bg-accent h-10 px-6 rounded-lg font-medium shadow-sm transition-all text-card-foreground"
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
+
+          {/* Pagination */}
+          {transactions.totalPages > 1 && (
+            <div className="p-10 border-t border-white/5 bg-black/20 flex flex-col md:flex-row items-center justify-between gap-8">
+              <Button
+                variant="ghost"
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                className="h-14 px-8 bg-white/5 border border-white/5 text-gray-400 hover:text-white rounded-2xl font-black italic uppercase text-xs disabled:opacity-20"
+              >
+                <ChevronLeft size={16} className="mr-2" /> Previous Shift
+              </Button>
+
+              <div className="flex items-center gap-3">
+                {Array.from({ length: transactions.totalPages }, (_, i) => i + 1).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={cn(
+                      "w-12 h-12 rounded-xl text-xs font-black italic transition-all",
+                      page === p ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20 scale-110" : "bg-white/5 text-gray-500 hover:bg-white/10"
+                    )}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                variant="ghost"
+                disabled={page === transactions.totalPages}
+                onClick={() => setPage(page + 1)}
+                className="h-14 px-8 bg-white/5 border border-white/5 text-gray-400 hover:text-white rounded-2xl font-black italic uppercase text-xs disabled:opacity-20"
+              >
+                Next Shift <ChevronRight size={16} className="ml-2" />
+              </Button>
+            </div>
+          )}
         </Card>
-      </main>
-      <SiteFooter />
-    </div >
+      </div>
+    </TrainerLayout>
   );
 }
