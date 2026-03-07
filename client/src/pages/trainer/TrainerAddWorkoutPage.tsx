@@ -422,11 +422,13 @@ function WorkoutSessionCard({
   index,
   onExerciseAdded,
   clientId,
+  isExpired,
 }: {
   session: WorkoutSession;
   index: number;
   onExerciseAdded: () => void;
   clientId: string;
+  isExpired: boolean;
 }) {
   const navigate = useNavigate();
 
@@ -451,10 +453,11 @@ function WorkoutSessionCard({
               variant="outline"
               className="bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"
               onClick={() => navigate(`/trainer/workout/add-session/${clientId}?sessionId=${session._id}`)}
+              disabled={isExpired}
             >
-              <Edit className="h-4 w-4 mr-2" /> Edit
+              <Edit className="h-4 w-4 mr-2" /> {isExpired ? "Access Denied" : "Edit"}
             </Button>
-            <ExerciseSearchModal sessionId={session._id} onExerciseAdded={onExerciseAdded} />
+            {!isExpired && <ExerciseSearchModal sessionId={session._id} onExerciseAdded={onExerciseAdded} />}
           </div>
         </div>
       </CardHeader>
@@ -492,6 +495,8 @@ export default function TrainerAddWorkoutPage() {
   const [dailyWorkouts, setDailyWorkouts] = useState<WorkoutDay[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userPlan, setUserPlan] = useState<any>(null);
+  const isExpired = userPlan ? new Date(userPlan.expiryDate) < new Date() : false;
 
   useEffect(() => {
     if (selectedDate && clientId) {
@@ -499,7 +504,19 @@ export default function TrainerAddWorkoutPage() {
     } else {
       setDailyWorkouts([]);
     }
+    if (clientId) {
+      fetchUserPlan();
+    }
   }, [selectedDate, clientId]);
+
+  async function fetchUserPlan() {
+    try {
+      const response = await API.get(`/trainer/user-plan/${clientId}`);
+      setUserPlan(response.data.plan);
+    } catch (err) {
+      console.error("Failed to fetch user plan:", err);
+    }
+  }
 
   async function fetchWorkouts() {
     setIsLoading(true);
@@ -534,6 +551,11 @@ export default function TrainerAddWorkoutPage() {
             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
               Assign Workout for Client
             </h1>
+            {isExpired && (
+              <Badge variant="destructive" className="ml-4 animate-pulse">
+                Subscription Expired
+              </Badge>
+            )}
             <Button
               variant="ghost"
               className="group hover:bg-primary/5 transition-all duration-300"
@@ -573,9 +595,9 @@ export default function TrainerAddWorkoutPage() {
               <Button
                 className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
                 onClick={() => navigate(`/trainer/workout/add-session/${clientId}`)}
-                disabled={!selectedDate}
+                disabled={!selectedDate || isExpired}
               >
-                <Plus className="h-4 w-4 mr-2" /> Add New Session
+                <Plus className="h-4 w-4 mr-2" /> {isExpired ? "Expired" : "Add New Session"}
               </Button>
             </div>
             {sessionsForDate.length > 0 ? (
@@ -586,6 +608,7 @@ export default function TrainerAddWorkoutPage() {
                   index={index}
                   onExerciseAdded={fetchWorkouts}
                   clientId={clientId!}
+                  isExpired={isExpired}
                 />
               ))
             ) : (

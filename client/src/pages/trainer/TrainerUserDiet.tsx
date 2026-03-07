@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArrowLeft, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import API from "@/lib/axios";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
@@ -44,11 +45,13 @@ function MealCard({
     index,
     onRemove,
     onEdit,
+    isExpired,
 }: {
     meal: Meal;
     index: number;
     onRemove: () => void;
     onEdit: () => void;
+    isExpired: boolean;
 }) {
     return (
         <Card
@@ -73,14 +76,16 @@ function MealCard({
                     <Button
                         variant="outline"
                         onClick={onEdit}
-                        className="hover:bg-primary/10 border-primary/30"
+                        className="hover:bg-primary/10 border-primary/30 disabled:opacity-50"
+                        disabled={isExpired}
                     >
-                        Edit
+                        {isExpired ? "Locked" : "Edit"}
                     </Button>
                     <Button
                         variant="destructive"
                         onClick={onRemove}
-                        className="bg-red-500 hover:bg-red-600 text-white"
+                        className="bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
+                        disabled={isExpired}
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>
@@ -156,12 +161,25 @@ export default function TrainerUserDietPage() {
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
-    const [hasDietSession, setHasDietSession] = useState<boolean>(false);
     const itemsPerPage = 5;
+    const [userPlan, setUserPlan] = useState<any>(null);
+    const isExpired = userPlan ? new Date(userPlan.expiryDate) < new Date() : false;
 
     useEffect(() => {
         fetchMeals();
+        if (clientId) {
+            fetchUserPlan();
+        }
     }, [date, clientId]);
+
+    async function fetchUserPlan() {
+        try {
+            const response = await API.get(`/trainer/user-plan/${clientId}`);
+            setUserPlan(response.data.plan);
+        } catch (err) {
+            console.error("Failed to fetch user plan:", err);
+        }
+    }
 
     async function fetchMeals() {
         setLoading(true);
@@ -173,7 +191,6 @@ export default function TrainerUserDietPage() {
             const day: IDietDay = response.data;
             console.log('rseponse', response);
             setMeals(day.meals?.filter((m) => m.source === "trainer") || []);
-            setHasDietSession(!!day);
         } catch (err: any) {
             if (err.response?.status === 404) {
                 try {
@@ -181,9 +198,7 @@ export default function TrainerUserDietPage() {
                     const retryResponse = await API.get(`/diet/trainer-get-day/${date}`, {
                         params: { userId: clientId },
                     });
-                    const day: IDietDay = retryResponse.data;
-                    setMeals(day.meals?.filter((m) => m.source === "trainer") || []);
-                    setHasDietSession(!!day);
+                    setMeals(retryResponse.data.meals?.filter((m: Meal) => m.source === "trainer") || []);
                 } catch (createErr: any) {
                     setError("Failed to create diet day");
                     toast.error("Failed to create diet day", { description: createErr.message });
@@ -197,25 +212,7 @@ export default function TrainerUserDietPage() {
         }
     }
 
-    async function createDietSession() {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await API.post(`/diet/trainer-create-diet-session`, {
-                date,
-                userId: clientId,
-            });
-            const day: IDietDay = response.data;
-            setMeals(day.meals?.filter((m) => m.source === "trainer") || []);
-            setHasDietSession(true);
-            toast.success("Diet session created successfully");
-        } catch (err: any) {
-            setError("Failed to create diet session");
-            toast.error("Failed to create diet session", { description: err.message });
-        } finally {
-            setLoading(false);
-        }
-    }
+    /* createDietSession was unused and removed */
 
     async function fetchUsdaFoods(query: string, page: number = 1) {
         if (!query) return;
@@ -302,7 +299,7 @@ export default function TrainerUserDietPage() {
         }
         setLoading(true);
         try {
-            const response = await API.patch(`/diet/${date}/meals/${editMeal._id}`, editMeal, {
+            await API.patch(`/diet/${date}/meals/${editMeal._id}`, editMeal, {
                 params: { userId: clientId },
             });
             setMeals(meals.map((m) => (m._id === editMeal._id ? { ...editMeal } : m)));
@@ -335,10 +332,10 @@ export default function TrainerUserDietPage() {
                 isEaten: false,
                 description: food.ingredients || "No ingredients provided.",
             };
-            const response = await API.post(`/diet/${date}/meals`, meal, {
+            await API.post(`/diet/${date}/meals`, meal, {
                 params: { userId: clientId },
             });
-            setMeals([...meals, { ...meal, _id: response.data.meals[response.data.meals.length - 1]._id }]);
+            setMeals([...meals, { ...meal, _id: Date.now().toString() }]); // Temporary ID if backend response is not used directly
             setSelectedFood(null);
             setUsdaMealTime("12:00");
             toast.success("Meal added successfully");
@@ -377,6 +374,11 @@ export default function TrainerUserDietPage() {
                         <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
                             Assign Diet Plan for Client
                         </h1>
+                        {isExpired && (
+                            <Badge variant="destructive" className="ml-4 animate-pulse bg-red-500 text-white border-transparent">
+                                Subscription Expired
+                            </Badge>
+                        )}
                         <Button
                             variant="ghost"
                             className="group hover:bg-primary/5 transition-all duration-300"
@@ -428,6 +430,7 @@ export default function TrainerUserDietPage() {
                                                 index={index}
                                                 onRemove={() => removeMeal(index, meal)}
                                                 onEdit={() => setEditMeal(meal)}
+                                                isExpired={isExpired}
                                             />
                                         ))}
                                     </div>
@@ -450,10 +453,10 @@ export default function TrainerUserDietPage() {
                                     />
                                     <Button
                                         onClick={() => fetchUsdaFoods(searchQuery, 1)}
-                                        disabled={loading}
-                                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2"
+                                        disabled={loading || isExpired}
+                                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2 disabled:opacity-50"
                                     >
-                                        Search
+                                        {isExpired ? "Access Denied" : "Search"}
                                     </Button>
                                 </div>
                                 {loading && <p className="text-muted-foreground">Loading...</p>}
@@ -594,10 +597,10 @@ export default function TrainerUserDietPage() {
                                 </div>
                                 <Button
                                     onClick={addManualMeal}
-                                    disabled={loading}
-                                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 shadow-lg hover:shadow-xl transition-all duration-300"
+                                    disabled={loading || isExpired}
+                                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
                                 >
-                                    Add Meal
+                                    {isExpired ? "Subscription Expired" : "Add Meal"}
                                 </Button>
                             </CardContent>
                         </Card>
