@@ -19,7 +19,7 @@ export class CreateWorkoutTemplateRequestDto {
     description: string;
     image: string;
     type: 'one-time' | 'series';
-    durationDays: number;
+    repetitions: number;
     difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
     requiredEquipment: string[];
     isPublic: boolean;
@@ -54,15 +54,20 @@ export class DietTemplateDayDto {
 export class CreateDietTemplateRequestDto {
     title: string;
     description: string;
+    image: string;
     duration: number;
     goal: string;
     bodyType: string;
+    isPublic: boolean;
     days: DietTemplateDayDto[];
+    createdById?: string;
+    createdByType?: 'Admin' | 'Trainer' | 'Gym';
+    gymId?: string;
 }
 
 export class DietTemplateResponseDto extends CreateDietTemplateRequestDto {
     _id: string;
-    createdBy: string;
+    popularityCount: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -76,6 +81,8 @@ export class TemplateQueryDto {
     goal?: string;
     bodyType?: string;
     equipment?: boolean;
+    createdById?: string;
+    gymId?: string;
 }
 
 export class PaginatedWorkoutTemplatesDto {

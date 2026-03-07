@@ -20,7 +20,7 @@ export interface IWorkoutTemplate {
     description: string;
     image: string;
     type: 'one-time' | 'series';
-    durationDays: number;
+    repetitions: number;
     difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
     requiredEquipment: string[];
     isPublic: boolean;

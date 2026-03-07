@@ -84,6 +84,13 @@ export class TrainerClientController {
         try {
             const trainerId = (req.user as JwtPayload).id
             const { clientId } = req.params
+
+            // Check if subscription is expired
+            const plan = await this._userPlanService.getUserPlan(clientId, trainerId)
+            if (!plan || new Date(plan.expiryDate) < new Date()) {
+                throw new AppError('Client subscription has expired', STATUS_CODE.FORBIDDEN)
+            }
+
             const messages = await this._messageService.getMessages(trainerId, clientId)
             res.status(STATUS_CODE.OK).json({ messages })
         } catch (err) {

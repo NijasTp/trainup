@@ -12,13 +12,29 @@ export interface IExercise {
 export interface IWorkoutTemplate {
   _id: string;
   title: string;
-  givenBy: "admin";
-  days: { dayNumber: number; exercises: IExercise[] }[];
-  // keeping exercises for compatibility if backend flattens it not seen in the dump
-  exercises?: IExercise[];
-  goal?: string;
-  notes?: string;
   description?: string;
+  image: string;
+  type: 'one-time' | 'series';
+  repetitions: number;
+  difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
+  requiredEquipment: string[];
+  isPublic: boolean;
+  popularityCount?: number;
+  days: {
+    dayNumber: number;
+    exercises: {
+      exerciseId: string;
+      name: string;
+      image?: string;
+      sets: number;
+      reps?: string;
+      weight?: string;
+      rest?: string;
+      notes?: string;
+    }[];
+  }[];
+  createdById: string;
+  createdByType: 'Admin' | 'Trainer' | 'Gym';
   createdAt: string;
   updatedAt: string;
 }
@@ -43,12 +59,16 @@ export interface IDietTemplateDay {
 export interface IDietTemplate {
   _id: string;
   title: string;
+  image: string;
   description?: string;
   duration: number;
   goal: string;
   bodyType: string;
+  isPublic: boolean;
+  popularityCount?: number;
   days: IDietTemplateDay[];
-  createdBy: string;
+  createdById: string;
+  createdByType: 'Admin' | 'Trainer' | 'Gym';
   createdAt: string;
   updatedAt: string;
 }

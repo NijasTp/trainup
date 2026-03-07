@@ -15,6 +15,8 @@ import {
 } from "../dtos/template.dto";
 import { IWorkoutTemplate } from "../models/workoutTemplate.model";
 import { IDietTemplate } from "../models/dietTemplate.model";
+import { WorkoutSnapshotModel } from "../models/workoutSnapshot.model";
+import { DietSnapshotModel } from "../models/dietSnapshot.model";
 import { AppError } from "../utils/appError.util";
 import { STATUS_CODE } from "../constants/status";
 import { FilterQuery } from "mongoose";
@@ -31,8 +33,8 @@ export class TemplateService implements ITemplateService {
     async createWorkoutTemplate(adminId: string, dto: CreateWorkoutTemplateRequestDto): Promise<WorkoutTemplateResponseDto> {
         const template = await this._workoutTemplateRepo.create({
             ...dto,
-            createdById: adminId,
-            createdByType: 'Admin'
+            createdById: dto.createdById || adminId,
+            createdByType: dto.createdByType || 'Admin'
         });
         return this.mapWorkoutToDto(template);
     }
@@ -58,6 +60,19 @@ export class TemplateService implements ITemplateService {
         if (query.difficultyLevel) filter.difficultyLevel = query.difficultyLevel;
         if (query.type) filter.type = query.type;
         if (query.goal) filter.goal = query.goal;
+        if (query.createdById) filter.createdById = query.createdById;
+
+        // If not admin/authenticated specifically for a search, 
+        // normally we'd restrict by isPublic or Gym here.
+        // We'll add those filters if query.gymId is present or for general user view.
+        if (query.gymId) {
+            filter.$or = [
+                { isPublic: true },
+                { gymId: query.gymId }
+            ];
+        } else {
+            filter.isPublic = true;
+        }
 
         const result = await this._workoutTemplateRepo.find(filter, query.page || 1, query.limit || 10);
         return {
@@ -69,8 +84,12 @@ export class TemplateService implements ITemplateService {
     }
 
     // Diet Templates
-    async createDietTemplate(adminId: string, dto: CreateDietTemplateRequestDto): Promise<DietTemplateResponseDto> {
-        const template = await this._dietTemplateRepo.create({ ...dto, createdBy: adminId });
+    async createDietTemplate(creatorId: string, dto: CreateDietTemplateRequestDto): Promise<DietTemplateResponseDto> {
+        const template = await this._dietTemplateRepo.create({
+            ...dto,
+            createdById: dto.createdById || creatorId,
+            createdByType: dto.createdByType || 'Admin'
+        });
         return this.mapDietToDto(template);
     }
 
@@ -94,6 +113,16 @@ export class TemplateService implements ITemplateService {
         if (query.search) filter.title = { $regex: query.search, $options: "i" };
         if (query.goal) filter.goal = query.goal;
         if (query.bodyType) filter.bodyType = query.bodyType;
+        if (query.createdById) filter.createdById = query.createdById;
+
+        if (query.gymId) {
+            filter.$or = [
+                { isPublic: true },
+                { gymId: query.gymId }
+            ];
+        } else {
+            filter.isPublic = true;
+        }
 
         const result = await this._dietTemplateRepo.find(filter, query.page || 1, query.limit || 10);
         return {
@@ -109,9 +138,30 @@ export class TemplateService implements ITemplateService {
         const template = await this._workoutTemplateRepo.findById(templateId);
         if (!template) throw new AppError("Template not found", STATUS_CODE.NOT_FOUND);
 
+        // Create a snapshot to freeze the workout data
+        const snapshot = await WorkoutSnapshotModel.create({
+            userId: userId,
+            originalTemplateId: template._id,
+            title: template.title,
+            description: template.description || "",
+            image: template.image,
+            type: template.type,
+            repetitions: template.repetitions,
+            difficultyLevel: template.difficultyLevel,
+            requiredEquipment: template.requiredEquipment,
+            days: template.days,
+            startDate: new Date(),
+            status: 'active'
+        });
+
         await this._userRepo.updateUser(userId, {
-            activeWorkoutTemplate: template._id,
+            activeWorkoutTemplate: snapshot._id as any, // Link to snapshot instead of original template
             workoutTemplateStartDate: new Date()
+        });
+
+        // Increment popularity count
+        await this._workoutTemplateRepo.update(templateId, {
+            popularityCount: (template.popularityCount || 0) + 1
         });
     }
 
@@ -126,9 +176,29 @@ export class TemplateService implements ITemplateService {
         const template = await this._dietTemplateRepo.getById(templateId);
         if (!template) throw new AppError("Template not found", STATUS_CODE.NOT_FOUND);
 
+        // Create snapshot
+        const snapshot = await DietSnapshotModel.create({
+            userId: userId,
+            originalTemplateId: template._id,
+            title: template.title,
+            description: template.description || "",
+            image: template.image,
+            duration: template.duration,
+            goal: template.goal,
+            bodyType: template.bodyType,
+            days: template.days,
+            startDate: new Date(),
+            status: 'active'
+        });
+
         await this._userRepo.updateUser(userId, {
-            activeDietTemplate: template._id,
+            activeDietTemplate: snapshot._id as any,
             dietTemplateStartDate: new Date()
+        });
+
+        // Increment popularity
+        await this._dietTemplateRepo.update(templateId, {
+            popularityCount: (template.popularityCount || 0) + 1
         });
     }
 
@@ -146,7 +216,7 @@ export class TemplateService implements ITemplateService {
             description: t.description || "",
             image: t.image,
             type: t.type,
-            durationDays: t.durationDays,
+            repetitions: t.repetitions,
             difficultyLevel: t.difficultyLevel,
             requiredEquipment: t.requiredEquipment,
             isPublic: t.isPublic,
@@ -165,11 +235,16 @@ export class TemplateService implements ITemplateService {
             _id: t._id.toString(),
             title: t.title,
             description: t.description || "",
+            image: t.image,
             duration: t.duration,
             goal: t.goal,
             bodyType: t.bodyType,
             days: t.days,
-            createdBy: t.createdBy?.toString() || "",
+            isPublic: t.isPublic,
+            popularityCount: t.popularityCount,
+            createdById: t.createdById?.toString() || "",
+            createdByType: t.createdByType,
+            gymId: t.gymId?.toString(),
             createdAt: t.createdAt,
             updatedAt: t.updatedAt
         };

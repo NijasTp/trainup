@@ -215,6 +215,12 @@ export class SocketHandler {
           return
         }
 
+        const userPlan = await this._userPlanService.getUserPlan(clientId, socket.userId)
+        if (!userPlan || new Date(userPlan.expiryDate) < new Date()) {
+          socket.emit('error', { message: 'Client subscription has expired' })
+          return
+        }
+
         const savedMessage = await this._messageService.createMessage({
           senderId: socket.userId,
           receiverId: clientId,

@@ -27,6 +27,8 @@ export default function TrainerUserDetails() {
     const [isProgressOpen, setIsProgressOpen] = useState(false);
     const [selectedProgress, setSelectedProgress] = useState<Progress | null>(null);
 
+    const isExpired = userPlan ? new Date(userPlan.expiryDate) < new Date() : false;
+
     useEffect(() => {
         document.title = "TrainUp - User Details";
         if (id) {
@@ -182,6 +184,12 @@ export default function TrainerUserDetails() {
                                         <span className="ml-2 capitalize">{user.trainerPlan} Plan</span>
                                     </Badge>
                                 )}
+                                {isExpired && (
+                                    <Badge className="bg-red-500 hover:bg-red-600 text-white border-red-500/20 px-3 py-1 text-sm animate-pulse">
+                                        <AlertCircle className="h-4 w-4 mr-2" />
+                                        Subscription Expired
+                                    </Badge>
+                                )}
                                 <Badge variant={user.activityStatus === 'active' ? "default" : "secondary"} className={user.activityStatus === 'active' ? "bg-green-500 hover:bg-green-600" : ""}>
                                     {user.activityStatus === 'active' ? 'Active Status' : 'Inactive'}
                                 </Badge>
@@ -268,46 +276,92 @@ export default function TrainerUserDetails() {
                                 <CardTitle className="text-lg">Management</CardTitle>
                             </CardHeader>
                             <CardContent className="grid gap-3">
-                                <Button variant="outline" className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5" asChild>
-                                    <Link to={`/trainer/workout/${id}`}>
-                                        <div className="p-1.5 rounded-md bg-blue-500/10 mr-3">
-                                            <Dumbbell className="h-4 w-4 text-blue-500" />
+                                <Button
+                                    variant="outline"
+                                    className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    asChild={!isExpired}
+                                    disabled={isExpired}
+                                >
+                                    {isExpired ? (
+                                        <div className="flex items-center w-full">
+                                            <div className="p-1.5 rounded-md bg-blue-500/10 mr-3 opacity-50">
+                                                <Dumbbell className="h-4 w-4 text-blue-500" />
+                                            </div>
+                                            Workouts (Expired)
+                                            <X className="ml-auto h-4 w-4 opacity-50" />
                                         </div>
-                                        Workouts
-                                        <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
-                                    </Link>
+                                    ) : (
+                                        <Link to={`/trainer/workout/${id}`}>
+                                            <div className="p-1.5 rounded-md bg-blue-500/10 mr-3">
+                                                <Dumbbell className="h-4 w-4 text-blue-500" />
+                                            </div>
+                                            Workouts
+                                            <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
+                                        </Link>
+                                    )}
                                 </Button>
-                                <Button variant="outline" className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5" asChild>
-                                    <Link to={`/trainer/diet/${id}`}>
-                                        <div className="p-1.5 rounded-md bg-green-500/10 mr-3">
-                                            <Apple className="h-4 w-4 text-green-500" />
+                                <Button
+                                    variant="outline"
+                                    className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    asChild={!isExpired}
+                                    disabled={isExpired}
+                                >
+                                    {isExpired ? (
+                                        <div className="flex items-center w-full">
+                                            <div className="p-1.5 rounded-md bg-green-500/10 mr-3 opacity-50">
+                                                <Apple className="h-4 w-4 text-green-500" />
+                                            </div>
+                                            Diet Plan (Expired)
+                                            <X className="ml-auto h-4 w-4 opacity-50" />
                                         </div>
-                                        Diet Plan
-                                        <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
-                                    </Link>
+                                    ) : (
+                                        <Link to={`/trainer/diet/${id}`}>
+                                            <div className="p-1.5 rounded-md bg-green-500/10 mr-3">
+                                                <Apple className="h-4 w-4 text-green-500" />
+                                            </div>
+                                            Diet Plan
+                                            <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
+                                        </Link>
+                                    )}
                                 </Button>
                                 {user.trainerPlan !== 'basic' && (
                                     <Button
                                         variant="outline"
-                                        className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5"
+                                        className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
                                         onClick={handleStartChat}
+                                        disabled={isExpired}
                                     >
-                                        <div className="p-1.5 rounded-md bg-amber-500/10 mr-3">
+                                        <div className={`p-1.5 rounded-md bg-amber-500/10 mr-3 ${isExpired ? 'opacity-50' : ''}`}>
                                             <MessageSquare className="h-4 w-4 text-amber-500" />
                                         </div>
-                                        Messages
-                                        <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
+                                        {isExpired ? 'Messages (Expired)' : 'Messages'}
+                                        {isExpired ? <X className="ml-auto h-4 w-4 opacity-50" /> : <ChevronRight className="ml-auto h-4 w-4 opacity-50" />}
                                     </Button>
                                 )}
                                 {user.trainerPlan === 'pro' && (
-                                    <Button variant="outline" className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5" asChild>
-                                        <Link to="/trainer/sessions">
-                                            <div className="p-1.5 rounded-md bg-purple-500/10 mr-3">
-                                                <Video className="h-4 w-4 text-purple-500" />
+                                    <Button
+                                        variant="outline"
+                                        className="w-full justify-start h-12 text-base font-normal hover:border-primary/50 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        asChild={!isExpired}
+                                        disabled={isExpired}
+                                    >
+                                        {isExpired ? (
+                                            <div className="flex items-center w-full">
+                                                <div className="p-1.5 rounded-md bg-purple-500/10 mr-3 opacity-50">
+                                                    <Video className="h-4 w-4 text-purple-500" />
+                                                </div>
+                                                Video Sessions (Expired)
+                                                <X className="ml-auto h-4 w-4 opacity-50" />
                                             </div>
-                                            Video Sessions
-                                            <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
-                                        </Link>
+                                        ) : (
+                                            <Link to="/trainer/sessions">
+                                                <div className="p-1.5 rounded-md bg-purple-500/10 mr-3">
+                                                    <Video className="h-4 w-4 text-purple-500" />
+                                                </div>
+                                                Video Sessions
+                                                <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
+                                            </Link>
+                                        )}
                                     </Button>
                                 )}
                             </CardContent>
@@ -326,7 +380,7 @@ export default function TrainerUserDetails() {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Expires</span>
-                                        <span className="font-medium">{new Date(userPlan.expiryDate).toLocaleDateString()}</span>
+                                        <span className={`font-medium ${isExpired ? 'text-red-500' : ''}`}>{new Date(userPlan.expiryDate).toLocaleDateString()}</span>
                                     </div>
 
                                     <div className="pt-4 border-t border-border/50 space-y-2">

@@ -104,12 +104,12 @@ const userSchema: Schema<IUser> = new Schema(
     profileImage: { type: String },
     activeWorkoutTemplates: {
       type: [{
-        templateId: { type: Schema.Types.ObjectId, ref: "WorkoutTemplate" },
+        templateId: { type: Schema.Types.ObjectId, ref: "WorkoutSnapshot" },
         startDate: { type: Date }
       }],
       default: []
     },
-    activeWorkoutTemplate: { type: Schema.Types.ObjectId, ref: "WorkoutTemplate", default: null },
+    activeWorkoutTemplate: { type: Schema.Types.ObjectId, ref: "WorkoutSnapshot", default: null },
     workoutTemplateStartDate: { type: Date, default: null },
     activeDietTemplate: { type: Schema.Types.ObjectId, ref: "DietTemplate", default: null },
     dietTemplateStartDate: { type: Date, default: null },

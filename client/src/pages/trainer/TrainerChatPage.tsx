@@ -45,6 +45,8 @@ export default function TrainerChatPage() {
     const [client, setClient] = useState<Client | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+    const [userPlan, setUserPlan] = useState<any>(null);
+    const isExpired = userPlan ? new Date(userPlan.expiryDate) < new Date() : false;
     const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const socketRef = useRef<Socket | null>(null);
@@ -110,6 +112,14 @@ export default function TrainerChatPage() {
 
             const messagesResponse = await API.get(`/trainer/chat/messages/${clientId}`);
             setMessages(messagesResponse.data.messages);
+
+            // Fetch plan to check expiry
+            try {
+                const planResponse = await API.get(`/trainer/user-plan/${clientId}`);
+                setUserPlan(planResponse.data.plan);
+            } catch (planErr) {
+                console.error("Failed to fetch plan in chat:", planErr);
+            }
 
             // Mark messages as read
             await API.put(`/trainer/chat/read/${clientId}`);
@@ -434,9 +444,16 @@ export default function TrainerChatPage() {
                     </div>
 
                     {client && (
-                        <Badge className={`${getPlanColor(client.trainerPlan)}`}>
-                            {client.trainerPlan.charAt(0).toUpperCase() + client.trainerPlan.slice(1)}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                            <Badge className={`${getPlanColor(client.trainerPlan)}`}>
+                                {client.trainerPlan.charAt(0).toUpperCase() + client.trainerPlan.slice(1)}
+                            </Badge>
+                            {isExpired && (
+                                <Badge className="bg-red-500 hover:bg-red-600 text-white border-red-500/20 animate-pulse">
+                                    Expired
+                                </Badge>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
@@ -578,7 +595,7 @@ export default function TrainerChatPage() {
                             variant="outline"
                             size="icon"
                             onClick={() => fileInputRef.current?.click()}
-                            disabled={isSending}
+                            disabled={isSending || isExpired}
                         >
                             <Paperclip className="h-4 w-4" />
                         </Button>
@@ -590,8 +607,9 @@ export default function TrainerChatPage() {
                                 handleTyping();
                             }}
                             onBlur={handleStopTyping}
-                            placeholder="Type your message..."
+                            placeholder={isExpired ? "Subscription expired - cannot send messages" : "Type your message..."}
                             className="flex-1"
+                            disabled={isExpired}
                             onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
                                     sendMessage();
@@ -603,7 +621,7 @@ export default function TrainerChatPage() {
                         {newMessage.trim() ? (
                             <Button
                                 onClick={() => sendMessage()}
-                                disabled={isSending}
+                                disabled={isSending || isExpired}
                                 size="icon"
                             >
                                 {isSending ? (
@@ -617,7 +635,7 @@ export default function TrainerChatPage() {
                                 variant="outline"
                                 size="icon"
                                 onClick={startRecording}
-                                disabled={isSending}
+                                disabled={isSending || isExpired}
                             >
                                 <Mic className="h-4 w-4" />
                             </Button>
@@ -626,8 +644,8 @@ export default function TrainerChatPage() {
                 )}
 
                 {client?.trainerPlan === 'premium' && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                        Chatting with {client?.name || "Client"} ({client?.trainerPlan} plan)
+                    <p className={`text-xs mt-2 ${isExpired ? 'text-red-500 font-semibold' : 'text-muted-foreground'}`}>
+                        {isExpired ? "Subscription Expired" : `Chatting with ${client?.name || "Client"} (${client?.trainerPlan} plan)`}
                     </p>
                 )}
             </div>

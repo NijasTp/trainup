@@ -11,6 +11,7 @@ import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status'
 import { IUserRepository } from '../core/interfaces/repositories/IUserRepository';
 import { IWorkoutTemplateRepository } from '../core/interfaces/repositories/IWorkoutTemplateRepository';
+import { WorkoutSnapshotModel } from '../models/workoutSnapshot.model';
 import { MESSAGES } from '../constants/messages.constants'
 
 @injectable()
@@ -243,8 +244,15 @@ export class WorkoutService implements IWorkoutService {
 
     if (activeTemplates.length > 0) {
       for (const activeDetails of activeTemplates) {
-        const template = await this._workoutTemplateRepo.findById(activeDetails.templateId.toString());
-        if (template) {
+        // Try to find as snapshot first
+        let templateData: any = await WorkoutSnapshotModel.findById(activeDetails.templateId.toString());
+
+        // Fallback to template if snapshot not found (for legacy support)
+        if (!templateData) {
+          templateData = await this._workoutTemplateRepo.findById(activeDetails.templateId.toString());
+        }
+
+        if (templateData) {
           const startDate = new Date(activeDetails.startDate);
           startDate.setHours(0, 0, 0, 0);
           const currentDate = new Date(date);
@@ -253,22 +261,23 @@ export class WorkoutService implements IWorkoutService {
           const diffTime = currentDate.getTime() - startDate.getTime();
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-          if (diffDays >= 0) {
-            const dayNumber = (diffDays % template.duration) + 1;
-            const templateDay = template.days.find(d => d.dayNumber === dayNumber);
+          // Calculate total duration based on repetitions
+          const repetitions = templateData.repetitions || 1;
+          const totalDays = templateData.days.length * repetitions;
 
-            // Set template info (Last one wins, or maybe we should aggregate? 
-            // For now, let's just set it so the UI shows something)
+          if (diffDays >= 0 && diffDays < totalDays) {
+            const dayNumber = (diffDays % templateData.days.length) + 1;
+            const templateDay = templateData.days.find((d: any) => d.dayNumber === dayNumber);
+
             templateInfo = {
-              templateDay: dayNumber,
-              templateName: template.title,
-              templateDuration: template.duration
+              templateDay: diffDays + 1, // Overall day of the program
+              templateName: templateData.title,
+              templateDuration: totalDays
             };
 
             if (templateDay && templateDay.exercises.length > 0) {
               // Check if there's already an admin session or template session for today FROM THIS TEMPLATE?
               // The original logic checked if ANY admin session existed. 
-              // With multiple templates, we want to allow multiple virtual sessions.
               // We should check if a session from THIS template exists. 
               // However, sessions don't store templateId explicitely, just 'givenBy: admin' and maybe notes.
               // To prevent duplicates, we can check if a session with same name exists? 
@@ -278,7 +287,7 @@ export class WorkoutService implements IWorkoutService {
               // We should probably rely on `_id` generation or check names. 
               // Let's rely on checking if any session in `day.sessions` matches the virtual ID we are about to generate.
 
-              const virtualId = `template-${template._id}-${dayNumber}-${date}`;
+              const virtualId = `template-${templateData._id}-${dayNumber}-${date}`;
               // Check for existing session from this template.
               // We check populated sessions for matching notes/name.
               // For unpopulated sessions (IDs), we must assume they might be duplicates but we can't be sure without fetching.
@@ -296,27 +305,25 @@ export class WorkoutService implements IWorkoutService {
                 if (typeof s === 'string') return false;
                 // Also check if name matches "TEMPLATE_TITLE - Day X" pattern?
                 // Notes is safer as user might rename session.
-                return session.notes?.includes(`From active template: ${template.title}`) || session.name === `${template.title} - Day ${dayNumber}`;
+                return session.notes?.includes(`From active template: ${templateData.title}`) || session.name === `${templateData.title} - Day ${dayNumber}`;
               });
 
 
               if (!alreadyExists) {
                 virtualSessions.push({
                   _id: virtualId,
-                  name: `${template.title} - Day ${dayNumber}`,
-                  givenBy: 'admin',
+                  name: `${templateData.title} - Day ${dayNumber}`,
+                  givenBy: templateData.createdByType === 'Trainer' ? 'trainer' : 'admin',
                   date: date,
                   time: "08:00", // Default virtual time
-                  exercises: templateDay.exercises.map(ex => ({
-                    id: ex.exerciseId,
-                    name: ex.name,
-                    image: ex.image,
-                    sets: ex.sets,
-                    reps: ex.reps,
-                    // removed time
+                  exercises: templateDay.exercises.map((ex: any) => ({
+                    ...ex,
+                    sessions: day ? day.sessions.filter((s: any) =>
+                      s.exercises.some((se: any) => se.exerciseId.toString() === ex.exerciseId.toString())
+                    ) : []
                   })),
-                  goal: template.goal,
-                  notes: `From active template: ${template.title}`,
+                  goal: templateData.goal,
+                  notes: `From active template: ${templateData.title}`,
                   isDone: false,
                   createdAt: new Date(),
                   updatedAt: new Date()

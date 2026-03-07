@@ -36,22 +36,21 @@ export interface WorkoutTemplate {
   _id: string;
   title: string;
   description?: string;
-  duration?: number;
+  image: string;
+  type: 'one-time' | 'series';
+  repetitions: number;
   goal?: string;
-  difficulty?: string;
-  equipment?: boolean;
-  notes?: string;
+  difficultyLevel?: string;
+  requiredEquipment: string[];
+  isPublic: boolean;
   days: TemplateDay[];
-
-  // Legacy/Flat support if needed temporarily, but main structure is days
-  exercises?: Exercise[];
-  name?: string; // handling legacy 'name' vs 'title'
 }
 
 export interface DietTemplate {
   _id: string;
   title: string;
   description?: string;
+  image?: string;
   duration?: number;
   goal?: string;
   bodyType?: string;

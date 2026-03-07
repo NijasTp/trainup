@@ -5,6 +5,13 @@ import { TemplateController } from "../controllers/template.controller";
 import { authMiddleware, roleMiddleware } from "../middlewares/auth.middleware";
 import { Role } from "../constants/role";
 import { upload } from "../utils/multer.util";
+import { validateRequest } from "../middlewares/zodValidation.middleware";
+import {
+    CreateWorkoutTemplateSchema,
+    UpdateWorkoutTemplateSchema,
+    CreateDietTemplateSchema,
+    UpdateDietTemplateSchema
+} from "../dtos/template.schema";
 
 
 const router = Router();
@@ -14,8 +21,9 @@ const controller = container.get<TemplateController>(TYPES.TemplateController);
 router.post(
     "/workout",
     authMiddleware,
-    roleMiddleware([Role.ADMIN]),
+    roleMiddleware([Role.ADMIN, Role.TRAINER, Role.GYM]),
     upload.single('image'),
+    validateRequest(CreateWorkoutTemplateSchema),
     controller.createWorkoutTemplate.bind(controller)
 );
 
@@ -23,8 +31,9 @@ router.post(
 router.patch(
     "/workout/:id",
     authMiddleware,
-    roleMiddleware([Role.ADMIN]),
+    roleMiddleware([Role.ADMIN, Role.TRAINER, Role.GYM]),
     upload.single('image'),
+    validateRequest(UpdateWorkoutTemplateSchema),
     controller.updateWorkoutTemplate.bind(controller)
 );
 
@@ -32,28 +41,32 @@ router.patch(
 router.delete(
     "/workout/:id",
     authMiddleware,
-    roleMiddleware([Role.ADMIN]),
+    roleMiddleware([Role.ADMIN, Role.TRAINER, Role.GYM]),
     controller.deleteWorkoutTemplate.bind(controller)
 );
 
 router.post(
     "/diet",
     authMiddleware,
-    roleMiddleware([Role.ADMIN]),
+    roleMiddleware([Role.ADMIN, Role.TRAINER, Role.GYM]),
+    upload.single('image'),
+    validateRequest(CreateDietTemplateSchema),
     controller.createDietTemplate.bind(controller)
 );
 
 router.patch(
     "/diet/:id",
     authMiddleware,
-    roleMiddleware([Role.ADMIN]),
+    roleMiddleware([Role.ADMIN, Role.TRAINER, Role.GYM]),
+    upload.single('image'),
+    validateRequest(UpdateDietTemplateSchema),
     controller.updateDietTemplate.bind(controller)
 );
 
 router.delete(
     "/diet/:id",
     authMiddleware,
-    roleMiddleware([Role.ADMIN]),
+    roleMiddleware([Role.ADMIN, Role.TRAINER, Role.GYM]),
     controller.deleteDietTemplate.bind(controller)
 );
 

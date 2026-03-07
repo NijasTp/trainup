@@ -23,11 +23,13 @@ export interface IWorkoutTemplate extends Document {
     description: string;
     image: string; // Mandatory
     type: 'one-time' | 'series';
-    durationDays: number; // e.g., 7, 14, 30
+    repetitions: number; // How many times the 'days' cycle repeats
     difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
     requiredEquipment: string[];
     isPublic: boolean;
     popularityCount: number;
+    averageRating: number;
+    reviewCount: number;
     days: IWorkoutTemplateDay[];
     createdById: Types.ObjectId | string;
     createdByType: 'Admin' | 'Trainer' | 'Gym';
@@ -66,11 +68,13 @@ const WorkoutTemplateSchema = new Schema<IWorkoutTemplate>(
         description: { type: String },
         image: { type: String, required: true },
         type: { type: String, enum: ['one-time', 'series'], required: true },
-        durationDays: { type: Number, required: true },
+        repetitions: { type: Number, required: true, default: 1 },
         difficultyLevel: { type: String, enum: ['beginner', 'intermediate', 'advanced'], default: 'beginner' },
         requiredEquipment: { type: [String], default: [] },
         isPublic: { type: Boolean, default: false },
         popularityCount: { type: Number, default: 0 },
+        averageRating: { type: Number, default: 0 },
+        reviewCount: { type: Number, default: 0 },
         days: { type: [DaySchema], default: [] },
         createdById: { type: Schema.Types.ObjectId, required: true, refPath: 'createdByType' },
         createdByType: { type: String, required: true, enum: ['Admin', 'Trainer', 'Gym'] },

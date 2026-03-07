@@ -18,7 +18,10 @@ export class TemplateController {
     // Workout Templates
     async createWorkoutTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const adminId = (req.user as JwtPayload).id;
+            const creatorId = (req.user as JwtPayload).id;
+            const creatorRole = (req.user as JwtPayload).role;
+            const createdByType = creatorRole === 'admin' ? 'Admin' : creatorRole === 'trainer' ? 'Trainer' : creatorRole === 'gym' ? 'Gym' : 'Admin';
+            const gymId = creatorRole === 'gym' ? creatorId : undefined;
             const body = req.body;
 
             // Handle file upload to Cloudinary
@@ -38,11 +41,14 @@ export class TemplateController {
                 image: imageUrl,
                 days: typeof body.days === 'string' ? JSON.parse(body.days) : body.days,
                 requiredEquipment: typeof body.requiredEquipment === 'string' ? JSON.parse(body.requiredEquipment) : body.requiredEquipment,
-                durationDays: parseInt(body.durationDays),
-                isPublic: body.isPublic === 'true' || body.isPublic === true
+                repetitions: parseInt(body.repetitions) || 1,
+                isPublic: body.isPublic === 'true' || body.isPublic === true,
+                createdById: creatorId,
+                createdByType: createdByType as any,
+                gymId: gymId
             };
 
-            const result = await this._templateService.createWorkoutTemplate(adminId, dto);
+            const result = await this._templateService.createWorkoutTemplate(creatorId, dto);
             res.status(STATUS_CODE.CREATED).json(result);
         } catch (err) {
             next(err);
@@ -69,7 +75,7 @@ export class TemplateController {
                 image: imageUrl,
                 days: body.days ? (typeof body.days === 'string' ? JSON.parse(body.days) : body.days) : undefined,
                 requiredEquipment: body.requiredEquipment ? (typeof body.requiredEquipment === 'string' ? JSON.parse(body.requiredEquipment) : body.requiredEquipment) : undefined,
-                durationDays: body.durationDays ? parseInt(body.durationDays) : undefined,
+                repetitions: body.repetitions ? parseInt(body.repetitions) : undefined,
                 isPublic: body.isPublic !== undefined ? (body.isPublic === 'true' || body.isPublic === true) : undefined
             };
 
@@ -99,6 +105,7 @@ export class TemplateController {
                 search: req.query.search as string,
                 goal: req.query.goal as string,
                 equipment: req.query.equipment === "true" ? true : req.query.equipment === "false" ? false : undefined,
+                createdById: req.query.createdById as string,
             };
             const result = await this._templateService.listWorkoutTemplates(query);
             res.status(STATUS_CODE.OK).json(result);
@@ -143,9 +150,36 @@ export class TemplateController {
     // Diet Templates
     async createDietTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const adminId = (req.user as JwtPayload).id;
-            const dto: CreateDietTemplateRequestDto = req.body;
-            const result = await this._templateService.createDietTemplate(adminId, dto);
+            const creatorId = (req.user as JwtPayload).id;
+            const creatorRole = (req.user as JwtPayload).role;
+            const createdByType = creatorRole === 'admin' ? 'Admin' : creatorRole === 'trainer' ? 'Trainer' : creatorRole === 'gym' ? 'Gym' : 'Admin';
+            const gymId = creatorRole === 'gym' ? creatorId : undefined;
+            const body = req.body;
+
+            // Handle file upload to Cloudinary
+            let imageUrl = body.image;
+            if (req.file) {
+                const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+                    folder: 'diet_templates'
+                });
+                imageUrl = uploadResult.secure_url;
+                fs.unlinkSync(req.file.path);
+            }
+
+            if (!imageUrl) throw new AppError("Template image is mandatory", STATUS_CODE.BAD_REQUEST);
+
+            const dto: CreateDietTemplateRequestDto = {
+                ...body,
+                image: imageUrl,
+                days: typeof body.days === 'string' ? JSON.parse(body.days) : body.days,
+                duration: parseInt(body.duration) || 7,
+                isPublic: body.isPublic === 'true' || body.isPublic === true,
+                createdById: creatorId,
+                createdByType: createdByType as any,
+                gymId: gymId
+            };
+
+            const result = await this._templateService.createDietTemplate(creatorId, dto);
             res.status(STATUS_CODE.CREATED).json(result);
         } catch (err) {
             next(err);
@@ -155,7 +189,26 @@ export class TemplateController {
     async updateDietTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { id } = req.params;
-            const dto: Partial<CreateDietTemplateRequestDto> = req.body;
+            const body = req.body;
+
+            // Handle file upload to Cloudinary if new image provided
+            let imageUrl = body.image;
+            if (req.file) {
+                const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+                    folder: 'diet_templates'
+                });
+                imageUrl = uploadResult.secure_url;
+                fs.unlinkSync(req.file.path);
+            }
+
+            const dto: Partial<CreateDietTemplateRequestDto> = {
+                ...body,
+                image: imageUrl,
+                days: body.days ? (typeof body.days === 'string' ? JSON.parse(body.days) : body.days) : undefined,
+                duration: body.duration ? parseInt(body.duration) : undefined,
+                isPublic: body.isPublic !== undefined ? (body.isPublic === 'true' || body.isPublic === true) : undefined
+            };
+
             const result = await this._templateService.updateDietTemplate(id, dto);
             res.status(STATUS_CODE.OK).json(result);
         } catch (err) {
@@ -180,6 +233,7 @@ export class TemplateController {
                 limit: parseInt(req.query.limit as string) || 10,
                 search: req.query.search as string,
                 goal: req.query.goal as string,
+                createdById: req.query.createdById as string,
             };
             const result = await this._templateService.listDietTemplates(query);
             res.status(STATUS_CODE.OK).json(result);
