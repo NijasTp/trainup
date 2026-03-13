@@ -294,28 +294,54 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
       throw new Error('Trainer not found')
     }
 
-    const query: Record<string, unknown> = {
+    const matchQuery: any = {
       _id: { $in: trainer.clients }
     }
 
     if (search) {
-      query.$or = [
+      matchQuery.$or = [
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } }
       ]
     }
 
-    const clients = await UserModel.find(query)
-      .select('name email phone subscriptionStartDate')
-      .skip(skip)
-      .limit(limit)
-      .lean()
-      .exec()
+    const clientsAgg = await UserModel.aggregate([
+      { $match: matchQuery },
+      {
+        $addFields: {
+          planPriority: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$trainerPlan', 'pro'] }, then: 3 },
+                { case: { $eq: ['$trainerPlan', 'premium'] }, then: 2 },
+                { case: { $eq: ['$trainerPlan', 'basic'] }, then: 1 }
+              ],
+              default: 0
+            }
+          }
+        }
+      },
+      { $sort: { planPriority: -1, name: 1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          email: 1,
+          phone: 1,
+          subscriptionStartDate: 1,
+          trainerPlan: 1,
+          activeWorkoutTemplates: 1,
+          activeDietTemplate: 1
+        }
+      }
+    ]).exec()
 
-    const total = await UserModel.countDocuments(query).exec()
+    const total = await UserModel.countDocuments(matchQuery).exec()
 
     return {
-      clients: clients.map(client => TrainerDto.toClientDto(client as IUser)),
+      clients: clientsAgg.map(client => TrainerDto.toClientDto(client as any)),
       total
     }
   }
@@ -387,5 +413,19 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     ]);
 
     return stats.map(g => ({ date: g._id, count: g.count }));
+  }
+
+  async countUnassignedClients(trainerId: string): Promise<number> {
+    const trainer = await TrainerModel.findById(trainerId).select('clients').exec();
+    if (!trainer) return 0;
+
+    return await UserModel.countDocuments({
+      _id: { $in: trainer.clients },
+      $or: [
+        { activeWorkoutTemplates: { $size: 0 } },
+        { activeDietTemplate: { $exists: false } },
+        { activeDietTemplate: null }
+      ]
+    }).exec();
   }
 }

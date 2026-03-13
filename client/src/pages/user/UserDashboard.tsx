@@ -29,6 +29,8 @@ import { compareProgress } from "@/services/progressService";
 import { ROUTES } from "@/constants/routes";
 import { Link } from "react-router-dom";
 import { Image as ImageIcon } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { updateUser } from "@/redux/slices/userAuthSlice";
 
 import type { WeightEntry, Workout, User, CurrentWeightProps, AddWeightDialogProps, WeightChartProps, TransformationWidgetProps, RecentWorkoutsProps, IBackendSession, IActivityData, TransformationData } from "@/interfaces/user/IUserDashboard";
 
@@ -364,6 +366,13 @@ const calculateStreak = (activityData: IActivityData) => {
 
 const ActivityCalendar: React.FC<{ activityData: IActivityData }> = ({ activityData }) => {
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+    }
+  }, [activityData]);
   
   // Generate last 53 weeks of dates (approx 1 year)
   const weeks = [];
@@ -405,7 +414,7 @@ const ActivityCalendar: React.FC<{ activityData: IActivityData }> = ({ activityD
   };
 
   return (
-    <Card className="bg-card/40 backdrop-blur-sm border-border/50 overflow-hidden relative">
+    <Card className="bg-card/40 backdrop-blur-sm border-border/50 relative z-20">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Calendar className="h-5 w-5 text-primary" />
@@ -417,7 +426,16 @@ const ActivityCalendar: React.FC<{ activityData: IActivityData }> = ({ activityD
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="relative">
-          <div className="flex gap-[3px] overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent custom-scrollbar">
+          <div 
+            ref={scrollRef}
+            className="flex gap-[3px] overflow-x-auto pb-4 flex-nowrap no-scrollbar"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            <style>{`
+              .no-scrollbar::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
             {weeks.map((week, wi) => (
               <div key={wi} className="flex flex-col gap-[3px] shrink-0">
                 {week.map((date, di) => {
@@ -442,7 +460,7 @@ const ActivityCalendar: React.FC<{ activityData: IActivityData }> = ({ activityD
                       onMouseLeave={() => setHoveredDate(null)}
                     >
                       {hoveredDate === dateStr && !isFuture && (
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-[100] animate-in fade-in zoom-in duration-200">
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-[9999] animate-in fade-in zoom-in duration-200">
                           <div className="bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl min-w-[180px] ring-1 ring-white/5">
                             <div className="space-y-3">
                               <div className="pb-2 border-b border-white/5">
@@ -575,8 +593,14 @@ const UserDashboard: React.FC = () => {
   const [newWeight, setNewWeight] = useState("");
   const [isWeightLoggedToday, setIsWeightLoggedToday] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
+  const dispatch = useDispatch();
   const streak = calculateStreak(activityData);
+
+  useEffect(() => {
+    if (activityData && Object.keys(activityData).length > 0) {
+      dispatch(updateUser({ streak }));
+    }
+  }, [streak, dispatch, activityData]);
 
   useEffect(() => {
     const fetchData = async () => {

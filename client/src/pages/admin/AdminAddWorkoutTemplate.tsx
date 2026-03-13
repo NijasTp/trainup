@@ -186,8 +186,12 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
     };
 
     const handleSave = async () => {
-        if (!formData.title || !formData.image) {
-            toast.error("Please fill in all required fields (Title and Image are mandatory)");
+        if (!formData.title) {
+            toast.error("Blueprint Title (Name) is required");
+            return;
+        }
+        if (!formData.image) {
+            toast.error("Visual Signature (Image) is mandatory");
             return;
         }
         if (formData.days.length === 0) {
@@ -209,8 +213,14 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                 } else if (key === 'requiredEquipment') {
                     data.append('requiredEquipment', JSON.stringify(formData.requiredEquipment));
                 } else if (key === 'imageFile') {
-                    data.append('image', formData.imageFile as Blob, 'template.jpg');
-                } else if (key !== 'image' && key !== 'durationDays' && formData[key as keyof typeof formData] !== undefined) {
+                    if (formData.imageFile) {
+                        data.append('image', formData.imageFile as Blob, 'template.jpg');
+                    }
+                } else if (key === 'image') {
+                    if (!formData.imageFile && formData.image) {
+                        data.append('image', String(formData.image));
+                    }
+                } else if (key !== 'durationDays' && formData[key as keyof typeof formData] !== undefined) {
                     data.append(key, String(formData[key as keyof typeof formData]));
                 }
             });

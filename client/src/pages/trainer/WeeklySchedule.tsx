@@ -236,14 +236,20 @@ export default function WeeklySchedule() {
             return;
         }
 
-        // Real-time conflict detection
         const daySchedule = schedule.schedule[dayIndex];
         const newStartTime = field === 'startTime' ? value : daySchedule.slots.find(s => s.id === slotId)?.startTime || "";
         const newEndTime = field === 'endTime' ? value : daySchedule.slots.find(s => s.id === slotId)?.endTime || "";
 
         if (newStartTime && newEndTime) {
-            const start = new Date(`2000-01-01T${newStartTime}`);
-            const end = new Date(`2000-01-01T${newEndTime}`);
+            const startStr = `2000-01-01T${newStartTime}`;
+            const endStr = `2000-01-01T${newEndTime}`;
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+
+            if (end <= start) {
+                toast.error("End time must be after start time");
+                return;
+            }
 
             for (const other of daySchedule.slots) {
                 if (other.id === slotId) continue;
@@ -252,6 +258,7 @@ export default function WeeklySchedule() {
 
                 if (start < oEnd && end > oStart) {
                     toast.error(`Conflict detected with slot ${other.startTime} - ${other.endTime}`);
+                    return; // Prevent update
                 }
             }
         }

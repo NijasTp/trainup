@@ -402,6 +402,10 @@ export class TrainerService implements ITrainerService {
       trainerId
     )
 
+    const unassignedClientsCount = await this._trainerRepo.countUnassignedClients(
+      trainerId
+    )
+
     return {
       totalClients,
       newClientsThisMonth,
@@ -411,7 +415,8 @@ export class TrainerService implements ITrainerService {
       totalSessions,
       monthlyEarnings,
       planDistribution,
-      recentActivity
+      recentActivity,
+      unassignedClientsCount
     }
   }
 

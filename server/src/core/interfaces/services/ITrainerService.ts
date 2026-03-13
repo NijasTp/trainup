@@ -48,6 +48,7 @@ export interface DashboardStats {
     message: string
     date: string
   }>
+  unassignedClientsCount: number
 }
 
 export interface ITrainerService {

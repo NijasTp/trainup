@@ -45,4 +45,5 @@ export interface ITrainerRepository {
   countCompletedSessions(trainerId: string): Promise<number>;
   getPlanDistribution(trainerId: string): Promise<Array<{ plan: string; count: number }>>;
   getGrowthStats(days: number): Promise<{ date: string; count: number }[]>;
+  countUnassignedClients(trainerId: string): Promise<number>;
 }

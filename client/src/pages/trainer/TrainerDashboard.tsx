@@ -9,8 +9,10 @@ import {
   Target,
   Activity,
   ArrowUpRight,
-  Plus
+  Plus,
+  ShieldAlert
 } from "lucide-react";
+import { motion } from "framer-motion";
 import API from "@/lib/axios";
 import { toast } from "sonner";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
@@ -53,6 +55,7 @@ interface DashboardStats {
     message: string;
     date: string;
   }>;
+  unassignedClientsCount: number;
 }
 
 export default function TrainerDashboard() {
@@ -166,6 +169,29 @@ export default function TrainerDashboard() {
               </Button>
           </div>
         </div>
+        
+        {/* Unassigned Users Notification */}
+        {stats.unassignedClientsCount > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-between p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl group cursor-pointer hover:bg-amber-500/20 transition-all"
+            onClick={() => navigate("/trainer/clients")}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30">
+                <ShieldAlert className="h-6 w-6 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black uppercase italic tracking-widest text-amber-400">Assignment Pending</h3>
+                <p className="text-xs text-amber-400/60 font-medium">You have {stats.unassignedClientsCount} client{stats.unassignedClientsCount > 1 ? 's' : ''} waiting for workout or diet plans.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-amber-400 font-black uppercase italic tracking-widest text-xs">
+              Action Required <ArrowUpRight className="h-4 w-4" />
+            </div>
+          </motion.div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

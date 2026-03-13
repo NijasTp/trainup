@@ -190,8 +190,10 @@ export const SiteHeader: React.FC = () => {
     })
 
   const navLinks = [
-    { name: "My Trainer", path: "/my-trainer/profile", icon: MessageSquare, show: !!user?.assignedTrainer },
-    { name: "My Subscriptions", path: "/my-subscriptions", icon: Activity, show: true },
+    { name: "Trainers", path: ROUTES.USER_TRAINER_PAGE, icon: Users, show: true },
+    { name: "Gyms", path: ROUTES.USER_GYMS, icon: Dumbbell, show: true },
+    { name: "Workouts", path: ROUTES.USER_WORKOUTS_PAGE, icon: Activity, show: true },
+    { name: "My Trainer", path: ROUTES.MY_TRAINER_PROFILE, icon: MessageSquare, show: !!user?.assignedTrainer },
   ].filter(link => link.show)
 
 
