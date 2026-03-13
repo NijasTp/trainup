@@ -43,4 +43,5 @@ export interface IUserController {
   addProgress(req: Request, res: Response, next: NextFunction): Promise<void>;
   getProgress(req: Request, res: Response, next: NextFunction): Promise<void>;
   compareProgress(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getActivityData(req: Request, res: Response, next: NextFunction): Promise<void>;
 }

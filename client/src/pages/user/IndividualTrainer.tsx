@@ -278,20 +278,7 @@ export default function TrainerPage() {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
             </div>
 
-            {hasTrainer && !isSameTrainer && (
-                <div className="relative bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-b border-amber-500/20 py-4 px-6">
-                    <div className="container mx-auto flex items-center justify-center gap-3 text-amber-600">
-                        <AlertTriangle className="h-5 w-5" />
-                        <span className="font-medium text-center">
-                            You already have a trainer assigned.{" "}
-                            <Link to="/my-trainer/profile" className="underline hover:text-amber-700 font-semibold">
-                                View your trainer's profile
-                            </Link>{" "}
-                            or cancel your current subscription to book a new trainer.
-                        </span>
-                    </div>
-                </div>
-            )}
+
             <SiteHeader />
             <div className="relative border-b border-border/50 bg-card/20 backdrop-blur-sm">
                 <div className="container mx-auto px-4 py-6">
@@ -305,6 +292,20 @@ export default function TrainerPage() {
             </div>
 
             <main className="relative container mx-auto px-4 py-12 space-y-12 flex-1">
+                        {hasTrainer && !isSameTrainer && (
+                <div className="relative bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-b border-amber-500/20 py-4 px-6">
+                    <div className="container mx-auto flex items-center justify-center gap-3 text-amber-600">
+                        <AlertTriangle className="h-5 w-5" />
+                        <span className="font-medium text-center">
+                            You already have a trainer assigned.{" "}
+                            <Link to="/my-trainer/profile" className="underline hover:text-amber-700 font-semibold">
+                                View your trainer's profile
+                            </Link>{" "}
+                            or cancel your current subscription to book a new trainer.
+                        </span>
+                    </div>
+                </div>
+            )}
                 {/* Hero Section */}
                 <SpotlightCard className="p-8 md:p-12">
                     <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
@@ -344,8 +345,13 @@ export default function TrainerPage() {
                                 </div>
 
                                 <div className="space-y-3">
-                                    <h1 className="font-display text-4xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                                    <h1 className="font-display text-4xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent flex items-center gap-4">
                                         {trainer.name}
+                                        {isSameTrainer && (
+                                            <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 font-black italic uppercase tracking-tighter text-xs h-fit">
+                                                Current Trainer
+                                            </Badge>
+                                        )}
                                     </h1>
 
                                     <div className="flex flex-wrap items-center gap-3">
@@ -619,14 +625,30 @@ export default function TrainerPage() {
                                     <span className="text-sm font-medium">{trainer.email}</span>
                                 </div>
                             </div>
-                            <Button
-                                onClick={handleChat}
-                                variant="outline"
-                                className="w-full hover:bg-primary/5"
-                            >
-                                <MessageSquare className="h-4 w-4 mr-2" />
-                                Start Conversation
-                            </Button>
+                            {user?.trainerPlan && isSameTrainer && (
+                                <Button
+                                    onClick={handleChat}
+                                    variant="outline"
+                                    className="w-full hover:bg-primary/5"
+                                >
+                                    <MessageSquare className="h-4 w-4 mr-2" />
+                                    Start Conversation
+                                </Button>
+                            )}
+                            <div className="mt-16 flex flex-col items-center gap-6 pb-12">
+                                <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                                <div className="text-center space-y-4">
+                                    <p className="text-muted-foreground">Not sure if {trainer.name} is the right fit for you?</p>
+                                    <Button
+                                        onClick={() => navigate('/trainers')}
+                                        variant="outline"
+                                        className="bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl px-8 h-12 font-bold transition-all group"
+                                    >
+                                        <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                                        Browse More Trainers
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     </SpotlightCard>
                 </div>

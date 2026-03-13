@@ -28,7 +28,12 @@ export class DietService implements IDietService {
 
   async createOrGetDay(userId: string, date: string): Promise<CreateOrGetDayResponseDto> {
     const day = await this._dietRepo.createOrGet(userId, date);
-    const templateInfo = await this.getTemplateInfo(userId, date);
+    let templateInfo = {};
+    try {
+      templateInfo = await this.getTemplateInfo(userId, date);
+    } catch (err) {
+      console.error("Failed to fetch template info in createOrGetDay:", err);
+    }
     return { ...this.mapToResponseDto(day), ...templateInfo };
   }
 
@@ -193,7 +198,13 @@ export class DietService implements IDietService {
     if (actor.role === Role.USER && actor.id !== userId) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
     if (actor.role !== Role.USER && actor.role !== Role.TRAINER) throw new AppError(MESSAGES.FORBIDDEN, STATUS_CODE.FORBIDDEN);
 
-    await this._streakService.updateUserStreak(userId);
+    try {
+      if (isEaten) {
+        await this._streakService.updateUserStreak(userId);
+      }
+    } catch (err) {
+      console.error("Failed to update streak in markMealEaten:", err);
+    }
 
     const updated = await this._dietRepo.markMeal(userId, date, mealId, isEaten);
 
@@ -256,9 +267,9 @@ export class DietService implements IDietService {
         fats: meal.fats,
         time: meal.time,
         isEaten: meal.isEaten,
-        usedBy: meal.usedBy.toString(),
+        usedBy: meal.usedBy?.toString() || day.user.toString(),
         source: meal.source,
-        sourceId: meal.sourceId.toString(),
+        sourceId: meal.sourceId?.toString() || "",
         nutritions: meal.nutritions,
         notes: meal.notes,
         createdAt: meal.createdAt,

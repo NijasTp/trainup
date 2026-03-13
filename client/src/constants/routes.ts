@@ -69,8 +69,10 @@ export const ROUTES = {
   TRAINER_SESSION_REQUESTS: "/trainer/session-requests",
   TRAINER_CLIENT_WORKOUT: "/trainer/workout/:clientId",
   TRAINER_CLIENT_SESSION: "/trainer/workout/add-session/:clientId",
-  TRAINER_CLIENT_DIET: "/trainer/diet/:clientId",
+   TRAINER_CLIENT_DIET: "/trainer/diet/:clientId",
   TRAINER_CHATS: "/trainer/chats",
+  TRAINER_ASSIGN_WORKOUT: "/trainer/assign-workout/:userId",
+  TRAINER_ASSIGN_DIET: "/trainer/assign-diet/:userId",
 
 
   // Admin Routes

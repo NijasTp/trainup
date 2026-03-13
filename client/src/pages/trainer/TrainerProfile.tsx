@@ -169,9 +169,6 @@ export default function TrainerProfile() {
             <TabsTrigger value="transactions" className="flex-1 lg:flex-none px-10 rounded-2xl font-black italic uppercase text-xs">
               <Wallet className="h-4 w-4 mr-2" /> Ledgers
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex-1 lg:flex-none px-10 rounded-2xl font-black italic uppercase text-xs">
-              <SettingsIcon className="h-4 w-4 mr-2" /> Global Config
-            </TabsTrigger>
           </TabsList>
 
           <AnimatePresence mode="wait">

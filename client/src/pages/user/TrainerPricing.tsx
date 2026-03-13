@@ -160,7 +160,6 @@ export default function TrainerPricingPage() {
         { label: "1 Month", value: 1 },
         { label: "3 Months", value: 3 },
         { label: "6 Months", value: 6 },
-        { label: "12 Months", value: 12 },
     ];
 
     const calculatePrice = (basePrice: number, months: number) => {

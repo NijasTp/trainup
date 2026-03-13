@@ -72,6 +72,8 @@ import TrainerClients from './pages/trainer/TrainerClientListing';
 import TrainerChats from './pages/trainer/TrainerChats';
 import TrainerEditProfile from './pages/trainer/TrainerEditProfile';
 import ProfileCompletion from './pages/user/ProfileCompletion';
+import TrainerAssignWorkouts from './pages/trainer/TrainerAssignWorkouts';
+import TrainerAssignDiets from './pages/trainer/TrainerAssignDiets';
 
 import UserNotifications from './pages/user/UserNotifications';
 import SubscriptionDetails from './pages/user/SubscriptionDetails';
@@ -182,6 +184,8 @@ function App() {
         <Route path={ROUTES.TRAINER_CLIENT_SESSION} element={<TrainerProtectedRoute><TrainerAddSessionPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_DIET} element={<TrainerProtectedRoute><TrainerUserDietPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CHATS} element={<TrainerProtectedRoute><TrainerChats /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_ASSIGN_WORKOUT} element={<TrainerProtectedRoute><TrainerAssignWorkouts /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_ASSIGN_DIET} element={<TrainerProtectedRoute><TrainerAssignDiets /></TrainerProtectedRoute>} />
 
         {/* Trainer Template Management */}
         <Route path="/trainer/templates" element={<TrainerProtectedRoute><TrainerTemplateManagement /></TrainerProtectedRoute>} />

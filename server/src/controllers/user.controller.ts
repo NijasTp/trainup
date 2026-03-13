@@ -926,4 +926,15 @@ export class UserController implements IUserController {
       next(err)
     }
   }
+  
+  async getActivityData(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = (req.user as JwtPayload).id
+      const activityData = await this._userService.getActivityData(userId)
+      res.status(STATUS_CODE.OK).json({ activityData })
+    } catch (err) {
+      logger.error('Error fetching activity data:', err)
+      next(err)
+    }
+  }
 }

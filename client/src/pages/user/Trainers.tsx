@@ -8,7 +8,9 @@ import { Slider } from "@/components/ui/slider";
 import { MapPin, Star, Search, Clock, Users, Award } from "lucide-react";
 import { getTrainers } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
 import type { Trainer } from "@/interfaces/trainer/trainers";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { toast } from "sonner";
@@ -38,6 +40,8 @@ export default function Trainers() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.userAuth.user);
   const [search, setSearch] = useState("");
   const [specialization, setSpecialization] = useState("");
   const [experience, setExperience] = useState("");
@@ -71,7 +75,10 @@ export default function Trainers() {
 
   useEffect(() => {
     document.title = "TrainUp - Find Your Perfect Trainer";
-  }, []);
+    if (user?.assignedTrainer) {
+      navigate("/my-trainer/profile");
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const debounce = setTimeout(() => {

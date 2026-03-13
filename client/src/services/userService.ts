@@ -93,3 +93,8 @@ export const deleteReview = async (reviewId: string) => {
   const response = await API.delete(`/user/review/${reviewId}`);
   return response.data;
 };
+
+export const getActivityData = async () => {
+  const response = await API.get("/user/activity-data");
+  return response.data;
+};

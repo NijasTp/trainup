@@ -147,6 +147,17 @@ export class TemplateController {
         }
     }
 
+    async assignWorkoutToUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { userId, templateId } = req.body;
+            if (!userId || !templateId) throw new AppError("User ID and Template ID are required", STATUS_CODE.BAD_REQUEST);
+            await this._templateService.startWorkoutTemplate(userId, templateId);
+            res.status(STATUS_CODE.OK).json({ message: "Workout template assigned successfully" });
+        } catch (err) {
+            next(err);
+        }
+    }
+
     // Diet Templates
     async createDietTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -270,6 +281,17 @@ export class TemplateController {
             const userId = (req.user as JwtPayload).id;
             await this._templateService.stopDietTemplate(userId);
             res.status(STATUS_CODE.OK).json({ message: "Diet template stopped" });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    async assignDietToUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { userId, templateId } = req.body;
+            if (!userId || !templateId) throw new AppError("User ID and Template ID are required", STATUS_CODE.BAD_REQUEST);
+            await this._templateService.startDietTemplate(userId, templateId);
+            res.status(STATUS_CODE.OK).json({ message: "Diet template assigned successfully" });
         } catch (err) {
             next(err);
         }

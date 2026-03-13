@@ -17,6 +17,16 @@ export interface User {
     name: string;
     currentWeight: number;
     goalWeight: number;
+    height?: number;
+}
+
+export interface IActivityData {
+    [date: string]: {
+        workout: boolean;
+        meal: boolean;
+        weight: boolean;
+        gym: boolean;
+    };
 }
 
 export interface CurrentWeightProps {

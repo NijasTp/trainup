@@ -95,6 +95,13 @@ router.post(
     controller.stopWorkoutTemplate.bind(controller)
 );
 
+router.post(
+    "/workout/assign",
+    authMiddleware,
+    roleMiddleware([Role.TRAINER]),
+    controller.assignWorkoutToUser.bind(controller)
+);
+
 router.get(
     "/diet",
     authMiddleware,
@@ -117,6 +124,13 @@ router.post(
     "/diet/stop",
     authMiddleware,
     controller.stopDietTemplate.bind(controller)
+);
+
+router.post(
+    "/diet/assign",
+    authMiddleware,
+    roleMiddleware([Role.TRAINER]),
+    controller.assignDietToUser.bind(controller)
 );
 
 export default router;

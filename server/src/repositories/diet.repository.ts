@@ -19,9 +19,13 @@ export class DietDayRepository implements IDietDayRepository {
   }
 
   async createOrGet(userId: string, date: string): Promise<IDietDay> {
-    const found = await this.getByUserAndDate(userId, date);
-    if (found) return found;
-    return this.createDay(userId, date);
+    const updated = await DietDayModel.findOneAndUpdate(
+      { user: new Types.ObjectId(userId), date },
+      { $setOnInsert: { user: new Types.ObjectId(userId), date, meals: [] } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    ).exec();
+    if (!updated) throw new Error("Failed to create or get diet day");
+    return updated;
   }
 
   async addMeal(userId: string, date: string, meal: Partial<IMeal>): Promise<IDietDay> {

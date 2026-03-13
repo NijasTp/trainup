@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +33,6 @@ import Aurora from "@/components/ui/Aurora";
 import type { User, Trainer, UserPlan } from "@/interfaces/user/IMyTrainer";
 
 export default function MyTrainerProfile() {
-    const navigate = useNavigate();
     const [trainer, setTrainer] = useState<Trainer | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -85,19 +83,6 @@ export default function MyTrainerProfile() {
 
 
 
-    const handleVideoCall = () => {
-        if (!user?.trainerPlan) {
-            toast.error("Please subscribe to a plan first");
-            return;
-        }
-
-        if (user.trainerPlan !== 'pro') {
-            toast.error("Video calls are only available with Pro plan");
-            return;
-        }
-
-        navigate(`/my-trainer/availability`);
-    };
 
     const handleCancelSubscription = async () => {
         try {
@@ -344,18 +329,6 @@ export default function MyTrainerProfile() {
                                             </Link>
                                         )}
 
-                                        {/* Video Call Button - Only for Pro */}
-                                        {user?.trainerPlan === 'pro' && (
-                                            <Button
-                                                variant="outline"
-                                                size="lg"
-                                                className="border-purple-500/50 text-purple-600 hover:bg-purple-500/5 hover:border-purple-500/30 transition-all duration-300 font-medium px-8 bg-transparent"
-                                                onClick={handleVideoCall}
-                                            >
-                                                <Video className="h-5 w-5 mr-2" />
-                                                Book Session
-                                            </Button>
-                                        )}
 
                                         {/* Sessions/Availability */}
                                         <Link to="/my-trainer/sessions">

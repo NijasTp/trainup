@@ -17,6 +17,10 @@ import {
     UserResponseDto
 } from '../dtos/user.dto'
 import { logger } from '../utils/logger.util'
+import WorkoutSessionModel from '../models/workout.model'
+import { DietDayModel } from '../models/diet.model'
+import { AttendanceModel } from '../models/gymAttendence.model'
+import { IActivityData } from '../core/interfaces/services/IUserService'
 
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
@@ -472,5 +476,59 @@ export class UserService implements IUserService {
             resource_type: "auto",
         });
         return result.secure_url;
+    }
+
+    async getActivityData(userId: string): Promise<IActivityData> {
+        const activityData: IActivityData = {};
+
+        // 1. Fetch Workout Activities
+        const workouts = await WorkoutSessionModel.find({
+            userId,
+            isDone: true
+        }).select('completedAt updatedAt').lean();
+
+        workouts.forEach(w => {
+            const date = (w.completedAt || w.updatedAt).toISOString().split('T')[0];
+            if (!activityData[date]) activityData[date] = { workout: false, meal: false, weight: false, gym: false };
+            activityData[date].workout = true;
+        });
+
+        // 2. Fetch Meal Activities
+        const dietDays = await DietDayModel.find({
+            user: userId,
+            "meals.isEaten": true
+        }).select('date meals').lean();
+
+        dietDays.forEach(d => {
+            const date = d.date;
+            const hasEaten = d.meals.some(m => m.isEaten);
+            if (hasEaten) {
+                if (!activityData[date]) activityData[date] = { workout: false, meal: false, weight: false, gym: false };
+                activityData[date].meal = true;
+            }
+        });
+
+        // 3. Fetch Weight Activities
+        const user = await this._userRepo.findById(userId);
+        if (user && user.weightHistory) {
+            user.weightHistory.forEach(w => {
+                const date = w.date.toISOString().split('T')[0];
+                if (!activityData[date]) activityData[date] = { workout: false, meal: false, weight: false, gym: false };
+                activityData[date].weight = true;
+            });
+        }
+
+        // 4. Fetch Gym Attendance
+        const attendance = await AttendanceModel.find({
+            userId
+        }).select('date').lean();
+
+        attendance.forEach(a => {
+            const date = a.date.toISOString().split('T')[0];
+            if (!activityData[date]) activityData[date] = { workout: false, meal: false, weight: false, gym: false };
+            activityData[date].gym = true;
+        });
+
+        return activityData;
     }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation, useParams, useNavigate, Link, } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ export default function SuccessPage() {
   const location = useLocation();
   const state = location.state as LocationState | undefined;
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const didUpdate = useRef(false);
 
   useEffect(() => {
     if (!state?.totalWorkoutTime || !state?.isDone) {
@@ -57,10 +58,6 @@ export default function SuccessPage() {
         origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
       });
     }, 250);
-
-
-
-    const didUpdate = useRef(false);
 
     async function markSessionAsDone() {
       if (didUpdate.current) return;

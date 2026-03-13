@@ -20,8 +20,7 @@ import {
     MoreHorizontal,
     Trash2,
     Paperclip,
-    Mic,
-    Video
+    Mic
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -306,16 +305,6 @@ export default function ChatPage() {
         }
     };
 
-    const handleRequestSession = async () => {
-        if (!trainer) return;
-        try {
-            await API.post('/user/chat/session-request', { trainerId: trainer._id });
-            toast.success("Session request sent to trainer!");
-        } catch (err: any) {
-            console.error("Failed to send session request:", err);
-            toast.error("Failed to send session request");
-        }
-    };
 
     const deleteMessage = async (messageId: string) => {
         try {
@@ -479,17 +468,6 @@ export default function ChatPage() {
                                 </Badge>
                             )}
                         </div>
-                    )}
-                    {userPlan?.planType === 'pro' && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="ml-2"
-                            onClick={handleRequestSession}
-                        >
-                            <Video className="h-4 w-4 mr-2" />
-                            Request Session
-                        </Button>
                     )}
                 </div>
             </div>

@@ -248,6 +248,37 @@ export default function Profile() {
                 </div>
               </div>
 
+              {/* My Subscriptions */}
+              <div className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-black italic uppercase">My Subscriptions</h3>
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/my-subscriptions')} className="text-primary font-bold uppercase text-[10px] tracking-widest hover:bg-primary/10">
+                    Manage <ArrowRight className="ml-1 h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {profile && profile.activeSubscriptions && profile.activeSubscriptions.length > 0 ? (
+                    profile.activeSubscriptions.map((sub: any, idx: number) => (
+                      <div key={idx} className="p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-primary/30 transition-all group">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-black italic uppercase text-white group-hover:text-primary transition-colors">{sub.planName} Plan</span>
+                          <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-[8px] font-black uppercase">Active</Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          <Calendar className="h-3 w-3" />
+                          <span>Renews: {formatDate(sub.expiryDate)}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center bg-black/20 rounded-2xl border border-dashed border-white/5">
+                      <p className="text-xs text-gray-500 italic">No active subscriptions logic implemented yet.</p>
+                      <Button variant="link" onClick={() => navigate('/trainers')} className="text-primary h-auto p-0 text-xs mt-2 uppercase font-bold">Browse Plans</Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Transactions */}
               <div className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] space-y-6">
                 <div className="flex items-center justify-between">

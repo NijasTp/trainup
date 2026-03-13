@@ -1,4 +1,12 @@
 import { IUser } from '../../../models/user.model'
+export interface IActivityData {
+  [date: string]: {
+    workout: boolean;
+    meal: boolean;
+    weight: boolean;
+    gym: boolean;
+  };
+}
 import {
   GetWeightHistoryResponseDto,
   LoginResponseDto,
@@ -61,4 +69,5 @@ export interface IUserService {
   getAssignedTrainerId(userId: string): Promise<string | null>
   uploadChatFile(file: Express.Multer.File): Promise<string>
   toggleWorkoutTemplate(userId: string, templateId: string): Promise<boolean>
+  getActivityData(userId: string): Promise<IActivityData>
 }

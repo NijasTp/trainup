@@ -144,5 +144,6 @@ router.post('/chat/upload', authMiddleware, upload.single('file'), userChatContr
 router.post('/progress', authMiddleware, upload.array('photo', 6), userProfileController.addProgress.bind(userProfileController))
 router.get('/progress', authMiddleware, userProfileController.getProgress.bind(userProfileController))
 router.get('/progress/compare', authMiddleware, userProfileController.compareProgress.bind(userProfileController))
+router.get('/activity-data', authMiddleware, userProfileController.getActivityData.bind(userProfileController))
 
 export default router
