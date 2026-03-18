@@ -30,7 +30,6 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     { label: "1 Month", value: 1, discount: 0 },
     { label: "3 Months", value: 3, discount: 10 },
     { label: "6 Months", value: 6, discount: 15 },
-    { label: "12 Months", value: 12, discount: 20 },
   ];
 
   const calculatePrice = (basePrice: number, months: number) => {
@@ -148,7 +147,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             onValueChange={(val) => setDuration(parseInt(val))}
             className="w-auto"
           >
-            <TabsList className="grid grid-cols-4 w-[400px]">
+            <TabsList className="grid grid-cols-3 w-[400px]">
               {durations.map((d) => (
                 <TabsTrigger
                   key={d.value}

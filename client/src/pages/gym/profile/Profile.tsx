@@ -16,7 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getGymDetails, updateGymProfile } from '@/services/gymService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const Profile = () => {
     const [loading, setLoading] = useState(true);
@@ -97,12 +97,12 @@ const Profile = () => {
         }
 
         try {
-            toast.loading(`Uploading ${type}...`, { id: 'upload' });
+            toast.loading(`Uploading ${type}...`, { toasterId: 'upload' });
             const result = await updateGymProfile(formData);
             setGymData(result.gym);
-            toast.success(`${type} updated`, { id: 'upload' });
+            toast.success(`${type} updated`, { toasterId: 'upload' });
         } catch (error) {
-            toast.error(`Failed to upload ${type}`, { id: 'upload' });
+            toast.error(`Failed to upload ${type}`, { toasterId: 'upload' });
         }
     };
 
@@ -133,7 +133,7 @@ const Profile = () => {
             return;
         }
 
-        toast.loading("Detecting location...", { id: 'geo' });
+        toast.loading("Detecting location...", { toasterId: 'geo' });
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 const { latitude, longitude } = position.coords;
@@ -142,22 +142,22 @@ const Profile = () => {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
                     const data = await res.json();
 
-                    setGymData(prev => ({
+                    setGymData((prev: any) => ({
                         ...prev,
                         address: data.display_name,
                         geoLocation: { type: 'Point', coordinates: [longitude, latitude] }
                     }));
-                    toast.success("Location detected", { id: 'geo' });
+                    toast.success("Location detected", { toasterId: 'geo' });
                 } catch (err) {
-                    setGymData(prev => ({
+                    setGymData((prev: any) => ({
                         ...prev,
                         geoLocation: { type: 'Point', coordinates: [longitude, latitude] }
                     }));
-                    toast.success("Coordinates detected", { id: 'geo' });
+                    toast.success("Coordinates detected", { toasterId: 'geo' });
                 }
             },
-            (error) => {
-                toast.error("Unable to retrieve location", { id: 'geo' });
+            (_error) => {
+                toast.error("Unable to retrieve location", { toasterId: 'geo' });
             }
         );
     };

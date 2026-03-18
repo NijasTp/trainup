@@ -4,7 +4,7 @@ import { login } from '../../redux/slices/userAuthSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import InputField from './InputField';
 import ActionButton from './ActionButton';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 
 

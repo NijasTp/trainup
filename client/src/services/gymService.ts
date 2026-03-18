@@ -48,7 +48,7 @@ export const verifyGym = async (gymId: string, payload: { verifyStatus: "approve
 };
 
 
-// Reapply with updated details (multipart)
+// Reapply with updated details
 export const reapplyGym = async (formData: FormData) => {
   const res = await API.post('/gym/reapply', formData);
   return res.data;

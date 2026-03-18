@@ -52,10 +52,9 @@ const ProgressPage = () => {
                 setNotes("");
                 setExistingPhotos([]);
             }
-            setNewPhotos([]); // Clear new uploads when changing date
+            setNewPhotos([]);
         } catch (error) {
             console.error("Failed to fetch progress:", error);
-            // Don't show error toast on 404/empty, just clear
             setNotes("");
             setExistingPhotos([]);
         } finally {
@@ -85,10 +84,10 @@ const ProgressPage = () => {
 
             await addProgress(formData);
             toast.success("Progress saved successfully!");
-            fetchProgress(selectedDate); // Refresh
+            fetchProgress(selectedDate);
         } catch (error: any) {
             console.error("Save error:", error);
-            toast.error(error.response?.data?.message || "Failed to save progress");
+            toast.error(error.response?.data?.error || "Failed to save progress");
         } finally {
             setIsSaving(false);
         }

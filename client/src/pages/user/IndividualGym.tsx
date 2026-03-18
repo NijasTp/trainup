@@ -1,22 +1,14 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
-    MapPin,
     Star,
     Clock,
     Users,
-    Award,
     ArrowLeft,
-    Calendar,
     Shield,
-    FileText,
     Check,
-    Dumbbell,
-    Info,
     ChevronRight,
     Map as MapIcon,
     Sparkles
@@ -77,6 +69,15 @@ export default function IndividualGym() {
         }
     }
 
+    const handleReviewAdded = (newReview: any) => {
+        if (gym) {
+            setGym({
+                ...gym,
+                reviews: [newReview, ...(gym.reviews || [])]
+            });
+        }
+    };
+
     const handleSubscribe = async (planId: string, preferredTime: string) => {
         setIsProcessing(true);
         try {
@@ -92,7 +93,7 @@ export default function IndividualGym() {
 
             // 2. Load Razorpay
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                key: import.meta.env.VITE_RAZORPAY_KEY,
                 amount: orderResponse.order.amount,
                 currency: "INR",
                 name: "TrainUp",
@@ -236,12 +237,15 @@ export default function IndividualGym() {
                             <div className="flex items-center justify-between">
                                 <div className="space-y-1">
                                     <p className="text-xs text-gray-500 font-black uppercase tracking-widest">Starting Price</p>
-                                    <p className="text-4xl font-black text-white">₹{plans[0]?.price || '---'}</p>
+                                    <p className="text-4xl font-black text-white">
+                                        {plans.length > 0 ? `₹${plans[0].price}` : <span className="text-2xl text-gray-400 italic">Unavailable</span>}
+                                    </p>
                                 </div>
                                 <Button
                                     onClick={() => setIsModalOpen(true)}
+                                    disabled={plans.length === 0}
                                     size="lg"
-                                    className="h-16 px-10 rounded-2xl bg-primary text-white font-black shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] hover:scale-105 transition-all text-lg"
+                                    className="h-16 px-10 rounded-2xl bg-primary text-black font-black shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] hover:scale-105 transition-all text-lg"
                                 >
                                     Choose Your Plan <ChevronRight className="ml-2 h-5 w-5" />
                                 </Button>
@@ -251,8 +255,16 @@ export default function IndividualGym() {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-2">
                                 <Clock className="h-6 w-6 text-primary mb-2" />
-                                <p className="font-black text-white">Opening Hours</p>
-                                <p className="text-sm text-gray-400">{gym.openingHours || "06:00 AM - 10:00 PM"}</p>
+                                <p className="font-black text-white">Opening Hours (Today)</p>
+                                <p className="text-sm text-gray-400">
+                                    {Array.isArray(gym.openingHours) && gym.openingHours.length > 0
+                                        ? (() => {
+                                            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+                                            const todayHours = gym.openingHours.find((h: any) => h.day.toLowerCase() === today) || gym.openingHours[0];
+                                            return todayHours.isClosed ? "Closed Today" : `${todayHours.open} - ${todayHours.close}`;
+                                        })()
+                                        : (gym.openingHours || "06:00 AM - 10:00 PM")}
+                                </p>
                             </div>
                             <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-2">
                                 <MapIcon className="h-6 w-6 text-primary mb-2" />
@@ -283,43 +295,49 @@ export default function IndividualGym() {
                 {/* Plans Deep Dive */}
                 <section className="space-y-8">
                     <h2 className="text-3xl font-black">Membership Plans</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {plans.map((plan, i) => (
-                            <Card key={plan._id} className="bg-white/5 border-white/10 rounded-[2.5rem] p-8 space-y-8 overflow-hidden relative group shadow-2xl">
-                                {i === 1 && (
-                                    <div className="absolute top-0 right-0 bg-primary text-white px-6 py-2 rounded-bl-3xl font-black text-[10px] uppercase tracking-widest shadow-xl">
-                                        Best Value
+                    {plans.length === 0 ? (
+                        <div className="py-12 text-center bg-white/5 border border-white/10 rounded-[2.5rem] shadow-2xl backdrop-blur-md">
+                            <h3 className="text-2xl font-bold text-gray-300">Plans Currently Unavailable</h3>
+                            <p className="text-gray-500 mt-2">This gym hasn't added any membership plans yet.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {plans.map((plan, i) => (
+                                <Card key={plan._id} className="bg-white/5 border-white/10 rounded-[2.5rem] p-8 space-y-8 overflow-hidden relative group shadow-2xl">
+                                    <div className="space-y-2">
+                                        <h3 className="text-2xl font-black text-white">{plan.name}</h3>
+                                        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">{plan.duration} {plan.durationUnit}(s)</p>
                                     </div>
-                                )}
-                                <div className="space-y-2">
-                                    <h3 className="text-2xl font-black text-white">{plan.name}</h3>
-                                    <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">{plan.duration} {plan.durationUnit}(s)</p>
-                                </div>
-                                <div className="space-y-4">
-                                    {plan.features.map((f: string, fi: number) => (
-                                        <div key={fi} className="flex items-start gap-3">
-                                            <Check className="h-4 w-4 text-primary mt-1" />
-                                            <span className="text-gray-400 font-medium">{f}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="pt-8 border-t border-white/10 flex items-center justify-between">
-                                    <p className="text-3xl font-black text-white">₹{plan.price}</p>
-                                    <Button
-                                        onClick={() => setIsModalOpen(true)}
-                                        className="rounded-2xl bg-white text-black font-black px-6 hover:bg-primary hover:text-white transition-all"
-                                    >
-                                        Select
-                                    </Button>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
+                                    <div className="space-y-4">
+                                        {plan.features.map((f: string, fi: number) => (
+                                            <div key={fi} className="flex items-start gap-3">
+                                                <Check className="h-4 w-4 text-primary mt-1" />
+                                                <span className="text-gray-400 font-medium">{f}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="pt-8 border-t border-white/10 flex items-center justify-between">
+                                        <p className="text-3xl font-black text-white">₹{plan.price}</p>
+                                        <Button
+                                            onClick={() => setIsModalOpen(true)}
+                                            className="rounded-2xl bg-white text-black font-black px-6 hover:bg-primary hover:text-white transition-all"
+                                        >
+                                            Select
+                                        </Button>
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
                 </section>
 
                 {/* Reviews */}
                 <section className="pt-12 pb-24 border-t border-white/10">
-                    <GymReviews gymId={id!} />
+                    <GymReviews 
+                        gymId={id!} 
+                        reviews={gym.reviews || []}
+                        onReviewAdded={handleReviewAdded}
+                    />
                 </section>
 
             </main>

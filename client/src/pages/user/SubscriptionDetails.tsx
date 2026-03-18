@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import API from '@/lib/axios';
 import { toast } from 'sonner';
-import { Loader2, Calendar, CreditCard, User, Building2, CheckCircle2, Clock, XCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Calendar, User, Building2, Clock, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";

@@ -119,7 +119,7 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
                                 className="flex items-center gap-2"
                             >
                                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center font-black text-black">T</div>
-                                <span className="text-xl font-black tracking-tighter">TRAINUP <span className="text-primary text-xs ml-1">GYM</span></span>
+                                <span className="text-xl font-black tracking-tighter">{gym?.name?.toUpperCase() || 'TrainUp Gym'} </span>
                             </motion.div>
                         )}
                     </AnimatePresence>

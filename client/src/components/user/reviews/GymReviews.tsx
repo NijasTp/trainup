@@ -27,7 +27,7 @@ interface GymReviewsProps {
     currentUserPlan?: string;
 }
 
-export default function GymReviews({ gymId, reviews, onReviewAdded, canReview = false, currentUserPlan }: GymReviewsProps) {
+export default function GymReviews({ gymId, reviews = [], onReviewAdded, canReview = false, currentUserPlan }: GymReviewsProps) {
     const [rating, setRating] = useState(0);
     const [message, setMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);

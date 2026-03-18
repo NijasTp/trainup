@@ -3,6 +3,7 @@ import { logout, updateUser } from "@/redux/slices/userAuthSlice"
 import type { RootState } from "@/redux/store"
 import { useDispatch, useSelector } from "react-redux"
 import { Link, useNavigate, useLocation } from "react-router-dom"
+import { ROUTES } from "@/constants/routes"
 import { logout as logoutApi } from "@/services/authService"
 import {
   Bell,

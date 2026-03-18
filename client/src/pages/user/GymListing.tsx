@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { MapPin, Star, Search, Users, Dumbbell, Navigation, Filter } from "lucide-react";
-import { getGymsForUser } from "@/services/gymService";
+import { getGymsForUser, getSubscriptionPlan } from "@/services/gymService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { Link, useNavigate } from "react-router-dom";
@@ -59,6 +59,7 @@ export default function GymListing() {
             setIsLoading(false);
         }
     }
+
 
     const handleDetectLocation = () => {
         setIsLocating(true);
@@ -321,8 +322,14 @@ function GymCard({ gym, index, navigate }: { gym: any; index: number; navigate: 
                     <div>
                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-[0.2em]">Starting At</p>
                         <p className="text-3xl font-black text-white">
-                            <span className="text-primary text-sm font-bold mr-1">₹</span>
-                            {gym.minPlanPrice || "---"}
+                            {gym.minPlanPrice ? (
+                                <>
+                                    <span className="text-primary text-sm font-bold mr-1">₹</span>
+                                    {gym.minPlanPrice}
+                                </>
+                            ) : (
+                                <span className="text-xl text-gray-400 italic">Unavailable</span>
+                            )}
                         </p>
                     </div>
                     <Button

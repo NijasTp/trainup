@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Lenis from "lenis";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -112,6 +113,19 @@ export default function HomePage() {
     document.title = "TrainUp - Your Fitness Journey";
     fetchHomeData();
     checkProfileCompletion();
+
+    const lenis = new Lenis();
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    const rafId = requestAnimationFrame(raf);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+    };
   }, []);
 
   const checkProfileCompletion = () => {

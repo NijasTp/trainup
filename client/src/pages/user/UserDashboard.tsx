@@ -85,13 +85,13 @@ const AddWeightDialog: React.FC<AddWeightDialogProps> = ({ newWeight, setNewWeig
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
-          className="w-full h-16 bg-gradient-to-r from-primary/80 to-primary hover:from-primary hover:to-primary-bright text-white font-black text-lg shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all duration-500 uppercase italic tracking-tighter border border-white/10"
+          className="w-full h-16 bg-gradient-to-r from-primary/80 to-primary hover:from-primary hover:to-primary-bright text-black font-black text-lg shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all duration-500 uppercase italic tracking-tighter border border-white/10"
           disabled={isWeightLoggedToday}
         >
           <Plus className="h-6 w-6 mr-2" />
           {isWeightLoggedToday ? "Logged for Today" : "Log Today's Weight"}
         </Button>
-      </DialogTrigger>
+    </DialogTrigger>
       <DialogContent className="bg-card/95 backdrop-blur-xl border-white/10">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter">Enter Weight</DialogTitle>
@@ -366,6 +366,7 @@ const calculateStreak = (activityData: IActivityData) => {
 
 const ActivityCalendar: React.FC<{ activityData: IActivityData }> = ({ activityData }) => {
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const [hoverPos, setHoverPos] = useState<{ x: number, y: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -428,7 +429,7 @@ const ActivityCalendar: React.FC<{ activityData: IActivityData }> = ({ activityD
         <div className="relative">
           <div 
             ref={scrollRef}
-            className="flex gap-[3px] overflow-x-auto pb-4 flex-nowrap no-scrollbar"
+            className="flex gap-[2px] overflow-x-auto pb-4 flex-nowrap no-scrollbar"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             <style>{`
@@ -437,7 +438,7 @@ const ActivityCalendar: React.FC<{ activityData: IActivityData }> = ({ activityD
               }
             `}</style>
             {weeks.map((week, wi) => (
-              <div key={wi} className="flex flex-col gap-[3px] shrink-0">
+              <div key={wi} className="flex flex-col gap-[2px] shrink-0">
                 {week.map((date, di) => {
                   const level = getLevel(date);
                   const dateStr = format(date, "yyyy-MM-dd");
@@ -448,7 +449,7 @@ const ActivityCalendar: React.FC<{ activityData: IActivityData }> = ({ activityD
                     <div
                       key={di}
                       className={cn(
-                        "w-3 h-3 rounded-[2px] transition-all duration-300 relative cursor-pointer",
+                        "w-[10px] h-[10px] rounded-[2px] transition-all duration-300 relative cursor-pointer",
                         isFuture ? 'bg-transparent pointer-events-none' :
                           level === 0 ? 'bg-white/[0.03] hover:bg-white/[0.08]' :
                             level === 1 ? 'bg-primary/20 shadow-[0_0_10px_rgba(var(--primary-rgb),0.1)]' :
@@ -456,12 +457,28 @@ const ActivityCalendar: React.FC<{ activityData: IActivityData }> = ({ activityD
                                 level === 3 ? 'bg-primary/70 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]' :
                                   'bg-primary shadow-[0_0_25px_rgba(var(--primary-rgb),0.4)]'
                       )}
-                      onMouseEnter={() => setHoveredDate(dateStr)}
-                      onMouseLeave={() => setHoveredDate(null)}
+                      onMouseEnter={(e) => {
+                        setHoveredDate(dateStr);
+                        setHoverPos({ x: e.clientX, y: e.clientY });
+                      }}
+                      onMouseMove={(e) => {
+                        setHoverPos({ x: e.clientX, y: e.clientY });
+                      }}
+                      onMouseLeave={() => {
+                        setHoveredDate(null);
+                        setHoverPos(null);
+                      }}
                     >
-                      {hoveredDate === dateStr && !isFuture && (
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-[9999] animate-in fade-in zoom-in duration-200">
-                          <div className="bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl min-w-[180px] ring-1 ring-white/5">
+                      {hoveredDate === dateStr && !isFuture && hoverPos && (
+                        <div 
+                          className="fixed z-[99999] pointer-events-none"
+                          style={{ 
+                            left: hoverPos.x, 
+                            top: hoverPos.y, 
+                            transform: 'translate(-50%, -110%)' 
+                          }}
+                        >
+                          <div className="bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl min-w-[180px] ring-1 ring-white/5 animate-in fade-in zoom-in duration-200">
                             <div className="space-y-3">
                               <div className="pb-2 border-b border-white/5">
                                 <p className="text-[10px] font-black uppercase italic tracking-widest text-white/30">{format(date, "EEEE")}</p>
@@ -592,19 +609,18 @@ const UserDashboard: React.FC = () => {
   const [activityData, setActivityData] = useState<IActivityData>({});
   const [newWeight, setNewWeight] = useState("");
   const [isWeightLoggedToday, setIsWeightLoggedToday] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardIsLoading, setDashboardIsLoading] = useState(true);
   const dispatch = useDispatch();
   const streak = calculateStreak(activityData);
 
   useEffect(() => {
-    if (activityData && Object.keys(activityData).length > 0) {
-      dispatch(updateUser({ streak }));
-    }
-  }, [streak, dispatch, activityData]);
+    // Always dispatch streak, even if 0, once we have some attempt at data
+    dispatch(updateUser({ streak }));
+  }, [streak, dispatch]);
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
+      setDashboardIsLoading(true);
       try {
         const [profileResponse, weightHistoryResponse, activityDataResponse] = await Promise.all([
           getProfile(),
@@ -685,7 +701,7 @@ const UserDashboard: React.FC = () => {
         const errorMessage = error instanceof Error ? (error as any).response?.data?.error || error.message : "Failed to load dashboard data";
         toast.error(errorMessage);
       } finally {
-        setIsLoading(false);
+        setDashboardIsLoading(false);
       }
     };
     fetchData();
@@ -758,7 +774,7 @@ const UserDashboard: React.FC = () => {
           </p>
         </div>
 
-        {isLoading ? (
+        {dashboardIsLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="relative">
               <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
