@@ -124,26 +124,26 @@ export const getGymAttendance = async (date: string) => {
 
 // Products
 export const getGymProducts = async (page: number = 1, limit: number = 10, search: string = '', category: string = 'all') => {
-  const res = await API.get(`/gym/products?page=${page}&limit=${limit}&search=${search}&category=${category}`);
+  const res = await API.get(`/gym/products/manage?page=${page}&limit=${limit}&search=${search}&category=${category}`);
   return res.data;
 };
 
 export const createGymProduct = async (formData: FormData) => {
-  const res = await API.post('/gym/products', formData, {
+  const res = await API.post('/gym/products/manage', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
   return res.data;
 };
 
 export const updateGymProduct = async (id: string, formData: FormData) => {
-  const res = await API.put(`/gym/products/${id}`, formData, {
+  const res = await API.put(`/gym/products/manage/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
   return res.data;
 };
 
 export const deleteGymProduct = async (id: string) => {
-  const res = await API.delete(`/gym/products/${id}`);
+  const res = await API.delete(`/gym/products/manage/${id}`);
   return res.data;
 };
 
@@ -260,5 +260,15 @@ export const getGymForUser = async (id: string) => {
 
 export const getActiveSubscriptionPlans = async (gymId: string) => {
   const res = await API.get(`/user/gyms/${gymId}/subscription-plans`);
+  return res.data;
+};
+
+export const markAttendance = async (gymId: string, location: { lat: number; lng: number }) => {
+  const res = await API.post('/user/gym/mark-attendance', { gymId, location });
+  return res.data;
+};
+
+export const getAttendanceHistoryForUser = async (gymId: string, page: number = 1, limit: number = 10) => {
+  const res = await API.get(`/user/gym/attendance-history/${gymId}?page=${page}&limit=${limit}`);
   return res.data;
 };

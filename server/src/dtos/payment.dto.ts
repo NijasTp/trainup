@@ -9,22 +9,13 @@ export interface CreateOrderRequestDto {
   duration: number; // in months
 }
 
-export interface CreateOrderResponseDto {
-  id: string;
-  entity: string;
-  amount: number;
-  amount_paid: number;
-  amount_due: number;
-  currency: string;
-  receipt?: string;
-  status: string;
-  created_at: number;
+export interface StripeCheckoutResponseDto {
+  sessionId: string;
+  url: string | null;
 }
 
 export interface VerifyPaymentRequestDto {
-  orderId: string;
-  paymentId: string;
-  signature: string;
+  sessionId: string;
   trainerId: string;
   planType: 'basic' | 'premium' | 'pro';
   amount: number;

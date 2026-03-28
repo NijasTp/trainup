@@ -51,6 +51,7 @@ export const MESSAGES = {
   OTP_VERIFIED: "OTP verified successfully",
   FAILED_TO_UPDATE_GYM_STATUS: "Failed to update gym status",
   PASSWORD_RESET: "Password reset successfully",
+  PRODUCT_NOT_FOUND: "Product not found",
   APPLICATION_SUBMITTED: "Application submitted successfully",
   INVALID_TRAINER_ID: "Invalid trainer ID",
   CERTIFICATE_REQUIRED: "Certificate file is required",

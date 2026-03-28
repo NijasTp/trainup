@@ -13,6 +13,8 @@ const BASE_ROUTE = {
     NOTIFICATION: '/api/notifications',
     TEMPLATE: '/api/template',
     SUBSCRIPTION: '/api/subscription',
+    GYM_PRODUCT: '/api/gym/products',
+    USER_GYM_PRODUCT: '/api/user/gym-products',
 }
 
 

@@ -9,6 +9,11 @@ export interface ITransactionRepository {
     status: 'completed' | 'failed',
     paymentId?: string
   ): Promise<ITransaction | null>;
+  updateTransactionStatusBySessionId(
+    sessionId: string,
+    status: 'completed' | 'failed',
+    paymentId?: string
+  ): Promise<ITransaction | null>;
   getTransactionById(id: string): Promise<ITransaction | null>;
   getUserTransactions(
     userId: string,
@@ -27,6 +32,7 @@ export interface ITransactionRepository {
     planType: string
   ): Promise<{ transactions: ITransactionDTO[]; totalPages: number; totalRevenue: number; total: number }>;
   findByOrderId(orderId: string): Promise<ITransaction | null>;
+  findBySessionId(sessionId: string): Promise<ITransaction | null>;
   getUserPendingTransaction(userId: string): Promise<ITransaction | null>;
   markUserPendingTransactionsAsFailed(userId: string): Promise<number>;
   getTrainerEarningsStats(

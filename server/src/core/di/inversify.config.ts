@@ -69,14 +69,16 @@ import { AdminController } from "../../controllers/admin.controller";
 import { MailService } from "../../services/mail.service";
 import { TrainerRepository } from "../../repositories/trainer.repository";
 import { TrainerService } from "../../services/trainer.service";
-import { TrainerController } from "../../controllers/trainer.controller";
 import { TrainerAuthController } from "../../controllers/trainer.auth.controller";
 import { TrainerScheduleController } from "../../controllers/trainer.schedule.controller";
 import { TrainerClientController } from "../../controllers/trainer.client.controller";
 import { TrainerDashboardController } from "../../controllers/trainer.dashboard.controller";
+import { GymProductController } from "../../controllers/gymProduct.controller";
+import { GymProductRepository } from "../../repositories/gymProduct.repository";
+import { GymProductService } from "../../services/gymProduct.service";
+import { IGymProductService } from "../interfaces/services/IGymProductService";
 import { GymController } from "../../controllers/gym.controller";
 import { GymRepository } from "../../repositories/gym.repository";
-import { GymProductRepository } from "../../repositories/gymProduct.repository";
 import { GymJobRepository } from "../../repositories/gymJob.repository";
 import { GymTransactionRepository } from "../../repositories/gymTransaction.repository";
 import { GymService } from "../../services/gym.service";
@@ -148,18 +150,23 @@ import { SubscriptionController } from "../../controllers/userSubscription.contr
 
 
 import { NotificationCron } from "../../cron/notification.cron";
+import { GymAttendanceCron } from "../../cron/gymAttendance.cron";
 
-// Create container 
+import { CronService } from '../../services/cron.service'
+import { ICronService } from '../interfaces/services/ICronService'
+
 const container = new Container();
+
+container.bind<ICronService>(TYPES.ICronService).to(CronService).inSingletonScope();
 
 // Bindings
 container.bind<UserController>(TYPES.UserController).to(UserController);
 container.bind<UserAuthController>(TYPES.UserAuthController).to(UserAuthController);
-container.bind<UserProfileController>(TYPES.UserProfileController).to(UserProfileController);
 container.bind<UserTrainerController>(TYPES.UserTrainerController).to(UserTrainerController);
 container.bind<UserGymController>(TYPES.UserGymController).to(UserGymController);
 container.bind<UserReviewController>(TYPES.UserReviewController).to(UserReviewController);
 container.bind<UserChatController>(TYPES.UserChatController).to(UserChatController);
+container.bind<UserProfileController>(TYPES.UserProfileController).to(UserProfileController);
 container.bind<IUserService>(TYPES.IUserService).to(UserService);
 container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepository);
 
@@ -167,6 +174,7 @@ container.bind<INotificationRepository>(TYPES.INotificationRepository).to(Notifi
 container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService);
 container.bind<NotificationController>(TYPES.NotificationController).to(NotificationController);
 container.bind<NotificationCron>(TYPES.NotificationCron).to(NotificationCron);
+container.bind<GymAttendanceCron>(TYPES.GymAttendanceCron).to(GymAttendanceCron).inSingletonScope();
 
 
 container.bind<IUserPlanRepository>(TYPES.IUserPlanRepository).to(UserPlanRepository);
@@ -200,7 +208,7 @@ container.bind<PaymentController>(TYPES.PaymentController).to(PaymentController)
 container.bind<PaymentTrainerController>(TYPES.PaymentTrainerController).to(PaymentTrainerController);
 container.bind<PaymentGymController>(TYPES.PaymentGymController).to(PaymentGymController);
 
-container.bind<TrainerController>(TYPES.TrainerController).to(TrainerController)
+
 container.bind<TrainerAuthController>(TYPES.TrainerAuthController).to(TrainerAuthController)
 container.bind<TrainerScheduleController>(TYPES.TrainerScheduleController).to(TrainerScheduleController)
 container.bind<TrainerClientController>(TYPES.TrainerClientController).to(TrainerClientController)
@@ -211,6 +219,8 @@ container.bind<ITrainerService>(TYPES.ITrainerService).to(TrainerService);
 container.bind<GymController>(TYPES.GymController).to(GymController)
 container.bind<IGymRepository>(TYPES.IGymRepository).to(GymRepository);
 container.bind<IGymProductRepository>(TYPES.IGymProductRepository).to(GymProductRepository);
+container.bind<IGymProductService>(TYPES.IGymProductService).to(GymProductService);
+container.bind<GymProductController>(TYPES.GymProductController).to(GymProductController);
 container.bind<IGymJobRepository>(TYPES.IGymJobRepository).to(GymJobRepository);
 container.bind<IGymTransactionRepository>(TYPES.IGymTransactionRepository).to(GymTransactionRepository);
 container.bind<IGymService>(TYPES.IGymService).to(GymService);

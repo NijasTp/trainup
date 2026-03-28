@@ -20,6 +20,7 @@ const TYPES = {
   INotificationService: Symbol.for("INotificationService"),
   NotificationController: Symbol.for("NotificationController"),
   NotificationCron: Symbol.for("NotificationCron"),
+  ICronService: Symbol.for("ICronService"),
 
   ISlotRepository: Symbol.for("ISlotRepository"),
   ISlotService: Symbol.for("ISlotService"),
@@ -64,13 +65,11 @@ const TYPES = {
   IAttendanceService: Symbol.for("IAttendanceService"),
   AttendanceController: Symbol.for("AttendanceController"),
 
-
   WorkoutTemplateRepository: Symbol.for("WorkoutTemplateRepository"),
   WorkoutSessionRepository: Symbol.for("WorkoutSessionRepository"),
   WorkoutDayRepository: Symbol.for("WorkoutDayRepository"),
   WorkoutService: Symbol.for("WorkoutService"),
   WorkoutController: Symbol.for("WorkoutController"),
-
 
   IDietDayRepository: Symbol.for("IDietDayRepository"),
   DietDayRepository: Symbol.for("DietDayRepository"),
@@ -104,13 +103,11 @@ const TYPES = {
   IQueueService: Symbol.for("IQueueService"),
   SocketHandler: Symbol.for("SocketHandler"),
 
-  // Gym Equipment
   IGymEquipmentRepository: Symbol.for("IGymEquipmentRepository"),
   IGymEquipmentCategoryRepository: Symbol.for("IGymEquipmentCategoryRepository"),
   IGymEquipmentService: Symbol.for("IGymEquipmentService"),
   GymEquipmentController: Symbol.for("GymEquipmentController"),
 
-  // Refund
   IRefundService: Symbol.for("IRefundService"),
 
   IGymAuthService: Symbol.for("IGymAuthService"),
@@ -118,12 +115,14 @@ const TYPES = {
 
   IWalletRepository: Symbol.for("IWalletRepository"),
   IGymProductRepository: Symbol.for("IGymProductRepository"),
+  IGymProductService: Symbol.for("IGymProductService"),
+  GymProductController: Symbol.for("GymProductController"),
   IGymJobRepository: Symbol.for("IGymJobRepository"),
   IGymTransactionRepository: Symbol.for("IGymTransactionRepository"),
   IUserGymMembershipRepository: Symbol.for("IUserGymMembershipRepository"),
   IUserSubscriptionService: Symbol.for("IUserSubscriptionService"),
   SubscriptionController: Symbol.for("SubscriptionController"),
+  GymAttendanceCron: Symbol.for("GymAttendanceCron"),
 };
-
 
 export default TYPES;

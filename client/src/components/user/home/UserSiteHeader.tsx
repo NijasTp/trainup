@@ -79,7 +79,7 @@ export const SiteHeader: React.FC = () => {
       setNotifications(data.notifications)
       setUnreadCount(data.unreadCount)
     } catch (err) {
-      console.error("Failed to load notifications")
+      toast.error("Failed to load notifications")
     } finally {
       setLoading(false)
     }
@@ -91,7 +91,7 @@ export const SiteHeader: React.FC = () => {
       const totalUnread = data.counts.reduce((acc, curr) => acc + curr.count, 0)
       setChatUnreadCount(totalUnread)
     } catch (err) {
-      console.error("Failed to load chat unread counts")
+      toast.error("Failed to load chat unread counts")
     }
   }, [])
 

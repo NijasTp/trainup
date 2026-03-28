@@ -149,7 +149,7 @@ export default function Profile() {
               </h1>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                 <Badge className="bg-primary/20 text-primary border-primary/30 py-1 px-4 rounded-full font-bold uppercase tracking-widest text-[10px]">
-                  {profile?.goal || 'FITNESS ENTHUSIAST'}
+                  FITNESS ENTHUSIAST
                 </Badge>
                 <Badge variant="outline" className="border-white/10 text-gray-400 py-1 px-4 rounded-full font-bold uppercase tracking-widest text-[10px]">
                   XP: {profile?.xp || 0}
@@ -177,7 +177,7 @@ export default function Profile() {
             <div className="lg:col-span-2 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <MetricCard icon={Activity} title="Activity Level" value={profile.activityLevel} label="FITNESS" />
-                <MetricCard icon={Target} title="Primary Goal" value={profile.goal} label="TARGET" />
+                <MetricCard icon={Target} title="Primary Goal" value={profile.goals![0] || 'Not specified'} label="TARGET" />
                 <MetricCard icon={Ruler} title="Height" value={profile.height ? `${profile.height} cm` : null} label="BODY" />
                 <MetricCard icon={Scale} title="Current Weight" value={profile.weight ? `${profile.weight} kg` : null} label="BODY" />
               </div>
@@ -203,26 +203,7 @@ export default function Profile() {
               </div>
 
               {/* Achievements */}
-              <section className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-3xl font-black italic uppercase tracking-tighter">Your Achievements</h2>
-                  <Trophy className="h-8 w-8 text-primary opacity-50" />
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {profile.achievements && profile.achievements.length > 0 ? (
-                    profile.achievements.map((achievement, i) => (
-                      <div key={i} className="p-4 bg-white/5 border border-white/10 rounded-3xl text-center space-y-2 hover:border-primary/50 transition-colors">
-                        <Award className="h-8 w-8 text-primary mx-auto" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest leading-none block">{achievement}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="col-span-full p-8 text-center bg-white/5 border border-dashed border-white/10 rounded-3xl">
-                      <p className="text-gray-500 font-medium italic">No achievements unlocked yet. Time to hit the gym!</p>
-                    </div>
-                  )}
-                </div>
-              </section>
+              
             </div>
 
             {/* Right Column: Info & Transactions */}

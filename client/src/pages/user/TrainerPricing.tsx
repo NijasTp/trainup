@@ -52,108 +52,36 @@ export default function TrainerPricingPage() {
         if (!trainer) return;
 
         setProcessingPayment(true);
-        const script = document.createElement("script");
-        script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.async = true;
-        document.body.appendChild(script);
+        try {
+            const trainerPrice = trainer.price;
+            const basePrice = trainerPrice[planType as keyof typeof trainerPrice];
+            const totalAmount = basePrice * duration;
 
-        script.onload = async () => {
-            try {
-                const trainerPrice = trainer.price;
-                const basePrice = trainerPrice[planType as keyof typeof trainerPrice];
-                const totalAmount = basePrice * duration;
+            const response = await API.post("/payment/create-checkout-session", {
+                amount: totalAmount,
+                trainerId: trainer._id,
+                planType,
+                duration
+            });
 
-                const response = await API.post("/payment/create-order", {
-                    amount: totalAmount,
-                    currency: "INR",
-                    receipt: `booking_${Date.now()}`,
-                    trainerId: trainer._id,
-                    planType,
-                    duration
-                });
-                const order = response.data;
-
-                const options = {
-                    key: import.meta.env.VITE_RAZORPAY_KEY,
-                    amount: order.amount,
-                    currency: order.currency,
-                    name: "TrainUp",
-                    description: `${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan - ${trainer?.name}`,
-                    image: import.meta.env.VITE_LOGO_URL || "/logo.png",
-                    order_id: order.id,
-                    handler: async (response: any) => {
-                        try {
-                            const verifyResponse = await API.post("/payment/verify-payment", {
-                                orderId: response.razorpay_order_id,
-                                paymentId: response.razorpay_payment_id,
-                                signature: response.razorpay_signature,
-                                trainerId: id,
-                                planType: planType,
-                                amount: totalAmount,
-                                duration: duration
-                            });
-                            if (verifyResponse.data.success) {
-                                toast.success("Payment successful! Subscription confirmed.");
-                                navigate("/my-trainer/profile");
-                            } else {
-                                toast.error("Payment verification failed");
-                            }
-                        } catch (err) {
-                            console.error("Payment verification failed:", err);
-                            toast.error("Failed to verify payment");
-                        }
-                    },
-                    prefill: {
-                        name: trainer?.name || "",
-                        email: trainer?.email || "",
-                        contact: trainer?.phone || "",
-                    },
-                    theme: {
-                        color: "#3b82f6",
-                    },
-                    modal: {
-                        ondismiss: async () => {
-                            try {
-                                await API.post("/payment/cleanup-pending");
-                                toast.info("Payment cancelled");
-                                setProcessingPayment(false);
-                            } catch (error) {
-                                console.error("Failed to cleanup on dismiss:", error);
-                            }
-                        }
-                    }
-                };
-
-                const rzp = new (window as unknown as { Razorpay: new (options: any) => any }).Razorpay(options);
-                rzp.on("payment.failed", async () => {
-                    try {
-                        await API.post("/payment/cleanup-pending");
-                        toast.error("Payment failed. Please try again.");
-                    } catch (error) {
-                        console.error("Failed to cleanup on failure:", error);
-                    } finally {
-                        setProcessingPayment(false);
-                    }
-                });
-                rzp.open();
-            } catch (err: any) {
-                console.error("Failed to create order:", err);
-                if (err.response?.data?.message) {
-                    toast.error(err.response.data.message);
-                } else {
-                    toast.error("Failed to initiate payment");
-                }
+            if (response.data.url) {
+                window.location.href = response.data.url;
+            } else if (response.status === 409) {
+                toast.warning("Payment Pending: You already have a transaction in progress.");
                 setProcessingPayment(false);
-            } finally {
-                document.body.removeChild(script);
+            } else {
+                throw new Error("No checkout URL received");
             }
-        };
-
-        script.onerror = () => {
-            toast.error("Failed to load Razorpay SDK");
-            document.body.removeChild(script);
+        } catch (err: any) {
+            console.error("Failed to initiate payment:", err);
+            const errorMessage = err.response?.data?.message || err.message || "Failed to initiate payment";
+            if (err.response?.status === 409) {
+                toast.warning("Payment Pending: You already have a transaction in progress.");
+            } else {
+                toast.error(errorMessage);
+            }
             setProcessingPayment(false);
-        };
+        }
     };
 
     const durations = [
@@ -386,7 +314,7 @@ export default function TrainerPricingPage() {
                 <div className="mt-12 text-center pb-8">
                     <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
                         <Shield className="h-4 w-4 text-green-500" />
-                        Secure payment processing via Razorpay. Cancel anytime.
+                        Secure payment processing via Stripe. Cancel anytime.
                     </p>
                 </div>
             </div>

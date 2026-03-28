@@ -55,10 +55,14 @@ const eventService = container.get<IEventService>(TYPES.IEventService);
 eventService.setIO(io);
 
 // Routes
+import gymProductRoutes from './routes/gymProduct.route'
+
 app.use(BASE_ROUTE.USER, userRoutes);
 app.use(BASE_ROUTE.ADMIN, adminRoutes);
 app.use(BASE_ROUTE.TRAINER, trainerRoutes)
 app.use(BASE_ROUTE.GYM, gymRoutes)
+app.use(BASE_ROUTE.GYM_PRODUCT, gymProductRoutes)
+app.use(BASE_ROUTE.USER_GYM_PRODUCT, gymProductRoutes)
 app.use(BASE_ROUTE.WORKOUT, workoutRoutes)
 app.use(BASE_ROUTE.DIET, dietRoutes);
 app.use(BASE_ROUTE.PAYMENT, paymentRoutes);

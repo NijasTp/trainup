@@ -1,43 +1,36 @@
-import { CreateOrderResponseDto } from '../../../dtos/payment.dto'
-import { IGymTransaction } from '../../../models/gymTransaction.model'
-
 export interface IPaymentService {
-  createOrder(
-    amount: number,
-    currency: string,
-    receipt?: string
-  ): Promise<CreateOrderResponseDto>
+  createTrainerCheckoutSession(params: {
+    userId: string;
+    trainerId: string;
+    planType: 'basic' | 'premium' | 'pro';
+    amount: number;
+    userName: string;
+    trainerName: string;
+    duration: number;
+  }): Promise<{ sessionId: string; url: string | null }>;
 
-  verifyPayment(
-    orderId: string,
-    paymentId: string,
-    signature: string
-  ): Promise<boolean>
-  
-  verifyTrainerPayment(
-    orderId: string,
-    paymentId: string,
-    signature: string,
-    userId: string,
-    trainerId: string,
-    planType: 'basic' | 'premium' | 'pro',
-    amount: number
-  ): Promise<boolean> 
-  createGymTransaction(data: Partial<IGymTransaction>): Promise<IGymTransaction>
-  findPendingGymTransactionByUser(userId: string): Promise<IGymTransaction | null>
-  markUserPendingGymTransactionsAsFailed(userId: string): Promise<number>
-  updateGymTransactionStatus(
-    orderId: string,
-    status: 'completed' | 'failed',
-    paymentId?: string,
-    signature?: string
-  ): Promise<IGymTransaction | null>
-
-  findGymTransactionByOrderId(orderId: string): Promise<IGymTransaction | null>
+  createGymCheckoutSession(params: {
+    userId: string;
+    gymId: string;
+    subscriptionPlanId: string;
+    amount: number;
+    userName: string;
+    gymName: string;
+    planName: string;
+    preferredTime: string;
+  }): Promise<{ sessionId: string; url: string | null }>;
 
   getGymTransactions(
     gymId: string,
     page: number,
     limit: number
-  ): Promise<{ transactions: IGymTransaction[]; totalPages: number }>
+  ): Promise<{ transactions: any[]; totalPages: number }>;
+
+  createGymTransaction(data: any): Promise<any>;
+
+  findPendingGymTransactionByUser(userId: string): Promise<any>;
+
+  getCheckoutSession(sessionId: string): Promise<any>;
+
+  markUserPendingGymTransactionsAsFailed(userId: string): Promise<number>;
 }

@@ -1,0 +1,13 @@
+﻿src/components/ui/calendar.tsx(55,17): error TS2353: Object literal may only specify known properties, and 'IconLeft' does not exist in type 'Partial<CustomComponents>'.
+src/components/ui/calendar.tsx(55,28): error TS6133: 'props' is declared but its value is never read.
+src/components/ui/calendar.tsx(56,29): error TS6133: 'props' is declared but its value is never read.
+src/components/user/progress/ProgressCalendar.tsx(63,17): error TS2353: Object literal may only specify known properties, and 'IconLeft' does not exist in type 'Partial<CustomComponents>'.
+src/components/user/workouts/WorkoutCalendar.tsx(16,5): error TS6133: 'parse' is declared but its value is never read.
+src/components/user/workouts/WorkoutCalendar.tsx(96,41): error TS6133: 'idx' is declared but its value is never read.
+src/pages/trainer/TrainerChatPage.tsx(26,5): error TS6133: 'IndianRupee' is declared but its value is never read.
+src/pages/trainer/TrainerChatPage.tsx(347,23): error TS18047: 'client' is possibly 'null'.
+src/pages/trainer/TrainerClientListing.tsx(17,11): error TS6196: 'Client' is declared but never used.
+src/pages/trainer/TrainerUserDiet.tsx(205,12): error TS6133: 'hasDietSession' is declared but its value is never read.
+src/pages/trainer/TrainerUserDiet.tsx(246,20): error TS6133: 'createDietSession' is declared but its value is never read.
+src/pages/trainer/TrainerUserDiet.tsx(351,19): error TS6133: 'response' is declared but its value is never read.
+src/pages/user/WorkoutSuccess.tsx(2,47): error TS6133: 'Link' is declared but its value is never read.

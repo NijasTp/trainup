@@ -7,6 +7,7 @@ import { UserTrainerController } from '../controllers/user.trainer.controller'
 import { UserGymController } from '../controllers/user.gym.controller'
 import { UserReviewController } from '../controllers/user.review.controller'
 import { UserChatController } from '../controllers/user.chat.controller'
+import { AttendanceController } from '../controllers/gymAttendance.controller'
 import { authMiddleware, roleMiddleware } from '../middlewares/auth.middleware'
 import { checkSubscriptionExpiry } from '../middlewares/checkSubscription.middleware'
 import { upload } from '../utils/multer.util'
@@ -19,6 +20,7 @@ const userTrainerController = container.get<UserTrainerController>(TYPES.UserTra
 const userGymController = container.get<UserGymController>(TYPES.UserGymController)
 const userReviewController = container.get<UserReviewController>(TYPES.UserReviewController)
 const userChatController = container.get<UserChatController>(TYPES.UserChatController)
+const attendanceController = container.get<AttendanceController>(TYPES.AttendanceController)
 
 router.post(
   '/refresh-token',
@@ -129,6 +131,9 @@ router.get("/gym-equipment", authMiddleware, userGymController.getGymEquipment.b
 router.get("/gym-products", authMiddleware, userGymController.getGymProducts.bind(userGymController));
 router.get("/gym-workout-templates", authMiddleware, userGymController.getGymWorkoutTemplates.bind(userGymController));
 router.post("/gyms/cancel-membership", authMiddleware, roleMiddleware(['user']), userGymController.cancelMembership.bind(userGymController));
+
+router.post("/gym/mark-attendance", authMiddleware, attendanceController.markAttendance.bind(attendanceController));
+router.get("/gym/attendance-history/:gymId", authMiddleware, attendanceController.getAttendanceHistory.bind(attendanceController));
 
 
 router.post('/trainer/rating/:id', authMiddleware, userReviewController.addTrainerRating.bind(userReviewController))

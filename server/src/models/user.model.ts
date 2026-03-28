@@ -54,6 +54,7 @@ export interface IUser extends Document {
   workoutTemplateStartDate?: Date | null; // Deprecated
   activeDietTemplate?: Types.ObjectId | string | null;
   dietTemplateStartDate?: Date | null;
+  wishlist: Types.ObjectId[] | string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -113,6 +114,7 @@ const userSchema: Schema<IUser> = new Schema(
     workoutTemplateStartDate: { type: Date, default: null },
     activeDietTemplate: { type: Schema.Types.ObjectId, ref: "DietTemplate", default: null },
     dietTemplateStartDate: { type: Date, default: null },
+    wishlist: [{ type: Schema.Types.ObjectId, ref: "GymProduct" }],
   },
   { timestamps: true }
 );

@@ -6,8 +6,6 @@ import { IPaymentService } from '../core/interfaces/services/IPaymentService';
 import { IUserService } from '../core/interfaces/services/IUserService';
 import { IGymService } from '../core/interfaces/services/IGymService';
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
-import { CreateOrderResponseDto } from '../dtos/payment.dto';
-import { CreateGymTransactionDto, VerifyGymPaymentDto } from '../dtos/gym.dto';
 import { MESSAGES } from '../constants/messages.constants';
 import { logger } from '../utils/logger.util';
 import { AppError } from '../utils/appError.util';
@@ -27,179 +25,115 @@ export class PaymentGymController {
         @inject(TYPES.INotificationService) private _notificationService: INotificationService
     ) { }
 
-    async createGymOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async createGymCheckoutSession(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const dto: CreateGymTransactionDto = req.body;
+            const { gymId, subscriptionPlanId, preferredTime } = req.body;
             const userId = (req.user as JwtPayload).id;
 
-            if (!dto.gymId || !dto.subscriptionPlanId || !dto.amount || !dto.preferredTime) {
+            if (!gymId || !subscriptionPlanId || !preferredTime) {
                 throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
             }
 
-            const user = await this._userService.getUserById(userId);
-            if (user?.gymId) {
-                throw new AppError('You already have a gym membership', STATUS_CODE.BAD_REQUEST);
+            // Check for pending transaction
+            const pending = await this._paymentService.findPendingGymTransactionByUser(userId);
+            if (pending) {
+                res.status(STATUS_CODE.CONFLICT).json({ 
+                    message: "You have a pending transaction. Please complete or cancel it first.",
+                    hasPending: true,
+                    transaction: pending
+                });
+                return;
             }
 
-            const order: CreateOrderResponseDto = await this._paymentService.createOrder(
-                dto.amount,
-                dto.currency || 'INR',
-                `gym_${Date.now()}`
-            );
+            const user = await this._userService.getUserById(userId);
+            if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
 
-            await this._paymentService.createGymTransaction({
+            const gym = await this._gymService.getGymById(gymId);
+            if (!gym) throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+
+            const subscriptionPlan = await this._gymService.getSubscriptionPlan(subscriptionPlanId);
+            if (!subscriptionPlan) throw new AppError('Subscription plan not found', STATUS_CODE.NOT_FOUND);
+
+            const session = await this._paymentService.createGymCheckoutSession({
                 userId,
-                gymId: dto.gymId,
-                subscriptionPlanId: dto.subscriptionPlanId,
-                razorpayOrderId: order.id,
-                amount: dto.amount,
-                status: 'pending',
-                preferredTime: dto.preferredTime
+                gymId,
+                subscriptionPlanId,
+                amount: subscriptionPlan.price,
+                userName: user.name,
+                gymName: gym.name || 'Gym',
+                planName: subscriptionPlan.name,
+                preferredTime
             });
 
-            res.status(STATUS_CODE.OK).json(order);
+            res.status(STATUS_CODE.OK).json(session);
         } catch (err) {
-            logger.error('Create Gym Order Error', err);
+            logger.error('Create Gym Checkout Session Error', err);
             next(err);
         }
     }
 
-    async verifyGymPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async getGymSessionStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const dto: VerifyGymPaymentDto = req.body;
-            const userId = (req.user as JwtPayload).id;
+            const { sessionId } = req.params;
+            const session = await this._paymentService.getCheckoutSession(sessionId);
 
-            if (!dto.gymId || !dto.subscriptionPlanId || !userId || !dto.preferredTime) {
-                throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
+            if (session.payment_status === 'paid') {
+                const metadata = session.metadata;
+                const userId = metadata.userId;
+                const gymId = metadata.gymId;
+                const subscriptionPlanId = metadata.subscriptionPlanId;
+                const preferredTime = metadata.preferredTime;
+                const amount = parseFloat(metadata.amount);
+
+                // Check fulfillment
+                const user = await this._userService.getUserById(userId);
+                if (user && !user.gymId) {
+                    const subscriptionPlan = await this._gymService.getSubscriptionPlan(subscriptionPlanId);
+                    if (subscriptionPlan) {
+                        const startDate = new Date();
+                        let endDate: Date;
+                        switch (subscriptionPlan.durationUnit) {
+                            case 'day': endDate = addDays(startDate, subscriptionPlan.duration); break;
+                            case 'month': endDate = addMonths(startDate, subscriptionPlan.duration); break;
+                            case 'year': endDate = addYears(startDate, subscriptionPlan.duration); break;
+                            default: endDate = addMonths(startDate, subscriptionPlan.duration);
+                        }
+
+                        // Create transaction record
+                        await this._paymentService.createGymTransaction({
+                            userId,
+                            gymId,
+                            subscriptionPlanId,
+                            stripeSessionId: sessionId,
+                            paymentIntentId: session.payment_intent as string,
+                            amount,
+                            status: 'completed',
+                            provider: 'stripe',
+                            preferredTime
+                        });
+
+                        await this._userService.updateUserGymMembership(
+                            userId, gymId, subscriptionPlanId, startDate, endDate, preferredTime
+                        );
+                        await this._gymService.addMemberToGym(gymId, userId);
+                        await this._gymReminderService.saveReminderPreference(userId, gymId, preferredTime);
+
+                        const gymDetails = await this._gymService.getGymById(gymId);
+                        if (gymDetails) {
+                            await this._notificationService.sendGymSubscribedNotification(
+                                userId, gymDetails.name || 'Gym', subscriptionPlan.name
+                            );
+                        }
+                    }
+                }
             }
 
-            const isValid = await this._paymentService.verifyPayment(
-                dto.orderId,
-                dto.paymentId,
-                dto.signature
-            );
-
-            let transaction = await this._paymentService.findGymTransactionByOrderId(dto.orderId);
-            if (!transaction) {
-                throw new AppError('Transaction not found', STATUS_CODE.BAD_REQUEST);
-            }
-
-            if (!isValid) {
-                await this._paymentService.updateGymTransactionStatus(
-                    dto.orderId,
-                    'failed',
-                    dto.paymentId,
-                    dto.signature
-                );
-                throw new AppError(MESSAGES.INVALID_SIGNATURE, STATUS_CODE.BAD_REQUEST);
-            }
-
-            const user = await this._userService.getUserById(userId);
-            if (user?.gymId) {
-                await this._paymentService.updateGymTransactionStatus(
-                    dto.orderId,
-                    'failed',
-                    dto.paymentId,
-                    dto.signature
-                );
-                throw new AppError('User already has a gym membership', STATUS_CODE.BAD_REQUEST);
-            }
-
-            const subscriptionPlan = await this._gymService.getSubscriptionPlan(dto.subscriptionPlanId);
-            if (!subscriptionPlan) {
-                throw new AppError('Subscription plan not found', STATUS_CODE.NOT_FOUND);
-            }
-
-            const startDate = new Date();
-            let endDate: Date;
-
-            switch (subscriptionPlan.durationUnit) {
-                case 'day':
-                    endDate = addDays(startDate, subscriptionPlan.duration);
-                    break;
-                case 'month':
-                    endDate = addMonths(startDate, subscriptionPlan.duration);
-                    break;
-                case 'year':
-                    endDate = addYears(startDate, subscriptionPlan.duration);
-                    break;
-                default:
-                    endDate = addMonths(startDate, subscriptionPlan.duration);
-            }
-
-            transaction = await this._paymentService.updateGymTransactionStatus(
-                dto.orderId,
-                'completed',
-                dto.paymentId,
-                dto.signature
-            );
-
-            await this._userService.updateUserGymMembership(
-                userId,
-                dto.gymId,
-                dto.subscriptionPlanId,
-                startDate,
-                endDate,
-                dto.preferredTime
-            );
-
-            await this._gymService.addMemberToGym(dto.gymId, userId);
-
-            const gymDetails = await this._gymService.getGymById(dto.gymId);
-
-            if (gymDetails && subscriptionPlan) {
-                await this._notificationService.sendGymSubscribedNotification(
-                    userId,
-                    gymDetails.name || 'Gym',
-                    subscriptionPlan.name
-                );
-
-                await this._notificationService.createNotification({
-                    recipientId: dto.gymId,
-                    recipientRole: 'gym',
-                    type: 'gym_new_member',
-                    title: 'New Member!',
-                    message: `New member ${user?.name} joined your gym with ${subscriptionPlan.name} plan`,
-                    priority: 'high',
-                    category: 'success'
-                });
-
-                await this._notificationService.createNotification({
-                    recipientId: dto.gymId,
-                    recipientRole: 'gym',
-                    type: 'gym_payment_received',
-                    title: 'Payment Received',
-                    message: `Payment received from ${user?.name} for ${subscriptionPlan.name}`,
-                    priority: 'medium',
-                    category: 'success'
-                });
-            }
-
-            await this._gymReminderService.saveReminderPreference(
-                userId,
-                dto.gymId,
-                dto.preferredTime
-            );
-
-            if (user && gymDetails && subscriptionPlan) {
-                await this._emailService.sendGymSubscriptionEmail(
-                    user.email,
-                    user.name,
-                    gymDetails.name!,
-                    subscriptionPlan.name,
-                    dto.preferredTime
-                );
-            }
-
-            const response = {
-                success: true,
-                message: 'Payment verified and gym membership confirmed!',
-                transactionId: transaction?._id,
-            };
-
-            res.status(STATUS_CODE.OK).json(response);
+            res.status(STATUS_CODE.OK).json({ 
+                status: session.status, 
+                payment_status: session.payment_status 
+            });
         } catch (err) {
-            logger.error('Verify Gym Payment Error', err);
+            logger.error('Get Gym Session Status Error', err);
             next(err);
         }
     }

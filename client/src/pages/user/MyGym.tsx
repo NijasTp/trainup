@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
-  Star,
-  CreditCard,
+   CreditCard,
   Bell,
   ChevronRight,
   Dumbbell,
@@ -15,6 +14,8 @@ import {
   MapPin,
   Trophy,
   Activity,
+  CalendarDays,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
@@ -26,7 +27,9 @@ import {
   getUserGymAnnouncements,
   getUserGymEquipment,
   getUserGymProducts,
-  getUserGymWorkoutTemplates
+  getUserGymWorkoutTemplates,
+  markAttendance,
+  getAttendanceHistoryForUser
 } from "@/services/gymService";
 import GymReviews from "@/components/user/reviews/GymReviews";
 import { format } from "date-fns";
@@ -41,7 +44,10 @@ export default function MyGym() {
   const [equipment, setEquipment] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
+  const [attendance, setAttendance] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
+  const [hasAttendedToday, setHasAttendedToday] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,17 +60,25 @@ export default function MyGym() {
       setIsLoading(true);
       const [gymRes, annRes, eqRes, prodRes, tempRes] = await Promise.all([
         API.get("/user/my-gym"),
-        getUserGymAnnouncements(1, 3),
+        getUserGymAnnouncements(1, 4),
         getUserGymEquipment(),
         getUserGymProducts(1, 4),
         getUserGymWorkoutTemplates(1, 3)
       ]);
+
+      const gym = gymRes.data.gym;
+      const history = await getAttendanceHistoryForUser(gym._id, 1, 15);
 
       setGymData(gymRes.data);
       setAnnouncements(annRes.announcements || []);
       setEquipment(eqRes.equipment || []);
       setProducts(prodRes.products || []);
       setTemplates(tempRes.templates || []);
+      setAttendance(history.attendance || []);
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const attendedToday = (history.attendance || []).some((a: any) => a.date.split('T')[0] === todayStr);
+      setHasAttendedToday(attendedToday);
     } catch (err: any) {
       console.error("Dashboard fetch error:", err);
       if (err.response?.status === 404) {
@@ -73,6 +87,40 @@ export default function MyGym() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleMarkAttendance = async () => {
+    if (!gymData?.gym?._id) return;
+    
+    setIsMarkingAttendance(true);
+    try {
+      if (!navigator.geolocation) {
+        throw new Error("Geolocation is not supported by your browser");
+      }
+
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+          const res = await markAttendance(gymData.gym._id, {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          
+          toast.success(res.message);
+          setHasAttendedToday(true);
+          fetchDashboardData(); // Refresh history
+        } catch (error: any) {
+          toast.error(error.response?.data?.message || "Failed to mark attendance");
+        } finally {
+          setIsMarkingAttendance(false);
+        }
+      }, (error) => {
+        toast.error("Please enable location access to mark attendance");
+        setIsMarkingAttendance(false);
+      });
+    } catch (error: any) {
+      toast.error(error.message);
+      setIsMarkingAttendance(false);
     }
   };
 
@@ -157,23 +205,30 @@ export default function MyGym() {
                     <p className="text-sm font-bold text-white">{gym?.address || "Unknown"}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                    <Star size={20} className="text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Reputation</p>
-                    <p className="text-sm font-bold text-white">{gym?.rating || "0.0"} / 5.0</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                    <Users size={20} className="text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Member Unit</p>
-                    <p className="text-sm font-bold text-white">{gym?.memberCount || 0} Registered</p>
-                  </div>
+                
+                <div className="flex items-center gap-6">
+                  {hasAttendedToday ? (
+                    <div className="flex items-center gap-3 px-6 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                      <CheckCircle2 className="text-emerald-500" size={24} />
+                      <div className="text-left">
+                        <p className="text-[10px] font-black text-emerald-500/60 uppercase tracking-widest italic">Status</p>
+                        <p className="text-sm font-black text-emerald-500 uppercase italic">Checked In Today</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button 
+                      onClick={handleMarkAttendance}
+                      disabled={isMarkingAttendance}
+                      className="h-14 px-8 bg-primary hover:bg-primary/90 text-black font-black uppercase italic tracking-widest rounded-2xl shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-105 active:scale-95"
+                    >
+                      {isMarkingAttendance ? (
+                        <Activity className="animate-spin mr-2" size={18} />
+                      ) : (
+                        <MapPin className="mr-2" size={18} />
+                      )}
+                      Mark Attendance
+                    </Button>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -181,6 +236,49 @@ export default function MyGym() {
         </div>
 
         <div className="container mx-auto px-6 -mt-16 space-y-24">
+          {/* --- ATTENDANCE TRACKER --- */}
+          <section>
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <h2 className="text-3xl font-black italic text-white uppercase tracking-tight">Deployment History</h2>
+                <div className="h-1 w-24 bg-primary mt-2" />
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-black italic text-zinc-500 uppercase tracking-widest">
+                <CalendarDays size={14} className="text-primary" /> Last 15 Missions
+              </div>
+            </div>
+
+            <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-8 overflow-hidden">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {attendance.length === 0 ? (
+                  <div className="col-span-full py-12 text-center">
+                    <Activity size={48} className="mx-auto text-zinc-800 mb-4" />
+                    <p className="text-zinc-600 font-bold uppercase italic tracking-widest">No mission logs recorded yet</p>
+                  </div>
+                ) : (
+                  attendance.map((log, i) => (
+                    <motion.div
+                      key={log._id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="p-6 bg-white/5 border border-white/10 rounded-3xl flex flex-col items-center gap-3 group hover:border-primary/30 transition-all"
+                    >
+                      <div className="p-3 bg-primary/10 rounded-2xl text-primary mb-1">
+                        <CheckCircle2 size={24} />
+                      </div>
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">{format(new Date(log.date), 'EEE, MMM dd')}</p>
+                      <p className="text-sm font-bold text-white">{format(new Date(log.checkInTime), 'hh:mm a')}</p>
+                      {!log.isValidLocation && (
+                        <Badge variant="destructive" className="text-[8px] font-black px-2 mt-1">PROXY ERROR</Badge>
+                      )}
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </div>
+          </section>
+
           {/* --- BROADCAST CENTER --- */}
           <section>
             <div className="flex items-end justify-between mb-8">

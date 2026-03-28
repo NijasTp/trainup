@@ -54,8 +54,24 @@ export class TransactionService implements ITransactionService {
     return this._transactionRepository.getTrainerTransactions(trainerId, page, limit, search, status, planType);
   }
 
+  async updateTransactionStatusBySessionId(
+    sessionId: string,
+    status: 'completed' | 'failed',
+    paymentId?: string
+  ): Promise<ITransaction | null> {
+    return await this._transactionRepository.updateTransactionStatusBySessionId(
+      sessionId,
+      status,
+      paymentId
+    );
+  }
+
   async findByOrderId(orderId: string): Promise<ITransaction | null> {
     return await this._transactionRepository.findByOrderId(orderId);
+  }
+
+  async findBySessionId(sessionId: string): Promise<ITransaction | null> {
+    return await this._transactionRepository.findBySessionId(sessionId);
   }
 
   async getUserPendingTransaction(userId: string): Promise<ITransaction | null> {

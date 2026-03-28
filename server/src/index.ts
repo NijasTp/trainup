@@ -9,11 +9,15 @@ import TYPES from "./core/types/types";
 import { NotificationCron } from "./cron/notification.cron";
 import { NotificationWorker } from "./workers/notification.worker";
 
+import { ICronService } from "./core/interfaces/services/ICronService";
+
 const PORT = process.env.PORT || 3000;
 
 connectDB().then(() => {
   // Initialize Cron Jobs
   container.get<NotificationCron>(TYPES.NotificationCron);
+  const cronService = container.get<ICronService>(TYPES.ICronService);
+  cronService.startJobs();
 
   // Initialize BullMQ Workers
   new NotificationWorker();

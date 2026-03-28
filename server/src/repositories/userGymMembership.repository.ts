@@ -23,4 +23,14 @@ export class UserGymMembershipRepository implements IUserGymMembershipRepository
     async update(id: string, data: Partial<IUserGymMembership>): Promise<IUserGymMembership | null> {
         return await UserGymMembershipModel.findByIdAndUpdate(id, data, { new: true });
     }
+
+    async findActiveByPreferredTime(time: string): Promise<IUserGymMembership[]> {
+        return await UserGymMembershipModel.find({
+            preferredTime: time,
+            status: 'active'
+        })
+        .populate('userId', 'name email')
+        .populate('gymId', 'name')
+        .lean() as IUserGymMembership[];
+    }
 }

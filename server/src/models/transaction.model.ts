@@ -4,15 +4,17 @@ export interface ITransaction extends Document {
   _id: string | Schema.Types.ObjectId
   userId: Types.ObjectId | string
   trainerId: Types.ObjectId | string
-  sessionId?: string
+  stripeSessionId?: string
+  paymentIntentId?: string
   amount: number
   platformFee: number
   trainerEarnings: number
   planType: 'basic' | 'premium' | 'pro'
-  razorpayOrderId: string
+  razorpayOrderId?: string
   duration?: number
   razorpayPaymentId?: string
   status: 'pending' | 'completed' | 'failed'
+  provider: 'razorpay' | 'stripe'
   createdAt: Date
   updatedAt: Date
 }
@@ -29,7 +31,8 @@ export const TransactionSchema = new Schema<ITransaction>(
       ref: 'Trainer',
       required: true
     },
-    sessionId: { type: String },
+    stripeSessionId: { type: String },
+    paymentIntentId: { type: String },
     amount: { type: Number, required: true },
     platformFee: { type: Number, default: 0 },
     trainerEarnings: { type: Number, default: 0 },
@@ -38,7 +41,7 @@ export const TransactionSchema = new Schema<ITransaction>(
       required: true,
       enum: ['basic', 'premium', 'pro']
     },
-    razorpayOrderId: { type: String, required: true },
+    razorpayOrderId: { type: String },
     duration: { type: Number },
     razorpayPaymentId: { type: String },
     status: {
@@ -46,6 +49,7 @@ export const TransactionSchema = new Schema<ITransaction>(
       enum: ['pending', 'completed', 'failed'],
       default: 'pending'
     },
+    provider: { type: String, enum: ['razorpay', 'stripe'], default: 'stripe' },
     createdAt: { type: Date, default: Date.now }
   },
   { timestamps: true }

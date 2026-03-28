@@ -68,7 +68,7 @@ export default function TrainerChatPage() {
     const chunksRef = useRef<Blob[]>([]);
     const [recordingDuration, setRecordingDuration] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const [shouldSendAudio, setShouldSendAudio] = useState(false);
+    const shouldSendRef = useRef(false);
 
     useEffect(() => {
         document.title = "TrainUp - Chat with Client";
@@ -89,12 +89,7 @@ export default function TrainerChatPage() {
         scrollToBottom();
     }, [messages, isOtherUserTyping]);
 
-    useEffect(() => {
-        if (shouldSendAudio && audioBlob) {
-            sendMessage(audioBlob);
-            setShouldSendAudio(false);
-        }
-    }, [audioBlob, shouldSendAudio]);
+
 
     const initializeChat = async () => {
         try {
@@ -219,8 +214,12 @@ export default function TrainerChatPage() {
             };
 
             mediaRecorderRef.current.onstop = () => {
-                const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+                const blob = new Blob(chunksRef.current, { type: 'audio/webm;codecs=opus' });
                 setAudioBlob(blob);
+                if (shouldSendRef.current) {
+                    sendMessage(blob);
+                    shouldSendRef.current = false;
+                }
                 stream.getTracks().forEach(track => track.stop());
             };
 
@@ -581,17 +580,29 @@ export default function TrainerChatPage() {
 
                 {/* Audio Recording UI */}
                 {isRecording ? (
-                    <div className="flex items-center space-x-4 bg-muted/50 p-2 rounded-lg mb-2">
-                        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                        <span className="text-sm font-medium">{formatDuration(recordingDuration)}</span>
+                    <div className="flex items-center space-x-4 bg-red-500/10 p-3 rounded-2xl mb-2 border border-red-500/20 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="relative flex items-center justify-center">
+                            <div className="absolute w-4 h-4 bg-red-500 rounded-full animate-ping opacity-75" />
+                            <div className="relative w-3 h-3 bg-red-500 rounded-full" />
+                        </div>
+                        <span className="text-sm font-bold font-mono text-red-500">{formatDuration(recordingDuration)}</span>
                         <div className="flex-1" />
-                        <Button variant="ghost" size="sm" onClick={cancelRecording}>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={cancelRecording}
+                            className="text-muted-foreground hover:text-white hover:bg-white/5"
+                        >
                             Cancel
                         </Button>
-                        <Button size="sm" onClick={() => {
-                            setShouldSendAudio(true);
-                            stopRecording();
-                        }}>
+                        <Button 
+                            size="sm" 
+                            onClick={() => {
+                                shouldSendRef.current = true;
+                                stopRecording();
+                            }}
+                            className="bg-red-500 hover:bg-red-600 text-white font-bold px-4"
+                        >
                             <Send className="h-4 w-4 mr-2" />
                             Send
                         </Button>

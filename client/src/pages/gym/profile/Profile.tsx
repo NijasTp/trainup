@@ -138,7 +138,6 @@ const Profile = () => {
             async (position) => {
                 const { latitude, longitude } = position.coords;
                 try {
-                    // Reverse geocoding using OpenStreetMap Nominatim (Free)
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
                     const data = await res.json();
 

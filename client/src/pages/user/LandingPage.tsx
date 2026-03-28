@@ -84,7 +84,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Track Your Progress"
               description="Visualize your journey with interactive charts and deep-dive metrics. Data-driven insights to optimize your training."
-              imagePath="/src/assets/progress-image.jpg"
+              imagePath="/src/assets/progress.avif"
               bullets={[
                 "Interactive performance trend charts",
                 "Body composition and photo logging",
@@ -97,6 +97,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Daily Streak Motivation"
               description="Consistency is the key to transformation. Our streak system gamifies your hard work and keeps you motivated every single day."
+              imagePath="/src/assets/streak-image.jpg"
               bullets={[
                 "Visual streak tracking & milestones",
                 "Community leaderboard participation",
@@ -104,11 +105,12 @@ export default function LandingPage() {
                 "Motivational push notifications"
               ]}
               align="right"
-            />
+              />
 
             <FeatureSection
               title="Workout Scheduling"
               description="Never guess what to do next. A seamless visual calendar that syncs directly with your trainer's assignments."
+              imagePath="/src/assets/schedule-image.jpg"
               bullets={[
                 "Intuitive drag-and-drop planning",
                 "Syncs with your mobile calendar",

@@ -86,6 +86,7 @@ import GymListing from './pages/user/GymListing';
 import IndividualGym from './pages/user/IndividualGym';
 import UserGymDashboard from './pages/user/UserGymDashboard';
 import WishlistPage from './pages/user/WishlistPage';
+import UserGymStore from './pages/user/GymStore';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import AdminRatingManagement from './pages/admin/AdminRatingManagement';
 import AdminGymManagement from './pages/admin/AdminGymManagement';
@@ -108,6 +109,9 @@ import GymOtpVerification from './pages/gym/register/GymOtpVerification';
 import GymStatus from './pages/gym/register/GymStatus';
 import GymReapply from './pages/gym/register/GymReapply';
 import { GymProtectedRoute } from "./redirects/GymRedirects";
+import GymPlanSelection from './pages/user/GymPlanSelection';
+import PaymentSuccessPage from './pages/user/PaymentSuccess';
+import PaymentCancelPage from './pages/user/PaymentCancel';
 
 
 function App() {
@@ -155,9 +159,13 @@ function App() {
         <Route path={ROUTES.USER_PROGRESS} element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYMS} element={<ProtectedRoute><GymListing /></ProtectedRoute>} />
         <Route path={ROUTES.USER_TRAINER_PRICING} element={<ProtectedRoute><TrainerPricingPage /></ProtectedRoute>} />
+        <Route path="/gym/select-plan/:id" element={<ProtectedRoute><GymPlanSelection /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYM_DASHBOARD} element={<ProtectedRoute><UserGymDashboard /></ProtectedRoute>} />
         <Route path="/my-subscriptions" element={<ProtectedRoute><SubscriptionDetails /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WISHLIST} element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
+        <Route path="/gym-shop" element={<ProtectedRoute><UserGymStore /></ProtectedRoute>} />
+        <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
+        <Route path="/payment/cancel" element={<ProtectedRoute><PaymentCancelPage /></ProtectedRoute>} />
 
 
 

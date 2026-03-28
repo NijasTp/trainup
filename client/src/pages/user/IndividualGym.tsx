@@ -14,20 +14,14 @@ import {
     Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
-import API from "@/lib/axios";
 import { getGymForUser, getActiveSubscriptionPlans } from "@/services/gymService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import GymSubscriptionModal from "@/components/user/gym/GymSubscriptionModal";
 import GymReviews from "@/components/user/reviews/GymReviews";
 import Aurora from "@/components/ui/Aurora";
 import { motion, AnimatePresence } from "framer-motion";
 
-declare global {
-    interface Window {
-        Razorpay: any;
-    }
-}
+
 
 export default function IndividualGym() {
     const { id } = useParams();
@@ -35,9 +29,6 @@ export default function IndividualGym() {
     const [gym, setGym] = useState<any>(null);
     const [plans, setPlans] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [imageLoaded, setImageLoaded] = useState(false);
     const [selectedImage, setSelectedImage] = useState(0);
 
     useEffect(() => {
@@ -78,66 +69,6 @@ export default function IndividualGym() {
         }
     };
 
-    const handleSubscribe = async (planId: string, preferredTime: string) => {
-        setIsProcessing(true);
-        try {
-            const plan = plans.find(p => p._id === planId);
-            if (!plan) throw new Error("Plan not found");
-
-            // 1. Create Order
-            const { data: orderResponse } = await API.post("/payment/create-gym-order", {
-                gymId: id,
-                subscriptionPlanId: planId,
-                amount: plan.price
-            });
-
-            // 2. Load Razorpay
-            const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY,
-                amount: orderResponse.order.amount,
-                currency: "INR",
-                name: "TrainUp",
-                description: `Membership for ${gym.name}`,
-                order_id: orderResponse.order.id,
-                handler: async (response: any) => {
-                    try {
-                        const verifyRes = await API.post("/payment/verify-gym-payment", {
-                            orderId: response.razorpay_order_id,
-                            paymentId: response.razorpay_payment_id,
-                            signature: response.razorpay_signature,
-                            gymId: id,
-                            subscriptionPlanId: planId,
-                            preferredTime
-                        });
-
-                        if (verifyRes.data.success) {
-                            toast.success("Membership confirmed!");
-                            navigate("/gym-dashboard");
-                        }
-                    } catch (error: any) {
-                        toast.error(error.response?.data?.message || "Payment verification failed");
-                    }
-                },
-                prefill: {
-                    name: "",
-                    email: "",
-                    contact: ""
-                },
-                theme: {
-                    color: "#030303"
-                },
-                modal: {
-                    ondismiss: () => setIsProcessing(false)
-                }
-            };
-
-            const rzp = new window.Razorpay(options);
-            rzp.open();
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Something went wrong. Please try again.");
-            setIsProcessing(false);
-        }
-    };
 
     if (isLoading) {
         return (
@@ -242,7 +173,7 @@ export default function IndividualGym() {
                                     </p>
                                 </div>
                                 <Button
-                                    onClick={() => setIsModalOpen(true)}
+                                    onClick={() => navigate(`/gym/select-plan/${id}`)}
                                     disabled={plans.length === 0}
                                     size="lg"
                                     className="h-16 px-10 rounded-2xl bg-primary text-black font-black shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] hover:scale-105 transition-all text-lg"
@@ -281,8 +212,8 @@ export default function IndividualGym() {
                         <Shield className="h-7 w-7 text-primary" /> World-Class Amenities
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                        {["Cardio Zone", "Free Weights", "Yoga Studio", "Personal Training", "Sauna", "Group Classes"].map((amenity, i) => (
-                            <div key={i} className="p-6 rounded-3xl bg-white/5 border border-white/10 flex flex-col items-center gap-4 text-center group hover:bg-white/10 transition-all">
+                        {["Cardio Zone", "Free Weights", "Yoga Studio", "Personal Training", "Sauna", "Group Classes"].map((amenity) => (
+                            <div key={amenity} className="p-6 rounded-3xl bg-white/5 border border-white/10 flex flex-col items-center gap-4 text-center group hover:bg-white/10 transition-all">
                                 <div className="p-3 bg-primary/10 rounded-2xl group-hover:scale-110 transition-all">
                                     <Check className="h-6 w-6 text-primary" />
                                 </div>
@@ -302,24 +233,24 @@ export default function IndividualGym() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {plans.map((plan, i) => (
-                                <Card key={plan._id} className="bg-white/5 border-white/10 rounded-[2.5rem] p-8 space-y-8 overflow-hidden relative group shadow-2xl">
-                                    <div className="space-y-2">
+                            {plans.map((plan) => (
+                                <Card key={plan._id} className="bg-white/5 border-white/10 rounded-[2.5rem] p-8 flex flex-col h-full overflow-hidden relative group shadow-2xl">
+                                    <div className="space-y-2 mb-6">
                                         <h3 className="text-2xl font-black text-white">{plan.name}</h3>
                                         <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">{plan.duration} {plan.durationUnit}(s)</p>
                                     </div>
-                                    <div className="space-y-4">
+                                    <div className="space-y-4 flex-grow mb-8">
                                         {plan.features.map((f: string, fi: number) => (
                                             <div key={fi} className="flex items-start gap-3">
-                                                <Check className="h-4 w-4 text-primary mt-1" />
+                                                <Check className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
                                                 <span className="text-gray-400 font-medium">{f}</span>
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="pt-8 border-t border-white/10 flex items-center justify-between">
+                                    <div className="pt-8 border-t border-white/10 flex items-center justify-between mt-auto">
                                         <p className="text-3xl font-black text-white">₹{plan.price}</p>
                                         <Button
-                                            onClick={() => setIsModalOpen(true)}
+                                            onClick={() => navigate(`/gym/select-plan/${id}`, { state: { selectedPlanId: plan._id } })}
                                             className="rounded-2xl bg-white text-black font-black px-6 hover:bg-primary hover:text-white transition-all"
                                         >
                                             Select
@@ -341,15 +272,6 @@ export default function IndividualGym() {
                 </section>
 
             </main>
-
-            <GymSubscriptionModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubscribe={handleSubscribe}
-                plans={plans}
-                gymName={gym?.name || ""}
-                isProcessing={isProcessing}
-            />
 
             <SiteFooter />
         </div>

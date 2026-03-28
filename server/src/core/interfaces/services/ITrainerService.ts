@@ -24,7 +24,7 @@ export interface TrainerApplyData {
   experience: string
   specialization: string
   certificate: Express.Multer.File | string
-  profileImage: Express.Multer.File | string
+  profileImage?: Express.Multer.File | string
 }
 
 export interface DashboardStats {

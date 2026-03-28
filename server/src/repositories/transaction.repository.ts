@@ -22,6 +22,18 @@ export class TransactionRepository implements ITransactionRepository {
     );
   }
 
+  async updateTransactionStatusBySessionId(
+    sessionId: string,
+    status: 'completed' | 'failed',
+    paymentId?: string
+  ): Promise<ITransaction | null> {
+    return await TransactionModel.findOneAndUpdate(
+      { stripeSessionId: sessionId },
+      { status, paymentIntentId: paymentId },
+      { new: true }
+    );
+  }
+
   async getTransactionById(id: string): Promise<ITransaction | null> {
     return await TransactionModel.findById(id);
   }
@@ -39,7 +51,8 @@ export class TransactionRepository implements ITransactionRepository {
     if (search) {
       query.$or = [
         { razorpayOrderId: { $regex: search, $options: 'i' } },
-        { razorpayPaymentId: { $regex: search, $options: 'i' } }
+        { razorpayPaymentId: { $regex: search, $options: 'i' } },
+        { stripeSessionId: { $regex: search, $options: 'i' } }
       ];
     }
 
@@ -82,7 +95,8 @@ export class TransactionRepository implements ITransactionRepository {
     if (search) {
       query.$or = [
         { razorpayOrderId: { $regex: search, $options: 'i' } },
-        { razorpayPaymentId: { $regex: search, $options: 'i' } }
+        { razorpayPaymentId: { $regex: search, $options: 'i' } },
+        { stripeSessionId: { $regex: search, $options: 'i' } }
       ];
     }
 
@@ -122,6 +136,10 @@ export class TransactionRepository implements ITransactionRepository {
 
   async findByOrderId(orderId: string): Promise<ITransaction | null> {
     return await TransactionModel.findOne({ razorpayOrderId: orderId });
+  }
+
+  async findBySessionId(sessionId: string): Promise<ITransaction | null> {
+    return await TransactionModel.findOne({ stripeSessionId: sessionId });
   }
 
   async getUserPendingTransaction(userId: string): Promise<ITransaction | null> {
@@ -291,7 +309,8 @@ export class TransactionRepository implements ITransactionRepository {
     if (search) {
       query.$or = [
         { razorpayOrderId: { $regex: search, $options: 'i' } },
-        { razorpayPaymentId: { $regex: search, $options: 'i' } }
+        { razorpayPaymentId: { $regex: search, $options: 'i' } },
+        { stripeSessionId: { $regex: search, $options: 'i' } }
       ];
     }
 
