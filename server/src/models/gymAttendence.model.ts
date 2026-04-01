@@ -1,19 +1,5 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
-
-export interface IAttendance extends Document {
-  _id: Types.ObjectId | string;
-  userId: Types.ObjectId | string;
-  gymId: Types.ObjectId | string;
-  date: Date;
-  checkInTime: Date;
-  location: {
-    type: 'Point';
-    coordinates: [number, number];
-  };
-  isValidLocation: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import mongoose, { Schema } from 'mongoose';
+import { IAttendance } from '../core/interfaces/models/IAttendance';
 
 const attendanceSchema: Schema<IAttendance> = new Schema(
   {

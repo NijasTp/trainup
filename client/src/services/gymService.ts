@@ -1,5 +1,6 @@
 import API from '@/lib/axios'
 import { API_ROUTES } from '@/constants/api.constants';
+import type { CreateSubscriptionPlanPayload } from '@/interfaces/gym/IGymSubscription';
 
 export const getMyGym = async () => {
   const res = await API.get(API_ROUTES.USER.MY_GYM);
@@ -49,14 +50,6 @@ export const reapplyGym = async (formData: FormData) => {
 };
 
 // Subscription Plans APIs
-export interface CreateSubscriptionPlanPayload {
-  name: string;
-  duration: number;
-  durationUnit: 'day' | 'month' | 'year';
-  price: number;
-  description?: string;
-  features?: string[];
-}
 
 export const createSubscriptionPlan = async (payload: CreateSubscriptionPlanPayload) => {
   const res = await API.post(API_ROUTES.GYM.SUBSCRIPTION_PLAN.BASE, payload);

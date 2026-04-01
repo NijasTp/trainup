@@ -341,10 +341,3 @@ export class SocketHandler {
     })
   }
 }
-
-declare module 'socket.io' {
-  interface Socket {
-    userId: string
-    userRole: string
-  }
-}

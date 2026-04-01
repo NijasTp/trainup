@@ -12,11 +12,10 @@ import {
     subMonths,
     startOfWeek,
     endOfWeek,
-    isFuture,
-    parse
+    isFuture
 } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { WorkoutSession } from '@/pages/user/Workouts';
+import type { WorkoutSession } from '@/interfaces/user/IWorkouts';
 
 interface WorkoutCalendarProps {
     sessions: WorkoutSession[]; // We will pass all sessions here
@@ -43,12 +42,10 @@ export function WorkoutCalendar({ sessions, selectedDate, onSelectDate }: Workou
         const dayStr = format(day, 'yyyy-MM-dd');
         const daySessions = sessions.filter(s => s.date === dayStr);
 
-        if (daySessions.length === 0) return 'yellow'; // No session assigned in past = Yellow (as per requirement)
+        if (daySessions.length === 0) return 'yellow';          
 
         const isAnyDone = daySessions.some(s => s.isDone);
         if (isAnyDone) return 'green';
-
-        // If sessions exist but none are done, and it's in the past/today
         return 'red';
     };
 
@@ -93,7 +90,7 @@ export function WorkoutCalendar({ sessions, selectedDate, onSelectDate }: Workou
 
             {/* Calendar Grid */}
             <div className="grid grid-cols-7 gap-1">
-                {calendarDays.map((day, idx) => {
+                {calendarDays.map((day) => {
                     const status = getDayStatus(day);
                     const isSelected = isSameDay(day, selectedDate);
                     const isCurrentMonth = isSameMonth(day, currentMonth);

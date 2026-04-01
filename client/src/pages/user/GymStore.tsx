@@ -27,18 +27,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 
-interface Product {
-    _id: string;
-    name: string;
-    description: string;
-    price: number;
-    category: string;
-    subcategory?: string;
-    images: string[];
-    isAvailable: boolean;
-    stock: number;
-    isInWishlist?: boolean;
-}
+import type { IGymProduct as Product } from "@/interfaces/gym/IGymProduct";
 
 export default function UserGymStore() {
     const [products, setProducts] = useState<Product[]>([]);

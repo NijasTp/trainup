@@ -16,6 +16,7 @@ import { ROUTES } from "@/constants/routes";
 import { getUserGymEquipment } from "@/services/gymService";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import type { IGymEquipment } from "@/interfaces/gym/IGymEquipment";
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ import {
 } from "@/components/ui/select";
 
 export default function UserGymEquipment() {
-  const [equipment, setEquipment] = useState<any[]>([]);
+  const [equipment, setEquipment] = useState<IGymEquipment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -38,13 +39,28 @@ export default function UserGymEquipment() {
     fetchEquipment();
   }, []);
 
+  const fetchEquipment = async () => {
+    try {
+      setIsLoading(true);
+      const res = await getUserGymEquipment();
+      const items = res.equipment || [];
+      setEquipment(items);
+
+      // Extract unique categories
+      const cats = Array.from(new Set(items.map((e: IGymEquipment) => e.categoryName || "Uncategorized"))) as string[];
+      setCategories(cats);
+    } catch (error) {
+      console.error("Fetch equipment error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, filterCategory]);
 
-  const filteredEquipment = equipment.filter((item) => {
+  const filteredEquipment = equipment.filter((item: IGymEquipment) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = filterCategory === "all" || (item.categoryName || "Uncategorized") === filterCategory;
     return matchesSearch && matchesCategory;

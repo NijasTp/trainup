@@ -120,6 +120,7 @@ export const ROUTES = {
   GYM_STATUS: "/gym/status",
   GYM_REAPPLY: "/gym/reapply",
   GYM_PLANS: "/gym/plans",
+  GYM_SUBSCRIPTIONS: "/gym/plans",
   GYM_PLANS_CREATE: "/gym/plans/create",
   GYM_PLANS_EDIT: "/gym/plans/edit/:id",
   GYM_EQUIPMENT: "/gym/equipment",

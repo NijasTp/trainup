@@ -1,0 +1,131 @@
+src/components/admin/layout/AppHeader.tsx(2,10): error TS6133: 'Link' is declared but its value is never read.
+src/components/admin/layout/AppSidebar.tsx(9,5): error TS6133: 'Star' is declared but its value is never read.
+src/components/admin/layout/UserDropdown.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/admin/layout/UserDropdown.tsx(2,10): error TS6133: 'Link' is declared but its value is never read.
+src/components/gym/navs/GymNavbar.tsx(15,45): error TS2339: Property 'GYM_SUBSCRIPTIONS' does not exist on type '{ CHOOSE_LOGIN: string; GLOBAL_LOGIN: string; USER_LOGIN: string; USER_FORGOT_PASSWORD: string; USER_NEW_PASSWORD: string; USER_SIGNUP: string; USER_HOME_ALT: string; USER_NOTIFICATIONS: string; ... 113 more ...; GYM_WORKOUTS_EDIT: string; }'.
+src/components/ui/Beams.tsx(1,71): error TS1484: 'FC' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/components/ui/Beams.tsx(1,75): error TS1484: 'ReactNode' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/components/ui/Beams.tsx(249,13): error TS2339: Property 'group' does not exist on type 'JSX.IntrinsicElements'.
+src/components/ui/Beams.tsx(252,13): error TS2339: Property 'group' does not exist on type 'JSX.IntrinsicElements'.
+src/components/ui/Beams.tsx(253,13): error TS2339: Property 'ambientLight' does not exist on type 'JSX.IntrinsicElements'.
+src/components/ui/Beams.tsx(254,13): error TS2339: Property 'color' does not exist on type 'JSX.IntrinsicElements'.
+src/components/ui/Beams.tsx(332,12): error TS2339: Property 'mesh' does not exist on type 'JSX.IntrinsicElements'.
+src/components/ui/Beams.tsx(367,12): error TS2339: Property 'directionalLight' does not exist on type 'JSX.IntrinsicElements'.
+src/components/ui/ColorBends.tsx(138,9): error TS6133: 'pointerSmoothRef' is declared but its value is never read.
+src/components/ui/StreakModal.tsx(7,1): error TS6133: 'Button' is declared but its value is never read.
+src/components/ui/VideoCall.tsx(28,12): error TS6133: 'isConnected' is declared but its value is never read.
+src/components/user/gym/GymSubscriptionModal.tsx(1,46): error TS6133: 'DialogFooter' is declared but its value is never read.
+src/components/user/gym/GymSubscriptionModal.tsx(3,25): error TS6133: 'Clock' is declared but its value is never read.
+src/components/user/gym/GymSubscriptionModal.tsx(3,32): error TS6133: 'Calendar' is declared but its value is never read.
+src/components/user/progress/ProgressCalendar.tsx(63,17): error TS2353: Object literal may only specify known properties, and 'IconLeft' does not exist in type 'Partial<CustomComponents>'.
+src/components/user/workouts/WorkoutCalendar.tsx(16,5): error TS6133: 'parse' is declared but its value is never read.
+src/components/user/workouts/WorkoutCalendar.tsx(19,15): error TS2614: Module '"@/pages/user/Workouts"' has no exported member 'WorkoutSession'. Did you mean to use 'import WorkoutSession from "@/pages/user/Workouts"' instead?
+src/components/user/workouts/WorkoutCalendar.tsx(96,41): error TS6133: 'idx' is declared but its value is never read.
+src/lib/cropImage.ts(84,34): error TS6133: 'reject' is declared but its value is never read.
+src/pages/admin/AdminTransactions.tsx(20,104): error TS6133: 'DollarSign' is declared but its value is never read.
+src/pages/admin/AdminTransactions.tsx(30,19): error TS6133: 'setLimit' is declared but its value is never read.
+src/pages/admin/IndividualUser.tsx(17,5): error TS6133: 'XCircle' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(4,33): error TS6133: 'DialogClose' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(4,46): error TS6133: 'DialogHeader' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(4,60): error TS6133: 'DialogTitle' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(4,73): error TS6133: 'DialogDescription' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(4,92): error TS6133: 'DialogFooter' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(5,18): error TS6133: 'ChevronLeft' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(5,31): error TS6133: 'ChevronRight' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(5,45): error TS6133: 'Loader2' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(5,54): error TS6133: 'FileText' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(5,108): error TS6133: 'Calendar' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(5,118): error TS6133: 'Sparkles' is declared but its value is never read.
+src/pages/admin/TemplateManagement.tsx(9,66): error TS6196: 'IExercise' is declared but never used.
+src/pages/admin/TemplateManagement.tsx(9,77): error TS6196: 'TemplateMeal' is declared but never used.
+src/pages/admin/TemplateManagement.tsx(11,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+src/pages/admin/TrainerApplication.tsx(6,3): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/pages/admin/TrainerApplication.tsx(8,3): error TS6133: 'Mail' is declared but its value is never read.
+src/pages/admin/TrainerApplication.tsx(9,3): error TS6133: 'Phone' is declared but its value is never read.
+src/pages/admin/TrainerApplication.tsx(10,3): error TS6133: 'MapPin' is declared but its value is never read.
+src/pages/admin/TrainerApplication.tsx(15,3): error TS6133: 'Calendar' is declared but its value is never read.
+src/pages/admin/TrainerApplication.tsx(23,1): error TS6133: 'Logo' is declared but its value is never read.
+src/pages/admin/TrainerApplication.tsx(32,1): error TS6133: 'Label' is declared but its value is never read.
+src/pages/admin/TrainerApplication.tsx(35,1): error TS6133: 'motion' is declared but its value is never read.
+src/pages/admin/TrainerManagement.tsx(1,43): error TS6133: 'ChangeEvent' is declared but its value is never read.
+src/pages/admin/TrainerManagement.tsx(2,104): error TS6133: 'Calendar' is declared but its value is never read.
+src/pages/admin/TrainerManagement.tsx(18,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+src/pages/admin/TrainerManagement.tsx(25,10): error TS6133: 'error' is declared but its value is never read.
+src/pages/admin/TrainerManagement.tsx(30,28): error TS6133: 'setIsVerifiedFilter' is declared but its value is never read.
+src/pages/admin/TrainerManagement.tsx(31,21): error TS6133: 'setStartDate' is declared but its value is never read.
+src/pages/admin/TrainerManagement.tsx(32,19): error TS6133: 'setEndDate' is declared but its value is never read.
+src/pages/gym/components/Placeholders.tsx(2,1): error TS6133: 'React' is declared but its value is never read.
+src/pages/gym/equipment/Equipment.tsx(12,5): error TS6133: 'Filter' is declared but its value is never read.
+src/pages/gym/equipment/Equipment.tsx(13,5): error TS6133: 'MoreVertical' is declared but its value is never read.
+src/pages/gym/equipment/Equipment.tsx(15,5): error TS6133: 'Check' is declared but its value is never read.
+src/pages/gym/members/Members.tsx(5,5): error TS6133: 'Users' is declared but its value is never read.
+src/pages/gym/register/components/ImageCropModal.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/pages/gym/register/components/OpeningHoursSelector.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/pages/gym/register/components/OpeningHoursSelector.tsx(2,10): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/gym/register/components/OpeningHoursSelector.tsx(2,17): error TS6133: 'Plus' is declared but its value is never read.
+src/pages/gym/register/components/OpeningHoursSelector.tsx(2,23): error TS6133: 'Trash2' is declared but its value is never read.
+src/pages/gym/register/components/OpeningHoursSelector.tsx(2,31): error TS6133: 'CheckCircle2' is declared but its value is never read.
+src/pages/gym/register/components/OpeningHoursSelector.tsx(19,7): error TS6133: 'DAYS' is declared but its value is never read.
+src/pages/gym/register/GymStatus.tsx(4,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+src/pages/trainer/TrainerClientListing.tsx(3,29): error TS6133: 'CardHeader' is declared but its value is never read.
+src/pages/trainer/TrainerClientListing.tsx(9,61): error TS6133: 'Dumbbell' is declared but its value is never read.
+src/pages/trainer/TrainerClientListing.tsx(12,10): error TS6133: 'Link' is declared but its value is never read.
+src/pages/trainer/TrainerDashboard.tsx(12,3): error TS6133: 'Plus' is declared but its value is never read.
+src/pages/trainer/TrainerDashboard.tsx(21,3): error TS6133: 'LineChart' is declared but its value is never read.
+src/pages/trainer/TrainerDashboard.tsx(22,3): error TS6133: 'Line' is declared but its value is never read.
+src/pages/trainer/TrainerEditProfile.tsx(8,11): error TS6133: 'Award' is declared but its value is never read.
+src/pages/trainer/TrainerSessionRequests.tsx(22,31): error TS6196: 'User' is declared but never used.
+src/pages/trainer/TrainerSessionRequests.tsx(22,37): error TS6196: 'RequestedBy' is declared but never used.
+src/pages/trainer/TrainerTemplateManagement.tsx(4,33): error TS6133: 'DialogHeader' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(4,47): error TS6133: 'DialogTitle' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(5,24): error TS6133: 'Calendar' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(5,34): error TS6133: 'Trophy' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(5,42): error TS6133: 'ImagePlus' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(5,53): error TS6133: 'MoreVertical' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(5,73): error TS6133: 'Trash2' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(5,86): error TS6133: 'Filter' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(5,94): error TS6133: 'Sparkles' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(5,104): error TS6133: 'Layout' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(5,132): error TS6133: 'Box' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(10,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+src/pages/trainer/TrainerTemplateManagement.tsx(11,1): error TS6133: 'Badge' is declared but its value is never read.
+src/pages/trainer/TrainerUserDetails.tsx(7,53): error TS6133: 'Video' is declared but its value is never read.
+src/pages/trainer/TrainerUserDetails.tsx(7,86): error TS6133: 'Star' is declared but its value is never read.
+src/pages/trainer/TrainerUserDetails.tsx(7,92): error TS6133: 'Crown' is declared but its value is never read.
+src/pages/user/GymListing.tsx(1,31): error TS6133: 'useRef' is declared but its value is never read.
+src/pages/user/GymListing.tsx(2,1): error TS6192: All imports in import declaration are unused.
+src/pages/user/GymListing.tsx(7,26): error TS6133: 'getSubscriptionPlan' is declared but its value is never read.
+src/pages/user/GymListing.tsx(10,10): error TS6133: 'Link' is declared but its value is never read.
+src/pages/user/GymListing.tsx(22,12): error TS6133: 'error' is declared but its value is never read.
+src/pages/user/GymPaymentSuccess.tsx(3,45): error TS6133: 'ShieldCheck' is declared but its value is never read.
+src/pages/user/MagicBento.tsx(199,42): error TS2345: Argument of type 'Timeout' is not assignable to parameter of type 'number'.
+src/pages/user/MyGym.tsx(46,10): error TS6133: 'products' is declared but its value is never read.
+src/pages/user/MyGym.tsx(47,10): error TS6133: 'templates' is declared but its value is never read.
+src/pages/user/UserEditProfile.tsx(13,3): error TS6133: 'Save' is declared but its value is never read.
+src/pages/user/UserEditProfile.tsx(24,3): error TS6133: 'Loader2' is declared but its value is never read.
+src/pages/user/UserEditProfile.tsx(25,3): error TS6133: 'ChevronRight' is declared but its value is never read.
+src/pages/user/UserEditProfile.tsx(124,10): error TS6133: 'isSaving' is declared but its value is never read.
+src/pages/user/UserEditProfile.tsx(844,46): error TS2304: Cannot find name 'isSubmitting'.
+src/pages/user/UserEditProfile.tsx(861,27): error TS2304: Cannot find name 'isSubmitting'.
+src/pages/user/UserEditProfile.tsx(864,18): error TS2304: Cannot find name 'isSubmitting'.
+src/pages/user/UserProfile.tsx(2,1): error TS6192: All imports in import declaration are unused.
+src/pages/user/UserProfile.tsx(6,3): error TS6133: 'Award' is declared but its value is never read.
+src/pages/user/UserProfile.tsx(8,3): error TS6133: 'Lock' is declared but its value is never read.
+src/pages/user/UserProfile.tsx(11,3): error TS6133: 'Trophy' is declared but its value is never read.
+src/pages/user/UserProfile.tsx(13,3): error TS6133: 'CreditCard' is declared but its value is never read.
+src/pages/user/UserProfile.tsx(15,3): error TS6133: 'Eye' is declared but its value is never read.
+src/pages/user/UserProfile.tsx(34,1): error TS6133: 'MagicBento' is declared but its value is never read.
+src/pages/user/UserProfile.tsx(42,10): error TS6133: 'error' is declared but its value is never read.
+src/pages/user/UserProfile.tsx(44,9): error TS6133: 'reduxUser' is declared but its value is never read.
+src/pages/user/UserProfile.tsx(192,30): error TS2339: Property 'medicalConditions' does not exist on type 'UserProfile'.
+src/pages/user/UserProfile.tsx(192,80): error TS2339: Property 'medicalConditions' does not exist on type 'UserProfile'.
+src/pages/user/UserProfile.tsx(192,143): error TS2339: Property 'medicalConditions' does not exist on type 'UserProfile'.
+src/pages/user/UserProfile.tsx(200,30): error TS2339: Property 'dietaryPreferences' does not exist on type 'UserProfile'.
+src/pages/user/UserProfile.tsx(200,81): error TS2339: Property 'dietaryPreferences' does not exist on type 'UserProfile'.
+src/pages/user/UserProfile.tsx(200,145): error TS2339: Property 'dietaryPreferences' does not exist on type 'UserProfile'.
+src/pages/user/UserProfile.tsx(241,39): error TS2339: Property 'activeSubscriptions' does not exist on type 'UserProfile'.
+src/pages/user/UserProfile.tsx(241,70): error TS2339: Property 'activeSubscriptions' does not exist on type 'UserProfile'.
+src/pages/user/UserProfile.tsx(242,29): error TS2339: Property 'activeSubscriptions' does not exist on type 'UserProfile'.
+src/pages/user/WorkoutSuccess.tsx(2,47): error TS6133: 'Link' is declared but its value is never read.
+src/pages/user/WorkoutSuccess.tsx(7,1): error TS6133: 'getProfile' is declared but its value is never read.
+src/services/workoutService.ts(3,15): error TS2614: Module '"@/pages/user/UserWorkoutEdit"' has no exported member 'IWorkoutSession'. Did you mean to use 'import IWorkoutSession from "@/pages/user/UserWorkoutEdit"' instead?

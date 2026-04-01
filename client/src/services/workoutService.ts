@@ -1,6 +1,6 @@
 import API from '../lib/axios'
 import { format } from 'date-fns'
-import type { IWorkoutSession } from '@/pages/user/UserWorkoutEdit'
+import type { IWorkoutSession } from '@/interfaces/user/IUserWorkoutEdit'
 import { API_ROUTES } from '@/constants/api.constants'
 
 export const createWorkoutSession = async (

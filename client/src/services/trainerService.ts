@@ -1,5 +1,6 @@
 import API from '@/lib/axios';
 import { API_ROUTES } from '@/constants/api.constants';
+import type { ITrainerPasswordData } from '@/interfaces/trainer/ITrainerChangePassword';
 
 export const getTrainerDetails = async () => {
   const res = await API.get(API_ROUTES.TRAINER.GET_DETAILS);
@@ -23,11 +24,6 @@ export const updateTrainerProfile = async (data: FormData) => {
   });
   return res.data;
 };
-
-export interface ITrainerPasswordData {
-  currentPassword: string;
-  newPassword: string;
-}
 
 export const changeTrainerPassword = async (data: ITrainerPasswordData) => {
   const res = await API.post(API_ROUTES.TRAINER.CHANGE_PASSWORD, data);

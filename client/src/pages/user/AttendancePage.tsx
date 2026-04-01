@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import {
   CalendarDays,
   Activity,
-  CheckCircle2,
   Clock,
   ArrowLeft
 } from "lucide-react";

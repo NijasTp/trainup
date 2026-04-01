@@ -841,7 +841,7 @@ export default function EditProfile() {
               type="button"
               variant="ghost"
               onClick={prevStep}
-              disabled={currentStep === 1 || isSubmitting}
+              disabled={currentStep === 1 || isSaving}
               className="h-16 px-10 rounded-2xl font-black italic uppercase tracking-widest text-gray-500 hover:text-white transition-all disabled:opacity-0"
             >
               Back
@@ -858,10 +858,10 @@ export default function EditProfile() {
             ) : (
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSaving}
                 className="h-16 px-16 rounded-2xl bg-primary text-black hover:bg-white transition-all font-black italic uppercase tracking-widest shadow-[0_0_30px_rgba(var(--primary),0.3)] disabled:opacity-50 flex items-center gap-3"
               >
-                {isSubmitting ? (
+                {isSaving ? (
                   <>
                     <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                     Saving...

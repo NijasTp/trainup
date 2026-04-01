@@ -1,6 +1,7 @@
 import { injectable } from 'inversify';
 import { IAttendanceRepository } from '../core/interfaces/repositories/IAttendanceRepository';
-import { IAttendance, AttendanceModel } from '../models/gymAttendence.model';
+import { AttendanceModel } from '../models/gymAttendence.model';
+import { IAttendance } from '../core/interfaces/models/IAttendance';
 import { Types } from 'mongoose';
 
 @injectable()

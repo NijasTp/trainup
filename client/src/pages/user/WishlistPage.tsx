@@ -7,15 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-interface WishlistItem {
-    id: string;
-    name: string;
-    price: number;
-    image: string;
-    category: string;
-    isAvailable: boolean;
-    rating: number;
-}
+import type { WishlistItem } from '@/interfaces/user/IWishlist';
 
 const mockWishlist: WishlistItem[] = [
     {
