@@ -44,4 +44,31 @@ export class GymProductRepository implements IGymProductRepository {
 
     return await GymProductModel.find(query).sort({ createdAt: -1 });
   }
+
+  async find(query: any, page: number, limit: number): Promise<{ products: IGymProduct[]; total: number; totalPages: number }> {
+    const total = await GymProductModel.countDocuments(query);
+    const products = await GymProductModel.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean() as IGymProduct[];
+
+    return {
+      products,
+      total,
+      totalPages: Math.ceil(total / limit)
+    };
+  }
+
+  async findOne(query: any): Promise<IGymProduct | null> {
+    return await GymProductModel.findOne(query).lean() as IGymProduct | null;
+  }
+
+  async updateOne(query: any, update: any): Promise<{ matchedCount: number; modifiedCount: number }> {
+    const result = await GymProductModel.updateOne(query, update);
+    return {
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount
+    };
+  }
 }

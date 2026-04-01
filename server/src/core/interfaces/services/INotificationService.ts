@@ -34,6 +34,7 @@ export interface INotificationService {
   sendInactivityNotifications(): Promise<void>;
   sendGymAnnouncementNotification(gymId: string, title: string): Promise<void>;
   sendAdminPendingVerificationsNotification(): Promise<void>;
+  sendAttendanceReminders(targetTime: string): Promise<void>;
   processScheduledNotifications(): Promise<void>;
   cleanupExpiredNotifications(): Promise<void>;
 }

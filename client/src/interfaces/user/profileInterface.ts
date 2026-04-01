@@ -13,6 +13,7 @@ export interface UserProfile {
     age?: number;
     assignedTrainer?: string;
     gymId?: string;
+    gymName?: string;
     isPrivate?: boolean;
     isBanned: boolean;
     streak?: number;

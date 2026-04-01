@@ -1,7 +1,8 @@
 import API from '../lib/axios';
+import { API_ROUTES } from '../constants/api.constants';
 
 export const addProgress = async (formData: FormData) => {
-    const res = await API.post('/user/progress', formData, {
+    const res = await API.post(API_ROUTES.USER.PROGRESS.BASE, formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
@@ -10,13 +11,13 @@ export const addProgress = async (formData: FormData) => {
 };
 
 export const getProgress = async (date?: string) => {
-    const res = await API.get('/user/progress', {
+    const res = await API.get(API_ROUTES.USER.PROGRESS.BASE, {
         params: date ? { date } : {},
     });
     return res.data;
 };
 
 export const compareProgress = async () => {
-    const res = await API.get('/user/progress/compare');
+    const res = await API.get(API_ROUTES.USER.PROGRESS.COMPARE);
     return res.data;
 };

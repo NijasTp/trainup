@@ -35,6 +35,11 @@ export class NotificationCron {
         cron.schedule('*/5 * * * *', async () => {
             await this.checkVideoCallReminders();
         });
+
+        // Gym Attendance Reminders - Every Minute
+        cron.schedule('* * * * *', async () => {
+            await this.checkGymAttendanceReminders();
+        });
     }
 
     private async checkMealReminders() {
@@ -60,6 +65,29 @@ export class NotificationCron {
             // Check for slots starting in 10-15 mins
         } catch (error) {
             logger.error('Error checking video call reminders:', error);
+        }
+    }
+
+    private async checkGymAttendanceReminders() {
+        try {
+            // Calculate time 10 minutes ago
+            const now = new Date();
+            const tenMinsAgo = new Date(now.getTime() - 10 * 60000);
+            
+            // Format to "HH:MM AM/PM"
+            let hours = tenMinsAgo.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const minutes = tenMinsAgo.getMinutes();
+            const strMinutes = minutes < 10 ? '0' + minutes : minutes;
+            const strHours = hours < 10 ? '0' + hours : hours;
+            
+            const formattedTime = `${strHours}:${strMinutes} ${ampm}`;
+            
+            await this._notificationService.sendAttendanceReminders(formattedTime);
+        } catch (error) {
+            logger.error('Error checking gym attendance reminders:', error);
         }
     }
 }

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreditCard, Search, Filter, Calendar, User, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { CreditCard, Search, Filter, Calendar, User, ArrowLeft, ChevronLeft, ChevronRight, Dumbbell } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { useNavigate } from "react-router-dom";
@@ -227,32 +227,37 @@ export default function Transactions() {
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            {transaction.trainerId?.profileImage ? (
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                            {transaction.type === 'trainer' && transaction.trainerId?.profileImage ? (
                               <img
                                 src={transaction.trainerId.profileImage}
                                 alt={transaction.trainerId.name}
                                 className="w-12 h-12 rounded-full object-cover"
                               />
+                            ) : transaction.type === 'gym' ? (
+                              <Dumbbell className="h-6 w-6 text-primary" />
                             ) : (
                               <User className="h-6 w-6 text-primary" />
                             )}
                           </div>
                           <div className="space-y-1">
-                            <p className="font-semibold text-foreground text-lg">
-                              {transaction.trainerId?.name || 'Trainer Subscription'}
+                            <p className="font-semibold text-foreground text-lg uppercase italic font-black">
+                              {transaction.type === 'gym' ? (transaction.gymId?.name || 'Gym Subscription') : (transaction.trainerId?.name || 'Trainer Subscription')}
                             </p>
-                            <p className="text-muted-foreground">
-                              {transaction.months} month{transaction.months > 1 ? 's' : ''} subscription
-                            </p>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-4 w-4" />
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-primary/5 text-primary border-primary/10 text-[10px] font-black h-5 uppercase">
+                                {transaction.planType || (transaction.months ? `${transaction.months} MONTHS` : 'PLAN')}
+                              </Badge>
+                              <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{transaction.type}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1">
+                              <div className="flex items-center gap-1 font-medium">
+                                <Calendar className="h-3.5 w-3.5" />
                                 {formatDate(transaction.createdAt)}
                               </div>
-                              {transaction.razorpayPaymentId && (
-                                <div className="text-xs font-mono">
-                                  ID: {transaction.razorpayPaymentId.slice(0, 10)}...
+                              {(transaction.razorpayPaymentId || transaction.stripeSessionId) && (
+                                <div className="text-[10px] font-mono opacity-50">
+                                  ID: {(transaction.stripeSessionId || transaction.razorpayPaymentId || '').slice(-12).toUpperCase()}
                                 </div>
                               )}
                             </div>

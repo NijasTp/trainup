@@ -4,8 +4,9 @@ import { XCircle, ArrowLeft, RefreshCw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Aurora from "@/components/ui/Aurora";
 import API from "@/lib/axios";
+import { toast } from "sonner";
 
-export default function PaymentCancelPage() {
+export default function GymPaymentCancel() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const sessionId = searchParams.get("session_id");
@@ -13,7 +14,8 @@ export default function PaymentCancelPage() {
     useEffect(() => {
         const cleanup = async () => {
             try {
-                await API.post("/payment/cleanup-pending");
+                await API.post("/payment/cleanup-pending-gym");
+                toast.error("Payment was cancelled.");
             } catch (error) {
                 console.error("Cleanup error:", error);
             }
@@ -40,9 +42,9 @@ export default function PaymentCancelPage() {
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-red-400 to-white bg-clip-text text-transparent">
                         Cancelled
                     </h1>
-                    <p className="text-xl font-medium text-gray-200">Transaction Aborted</p>
+                    <p className="text-xl font-medium text-gray-200">Payment Aborted</p>
                     <p className="text-muted-foreground">
-                        Your payment was cancelled. No charges were made to your account.
+                        Your gym subscription was not completed. No charges were made.
                     </p>
                 </div>
 
@@ -58,7 +60,7 @@ export default function PaymentCancelPage() {
 
                 <div className="space-y-3">
                     <Button 
-                        onClick={() => navigate(-2)} 
+                        onClick={() => navigate(-1)} 
                         className="w-full bg-white text-black hover:bg-gray-200 py-7 font-bold text-lg rounded-xl group transition-all"
                     >
                         <RefreshCw className="mr-2 h-5 w-5 group-hover:rotate-180 transition-transform duration-500" />

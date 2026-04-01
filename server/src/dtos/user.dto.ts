@@ -16,7 +16,8 @@ export class UserDto {
       equipment: user.equipment,
       assignedTrainer: user.assignedTrainer?.toString(),
       subscriptionStartDate: user.subscriptionStartDate || undefined,
-      gymId: user.gymId?.toString(),
+      gymId: (user.gymId as any)?._id?.toString() || user.gymId?.toString(),
+      gymName: (user.gymId as any)?.name,
       isPrivate: user.isPrivate,
       isBanned: user.isBanned,
       streak: user.streak,
@@ -123,6 +124,7 @@ export class UserResponseDto {
   assignedTrainer?: string;
   subscriptionStartDate?: Date;
   gymId?: string;
+  gymName?: string;
   isPrivate?: boolean;
   isBanned: boolean;
   streak: number;
@@ -144,6 +146,13 @@ export class UserResponseDto {
   workoutTemplateStartDate?: Date;
   activeDietTemplate?: string;
   dietTemplateStartDate?: Date;
+  assignedTrainerDetails?: TrainerPublicDto;
+  activeGymDetails?: {
+    _id: string;
+    name: string;
+    profileImage?: string;
+    address?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }

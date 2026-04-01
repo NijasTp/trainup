@@ -1,5 +1,5 @@
 import API from "@/lib/axios";
-
+import { API_ROUTES } from "@/constants/api.constants";
 
 export const getTrainers = async (
   page: number,
@@ -22,7 +22,7 @@ export const getTrainers = async (
   if (startDate) params.append("startDate", startDate);
   if (endDate) params.append("endDate", endDate);
 
-  const url = `/admin/trainers?${params.toString()}`;
+  const url = `${API_ROUTES.ADMIN.TRAINERS.LIST}?${params.toString()}`;
 
   const res = await API.get(url);
   return res.data;
@@ -30,26 +30,26 @@ export const getTrainers = async (
 
 
 export const toggleTrainerBan = async (trainerId: string, isBanned: boolean) => {
-  await API.patch(`/admin/trainers/${trainerId}/status`, { isBanned });
+  await API.patch(API_ROUTES.ADMIN.TRAINERS.STATUS(trainerId), { isBanned });
 };
 
 
 export const verifyTrainer = async (trainerId: string) => {
-  await API.patch(`/admin/trainers/${trainerId}/status`, { profileStatus: 'approved' });
+  await API.patch(API_ROUTES.ADMIN.TRAINERS.STATUS(trainerId), { profileStatus: 'approved' });
 };
 
 export const rejectTrainer = async (trainerId: string, rejectReason: string) => {
-  await API.patch(`/admin/trainers/${trainerId}/status`, { profileStatus: 'rejected', rejectReason })
+  await API.patch(API_ROUTES.ADMIN.TRAINERS.STATUS(trainerId), { profileStatus: 'rejected', rejectReason })
 }
 
 export const getTrainerById = async (trainerId: string) => {
-  const res = await API.get(`/admin/trainers/${trainerId}`);
+  const res = await API.get(API_ROUTES.ADMIN.TRAINERS.DETAIL(trainerId));
   return res.data;
 };
 
 
 export const getTrainerApplication = async (trainerId: string) => {
-  const res = await API.get(`/admin/trainers/${trainerId}/application`);
+  const res = await API.get(API_ROUTES.ADMIN.TRAINERS.APPLICATION(trainerId));
   return res.data;
 };
 
@@ -72,30 +72,30 @@ export const getUsers = async (
   if (startDate) params.append("startDate", startDate);
   if (endDate) params.append("endDate", endDate);
 
-  const res = await API.get(`/admin/users?${params.toString()}`);
+  const res = await API.get(`${API_ROUTES.ADMIN.USERS.LIST}?${params.toString()}`);
   return res.data;
 };
 
 export const toggleUserBan = async (userId: string, isBanned: boolean) => {
-  await API.patch(`/admin/users/${userId}`, { isBanned });
-  const res = await API.get(`/admin/users/${userId}`);
+  await API.patch(API_ROUTES.ADMIN.USERS.DETAIL(userId), { isBanned });
+  const res = await API.get(API_ROUTES.ADMIN.USERS.DETAIL(userId));
   return res.data;
 };
 
 
 
 export const getUserById = async (id: string) => {
-  const res = await API.get(`/admin/users/${id}`);
+  const res = await API.get(API_ROUTES.ADMIN.USERS.DETAIL(id));
   return res.data;
 };
 
 export const getGymApplication = async (gymId: string) => {
-  const res = await API.get(`/admin/gyms/${gymId}/application`);
+  const res = await API.get(API_ROUTES.ADMIN.GYMS.APPLICATION(gymId));
   return res.data;
 };
 
 export const getDashboardStats = async () => {
-  const res = await API.get('/admin/dashboard-stats');
+  const res = await API.get(API_ROUTES.ADMIN.DASHBOARD_STATS);
   return res.data;
 };
 
@@ -113,17 +113,17 @@ export const getAdminTransactions = async (
     status,
     sort
   });
-  const res = await API.get(`/admin/transactions?${params.toString()}`);
+  const res = await API.get(`${API_ROUTES.ADMIN.TRANSACTIONS.LIST}?${params.toString()}`);
   return res.data;
 };
 
 export const downloadSaleReport = async () => {
-  const res = await API.get('/admin/transactions/export');
+  const res = await API.get(API_ROUTES.ADMIN.TRANSACTIONS.EXPORT);
   return res.data;
 };
 
 export const getDashboardGraphData = async (filter: 'day' | 'week' | 'month' | 'year', type: 'revenue' | 'users' | 'trainers' = 'revenue') => {
-  const res = await API.get(`/admin/dashboard-graph?filter=${filter}&type=${type}`);
+  const res = await API.get(`${API_ROUTES.ADMIN.DASHBOARD_GRAPH}?filter=${filter}&type=${type}`);
   return res.data;
 };
 
@@ -133,7 +133,7 @@ export const getTrainerReviews = async (trainerId: string, page: number = 1, lim
     limit: limit.toString(),
     search
   });
-  const res = await API.get(`/admin/trainers/${trainerId}/reviews?${params.toString()}`);
+  const res = await API.get(`${API_ROUTES.ADMIN.TRAINERS.REVIEWS(trainerId)}?${params.toString()}`);
   return res.data;
 };
 
@@ -156,12 +156,11 @@ export const getGyms = async (
   if (startDate) params.append("startDate", startDate);
   if (endDate) params.append("endDate", endDate);
 
-  const res = await API.get(`/admin/gyms?${params.toString()}`);
+  const res = await API.get(`${API_ROUTES.ADMIN.GYMS.LIST}?${params.toString()}`);
   return res.data;
 };
 
 export const updateGymStatus = async (gymId: string, status: { isBanned?: boolean, verifyStatus?: string, rejectReason?: string }) => {
-  const res = await API.patch(`/admin/gyms/${gymId}`, status);
-  return res.data;
+  const resActual = await API.patch(`${API_ROUTES.ADMIN.GYMS.LIST}/${gymId}`, status);
+  return resActual.data;
 };
-

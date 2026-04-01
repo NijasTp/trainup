@@ -8,6 +8,8 @@ import { IGymRepository } from '../core/interfaces/repositories/IGymRepository';
 import { INotification } from '../models/notification.model';
 import { NOTIFICATION_MESSAGES, NOTIFICATION_TYPES } from '../constants/notification.constants';
 import { logger } from '../utils/logger.util';
+import { IUserGymMembershipRepository } from '../core/interfaces/repositories/IUserGymMembershipRepository';
+import { IAttendanceRepository } from '../core/interfaces/repositories/IAttendanceRepository';
 
 import { IQueueService } from '../core/interfaces/services/IQueueService';
 
@@ -18,7 +20,9 @@ export class NotificationService implements INotificationService {
     @inject(TYPES.IUserRepository) private _userRepo: IUserRepository,
     @inject(TYPES.ITrainerRepository) private _trainerRepo: ITrainerRepository,
     @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository,
-    @inject(TYPES.IQueueService) private _queueService: IQueueService
+    @inject(TYPES.IQueueService) private _queueService: IQueueService,
+    @inject(TYPES.IUserGymMembershipRepository) private _membershipRepo: IUserGymMembershipRepository,
+    @inject(TYPES.IAttendanceRepository) private _attendanceRepo: IAttendanceRepository
   ) { }
 
   async createNotification(data: CreateNotificationDto): Promise<INotification> {
@@ -279,6 +283,46 @@ export class NotificationService implements INotificationService {
       logger.info('Cleaned up expired notifications');
     } catch (error) {
       logger.error('Error cleaning up expired notifications:', error);
+    }
+  }
+
+  async sendAttendanceReminders(targetTime: string): Promise<void> {
+    try {
+      logger.info(`Checking attendance reminders for target time: ${targetTime}`);
+      
+      const memberships = await this._membershipRepo.findActiveByPreferredTime(targetTime);
+      if (memberships.length === 0) return;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      for (const membership of memberships) {
+        const userId = membership.userId.toString();
+        const gymId = membership.gymId.toString();
+
+        const attendance = await this._attendanceRepo.findTodayAttendance(userId, gymId, today);
+        
+        if (!attendance) {
+          // Send reminder
+          const user = await this._userRepo.findById(userId);
+          const gym = await this._gymRepo.findById(gymId);
+          
+          if (user && gym) {
+            await this.createNotification({
+              recipientId: userId,
+              recipientRole: 'user',
+              type: NOTIFICATION_TYPES.USER.GYM_ANNOUNCEMENT, // Using generic type for now or define new one
+              title: 'Gym Attendance Reminder',
+              message: `Don't forget to mark your attendance at ${gym.name}! It's past your preferred time of ${membership.preferredTime}.`,
+              priority: 'medium',
+              category: 'warning'
+            });
+            logger.info(`Sent attendance reminder to user ${userId} for gym ${gymId}`);
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('Error sending attendance reminders:', error);
     }
   }
 }

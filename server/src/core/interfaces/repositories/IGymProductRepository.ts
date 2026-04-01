@@ -7,4 +7,7 @@ export interface IGymProductRepository {
   update(id: string, data: Partial<IGymProduct>): Promise<IGymProduct | null>;
   delete(id: string): Promise<void>;
   findAll(search: string, category: string, minPrice: number, maxPrice: number): Promise<IGymProduct[]>;
+  find(query: any, page: number, limit: number): Promise<{ products: IGymProduct[]; total: number; totalPages: number }>;
+  findOne(query: any): Promise<IGymProduct | null>;
+  updateOne(query: any, update: any): Promise<{ matchedCount: number; modifiedCount: number }>;
 }

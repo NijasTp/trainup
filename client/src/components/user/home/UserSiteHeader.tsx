@@ -191,10 +191,20 @@ export const SiteHeader: React.FC = () => {
     })
 
   const navLinks = [
-    { name: "Trainers", path: ROUTES.USER_TRAINER_PAGE, icon: Users, show: true },
-    { name: "Gyms", path: ROUTES.USER_GYMS, icon: Dumbbell, show: true },
+    { 
+      name: user?.assignedTrainerDetails ? "Trainer" : "Trainers", 
+      path: user?.assignedTrainerDetails ? ROUTES.MY_TRAINER_PROFILE : ROUTES.USER_TRAINER_PAGE, 
+      icon: Users, 
+      show: true 
+    },
+    { 
+      name: user?.activeGymDetails ? "Gym" : "Gyms", 
+      path: user?.activeGymDetails ? ROUTES.USER_GYM_DASHBOARD : ROUTES.USER_GYMS, 
+      icon: Dumbbell, 
+      show: true 
+    },
     { name: "Workouts", path: ROUTES.USER_WORKOUTS_PAGE, icon: Activity, show: true },
-    { name: "My Trainer", path: ROUTES.MY_TRAINER_PROFILE, icon: MessageSquare, show: !!user?.assignedTrainer },
+    { name: "My Trainer Profile", path: ROUTES.MY_TRAINER_PROFILE, icon: MessageSquare, show: !!user?.assignedTrainerDetails },
   ].filter(link => link.show)
 
 

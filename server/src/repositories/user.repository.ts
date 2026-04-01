@@ -123,8 +123,8 @@ export class UserRepository implements IUserRepository {
   async findProfileById(id: string): Promise<IUser | null> {
     return UserModel.findById(id)
       .select('-password')
-      .populate('assignedTrainer', 'name')
-      .populate('gymId', 'name')
+      .populate('assignedTrainer', 'name profileImage specialization rating location price')
+      .populate('gymId', 'name profileImage address')
       .exec();
   }
 

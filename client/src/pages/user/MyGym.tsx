@@ -1,27 +1,20 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Users,
-   CreditCard,
   Bell,
-  ChevronRight,
   Dumbbell,
-  ShoppingBag,
-  Flame,
-  Zap,
-  Clock,
-  ArrowRight,
   MapPin,
-  Trophy,
   Activity,
-  CalendarDays,
   CheckCircle2,
+  ArrowUpRight,
+  AlertCircle,
+  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import Aurora from "@/components/ui/Aurora";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import API from "@/lib/axios";
 import {
   getUserGymAnnouncements,
@@ -35,16 +28,23 @@ import GymReviews from "@/components/user/reviews/GymReviews";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent} from "@/components/ui/card";
+import { ROUTES } from "@/constants/routes";
+
+const safeFormatDate = (date: any, formatStr: string = 'MMM dd, yyyy') => {
+  if (!date) return 'N/A';
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return 'Invalid Date';
+  return format(d, formatStr);
+};
 
 export default function MyGym() {
   const [gymData, setGymData] = useState<any>(null);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [equipment, setEquipment] = useState<any[]>([]);
+  const [attendance, setAttendance] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
-  const [attendance, setAttendance] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
   const [hasAttendedToday, setHasAttendedToday] = useState(false);
@@ -76,8 +76,10 @@ export default function MyGym() {
       setTemplates(tempRes.templates || []);
       setAttendance(history.attendance || []);
 
-      const todayStr = new Date().toISOString().split('T')[0];
-      const attendedToday = (history.attendance || []).some((a: any) => a.date.split('T')[0] === todayStr);
+      const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+      const attendedToday = (history.attendance || []).some((a: any) =>
+        new Date(a.date).toLocaleDateString('en-CA') === todayStr
+      );
       setHasAttendedToday(attendedToday);
     } catch (err: any) {
       console.error("Dashboard fetch error:", err);
@@ -92,7 +94,7 @@ export default function MyGym() {
 
   const handleMarkAttendance = async () => {
     if (!gymData?.gym?._id) return;
-    
+
     setIsMarkingAttendance(true);
     try {
       if (!navigator.geolocation) {
@@ -105,16 +107,16 @@ export default function MyGym() {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
-          
+
           toast.success(res.message);
           setHasAttendedToday(true);
-          fetchDashboardData(); // Refresh history
+          fetchDashboardData();
         } catch (error: any) {
-          toast.error(error.response?.data?.message || "Failed to mark attendance");
+          toast.error(error.response?.data?.error || "Failed to mark attendance");
         } finally {
           setIsMarkingAttendance(false);
         }
-      }, (error) => {
+      }, () => {
         toast.error("Please enable location access to mark attendance");
         setIsMarkingAttendance(false);
       });
@@ -148,394 +150,258 @@ export default function MyGym() {
   const { gym, userSubscription } = gymData;
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-      <div className="absolute inset-0 z-0">
+    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-x-hidden font-outfit">
+      {/* Dynamic Background Layer */}
+      <div className="fixed inset-0 z-0">
         <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.05)_0%,transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03)_0%,transparent_70%)]" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] brightness-100" />
       </div>
 
       <SiteHeader />
 
-      <main className="relative flex-1 z-10 pb-24">
-        {/* --- HERO SECTION --- */}
-        <div className="relative h-[60vh] min-h-[500px] flex items-end">
-          <div className="absolute inset-0 overflow-hidden">
-            <motion.img
-              initial={{ scale: 1.1, opacity: 0 }}
-              animate={{ scale: 1, opacity: 0.4 }}
-              transition={{ duration: 1.5 }}
-              src={gym?.profileImage || gym?.images?.[0]}
-              className="w-full h-full object-cover grayscale-[50%]"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-[#030303]/60 to-transparent" />
+      <main className="relative container mx-auto px-4 sm:px-6 lg:px-12 py-12 space-y-12 flex-1 z-10">
+        {/* Header Section - Modern Brutalist */}
+        <section className="flex flex-col md:flex-row justify-between items-end gap-8 pb-12 border-b border-white/5">
+          <div className="space-y-4">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-4"
+            >
+              <div className="h-16 w-16 rounded-[2rem] bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.1)]">
+                <Dumbbell className="h-8 w-8 text-cyan-400" />
+              </div>
+              <div className="space-y-1">
+                <Badge variant="outline" className="text-[10px] font-black uppercase tracking-[0.3em] border-cyan-500/30 text-cyan-400 py-1 px-3 rounded-full bg-cyan-500/5">
+                  HQ COMMAND
+                </Badge>
+                <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic leading-none text-white">
+                  {gym.name}
+                </h1>
+              </div>
+            </motion.div>
+            <div className="flex items-center gap-6 text-zinc-500 font-bold uppercase tracking-widest text-[11px] italic">
+              <span className="flex items-center gap-2">
+                <MapPin className="h-3 w-3 text-cyan-500" /> {gym.address}
+              </span>
+              <span className="h-1 w-1 bg-zinc-800 rounded-full" />
+              <span className="flex items-center gap-2 text-green-500">
+                <Activity className="h-3 w-3" /> ACTIVE PROTOCOL
+              </span>
+            </div>
           </div>
 
-          <div className="container mx-auto px-6 pb-12">
+          <div className="flex items-center gap-4">
+            {hasAttendedToday ? (
+              <div className="h-14 px-8 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3 text-emerald-500 font-black uppercase italic tracking-widest text-xs shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                <CheckCircle2 size={20} className="animate-bounce" /> ATTENDANCE MARKED
+              </div>
+            ) : (
+              <Button
+                onClick={handleMarkAttendance}
+                disabled={isMarkingAttendance}
+                className="h-14 px-8 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-black font-black uppercase italic tracking-widest text-xs shadow-[0_0_30px_rgba(6,182,212,0.3)] transition-all hover:scale-105"
+              >
+                {isMarkingAttendance ? <Activity className="animate-spin mr-2" /> : <MapPin className="mr-2" />} Mark Presence
+              </Button>
+            )}
+          </div>
+        </section>
+
+        {/* Dashboard Intelligence Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+          {/* LEFT: STATUS & ATTENDANCE */}
+          <div className="lg:col-span-8 space-y-8">
+
+            {/* Membership "Intelligence Card" */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              className="max-w-4xl"
+              className="relative group bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 rounded-[3rem] p-10 overflow-hidden shadow-2xl backdrop-blur-3xl"
             >
-              <div className="flex items-center gap-4 mb-6">
-                <Badge className="bg-primary/10 text-primary border-primary/30 px-4 py-1.5 text-[10px] font-black tracking-widest uppercase italic">
-                  <Flame size={12} className="mr-2 inline" /> ACTIVE HQ
-                </Badge>
-                {userSubscription?.expiresAt && (
-                  <div className="flex items-center gap-2 text-zinc-400 text-[10px] font-black tracking-widest uppercase italic">
-                    <Clock size={12} />
-                    {(() => {
-                      const days = Math.ceil((new Date(userSubscription.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                      return days > 0 ? `${days} DAYS REMAINING` : "MEMBERSHIP EXPIRED";
-                    })()}
-                  </div>
-                )}
+              <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform duration-1000">
+                <Shield className="h-72 w-72" />
               </div>
 
-              <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-white mb-6 uppercase">
-                {gym?.name}
-              </h1>
-
-              <div className="flex flex-wrap items-center gap-8 mb-10">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                    <MapPin size={20} className="text-primary" />
+              <div className="relative z-10 space-y-12">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                  <div className="space-y-4">
+                    <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20">
+                      <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
+                      <span className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.2em]">{userSubscription.planName} MEMBER</span>
+                    </div>
+                    <h2 className="text-4xl md:text-6xl font-black tracking-tight uppercase leading-none italic text-white line-clamp-2">
+                      Mission <span className="text-zinc-500">Status</span>: <br />
+                      <span className="text-cyan-400">Deployed</span>
+                    </h2>
                   </div>
-                  <div className="text-left">
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Base Location</p>
-                    <p className="text-sm font-bold text-white">{gym?.address || "Unknown"}</p>
+
+                  <div className="bg-black/40 border border-white/5 rounded-3xl p-8 backdrop-blur-md min-w-[200px] text-center md:text-right">
+                    <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Days Remaining</p>
+                    <div className="text-6xl font-black tracking-tighter text-white tabular-nums italic">
+                      {(() => {
+                        if (!userSubscription.expiresAt) return "??";
+                        const days = Math.ceil((new Date(userSubscription.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                        return days > 0 ? days : "00";
+                      })()}
+                    </div>
+                    <p className="text-[10px] text-cyan-500 font-black uppercase tracking-widest mt-1">Operational</p>
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-6">
-                  {hasAttendedToday ? (
-                    <div className="flex items-center gap-3 px-6 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
-                      <CheckCircle2 className="text-emerald-500" size={24} />
-                      <div className="text-left">
-                        <p className="text-[10px] font-black text-emerald-500/60 uppercase tracking-widest italic">Status</p>
-                        <p className="text-sm font-black text-emerald-500 uppercase italic">Checked In Today</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <Button 
-                      onClick={handleMarkAttendance}
-                      disabled={isMarkingAttendance}
-                      className="h-14 px-8 bg-primary hover:bg-primary/90 text-black font-black uppercase italic tracking-widest rounded-2xl shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-105 active:scale-95"
-                    >
-                      {isMarkingAttendance ? (
-                        <Activity className="animate-spin mr-2" size={18} />
-                      ) : (
-                        <MapPin className="mr-2" size={18} />
-                      )}
-                      Mark Attendance
-                    </Button>
-                  )}
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-10 pt-10 border-t border-white/5">
+                  <div className="space-y-1">
+                    <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">Entry Window</p>
+                    <p className="text-xl font-bold text-white italic">{userSubscription.preferredTime || "00:00 - 23:59"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">Start Date</p>
+                    <p className="text-xl font-bold text-white italic">{safeFormatDate(userSubscription.subscribedAt, 'MMM dd, yy')}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">Expiration</p>
+                    <p className="text-xl font-bold text-white italic">{safeFormatDate(userSubscription.expiresAt, 'MMM dd, yy')}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">Sector Price</p>
+                    <p className="text-xl font-bold text-cyan-400 italic">₹{userSubscription.planPrice}</p>
+                  </div>
                 </div>
               </div>
             </motion.div>
+
+            {/* Attendance Analytics */}
+            <section className="space-y-6">
+              <div className="flex items-center justify-between px-4">
+                <h3 className="text-2xl font-black uppercase tracking-tighter italic flex items-center gap-3 text-white">
+                  <Activity className="h-5 w-5 text-green-500" /> Entry Logs
+                </h3>
+                <Link to={ROUTES.USER_GYM_ATTENDANCE}>
+                  <Button variant="link" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-cyan-400">Archived Data <ArrowUpRight className="ml-2 h-3 w-3" /></Button>
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
+                {attendance.length === 0 ? (
+                  <div className="col-span-full py-20 bg-white/5 rounded-[2.5rem] border border-dashed border-white/10 flex flex-col items-center justify-center space-y-4">
+                    <Activity className="h-10 w-10 text-zinc-700" />
+                    <p className="text-zinc-600 font-bold uppercase tracking-widest text-[10px]">No recent entry detected</p>
+                  </div>
+                ) : (
+                  attendance.slice(0, 5).map((log, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="relative overflow-hidden bg-white/5 border border-white/10 rounded-[2.5rem] p-6 text-center group hover:bg-green-500/5 hover:border-green-500/30 transition-all cursor-crosshair"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-t from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative z-10 space-y-3">
+                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center mx-auto group-hover:bg-green-500/20 transition-colors">
+                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic group-hover:text-green-500 transition-colors">
+                            {safeFormatDate(log.date, 'EEE, MMM dd')}
+                          </p>
+                          <p className="text-sm font-black text-white italic">{safeFormatDate(log.checkInTime, 'hh:mm a')}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
+
+          {/* RIGHT: UPDATES & PROTOCOL */}
+          <div className="lg:col-span-4 space-y-8">
+            {/* Announcements Terminal */}
+            <Card className="bg-black/40 border border-white/10 rounded-[3rem] h-full flex flex-col overflow-hidden backdrop-blur-3xl shadow-2xl">
+              <div className="p-8 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                <h3 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 text-white">
+                  <Bell className="h-5 w-5 text-cyan-400" /> Briefings
+                </h3>
+                <Badge className="bg-cyan-500/20 text-cyan-400 border-0 text-[9px] font-black tracking-widest">LIVE</Badge>
+              </div>
+
+              <CardContent className="flex-1 p-8 space-y-6 overflow-y-auto max-h-[500px] scrollbar-hide">
+                {announcements.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-20">
+                    <AlertCircle className="h-10 w-10 text-zinc-800" />
+                    <p className="text-zinc-600 font-bold uppercase tracking-widest text-[10px]">Digital silence maintained</p>
+                  </div>
+                ) : (
+                  announcements.map((ann, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="group p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-cyan-500/30 hover:bg-cyan-500/5 transition-all"
+                    >
+                      <span className="text-[9px] font-black text-cyan-500 uppercase tracking-widest italic mb-2 block">
+                        {safeFormatDate(ann.createdAt, 'MMM dd, yyyy')}
+                      </span>
+                      <h4 className="text-lg font-black text-white italic uppercase tracking-tight group-hover:text-cyan-400 transition-colors mb-3">
+                        {ann.title}
+                      </h4>
+                      <p className="text-xs text-zinc-500 leading-relaxed font-bold uppercase tracking-tight">
+                        {ann.content}
+                      </p>
+                    </motion.div>
+                  ))
+                )}
+              </CardContent>
+
+              <div className="p-8 border-t border-white/5">
+                <Button variant="outline" className="w-full h-12 rounded-2xl border-white/10 bg-white/5 font-black uppercase italic tracking-widest text-[10px] text-zinc-500 hover:text-white transition-all">
+                  Access Previous Logs
+                </Button>
+              </div>
+            </Card>
           </div>
         </div>
 
-        <div className="container mx-auto px-6 -mt-16 space-y-24">
-          {/* --- ATTENDANCE TRACKER --- */}
-          <section>
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <h2 className="text-3xl font-black italic text-white uppercase tracking-tight">Deployment History</h2>
-                <div className="h-1 w-24 bg-primary mt-2" />
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-black italic text-zinc-500 uppercase tracking-widest">
-                <CalendarDays size={14} className="text-primary" /> Last 15 Missions
-              </div>
-            </div>
-
-            <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-8 overflow-hidden">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {attendance.length === 0 ? (
-                  <div className="col-span-full py-12 text-center">
-                    <Activity size={48} className="mx-auto text-zinc-800 mb-4" />
-                    <p className="text-zinc-600 font-bold uppercase italic tracking-widest">No mission logs recorded yet</p>
-                  </div>
-                ) : (
-                  attendance.map((log, i) => (
-                    <motion.div
-                      key={log._id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="p-6 bg-white/5 border border-white/10 rounded-3xl flex flex-col items-center gap-3 group hover:border-primary/30 transition-all"
-                    >
-                      <div className="p-3 bg-primary/10 rounded-2xl text-primary mb-1">
-                        <CheckCircle2 size={24} />
-                      </div>
-                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">{format(new Date(log.date), 'EEE, MMM dd')}</p>
-                      <p className="text-sm font-bold text-white">{format(new Date(log.checkInTime), 'hh:mm a')}</p>
-                      {!log.isValidLocation && (
-                        <Badge variant="destructive" className="text-[8px] font-black px-2 mt-1">PROXY ERROR</Badge>
-                      )}
-                    </motion.div>
-                  ))
-                )}
-              </div>
-            </div>
-          </section>
-
-          {/* --- BROADCAST CENTER --- */}
-          <section>
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <h2 className="text-3xl font-black italic text-white uppercase tracking-tight">Broadcast Center</h2>
-                <div className="h-1 w-24 bg-primary mt-2" />
-              </div>
-              <Button variant="link" className="text-primary font-black uppercase text-xs tracking-widest italic hover:gap-2 transition-all">
-                ALL SIGNALS <ChevronRight size={14} />
-              </Button>
-            </div>
-
-            {announcements.length === 0 ? (
-              <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-12 text-center">
-                <Bell size={48} className="mx-auto text-zinc-800 mb-4" />
-                <p className="text-zinc-600 font-bold uppercase italic tracking-widest">No active broadcasts found</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {announcements.map((ann, i) => (
-                  <motion.div
-                    key={ann._id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="bg-zinc-900/40 border border-white/5 rounded-[2rem] p-8 group hover:border-primary/20 transition-all cursor-default"
-                  >
-                    {ann.image && (
-                      <div className="h-40 rounded-2xl overflow-hidden mb-6 relative">
-                        <img src={ann.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
-                      </div>
-                    )}
-                    <span className="text-[10px] font-black text-primary uppercase tracking-widest italic mb-2 block">
-                      {format(new Date(ann.createdAt), 'MMM dd, yyyy')}
-                    </span>
-                    <h3 className="text-xl font-black text-white italic uppercase mb-4 tracking-tight group-hover:text-primary transition-colors">
-                      {ann.title}
-                    </h3>
-                    <p className="text-zinc-400 text-sm font-medium leading-relaxed italic line-clamp-3">
-                      {ann.description}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* --- RESOURCE GALLERY (EQUIPMENT) --- */}
-          <section>
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <h2 className="text-3xl font-black italic text-white uppercase tracking-tight">Arsenal Gallery</h2>
-                <div className="h-1 w-24 bg-primary mt-2" />
-              </div>
-              <div className="flex gap-2">
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] font-black italic text-zinc-500">
-                  <Dumbbell size={12} /> {equipment.length} ASSETS
-                </div>
-              </div>
-            </div>
-
-            <div className="relative group">
-              <div className="overflow-x-auto pb-6 scrollbar-hide flex gap-6 px-2">
-                {equipment.length === 0 ? (
-                  <div className="w-full h-48 flex items-center justify-center bg-zinc-900/40 border border-white/5 rounded-[2.5rem]">
-                    <p className="text-zinc-600 font-bold uppercase italic tracking-widest">Inventory scanner offline</p>
-                  </div>
-                ) : (
-                  equipment.map((eq, i) => (
-                    <motion.div
-                      key={eq._id}
-                      initial={{ opacity: 0, x: 20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="min-w-[280px] bg-zinc-900/40 border border-white/5 rounded-[2rem] overflow-hidden group hover:border-primary/20 transition-all"
-                    >
-                      <div className="h-40 relative">
-                        <img src={eq.image} className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-500" />
-                        <div className="absolute top-4 left-4">
-                          <Badge className={`${eq.available ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'} border-0 text-[8px] font-black tracking-widest px-2 uppercase`}>
-                            {eq.available ? 'ONLINE' : 'MAINTENANCE'}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="p-6">
-                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 italic">{eq.categoryName}</p>
-                        <h4 className="text-lg font-black text-white italic uppercase tracking-tight">{eq.name}</h4>
-                      </div>
-                    </motion.div>
-                  ))
-                )}
-              </div>
-              <div className="absolute right-0 top-0 bottom-6 w-32 bg-gradient-to-l from-[#030303] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-          </section>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24">
-            {/* --- BLUEPRINT HUB (WORKOUT TEMPLATES) --- */}
-            <section>
-              <div className="flex items-end justify-between mb-8">
-                <div>
-                  <h2 className="text-3xl font-black italic text-white uppercase tracking-tight">Blueprint Hub</h2>
-                  <div className="h-1 w-24 bg-primary mt-2" />
-                </div>
-              </div>
-              <div className="space-y-4">
-                {templates.length === 0 ? (
-                  <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-12 text-center">
-                    <Flame size={32} className="mx-auto text-zinc-800 mb-4" />
-                    <p className="text-zinc-600 font-bold uppercase italic tracking-widest text-sm">No training blueprints deployed</p>
-                  </div>
-                ) : (
-                  templates.map((temp) => (
-                    <motion.div
-                      key={temp._id}
-                      whileHover={{ x: 10 }}
-                      className="bg-zinc-900/40 border border-white/5 rounded-[1.5rem] p-6 flex items-center justify-between group hover:border-primary/30 transition-all cursor-pointer"
-                    >
-                      <div className="flex items-center gap-6">
-                        <div className="p-4 bg-primary/10 rounded-2xl text-primary border border-primary/20 shadow-xl">
-                          <Zap size={24} />
-                        </div>
-                        <div>
-                          <h4 className="text-xl font-black text-white italic uppercase tracking-tight group-hover:text-primary transition-colors">{temp.title}</h4>
-                          <p className="text-xs font-black text-zinc-500 uppercase tracking-widest italic mt-1">
-                            {temp.days?.length} Training Cycles • {temp.goal || "General Strength"}
-                          </p>
-                        </div>
-                      </div>
-                      <ChevronRight size={24} className="text-zinc-800 group-hover:text-primary transition-colors" />
-                    </motion.div>
-                  ))
-                )}
-                <Button variant="outline" className="w-full h-14 rounded-2xl border-white/5 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-white font-black uppercase italic tracking-widest mt-4">
-                  EXPLORE ALL BLUEPRINTS
-                </Button>
-              </div>
-            </section>
-
-            {/* --- PREMIUM STORE PREVIEW --- */}
-            <section>
-              <div className="flex items-end justify-between mb-8">
-                <div>
-                  <h2 className="text-3xl font-black italic text-white uppercase tracking-tight">Premium Gear</h2>
-                  <div className="h-1 w-24 bg-primary mt-2" />
-                </div>
-                <Button variant="link" className="text-primary font-black uppercase text-xs tracking-widest italic hover:gap-2 transition-all">
-                  OPEN ARMORY <ChevronRight size={14} />
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                {products.length === 0 ? (
-                  <div className="col-span-2 bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-12 text-center">
-                    <ShoppingBag size={32} className="mx-auto text-zinc-800 mb-4" />
-                    <p className="text-zinc-600 font-bold uppercase italic tracking-widest text-sm">Armory shelves are empty</p>
-                  </div>
-                ) : (
-                  products.map((prod) => (
-                    <motion.div
-                      key={prod._id}
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      className="bg-zinc-900/40 border border-white/5 rounded-[2rem] p-4 group hover:border-primary/20 transition-all"
-                    >
-                      <div className="aspect-square rounded-2xl overflow-hidden mb-4 relative">
-                        <img src={prod.images?.[0]} className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-500" />
-                        <div className="absolute bottom-2 right-2 px-3 py-1 bg-black/80 rounded-lg text-primary font-black italic text-xs">
-                          ₹{prod.price}
-                        </div>
-                      </div>
-                      <h4 className="text-sm font-black text-white italic uppercase tracking-tight truncate px-1 group-hover:text-primary transition-colors">{prod.name}</h4>
-                    </motion.div>
-                  ))
-                )}
-              </div>
-            </section>
+        {/* System Nodes Section */}
+        <section className="pt-12">
+          <div className="flex items-center justify-between mb-8 px-4">
+            <h2 className="text-3xl font-black uppercase tracking-tighter italic text-white flex items-center gap-3">
+              HQ <span className="text-zinc-500">Inventory</span>
+            </h2>
+            <Link to={ROUTES.USER_GYM_EQUIPMENT}><Button variant="ghost" className="text-cyan-400 font-black uppercase tracking-widest text-[10px] italic hover:bg-transparent">Sector Map <ArrowUpRight className="ml-2 h-4 w-4" /></Button></Link>
           </div>
-
-          {/* --- COMMUNITY & SUBSCRIPTION --- */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-12">
-            <Card className="bg-zinc-950/50 border-white/5 rounded-[3rem] p-4 lg:col-span-2 shadow-2xl overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-8 opacity-5">
-                <Users size={200} />
-              </div>
-              <CardHeader>
-                <CardTitle className="text-2xl font-black italic text-white uppercase tracking-tight flex items-center gap-4">
-                  <Trophy className="text-primary" /> COMMUNITY ELITE
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {gymData.members?.slice(0, 6).map((member: any) => (
-                  <div key={member._id} className="flex items-center gap-4 p-4 bg-white/5 rounded-[1.5rem] border border-white/5 hover:border-primary/20 transition-all">
-                    <Avatar className="h-12 w-12 border-2 border-primary/20">
-                      <AvatarImage src={member.profileImage} />
-                      <AvatarFallback className="bg-zinc-800 text-white font-black uppercase italic">{member.name?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="overflow-hidden">
-                      <p className="text-sm font-black text-white italic uppercase truncate">{member.name}</p>
-                      <p className="text-[8px] font-black text-zinc-500 uppercase tracking-widest italic">Member Unit</p>
-                    </div>
-                  </div>
-                ))}
-                <button className="flex items-center justify-center gap-3 p-4 bg-primary/10 rounded-[1.5rem] border border-primary/20 hover:bg-primary/20 transition-all group">
-                  <span className="text-[10px] font-black text-primary uppercase tracking-widest italic">JOIN ALL</span>
-                  <ArrowRight size={14} className="text-primary group-hover:translate-x-1 transition-transform" />
-                </button>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-zinc-950/50 border-white/5 rounded-[3rem] p-4 shadow-2xl relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CardHeader>
-                <CardTitle className="text-2xl font-black italic text-white uppercase tracking-tight flex items-center gap-4">
-                  <CreditCard className="text-primary" /> ACCESS LEVEL
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="p-8 bg-zinc-900 border border-white/5 rounded-[2rem] text-center relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-4">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-ping" />
-                  </div>
-                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic mb-2">Current Protocol</p>
-                  <h3 className="text-4xl font-black text-white italic uppercase mb-2 tracking-tighter">{userSubscription?.planName || "STATIC"}</h3>
-                  <div className="flex items-baseline justify-center gap-1 text-primary">
-                    <span className="text-xl font-black italic">₹</span>
-                    <span className="text-4xl font-black tracking-tighter">{userSubscription?.planPrice || "0"}</span>
-                    <span className="text-xs font-black text-zinc-500 italic uppercase">/ {userSubscription?.planDuration} {userSubscription?.planDurationUnit}</span>
-                  </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {equipment.slice(0, 6).map((item, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ y: -8, scale: 1.02 }}
+                onClick={() => navigate("/gym/equipment-inventory")}
+                className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 flex flex-col items-center gap-4 text-center group cursor-pointer hover:bg-cyan-500/5 hover:border-cyan-500/30 transition-all shadow-xl backdrop-blur-md"
+              >
+                <div className="h-12 w-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-all group-hover:rotate-12">
+                  <Dumbbell className="h-6 w-6 text-cyan-400" />
                 </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center px-2">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Deployed On</span>
-                    <span className="text-sm font-black text-white italic uppercase">{format(new Date(userSubscription?.subscribedAt), 'MMM dd, yyyy')}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-2">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Sector Mode</span>
-                    <Badge className="bg-primary/10 text-primary border-0 text-[10px] font-black italic tracking-widest px-3 py-1 uppercase">{userSubscription?.preferredTime || "FULL ACCESS"}</Badge>
-                  </div>
-                </div>
-
-                <Button className="w-full h-16 rounded-[1.5rem] bg-primary hover:bg-primary/90 text-black font-black uppercase italic tracking-widest text-lg shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] hover:scale-105 transition-all">
-                  MANAGE ACCESS
-                </Button>
-              </CardContent>
-            </Card>
+                <span className="text-[10px] font-black text-zinc-500 group-hover:text-white uppercase tracking-widest italic transition-colors">
+                  {item.name}
+                </span>
+              </motion.div>
+            ))}
           </div>
+        </section>
 
-          {/* --- REVIEWS SECTION --- */}
-          <section className="pt-12">
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <h2 className="text-3xl font-black italic text-white uppercase tracking-tight">Mission Reports</h2>
-                <div className="h-1 w-24 bg-primary mt-2" />
-              </div>
+        {/* Feedback Section */}
+        <section className="pt-24">
+          <div className="flex items-end justify-between mb-12">
+            <div className="space-y-4">
+              <Badge className="bg-primary/20 text-primary border-primary/30 px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px] italic">REPORTS</Badge>
+              <h2 className="text-4xl md:text-5xl font-black italic text-white uppercase tracking-tighter">Mission <span className="text-zinc-500">Reports</span></h2>
             </div>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-[4rem] p-12 backdrop-blur-3xl">
             <GymReviews
               gymId={gym._id}
               reviews={gym.reviews || []}
@@ -551,10 +417,11 @@ export default function MyGym() {
               canReview={true}
               currentUserPlan={userSubscription?.planName}
             />
-          </section>
-        </div>
+          </div>
+        </section>
       </main>
+
       <SiteFooter />
-    </div >
+    </div>
   );
 }

@@ -84,7 +84,7 @@ import ProgressPage from './pages/user/Progress';
 import TemplateDetails from './pages/user/TemplateDetails';
 import GymListing from './pages/user/GymListing';
 import IndividualGym from './pages/user/IndividualGym';
-import UserGymDashboard from './pages/user/UserGymDashboard';
+import MyGym from './pages/user/MyGym';
 import WishlistPage from './pages/user/WishlistPage';
 import UserGymStore from './pages/user/GymStore';
 import AdminTransactions from './pages/admin/AdminTransactions';
@@ -112,6 +112,10 @@ import { GymProtectedRoute } from "./redirects/GymRedirects";
 import GymPlanSelection from './pages/user/GymPlanSelection';
 import PaymentSuccessPage from './pages/user/PaymentSuccess';
 import PaymentCancelPage from './pages/user/PaymentCancel';
+import GymPaymentSuccess from './pages/user/GymPaymentSuccess';
+import GymPaymentCancel from './pages/user/GymPaymentCancel';
+import AttendancePage from './pages/user/AttendancePage';
+import UserGymEquipment from './pages/user/UserGymEquipment';
 
 
 function App() {
@@ -159,13 +163,17 @@ function App() {
         <Route path={ROUTES.USER_PROGRESS} element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYMS} element={<ProtectedRoute><GymListing /></ProtectedRoute>} />
         <Route path={ROUTES.USER_TRAINER_PRICING} element={<ProtectedRoute><TrainerPricingPage /></ProtectedRoute>} />
-        <Route path="/gym/select-plan/:id" element={<ProtectedRoute><GymPlanSelection /></ProtectedRoute>} />
-        <Route path={ROUTES.USER_GYM_DASHBOARD} element={<ProtectedRoute><UserGymDashboard /></ProtectedRoute>} />
-        <Route path="/my-subscriptions" element={<ProtectedRoute><SubscriptionDetails /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_GYM_PLAN_SELECTION} element={<ProtectedRoute><GymPlanSelection /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_GYM_DASHBOARD} element={<ProtectedRoute><MyGym /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_GYM_ATTENDANCE} element={<ProtectedRoute><AttendancePage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_GYM_EQUIPMENT} element={<ProtectedRoute><UserGymEquipment /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_SUBSCRIPTIONS} element={<ProtectedRoute><SubscriptionDetails /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WISHLIST} element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
-        <Route path="/gym-shop" element={<ProtectedRoute><UserGymStore /></ProtectedRoute>} />
-        <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
-        <Route path="/payment/cancel" element={<ProtectedRoute><PaymentCancelPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_GYM_SHOP} element={<ProtectedRoute><UserGymStore /></ProtectedRoute>} />
+        <Route path={ROUTES.PAYMENT_TRAINER_SUCCESS} element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
+        <Route path={ROUTES.PAYMENT_TRAINER_CANCEL} element={<ProtectedRoute><PaymentCancelPage /></ProtectedRoute>} />
+        <Route path={ROUTES.PAYMENT_GYM_SUCCESS} element={<ProtectedRoute><GymPaymentSuccess /></ProtectedRoute>} />
+        <Route path={ROUTES.PAYMENT_GYM_CANCEL} element={<ProtectedRoute><GymPaymentCancel /></ProtectedRoute>} />
 
 
 
@@ -198,10 +206,10 @@ function App() {
         <Route path={ROUTES.TRAINER_ASSIGN_DIET} element={<TrainerProtectedRoute><TrainerAssignDiets /></TrainerProtectedRoute>} />
 
         {/* Trainer Template Management */}
-        <Route path="/trainer/templates" element={<TrainerProtectedRoute><TrainerTemplateManagement /></TrainerProtectedRoute>} />
-        <Route path="/trainer/templates/new/workout" element={<TrainerProtectedRoute><AdminAddWorkoutTemplate mode="trainer" /></TrainerProtectedRoute>} />
-        <Route path="/trainer/templates/new/diet" element={<TrainerProtectedRoute><NewDietTemplate mode="trainer" /></TrainerProtectedRoute>} />
-        <Route path="/trainer/templates/:id/:template/edit" element={<TrainerProtectedRoute><EditAdminTemplate mode="trainer" /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_TEMPLATES} element={<TrainerProtectedRoute><TrainerTemplateManagement /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_NEW_WORKOUT_TEMPLATE} element={<TrainerProtectedRoute><AdminAddWorkoutTemplate mode="trainer" /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_NEW_DIET_TEMPLATE} element={<TrainerProtectedRoute><NewDietTemplate mode="trainer" /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_EDIT_TEMPLATE} element={<TrainerProtectedRoute><EditAdminTemplate mode="trainer" /></TrainerProtectedRoute>} />
 
         {/* Admin Routes */}
         <Route path={ROUTES.ADMIN_LOGIN} element={<AdminPreventLoggedIn><AdminLogin /></AdminPreventLoggedIn>} />
@@ -226,7 +234,7 @@ function App() {
         <Route path={ROUTES.GYM_STATUS} element={<GymProtectedRoute><GymStatus /></GymProtectedRoute>} />
         <Route path={ROUTES.GYM_REAPPLY} element={<GymProtectedRoute><GymReapply /></GymProtectedRoute>} />
 
-        <Route path="/gym/*" element={<GymProtectedRoute><GymLayout><Routes>
+        <Route path={ROUTES.GYM_ROOT} element={<GymProtectedRoute><GymLayout><Routes>
           <Route path="dashboard" element={<GymDashboardPage />} />
           <Route path="profile" element={<GymProfilePage />} />
           <Route path="plans" element={<GymPlansPage />} />

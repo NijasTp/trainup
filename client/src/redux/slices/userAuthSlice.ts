@@ -43,6 +43,8 @@ export interface UserType {
   activeWorkoutTemplate?: string | null;
   activeWorkoutTemplates?: ActiveTemplate[];
   activeDietTemplate?: string | null;
+  assignedTrainerDetails?: any;
+  activeGymDetails?: any;
   isVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -92,6 +94,8 @@ export const userAuthSlice = createSlice({
         activeWorkoutTemplate: payload.activeWorkoutTemplate || null,
         activeWorkoutTemplates: payload.activeWorkoutTemplates || [],
         activeDietTemplate: payload.activeDietTemplate || null,
+        assignedTrainerDetails: payload.assignedTrainerDetails || null,
+        activeGymDetails: payload.activeGymDetails || null,
         createdAt: payload.createdAt,
         updatedAt: payload.updatedAt,
       };

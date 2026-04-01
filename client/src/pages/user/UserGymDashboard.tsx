@@ -51,7 +51,7 @@ export default function UserGymDashboard() {
             console.error("Dashboard error:", error);
             if (error.response?.status === 404) {
                 toast.error("No active gym membership found.");
-                navigate("/gyms");
+                navigate(ROUTES.USER_GYMS);
             } else {
                 toast.error("Failed to load dashboard data");
             }
@@ -66,7 +66,7 @@ export default function UserGymDashboard() {
         try {
             await cancelGymMembership(gymData.membership._id);
             toast.success("Membership cancelled successfully");
-            navigate("/gyms");
+            navigate(ROUTES.USER_GYMS);
         } catch (error) {
             toast.error("Failed to cancel membership");
         }
@@ -105,7 +105,7 @@ export default function UserGymDashboard() {
                             <div className="h-12 w-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30">
                                 <Dumbbell className="h-6 w-6 text-primary" />
                             </div>
-                            <h1 className="text-3xl md:text-5xl font-black">{gym.name}</h1>
+                            <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase">{gym.name}</h1>
                         </motion.div>
                         <p className="text-gray-400 font-medium flex items-center gap-2">
                             <MapPin className="h-4 w-4 text-primary" /> {gym.address}
@@ -113,7 +113,7 @@ export default function UserGymDashboard() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <Link to="/gym-shop">
+                        <Link to={ROUTES.USER_GYM_SHOP}>
                             <Button className="h-12 px-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold gap-2">
                                 <ShoppingBag className="h-4 w-4" /> Gym Store
                             </Button>
@@ -144,7 +144,7 @@ export default function UserGymDashboard() {
                                         <Badge className="bg-primary/90 text-white border-0 px-4 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px]">
                                             {membership.planDetails?.name || 'Standard Plan'}
                                         </Badge>
-                                        <h2 className="text-4xl font-black">Active Member</h2>
+                                        <h2 className="text-4xl font-black uppercase italic">Active Member</h2>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">Renew In</p>
@@ -155,15 +155,15 @@ export default function UserGymDashboard() {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-white/10">
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Subscribed On</p>
-                                        <p className="font-bold text-white">{format(new Date(membership.startDate), "MMM dd, yyyy")}</p>
+                                        <p className="font-bold text-white italic">{format(new Date(membership.startDate), "MMM dd, yyyy")}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Expiry Date</p>
-                                        <p className="font-bold text-white">{format(new Date(membership.endDate), "MMM dd, yyyy")}</p>
+                                        <p className="font-bold text-white italic">{format(new Date(membership.endDate), "MMM dd, yyyy")}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Daily Window</p>
-                                        <p className="font-bold text-white">{membership.preferredTime || "Anytime"}</p>
+                                        <p className="font-bold text-white italic">{membership.preferredTime || "Anytime"}</p>
                                     </div>
                                 </div>
                             </div>
@@ -173,10 +173,10 @@ export default function UserGymDashboard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <Card className="bg-white/5 border-white/10 rounded-[2rem] p-8 space-y-6">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-xl font-black flex items-center gap-3">
+                                    <h3 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3">
                                         <CheckCircle2 className="h-5 w-5 text-green-500" /> Attendance
                                     </h3>
-                                    <Link to="/attendance" className="text-xs font-bold text-primary hover:underline">View History</Link>
+                                    <Link to={ROUTES.USER_GYM_ATTENDANCE} className="text-xs font-bold text-primary hover:underline">View History</Link>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
@@ -186,14 +186,14 @@ export default function UserGymDashboard() {
                                             </div>
                                             <p className="font-bold">Today</p>
                                         </div>
-                                        <span className="text-sm font-black text-green-500 uppercase tracking-widest">Marked</span>
+                                        <span className="text-sm font-black text-green-500 uppercase tracking-widest italic">Marked</span>
                                     </div>
-                                    <p className="text-xs text-gray-500 text-center font-medium italic">You've maintained a 5-day streak! Keep going.</p>
+                                    <p className="text-xs text-gray-500 text-center font-medium italic">Mission complete for today. Logged & Verified.</p>
                                 </div>
                             </Card>
 
                             <Card className="bg-white/5 border-white/10 rounded-[2rem] p-8 space-y-6">
-                                <h3 className="text-xl font-black flex items-center gap-3 text-white">
+                                <h3 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 text-white">
                                     <Navigation className="h-5 w-5 text-primary" /> Navigation
                                 </h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -201,11 +201,11 @@ export default function UserGymDashboard() {
                                         <Heart className="h-5 w-5 text-red-500" />
                                         <span className="text-xs font-bold">Wishlist</span>
                                     </Link>
-                                    <Link to="/diets" className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 flex flex-col items-center gap-2">
+                                    <Link to={ROUTES.USER_DIET} className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 flex flex-col items-center gap-2">
                                         <Utensils className="h-5 w-5 text-green-500" />
                                         <span className="text-xs font-bold">Diet</span>
                                     </Link>
-                                    <Link to="/gym-shop" className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 flex flex-col items-center gap-2">
+                                    <Link to={ROUTES.USER_GYM_SHOP} className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 flex flex-col items-center gap-2">
                                         <ShoppingBag className="h-5 w-5 text-blue-500" />
                                         <span className="text-xs font-bold">Shop</span>
                                     </Link>
@@ -218,7 +218,7 @@ export default function UserGymDashboard() {
                     <div className="space-y-8">
                         <Card className="bg-white/5 border-white/10 rounded-[2.5rem] p-8 h-full shadow-2xl backdrop-blur-md">
                             <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-2xl font-black flex items-center gap-3"><Bell className="h-6 w-6 text-primary" /> Updates</h3>
+                                <h3 className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3"><Bell className="h-6 w-6 text-primary" /> Updates</h3>
                                 <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest border-white/20">All</Badge>
                             </div>
 
@@ -226,7 +226,7 @@ export default function UserGymDashboard() {
                                 {announcements.length === 0 ? (
                                     <div className="py-20 text-center space-y-4">
                                         <AlertCircle className="h-12 w-12 text-gray-600 mx-auto" />
-                                        <p className="text-gray-500 font-medium">No new announcements</p>
+                                        <p className="text-gray-500 font-medium italic">No new announcements</p>
                                     </div>
                                 ) : (
                                     announcements.map((item, i) => (
@@ -238,10 +238,10 @@ export default function UserGymDashboard() {
                                             className="p-5 rounded-3xl bg-white/5 border border-white/5 hover:border-primary/30 transition-all group"
                                         >
                                             <div className="flex items-start justify-between gap-4 mb-2">
-                                                <h4 className="font-bold text-white group-hover:text-primary transition-colors line-clamp-1">{item.title}</h4>
+                                                <h4 className="font-bold text-white group-hover:text-primary transition-colors line-clamp-1 italic uppercase tracking-tight">{item.title}</h4>
                                                 <span className="text-[10px] font-black text-gray-500 whitespace-nowrap">{format(new Date(item.createdAt), "MMM d")}</span>
                                             </div>
-                                            <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">{item.content}</p>
+                                            <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed font-medium">{item.content}</p>
                                             <div className="mt-4 flex justify-end">
                                                 <ArrowUpRight className="h-4 w-4 text-gray-600 group-hover:text-primary transition-all" />
                                             </div>
@@ -250,7 +250,7 @@ export default function UserGymDashboard() {
                                 )}
                             </div>
 
-                            <Button variant="ghost" className="w-full mt-8 rounded-2xl border border-white/5 hover:bg-white/10 font-bold text-gray-400">
+                            <Button variant="ghost" className="w-full mt-8 rounded-2xl border border-white/5 hover:bg-white/10 font-black uppercase tracking-widest text-[10px] text-gray-500">
                                 View Previous Logs
                             </Button>
                         </Card>
@@ -260,14 +260,14 @@ export default function UserGymDashboard() {
                 {/* Bottom Section: Facilities */}
                 <section className="pt-8 pb-12">
                     <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-3xl font-black">Gym Facilities</h2>
-                        <Link to="/gym-equipment"><Button variant="link" className="text-primary font-black uppercase tracking-widest text-[10px]">Explore Map <ArrowUpRight className="ml-2 h-4 w-4" /></Button></Link>
+                        <h2 className="text-3xl font-black uppercase italic tracking-tighter">Gym <span className="text-gray-500">Inventory</span></h2>
+                        <Link to={ROUTES.USER_GYM_EQUIPMENT}><Button variant="link" className="text-primary font-black uppercase tracking-widest text-[10px]">Sector Map <ArrowUpRight className="ml-2 h-4 w-4" /></Button></Link>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
                         {["Sauna", "Dumbbells", "CrossFit", "Cafeteria", "Locker Room", "Cardio"].map((facility, i) => (
                             <div key={i} className="p-6 rounded-[2rem] bg-white/5 border border-white/10 flex flex-col items-center gap-4 text-center group hover:bg-white/10 transition-all">
-                                <Award className="h-6 w-6 text-primary group-hover:scale-110 transition-all" />
-                                <span className="text-xs font-black text-gray-300 uppercase tracking-widest">{facility}</span>
+                                <Award className="h-6 w-6 text-primary group-hover:scale-110 transition-all shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]" />
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic group-hover:text-white">{facility}</span>
                             </div>
                         ))}
                     </div>

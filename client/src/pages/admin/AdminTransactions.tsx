@@ -195,8 +195,12 @@ export default function AdminTransactions() {
                                         >
                                             <TableCell className="pl-10">
                                                 <div className="flex flex-col">
-                                                    <span className="text-white font-black italic tracking-wider group-hover:text-primary transition-colors">#{t.razorpayOrderId.slice(-8).toUpperCase()}</span>
-                                                    <span className="text-[8px] text-zinc-600 font-black font-mono tracking-tighter truncate w-32 uppercase">{t.razorpayOrderId}</span>
+                                                    <span className="text-white font-black italic tracking-wider group-hover:text-primary transition-colors">
+                                                        #{ (t.stripeSessionId ? t.stripeSessionId.slice(-8) : (t.razorpayOrderId ? t.razorpayOrderId.slice(-8) : "N/A")).toUpperCase() }
+                                                    </span>
+                                                    <span className="text-[8px] text-zinc-600 font-black font-mono tracking-tighter truncate w-32 uppercase">
+                                                        {t.stripeSessionId || t.razorpayOrderId || "NO_ID"}
+                                                    </span>
                                                 </div>
                                             </TableCell>
 
@@ -206,8 +210,13 @@ export default function AdminTransactions() {
                                                         <span className="text-white font-black italic text-sm leading-tight uppercase">{t.userId?.name || "ANONYMOUS"}</span>
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-[10px] text-zinc-500 font-medium">To:</span>
-                                                            <span className="text-[10px] text-zinc-400 font-black italic uppercase tracking-tighter">{t.trainerId?.name || "TRAINER"}</span>
+                                                            <span className="text-[10px] text-zinc-400 font-black italic uppercase tracking-tighter">
+                                                                {t.type === 'gym' ? (t.gymId?.name || "GYM") : (t.trainerId?.name || "TRAINER")}
+                                                            </span>
                                                         </div>
+                                                        <Badge className="w-fit bg-primary/5 text-primary border-primary/10 text-[8px] font-black h-4 mt-1 uppercase">
+                                                            {t.planType || "PLAN"}
+                                                        </Badge>
                                                     </div>
                                                 </div>
                                             </TableCell>

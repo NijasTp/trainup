@@ -14,6 +14,7 @@ export const ROUTES = {
   USER_DASHBOARD: '/dashboard',
   USER_VERIFY_OTP: "/verify-otp",
   USER_COMPLETE_PROFILE: "/complete-profile",
+  USER_CHATS: "/chats",
   USER_TRAINER_PAGE: '/trainers',
   USER_INDIVIDUAL_TRAINER: '/trainers/:id',
   USER_TRAINER_PRICING: '/trainers/:id/pricing',
@@ -41,9 +42,19 @@ export const ROUTES = {
   USER_WISHLIST: "/wishlist",
   USER_GYMS: '/gyms',
   USER_INDIVIDUAL_GYM: '/gyms/:id',
-  USER_GYM_DASHBOARD: '/gym-dashboard',
+  USER_GYM_DASHBOARD: '/my-gym/dashboard',
+  USER_GYM_ATTENDANCE: '/my-gym/attendance-history',
+  USER_GYM_EQUIPMENT: '/my-gym/equipment-inventory',
+  USER_GYM_PLAN_SELECTION: '/gym/select-plan/:id',
+  USER_GYM_SHOP: '/gym-shop',
   USER_SUBSCRIPTIONS: '/my-subscriptions',
   USER_NOT_FOUND: "*",
+
+  // Payment Routes
+  PAYMENT_TRAINER_SUCCESS: '/payment/trainer/success',
+  PAYMENT_TRAINER_CANCEL: '/payment/trainer/cancel',
+  PAYMENT_GYM_SUCCESS: '/payment/gym/success',
+  PAYMENT_GYM_CANCEL: '/payment/gym/cancel',
 
 
   // Trainer Routes
@@ -73,6 +84,10 @@ export const ROUTES = {
   TRAINER_CHATS: "/trainer/chats",
   TRAINER_ASSIGN_WORKOUT: "/trainer/assign-workout/:userId",
   TRAINER_ASSIGN_DIET: "/trainer/assign-diet/:userId",
+  TRAINER_TEMPLATES: "/trainer/templates",
+  TRAINER_NEW_WORKOUT_TEMPLATE: "/trainer/templates/new/workout",
+  TRAINER_NEW_DIET_TEMPLATE: "/trainer/templates/new/diet",
+  TRAINER_EDIT_TEMPLATE: "/trainer/templates/:id/:template/edit",
 
 
   // Admin Routes
@@ -93,6 +108,7 @@ export const ROUTES = {
 
 
   // Gym Management Routes
+  GYM_ROOT: "/gym/*",
   GYM_DASHBOARD: "/gym/dashboard",
   GYM_PROFILE: "/gym/profile",
   GYM_LOGIN: "/gym/login",

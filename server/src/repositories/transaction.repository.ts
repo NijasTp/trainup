@@ -1,6 +1,7 @@
 import { injectable } from 'inversify';
 import { ITransactionRepository } from '../core/interfaces/repositories/ITransactionRepository';
 import { ITransaction, TransactionModel } from '../models/transaction.model';
+import { GymTransactionModel } from '../models/gymTransaction.model';
 import { SortOrder, FilterQuery, Types } from 'mongoose';
 import { ITransactionDTO, TransactionDto } from '../dtos/transaction.dto';
 
@@ -16,7 +17,7 @@ export class TransactionRepository implements ITransactionRepository {
     paymentId?: string
   ): Promise<ITransaction | null> {
     return await TransactionModel.findOneAndUpdate(
-      { razorpayOrderId: orderId },
+      { $or: [{ razorpayOrderId: orderId }, { stripeSessionId: orderId }] },
       { status, razorpayPaymentId: paymentId },
       { new: true }
     );
@@ -46,7 +47,7 @@ export class TransactionRepository implements ITransactionRepository {
     status: string,
     sort: string
   ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }> {
-    const query: FilterQuery<ITransaction> = { userId };
+    const query: FilterQuery<any> = { userId };
     if (status && status !== 'all') query.status = status;
     if (search) {
       query.$or = [
@@ -56,27 +57,41 @@ export class TransactionRepository implements ITransactionRepository {
       ];
     }
 
-    const sortOptions: { [key: string]: { [field: string]: SortOrder } } = {
-      newest: { createdAt: -1 },
-      oldest: { createdAt: 1 },
-      amount_high: { amount: -1 },
-      amount_low: { amount: 1 }
-    };
+    const skip = (page - 1) * limit;
 
-    const transactions = await TransactionModel.find(query)
+    // Fetch trainer transactions
+    const trainerTrans = await TransactionModel.find(query)
       .populate('trainerId', 'name profileImage')
-      .sort(sortOptions[sort] || sortOptions.newest)
-      .skip((page - 1) * limit)
-      .limit(limit)
       .lean();
 
-    const total = await TransactionModel.countDocuments(query);
+    // Fetch gym transactions
+    const gymTrans = await GymTransactionModel.find(query)
+      .populate('gymId', 'name')
+      .populate('subscriptionPlanId', 'name')
+      .lean();
+
+    // Combine and map
+    let combined = [
+      ...trainerTrans.map(t => TransactionDto.toResponse(t as any)),
+      ...gymTrans.map(t => TransactionDto.fromGymTransaction(t as any))
+    ];
+
+    // Sorting
+    const sortKey = sort === 'amount_high' || sort === 'amount_low' ? 'amount' : 'createdAt';
+    const sortDir = sort === 'oldest' || sort === 'amount_low' ? 1 : -1;
+
+    combined.sort((a, b) => {
+      if (a[sortKey] < b[sortKey]) return -1 * sortDir;
+      if (a[sortKey] > b[sortKey]) return 1 * sortDir;
+      return 0;
+    });
+
+    const total = combined.length;
+    const paginated = combined.slice(skip, skip + limit);
     const totalPages = Math.ceil(total / limit);
 
     return {
-      transactions: transactions.map(transaction =>
-        TransactionDto.toResponse(transaction as ITransaction)
-      ),
+      transactions: paginated,
       totalPages
     };
   }
@@ -304,7 +319,7 @@ export class TransactionRepository implements ITransactionRepository {
     status: string,
     sort: string
   ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }> {
-    const query: FilterQuery<ITransaction> = {};
+    const query: FilterQuery<any> = {};
     if (status && status !== 'all') query.status = status;
     if (search) {
       query.$or = [
@@ -314,42 +329,66 @@ export class TransactionRepository implements ITransactionRepository {
       ];
     }
 
-    const sortOptions: { [key: string]: { [field: string]: SortOrder } } = {
-      newest: { createdAt: -1 },
-      oldest: { createdAt: 1 },
-      amount_high: { amount: -1 },
-      amount_low: { amount: 1 }
-    };
+    const skip = (page - 1) * limit;
 
-    const transactions = await TransactionModel.find(query)
+    // Fetch trainer translations
+    const trainerTrans = await TransactionModel.find(query)
       .populate('userId', 'name email')
       .populate('trainerId', 'name')
-      .sort(sortOptions[sort] || sortOptions.newest)
-      .skip((page - 1) * limit)
-      .limit(limit)
       .lean();
 
-    const total = await TransactionModel.countDocuments(query);
+    // Fetch gym translations
+    const gymTrans = await GymTransactionModel.find(query)
+      .populate('userId', 'name email')
+      .populate('gymId', 'name')
+      .populate('subscriptionPlanId', 'name')
+      .lean();
+
+    // Combine and map
+    let combined = [
+      ...trainerTrans.map(t => TransactionDto.toResponse(t as any)),
+      ...gymTrans.map(t => TransactionDto.fromGymTransaction(t as any))
+    ];
+
+    // Sorting
+    const sortKey = sort === 'amount_high' || sort === 'amount_low' ? 'amount' : 'createdAt';
+    const sortDir = sort === 'oldest' || sort === 'amount_low' ? 1 : -1;
+
+    combined.sort((a, b) => {
+      if (a[sortKey] < b[sortKey]) return -1 * sortDir;
+      if (a[sortKey] > b[sortKey]) return 1 * sortDir;
+      return 0;
+    });
+
+    const total = combined.length;
+    const paginated = combined.slice(skip, skip + limit);
     const totalPages = Math.ceil(total / limit);
 
     return {
-      transactions: transactions.map(transaction =>
-        TransactionDto.toResponse(transaction as ITransaction)
-      ),
+      transactions: paginated,
       totalPages
     };
   }
 
   async getAllTransactionsForExport(): Promise<ITransactionDTO[]> {
-    const transactions = await TransactionModel.find({})
-      .populate('userId', 'name email')
-      .populate('trainerId', 'name')
-      .sort({ createdAt: -1 })
-      .lean();
+    const [trainerTrans, gymTrans] = await Promise.all([
+      TransactionModel.find({ status: 'completed' })
+        .populate('userId', 'name email')
+        .populate('trainerId', 'name')
+        .lean(),
+      GymTransactionModel.find({ status: 'completed' })
+        .populate('userId', 'name email')
+        .populate('gymId', 'name')
+        .populate('subscriptionPlanId', 'name')
+        .lean()
+    ]);
 
-    return transactions.map(transaction =>
-      TransactionDto.toResponse(transaction as ITransaction)
-    );
+    const combined = [
+      ...trainerTrans.map(t => TransactionDto.toResponse(t as any)),
+      ...gymTrans.map(t => TransactionDto.fromGymTransaction(t as any))
+    ];
+
+    return combined.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async getGraphData(filter: 'day' | 'week' | 'month' | 'year'): Promise<unknown[]> {
@@ -427,16 +466,39 @@ export class TransactionRepository implements ITransactionRepository {
   }
 
   async getTotalPlatformRevenue(): Promise<number> {
-    const transactions = await TransactionModel.find({ status: 'completed' });
-    return transactions.reduce((acc, curr) => acc + (curr.platformFee || 0), 0);
+    const [trainerRevenue, gymRevenue] = await Promise.all([
+      TransactionModel.find({ status: 'completed' }),
+      GymTransactionModel.find({ status: 'completed' })
+    ]);
+    
+    const trainerTotal = trainerRevenue.reduce((acc, curr) => acc + (curr.platformFee || 0), 0);
+    const gymTotal = gymRevenue.reduce((acc, curr) => acc + (curr.amount * 0.10), 0);
+    
+    return trainerTotal + gymTotal;
   }
 
-  async getRecentTransactions(limit: number): Promise<any[]> {
-    return await TransactionModel.find()
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .populate('userId', 'name')
-      .populate('trainerId', 'name')
-      .lean();
+  async getRecentTransactions(limitCount: number): Promise<any[]> {
+    const [trainerTrans, gymTrans] = await Promise.all([
+      TransactionModel.find()
+        .sort({ createdAt: -1 })
+        .limit(limitCount)
+        .populate('userId', 'name')
+        .populate('trainerId', 'name')
+        .lean(),
+      GymTransactionModel.find()
+        .sort({ createdAt: -1 })
+        .limit(limitCount)
+        .populate('userId', 'name')
+        .populate('gymId', 'name')
+        .populate('subscriptionPlanId', 'name')
+        .lean()
+    ]);
+
+    const combined = [
+      ...trainerTrans.map(t => TransactionDto.toResponse(t as any)),
+      ...gymTrans.map(t => TransactionDto.fromGymTransaction(t as any))
+    ];
+
+    return combined.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, limitCount);
   }
 }

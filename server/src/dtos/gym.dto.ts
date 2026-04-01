@@ -278,6 +278,7 @@ export interface UserSubscription {
   planDuration: number;
   planDurationUnit: string;
   subscribedAt: Date;
+  expiresAt: Date;
   preferredTime: string;
 }
 
@@ -295,15 +296,6 @@ export interface GymSummary {
 
 export interface MyGymResponseDto {
   gym: GymSummary;
-  membership: {
-    _id: string;
-    startDate: Date;
-    endDate: Date;
-    preferredTime: string;
-    planDetails: {
-      name: string;
-      price: number;
-    };
-  };
+  userSubscription: UserSubscription & { _id: string };
   members: MemberSummary[];
 }

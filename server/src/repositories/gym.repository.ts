@@ -544,15 +544,15 @@ export class GymRepository implements IGymRepository {
     return {
       gym: gymSummary,
       members,
-      membership: {
+      userSubscription: {
         _id: membership._id.toString(),
-        startDate: (membership.subscriptionStartDate ?? membership.createdAt) as Date,
-        endDate: membership.subscriptionEndDate as Date,
-        preferredTime: membership.preferredTime ?? 'Anytime',
-        planDetails: {
-          name: plan?.name ?? 'N/A',
-          price: plan?.price ?? 0
-        }
+        planName: plan?.name ?? 'N/A',
+        planPrice: plan?.price ?? 0,
+        planDuration: plan?.duration ?? 0,
+        planDurationUnit: plan?.durationUnit ?? 'month',
+        subscribedAt: (membership.subscriptionStartDate ?? membership.createdAt) as Date,
+        expiresAt: membership.subscriptionEndDate as Date,
+        preferredTime: membership.preferredTime ?? 'Anytime'
       }
     }
   }

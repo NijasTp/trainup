@@ -1,13 +1,13 @@
 import API from '@/lib/axios';
-
+import { API_ROUTES } from '@/constants/api.constants';
 
 export const getTrainerDetails = async () => {
-  const res = await API.get('/trainer/get-details');
+  const res = await API.get(API_ROUTES.TRAINER.GET_DETAILS);
   return res.data;
 }
 
 export const reapplyTrainer = async (data: FormData) => {
-  const res = await API.post('/trainer/reapply', data, {
+  const res = await API.post(API_ROUTES.AUTH.TRAINER.REAPPLY, data, {
     headers: {
       "Content-Type": "multipart/form-data",
     }
@@ -16,7 +16,7 @@ export const reapplyTrainer = async (data: FormData) => {
 };
 
 export const updateTrainerProfile = async (data: FormData) => {
-  const res = await API.put('/trainer/profile', data, {
+  const res = await API.put(API_ROUTES.TRAINER.PROFILE, data, {
     headers: {
       "Content-Type": "multipart/form-data",
     }
@@ -30,6 +30,6 @@ export interface ITrainerPasswordData {
 }
 
 export const changeTrainerPassword = async (data: ITrainerPasswordData) => {
-  const res = await API.post('/trainer/change-password', data);
+  const res = await API.post(API_ROUTES.TRAINER.CHANGE_PASSWORD, data);
   return res.data;
 };

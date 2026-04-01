@@ -1,22 +1,18 @@
 import API from '../lib/axios';
-
+import { API_ROUTES } from '../constants/api.constants';
 
 export const login = async (email: string, password: string) => {
-
-  const response = await API.post('/user/login', { email, password });
+  const response = await API.post(API_ROUTES.AUTH.USER.LOGIN, { email, password });
   return response.data;
-
-
 };
 
 export const checkUserSession = async () => {
-  const response = await API.get('/user/session', { withCredentials: true });
+  const response = await API.get(API_ROUTES.AUTH.USER.SESSION, { withCredentials: true });
   return response.data;
 }
 
-
 export const signup = async (name: string, email: string, password: string, otp: string) => {
-  return await API.post("/user/verify-otp", {
+  return await API.post(API_ROUTES.AUTH.USER.SIGNUP, {
     email,
     name,
     password,
@@ -25,63 +21,60 @@ export const signup = async (name: string, email: string, password: string, otp:
 }
 
 export const resendOtp = async (email: string) => {
-  return await API.post("/user/resend-otp", { email });
+  return await API.post(API_ROUTES.AUTH.USER.RESEND_OTP, { email });
 };
 
 export const logout = async () => {
-  await API.post('/user/logout', {}, { withCredentials: true })
-
+  await API.post(API_ROUTES.AUTH.USER.LOGOUT, {}, { withCredentials: true })
 }
 
 export const forgotPassword = async (email: string) => {
-  const res = await API.post('/user/forgot-password', { email })
+  const res = await API.post(API_ROUTES.AUTH.USER.FORGOT_PASSWORD, { email })
   return res.data
 }
 
 export const verifyForgotPasswordOtp = async (otp: string, email: string) => {
-  await API.post('/user/verify-forgot-password-otp', { otp, email })
-
+  await API.post(API_ROUTES.AUTH.USER.VERIFY_FORGOT_PASSWORD_OTP, { otp, email })
 }
 
 export const resetPassword = async (email: string, newPassword: string) => {
-  await API.post('/user/reset-password', { email, newPassword });
-
+  await API.post(API_ROUTES.AUTH.USER.RESET_PASSWORD, { email, newPassword });
 };
 
 export const trainerLogin = async (email: string, password: string) => {
-  const res = await API.post('/trainer/login', { email, password })
+  const res = await API.post(API_ROUTES.AUTH.TRAINER.LOGIN, { email, password })
   return res.data
 };
 
 export const trainerForgotPassword = async (email: string) => {
-  await API.post('/trainer/forgot-password', { email })
+  await API.post(API_ROUTES.AUTH.TRAINER.FORGOT_PASSWORD, { email })
 }
 
-
 export const trainerResetPassword = async (email: string, password: string) => {
-  const res = await API.post('/trainer/reset-password', { email, password })
+  const res = await API.post(API_ROUTES.AUTH.TRAINER.RESET_PASSWORD, { email, password })
   return res.data
 }
 
 export const trainerRequestOtp = async (email: string) => {
-  const { data } = await API.post("/trainer/request-otp", { email });
+  const { data } = await API.post(API_ROUTES.AUTH.TRAINER.REQUEST_OTP, { email });
   return data;
 };
 
 export const trainerVerifyOtp = async (email: string, otp: string) => {
-  await API.post('/trainer/verify-otp', { email, otp })
+  await API.post(API_ROUTES.AUTH.TRAINER.VERIFY_OTP, { email, otp })
 }
+
 export const trainerResendOtp = async (email: string) => {
-  await API.post('/trainer/resend-otp', { email })
+  await API.post(API_ROUTES.AUTH.TRAINER.RESEND_OTP, { email })
 }
 
 export const trainerForgotPasswordResendOtp = async (email: string) => {
-  const res = await API.post('/trainer/forgot-password-resend-otp', { email })
+  const res = await API.post(API_ROUTES.AUTH.TRAINER.FORGOT_PASSWORD_RESEND_OTP, { email })
   return res.data
 }
 
 export const trainerApply = async (formData: FormData) => {
-  const res = await API.post("/trainer/apply", formData, {
+  const res = await API.post(API_ROUTES.AUTH.TRAINER.APPLY, formData, {
     headers: {
       "Content-Type": "multipart/form-data"
     }
@@ -90,30 +83,29 @@ export const trainerApply = async (formData: FormData) => {
 };
 
 export const trainerLogout = async () => {
-  await API.post('/trainer/logout', {}, { withCredentials: true });
+  await API.post(API_ROUTES.AUTH.TRAINER.LOGOUT, {}, { withCredentials: true });
 }
 
 export const gymLogin = async (email: string, password: string) => {
-  const response = await API.post(`/gym/login`, {
+  const response = await API.post(API_ROUTES.AUTH.GYM.LOGIN, {
     email,
     password
   });
   return response.data;
 }
 
-
 export const requestGymAuthOtp = async (email: string) => {
-  const response = await API.post("/gym/auth/request-otp", { email });
+  const response = await API.post(API_ROUTES.AUTH.GYM.REQUEST_OTP, { email });
   return response.data;
 };
 
 export const verifyGymAuthOtp = async (email: string, otp: string) => {
-  const response = await API.post("/gym/auth/verify-otp", { email, otp });
+  const response = await API.post(API_ROUTES.AUTH.GYM.VERIFY_OTP, { email, otp });
   return response.data;
 };
 
 export const registerGym = async (formData: FormData) => {
-  const response = await API.post("/gym/register", formData, {
+  const response = await API.post(API_ROUTES.AUTH.GYM.REGISTER, formData, {
     headers: {
       "Content-Type": "multipart/form-data"
     }
@@ -122,7 +114,7 @@ export const registerGym = async (formData: FormData) => {
 };
 
 export const reapplyGym = async (formData: FormData) => {
-  const response = await API.post("/gym/reapply", formData, {
+  const response = await API.post(API_ROUTES.AUTH.GYM.REAPPLY, formData, {
     headers: {
       "Content-Type": "multipart/form-data"
     }
@@ -130,37 +122,34 @@ export const reapplyGym = async (formData: FormData) => {
   return response.data;
 };
 
-
-
 export const gymLogout = async () => {
-  await API.post('/gym/logout')
+  await API.post(API_ROUTES.AUTH.GYM.LOGOUT)
 }
 
 export const checkGymSession = async () => {
-  const response = await API.get('/gym/session', { withCredentials: true });
+  const response = await API.get(API_ROUTES.AUTH.GYM.SESSION, { withCredentials: true });
   return response.data;
 }
 
 export const checkAdminSession = async () => {
-  const response = await API.get('/admin/session', { withCredentials: true });
+  const response = await API.get(API_ROUTES.AUTH.ADMIN.SESSION, { withCredentials: true });
   return response.data;
 }
 
 export const loginAdmin = async (email: string, password: string) => {
-  const response = await API.post("/admin/login", { email, password });
+  const response = await API.post(API_ROUTES.AUTH.ADMIN.LOGIN, { email, password });
   return response.data;
 }
 
 export const logoutAdmin = async () => {
-  await API.post("/admin/logout");
+  await API.post(API_ROUTES.AUTH.ADMIN.LOGOUT);
 }
 
-
 export const gymForgotPassword = async (email: string) => {
-  await API.post('/gym/forgot-password', { email })
+  await API.post(API_ROUTES.AUTH.GYM.FORGOT_PASSWORD, { email })
 }
 
 export const gymResetPassword = async (email: string, password: string, otp: string) => {
-  const res = await API.post('/gym/reset-password', { email, password, otp })
+  const res = await API.post(API_ROUTES.AUTH.GYM.RESET_PASSWORD, { email, password, otp })
   return res.data
 }

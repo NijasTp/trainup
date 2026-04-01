@@ -447,15 +447,77 @@ export default function HomePage() {
         <section className="space-y-6">
           <div className="flex items-end justify-between px-2">
             <div className="space-y-1">
-              <h2 className="text-3xl font-black tracking-tight">Elite Coaches</h2>
+              <h2 className="text-3xl font-black tracking-tight uppercase italic">Elite <span className="text-primary">Coaches</span></h2>
               <p className="text-gray-500 font-medium">Learn from the best in the industry</p>
             </div>
-            <Link to="/trainers">
-              <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all">
-                View All Trainers <ChevronRight className="h-4 w-4" />
-              </Button>
-            </Link>
           </div>
+
+          {user?.assignedTrainerDetails && (
+            <motion.div 
+              variants={itemVariants}
+              onClick={() => navigate(ROUTES.MY_TRAINER_PROFILE)}
+              className="group relative bg-white/5 border border-primary/30 rounded-[3rem] p-8 md:p-12 overflow-hidden cursor-pointer hover:bg-white/10 transition-all mb-12 shadow-2xl"
+            >
+              <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-700">
+                <Users className="h-64 w-64" />
+              </div>
+              
+              <div className="flex flex-col md:flex-row gap-10 items-center relative z-10">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
+                  <img 
+                    src={user.assignedTrainerDetails.profileImage || "/placeholder.svg"} 
+                    alt={user.assignedTrainerDetails.name}
+                    className="relative w-48 h-48 md:w-56 md:h-56 rounded-[2.5rem] object-cover border-2 border-primary/50 shadow-2xl transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <Badge className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-primary text-white px-6 py-2 rounded-full font-black uppercase tracking-widest text-[10px] shadow-xl">
+                    My Coach
+                  </Badge>
+                </div>
+                
+                <div className="flex-1 text-center md:text-left space-y-4">
+                  <div>
+                    <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white">
+                      {user.assignedTrainerDetails.name}
+                    </h2>
+                    <p className="text-primary font-bold uppercase tracking-widest text-sm mt-1">
+                      {user.assignedTrainerDetails.specialization} • ELITE PERFORMANCE
+                    </p>
+                  </div>
+                  
+                  <p className="text-gray-400 max-w-xl text-lg leading-relaxed">
+                    You are currently training under {user.assignedTrainerDetails.name}. Access your personalized workout plans, diet regimes, and chat directly for guidance.
+                  </p>
+                  
+                  <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-4">
+                    <Button onClick={(e) => { e.stopPropagation(); navigate(ROUTES.MY_TRAINER_PROFILE); }} className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 font-black uppercase italic tracking-widest text-xs">
+                      Trainer Dashboard
+                    </Button>
+                    <Button onClick={(e) => { e.stopPropagation(); navigate(ROUTES.USER_CHATS); }} variant="outline" className="h-12 px-8 rounded-2xl border-white/10 bg-white/5 font-black uppercase italic tracking-widest text-xs">
+                      Chat Now
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8 flex justify-center md:justify-start">
+                <Link to="/trainers">
+                  <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all p-0">
+                    See All Trainers <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          )}
+
+          {!user?.assignedTrainerDetails && (
+            <div className="flex justify-end pr-4 -mt-4 mb-4">
+               <Link to="/trainers">
+                  <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all">
+                    View All Trainers <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {isLoading ? (
@@ -527,15 +589,77 @@ export default function HomePage() {
         <section className="space-y-6">
           <div className="flex items-end justify-between px-2">
             <div className="space-y-1">
-              <h2 className="text-3xl font-black tracking-tight">Elite Gyms</h2>
+              <h2 className="text-3xl font-black tracking-tight uppercase italic">Elite <span className="text-cyan-500">Gyms</span></h2>
               <p className="text-gray-500 font-medium">Top-rated fitness centers near you</p>
             </div>
-            <Link to={ROUTES.USER_GYMS}>
-              <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all">
-                Explore All Gyms <ChevronRight className="h-4 w-4" />
-              </Button>
-            </Link>
           </div>
+
+          {user?.activeGymDetails && (
+            <motion.div 
+              variants={itemVariants}
+              onClick={() => navigate(ROUTES.USER_GYM_DASHBOARD)}
+              className="group relative bg-white/5 border border-cyan-500/30 rounded-[3rem] p-8 md:p-12 overflow-hidden cursor-pointer hover:bg-white/10 transition-all mb-12 shadow-2xl"
+            >
+              <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-700">
+                <Dumbbell className="h-64 w-64" />
+              </div>
+              
+              <div className="flex flex-col md:flex-row gap-10 items-center relative z-10">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-cyan-500/10 blur-2xl rounded-full" />
+                  <img 
+                    src={user.activeGymDetails.profileImage || "/placeholder.svg"} 
+                    alt={user.activeGymDetails.name}
+                    className="relative w-48 h-48 md:w-56 md:h-56 rounded-[2.5rem] object-cover border-2 border-cyan-500/30 shadow-2xl transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <Badge className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-white px-6 py-2 rounded-full font-black uppercase tracking-widest text-[10px] shadow-xl">
+                    Active Gym
+                  </Badge>
+                </div>
+                
+                <div className="flex-1 text-center md:text-left space-y-4">
+                  <div>
+                    <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white">
+                      {user.activeGymDetails.name}
+                    </h2>
+                    <div className="flex items-center justify-center md:justify-start gap-2 text-cyan-400 font-bold uppercase tracking-widest text-sm mt-1">
+                      <MapPin className="h-4 w-4" /> {user.activeGymDetails.address || "Main Branch"}
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-400 max-w-xl text-lg leading-relaxed">
+                    You are an active member of {user.activeGymDetails.name}. Track your attendance, see upcoming gym announcements, and check available equipment.
+                  </p>
+                  
+                  <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-4">
+                    <Button onClick={(e) => { e.stopPropagation(); navigate(ROUTES.USER_GYM_DASHBOARD); }} className="h-12 px-8 rounded-2xl bg-cyan-500 hover:bg-cyan-500/90 text-white font-black uppercase italic tracking-widest text-xs border-0">
+                      Gym Dashboard
+                    </Button>
+                    <Button onClick={(e) => { e.stopPropagation(); navigate(ROUTES.USER_GYM_EQUIPMENT); }} variant="outline" className="h-12 px-8 rounded-2xl border-white/10 bg-white/5 font-black uppercase italic tracking-widest text-xs">
+                      View Facilities
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8 flex justify-center md:justify-start">
+                  <Link to={ROUTES.USER_GYMS}>
+                    <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all p-0">
+                      See All Gyms <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+              </div>
+            </motion.div>
+          )}
+
+          {!user?.activeGymDetails && (
+            <div className="flex justify-end pr-4 -mt-4 mb-4">
+               <Link to={ROUTES.USER_GYMS}>
+                  <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all">
+                    Explore All Gyms <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {isLoading ? (

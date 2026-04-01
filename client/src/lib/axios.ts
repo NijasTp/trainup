@@ -5,7 +5,7 @@ import { logoutTrainer } from "@/redux/slices/trainerAuthSlice";
 import { logoutGym } from "@/redux/slices/gymAuthSlice";
 import axios from "axios";
 import { toast } from "sonner";
-import { API_ROUTES } from "../constants/api.constants";
+import { ROUTES } from "../constants/routes";
 
 const api = axios.create({
   baseURL: "/api",
@@ -49,7 +49,7 @@ api.interceptors.response.use(
     // Global Error Mapping
     switch (status) {
       case 400:
-        showDeduplicatedToast(data?.message || "Invalid request.");
+        showDeduplicatedToast(data?.message || data?.error || "Invalid request.");
         break;
       case 404:
         showDeduplicatedToast("Requested resource not found.", 'warn');
@@ -64,7 +64,13 @@ api.interceptors.response.use(
         }
         break;
       case 403:
-        handleForcedLogout();
+        if (data?.error === "Banned" || data?.message?.includes("banned")) {
+            showDeduplicatedToast("Your account has been banned. Please contact support.");
+            handleForcedLogout(true);
+        } else {
+            showDeduplicatedToast(data?.message || data?.error || "Access denied. Please logout first if you want to switch roles.");
+            // Do not force logout for regular forbidden errors (cross-role access)
+        }
         break;
       case 401:
         if (!originalRequest._retry) {
@@ -82,22 +88,29 @@ api.interceptors.response.use(
 );
 
 // Helper for 403 Forbidden (Force Logout)
-const handleForcedLogout = () => {
+const handleForcedLogout = (force: boolean = false) => {
   const state = store.getState();
-  if (state.userAuth.user) {
+  const hasUser = !!state.userAuth.user;
+  const hasTrainer = !!state.trainerAuth.trainer;
+  const hasGym = !!state.gymAuth.gym;
+  const hasAdmin = !!state.adminAuth.admin;
+
+  if (!force) return; // Only logout if explicitly forced (e.g. Banned)
+
+  if (hasUser) {
     store.dispatch(userLogout());
-    window.location.href = "/login";
-  } else if (state.trainerAuth.trainer) {
+    window.location.href = ROUTES.USER_LOGIN;
+  } else if (hasTrainer) {
     store.dispatch(logoutTrainer());
-    window.location.href = "/trainer/login";
-  } else if (state.gymAuth.gym) {
+    window.location.href = ROUTES.TRAINER_LOGIN;
+  } else if (hasGym) {
     store.dispatch(logoutGym());
-    window.location.href = "/gym/login";
-  } else if (state.adminAuth.admin) {
+    window.location.href = ROUTES.GYM_LOGIN;
+  } else if (hasAdmin) {
     store.dispatch(adminLogout());
-    window.location.href = "/admin/login";
+    window.location.href = ROUTES.ADMIN_LOGIN;
   } else {
-    window.location.href = "/login";
+    window.location.href = ROUTES.USER_LOGIN;
   }
 };
 
@@ -107,26 +120,24 @@ const handleTokenRefresh = async (originalRequest: any) => {
   const state = store.getState();
   let refreshUrl: string | null = null;
   let logoutAction: any = null;
-  let loginPath: string = '/login';
+  let loginPath: string = ROUTES.USER_LOGIN;
 
   if (state.userAuth.user) {
-    refreshUrl = API_ROUTES.AUTH.USER.RESEND_OTP; // Wait, refresh token route! 
-    // Looking at authService, user refresh was /user/refresh-token
     refreshUrl = "/user/refresh-token"; 
     logoutAction = userLogout;
-    loginPath = "/login";
+    loginPath = ROUTES.USER_LOGIN;
   } else if (state.trainerAuth.trainer) {
     refreshUrl = "/trainer/refresh-token";
     logoutAction = logoutTrainer;
-    loginPath = "/trainer/login";
+    loginPath = ROUTES.TRAINER_LOGIN;
   } else if (state.gymAuth.gym) {
     refreshUrl = "/gym/refresh-token";
     logoutAction = logoutGym;
-    loginPath = "/gym/login";
+    loginPath = ROUTES.GYM_LOGIN;
   } else if (state.adminAuth.admin) {
     refreshUrl = "/admin/refresh-token";
     logoutAction = adminLogout;
-    loginPath = "/admin/login";
+    loginPath = ROUTES.ADMIN_LOGIN;
   }
 
   if (refreshUrl) {

@@ -54,8 +54,8 @@ export class PaymentService implements IPaymentService {
           },
         ],
         mode: 'payment',
-        success_url: `${process.env.STRIPE_SUCCESS_URL}?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.STRIPE_CANCEL_URL}`,
+        success_url: `${process.env.CLIENT_URL}/payment/trainer/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.CLIENT_URL}/payment/trainer/cancel?session_id={CHECKOUT_SESSION_ID}`,
         client_reference_id: params.userId,
         metadata: {
           type: 'trainer_subscription',
@@ -65,6 +65,19 @@ export class PaymentService implements IPaymentService {
           amount: params.amount.toString(),
           duration: params.duration.toString(),
         },
+      });
+
+      // Create pending transaction record
+      await this._transactionService.createTransaction({
+        userId: params.userId,
+        trainerId: params.trainerId,
+        amount: params.amount,
+        planType: params.planType,
+        duration: params.duration,
+        stripeSessionId: session.id,
+        status: 'pending',
+        provider: 'stripe',
+        createdAt: new Date(),
       });
 
       return { sessionId: session.id, url: session.url };
@@ -101,8 +114,8 @@ export class PaymentService implements IPaymentService {
           },
         ],
         mode: 'payment',
-        success_url: `${process.env.STRIPE_SUCCESS_URL}?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.STRIPE_CANCEL_URL}`,
+        success_url: `${process.env.CLIENT_URL}/payment/gym/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.CLIENT_URL}/payment/gym/cancel?session_id={CHECKOUT_SESSION_ID}`,
         client_reference_id: params.userId,
         metadata: {
           type: 'gym_subscription',
@@ -112,6 +125,18 @@ export class PaymentService implements IPaymentService {
           preferredTime: params.preferredTime,
           amount: params.amount.toString(),
         },
+      });
+
+      // Create pending gym transaction record
+      await this._gymTransactionRepo.create({
+        userId: params.userId,
+        gymId: params.gymId,
+        subscriptionPlanId: params.subscriptionPlanId,
+        amount: params.amount,
+        preferredTime: params.preferredTime,
+        stripeSessionId: session.id,
+        status: 'pending',
+        provider: 'stripe'
       });
 
       return { sessionId: session.id, url: session.url };
