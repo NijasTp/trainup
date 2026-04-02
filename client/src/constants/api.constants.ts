@@ -84,6 +84,11 @@ export const API_ROUTES = {
     },
     WORKOUT_TEMPLATE_TOGGLE: '/user/workout-template/toggle',
   },
+  USER_GYM_PRODUCT: {
+    LIST: '/user/gym-products',
+    WISH_LIST: '/user/gym-products/wishlist',
+    ADD_TO_WISH_LIST: (id: string) => `/user/gym-products/wishlist/${id}`,
+  },
   TRAINER: {
     GET_DETAILS: '/trainer/get-details',
     DASHBOARD_STATS: '/trainer/dashboard-stats',

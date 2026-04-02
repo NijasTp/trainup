@@ -102,7 +102,6 @@ const Store = () => {
             formData.append('price', editingProduct.price.toString());
             formData.append('category', editingProduct.category);
             formData.append('subcategory', editingProduct.subcategory);
-            formData.append('stock', editingProduct.stock.toString());
             formData.append('isAvailable', editingProduct.isAvailable.toString());
 
             if (editingProduct.existingImages) {
@@ -148,7 +147,8 @@ const Store = () => {
                                     price: 0,
                                     category: 'supplements',
                                     subcategory: '',
-                                    stock: 0,
+                                    category: 'supplements',
+                                    subcategory: '',
                                     description: '',
                                     isAvailable: true
                                 });
@@ -220,17 +220,13 @@ const Store = () => {
                                                     <Badge className="bg-black/80 backdrop-blur-md text-white border-white/10 text-[10px] uppercase font-black px-2 py-0.5 tracking-tighter">
                                                         {product.category}
                                                     </Badge>
-                                                    {product.stock === 0 || !product.isAvailable ? (
+                                                    {!product.isAvailable ? (
                                                         <Badge className="bg-red-500/80 backdrop-blur-md text-white border-0 text-[10px] uppercase font-black px-2 py-0.5 tracking-tighter">
-                                                            Out of stock
-                                                        </Badge>
-                                                    ) : product.stock < 5 ? (
-                                                        <Badge className="bg-orange-500/80 backdrop-blur-md text-white border-0 text-[10px] uppercase font-black px-2 py-0.5 tracking-tighter animate-pulse">
-                                                            Low Stock
+                                                            Currently Unavailable
                                                         </Badge>
                                                     ) : (
                                                         <Badge className="bg-green-500/80 backdrop-blur-md text-white border-0 text-[10px] uppercase font-black px-2 py-0.5 tracking-tighter">
-                                                            In Stock
+                                                            Available
                                                         </Badge>
                                                     )}
                                                 </div>
@@ -259,11 +255,8 @@ const Store = () => {
                                                         variant="outline"
                                                         className="flex-1 h-10 border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-black uppercase italic tracking-widest"
                                                     >
-                                                        <Edit3 size={14} className="mr-2" /> Edit
+                                                        <Edit3 size={14} className="mr-2" /> Edit Product
                                                     </Button>
-                                                    <Badge className="bg-white/5 border border-white/10 text-zinc-500 font-black italic text-[10px] px-3">
-                                                        STOCK: {product.stock}
-                                                    </Badge>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -336,16 +329,6 @@ const Store = () => {
                                             type="number"
                                             value={editingProduct?.price}
                                             onChange={(e) => setEditingProduct({ ...editingProduct!, price: parseInt(e.target.value) })}
-                                            className="bg-white/5 border-white/10 h-12 rounded-xl text-white outline-none focus:ring-1 focus:ring-primary/30"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1 italic">Current Stock</label>
-                                        <Input
-                                            required
-                                            type="number"
-                                            value={editingProduct?.stock}
-                                            onChange={(e) => setEditingProduct({ ...editingProduct!, stock: parseInt(e.target.value) })}
                                             className="bg-white/5 border-white/10 h-12 rounded-xl text-white outline-none focus:ring-1 focus:ring-primary/30"
                                         />
                                     </div>

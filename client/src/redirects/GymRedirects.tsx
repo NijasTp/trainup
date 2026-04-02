@@ -2,7 +2,7 @@ import { ROUTES } from "@/constants/routes";
 import api from "@/lib/axios";
 import { loginGym } from "@/redux/slices/gymAuthSlice";
 import type { RootState } from "@/redux/store";
-import { useEffect, type JSX } from "react";
+import React, { useEffect, useRef, type JSX } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -46,6 +46,10 @@ export const GymProtectedRoute: React.FC<{ children: JSX.Element }> = ({ childre
     const location = useLocation();
     const dispatch = useDispatch();
 
+    const gymRef = useRef(gym);
+    useEffect(() => { gymRef.current = gym; }, [gym]);
+
+    const hasChecked = useRef(false);
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -55,21 +59,25 @@ export const GymProtectedRoute: React.FC<{ children: JSX.Element }> = ({ childre
                 console.error("Failed to fetch gym profile", err);
             }
         };
-        // Initial fetch
-        if (gym) fetchProfile();
 
-        const interval = setInterval(() => { if (gym) fetchProfile(); }, 30000);
+        // Initial fetch on mount if gym exists
+        if (gymRef.current && !hasChecked.current) {
+            fetchProfile();
+            hasChecked.current = true;
+        }
+
+        const interval = setInterval(() => { 
+            if (gymRef.current) fetchProfile(); 
+        }, 60000); 
 
         return () => clearInterval(interval);
-    }, [dispatch, gym]);
+    }, [dispatch]); 
 
     if (!gym) {
         return <Navigate to={ROUTES.GYM_LOGIN} replace />;
     }
 
-    // Strict check for verified status
     if (gym.verifyStatus !== 'approved') {
-        // Allow access to status and reapply pages
         if (location.pathname === ROUTES.GYM_STATUS || location.pathname === ROUTES.GYM_REAPPLY) {
             return children;
         }

@@ -22,13 +22,14 @@ import {
   getUserGymProducts,
   getUserGymWorkoutTemplates,
   markAttendance,
-  getAttendanceHistoryForUser
+  getAttendanceHistoryForUser,
+  getUserWishlist
 } from "@/services/gymService";
 import GymReviews from "@/components/user/reviews/GymReviews";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
 
 const safeFormatDate = (date: any, formatStr: string = 'MMM dd, yyyy') => {
@@ -45,6 +46,7 @@ export default function MyGym() {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
+  const [wishlist, setWishlist] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
   const [hasAttendedToday, setHasAttendedToday] = useState(false);
@@ -58,12 +60,13 @@ export default function MyGym() {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      const [gymRes, annRes, eqRes, prodRes, tempRes] = await Promise.all([
+      const [gymRes, annRes, eqRes, prodRes, tempRes, wishlistRes] = await Promise.all([
         API.get("/user/my-gym"),
         getUserGymAnnouncements(1, 4),
         getUserGymEquipment(),
         getUserGymProducts(1, 4),
-        getUserGymWorkoutTemplates(1, 3)
+        getUserGymWorkoutTemplates(1, 3),
+        getUserWishlist()
       ]);
 
       const gym = gymRes.data.gym;
@@ -75,6 +78,7 @@ export default function MyGym() {
       setProducts(prodRes.products || []);
       setTemplates(tempRes.templates || []);
       setAttendance(history.attendance || []);
+      setWishlist(wishlistRes.products || []);
 
       const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
       const attendedToday = (history.attendance || []).some((a: any) =>
@@ -212,10 +216,10 @@ export default function MyGym() {
         {/* Dashboard Intelligence Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-          {/* LEFT: STATUS & ATTENDANCE */}
-          <div className="lg:col-span-8 space-y-8">
+          {/* LEFT: STATUS & ARMORY */}
+          <div className="lg:col-span-8 space-y-12">
 
-            {/* Membership "Intelligence Card" */}
+            {/* Membership Card */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -232,7 +236,7 @@ export default function MyGym() {
                       <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
                       <span className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.2em]">{userSubscription.planName} MEMBER</span>
                     </div>
-                    <h2 className="text-4xl md:text-6xl font-black tracking-tight uppercase leading-none italic text-white line-clamp-2">
+                    <h2 className="text-4xl md:text-6xl font-black tracking-tight uppercase leading-none italic text-white">
                       Mission <span className="text-zinc-500">Status</span>: <br />
                       <span className="text-cyan-400">Deployed</span>
                     </h2>
@@ -272,22 +276,104 @@ export default function MyGym() {
               </div>
             </motion.div>
 
-            {/* Attendance Analytics */}
+            {/* SECTOR: ARMORY (Equipment & Store) */}
+            <section className="space-y-8">
+              <div className="flex items-center justify-between px-4">
+                <h3 className="text-2xl font-black uppercase tracking-tighter italic text-white flex items-center gap-3">
+                  <Dumbbell className="h-5 w-5 text-cyan-500" /> Sector: <span className="text-zinc-500">Armory</span>
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+                {/* Tactical Gear Card */}
+                <Link to={ROUTES.USER_GYM_SHOP} className="group block">
+                  <div className="h-full bg-white/5 border border-white/10 rounded-[3rem] p-10 hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all relative overflow-hidden shadow-xl">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500">
+                      <Activity size={80} className="text-cyan-400" />
+                    </div>
+                    <div className="space-y-6 relative z-10">
+                      <div>
+                        <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30 text-[9px] font-black uppercase tracking-[0.2em] px-3 mb-4">SUPPLIES</Badge>
+                        <h4 className="text-3xl font-black italic uppercase tracking-tighter text-white">Tactical <br /><span className="text-cyan-400">Gear Shop</span></h4>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2">{products.filter(p => p.isAvailable).length} ITEMS AVAILABLE NOW</p>
+                      </div>
+                      
+                      <div className="flex -space-x-3">
+                         {products.filter(p => p.isAvailable).slice(0, 4).map((p, i) => (
+                           <div key={i} className="h-10 w-10 rounded-full border-2 border-black overflow-hidden bg-zinc-800">
+                             <img src={p.images[0]} alt="" className="w-full h-full object-cover" />
+                           </div>
+                         ))}
+                         {products.filter(p => p.isAvailable).length > 4 && (
+                           <div className="h-10 w-10 rounded-full border-2 border-black bg-zinc-900 flex items-center justify-center text-[10px] font-black text-cyan-500">
+                             +{products.filter(p => p.isAvailable).length - 4}
+                           </div>
+                         )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+
+                {/* Tactical Wishlist Card */}
+                <Link to={ROUTES.USER_WISHLIST} className="group block">
+                  <div className="h-full bg-zinc-950/80 border border-white/5 rounded-[3rem] p-10 hover:border-fuchsia-500/40 hover:bg-fuchsia-500/5 transition-all relative overflow-hidden shadow-xl">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-500">
+                       <Shield size={80} className="text-fuchsia-400" />
+                    </div>
+                    <div className="space-y-6 relative z-10">
+                      <div>
+                        <Badge className="bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30 text-[9px] font-black uppercase tracking-[0.2em] px-3 mb-4">RESERVED</Badge>
+                        <h4 className="text-3xl font-black italic uppercase tracking-tighter text-white">Target <br /><span className="text-fuchsia-400">Wishlist</span></h4>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2">{wishlist.length} PENDING ACQUISITIONS</p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                         {wishlist.slice(0, 3).map((w, i) => (
+                           <div key={i} className="h-12 w-12 rounded-2xl border border-white/10 overflow-hidden">
+                              <img src={w.images[0]} alt="" className="w-full h-full object-cover" />
+                           </div>
+                         ))}
+                         {wishlist.length === 0 && <p className="text-zinc-600 text-[10px] uppercase font-black tracking-widest italic italic">Scan gear to prioritize...</p>}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Equipment Sector Map Link Section */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {equipment.slice(0, 4).map((item, i) => (
+                  <motion.div
+                    key={i}
+                    whileHover={{ y: -8 }}
+                    onClick={() => navigate(ROUTES.USER_GYM_EQUIPMENT)}
+                    className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 flex flex-col items-center gap-4 text-center group cursor-pointer hover:bg-cyan-500/5 hover:border-cyan-500/30 transition-all shadow-xl"
+                  >
+                    <div className="h-12 w-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-all">
+                       <Dumbbell className="h-6 w-6 text-cyan-400" />
+                    </div>
+                    <span className="text-[10px] font-black text-zinc-500 group-hover:text-white uppercase tracking-widest italic line-clamp-1">{item.name}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+
+            {/* SECTOR: LOGS (Attendance) */}
             <section className="space-y-6">
               <div className="flex items-center justify-between px-4">
                 <h3 className="text-2xl font-black uppercase tracking-tighter italic flex items-center gap-3 text-white">
-                  <Activity className="h-5 w-5 text-green-500" /> Entry Logs
+                  <Activity className="h-5 w-5 text-green-500" /> Sector: <span className="text-zinc-500">Logs</span>
                 </h3>
                 <Link to={ROUTES.USER_GYM_ATTENDANCE}>
-                  <Button variant="link" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-cyan-400">Archived Data <ArrowUpRight className="ml-2 h-3 w-3" /></Button>
+                  <Button variant="link" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-cyan-400">Tactical History <ArrowUpRight className="ml-2 h-3 w-3" /></Button>
                 </Link>
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
                 {attendance.length === 0 ? (
-                  <div className="col-span-full py-20 bg-white/5 rounded-[2.5rem] border border-dashed border-white/10 flex flex-col items-center justify-center space-y-4">
+                  <div className="col-span-full py-20 bg-white/5 rounded-[2.5rem] border border-dashed border-white/10 flex flex-col items-center justify-center space-y-4 text-center">
                     <Activity className="h-10 w-10 text-zinc-700" />
-                    <p className="text-zinc-600 font-bold uppercase tracking-widest text-[10px]">No recent entry detected</p>
+                    <p className="text-zinc-600 font-bold uppercase tracking-widest text-[10px]">No recent entry records detected...</p>
                   </div>
                 ) : (
                   attendance.slice(0, 5).map((log, i) => (
@@ -299,11 +385,11 @@ export default function MyGym() {
                       className="relative overflow-hidden bg-white/5 border border-white/10 rounded-[2.5rem] p-6 text-center group hover:bg-green-500/5 hover:border-green-500/30 transition-all cursor-crosshair"
                     >
                       <div className="absolute inset-0 bg-gradient-to-t from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="relative z-10 space-y-3">
+                      <div className="relative z-10 space-y-3 text-center">
                         <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center mx-auto group-hover:bg-green-500/20 transition-colors">
                           <CheckCircle2 className="h-5 w-5 text-green-500" />
                         </div>
-                        <div>
+                        <div className="text-center">
                           <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic group-hover:text-green-500 transition-colors">
                             {safeFormatDate(log.date, 'EEE, MMM dd')}
                           </p>
@@ -317,22 +403,20 @@ export default function MyGym() {
             </section>
           </div>
 
-          {/* RIGHT: UPDATES & PROTOCOL */}
-          <div className="lg:col-span-4 space-y-8">
-            {/* Announcements Terminal */}
-            <Card className="bg-black/40 border border-white/10 rounded-[3rem] h-full flex flex-col overflow-hidden backdrop-blur-3xl shadow-2xl">
+          {/* RIGHT: SECTOR: UPDATES (Announcements) */}
+          <div className="lg:col-span-4 h-full">
+            <Card className="bg-black/40 border border-white/10 rounded-[3rem] h-full flex flex-col overflow-hidden backdrop-blur-3xl shadow-2xl sticky top-24">
               <div className="p-8 border-b border-white/5 bg-white/5 flex items-center justify-between">
                 <h3 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 text-white">
-                  <Bell className="h-5 w-5 text-cyan-400" /> Briefings
+                  <Bell className="h-5 w-5 text-cyan-400" /> Sector: <span className="text-zinc-500">Updates</span>
                 </h3>
-                <Badge className="bg-cyan-500/20 text-cyan-400 border-0 text-[9px] font-black tracking-widest">LIVE</Badge>
               </div>
 
-              <CardContent className="flex-1 p-8 space-y-6 overflow-y-auto max-h-[500px] scrollbar-hide">
+              <div className="flex-1 overflow-y-auto max-h-[800px] scrollbar-hide p-8 space-y-8">
                 {announcements.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-20">
                     <AlertCircle className="h-10 w-10 text-zinc-800" />
-                    <p className="text-zinc-600 font-bold uppercase tracking-widest text-[10px]">Digital silence maintained</p>
+                    <p className="text-zinc-600 font-bold uppercase tracking-widest text-[10px]">Digital silence maintained from HQ...</p>
                   </div>
                 ) : (
                   announcements.map((ann, i) => (
@@ -340,83 +424,71 @@ export default function MyGym() {
                       key={i}
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      className="group p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-cyan-500/30 hover:bg-cyan-500/5 transition-all"
+                      className="group relative rounded-[2.5rem] bg-zinc-900 border border-white/5 overflow-hidden transition-all hover:border-cyan-500/30"
                     >
-                      <span className="text-[9px] font-black text-cyan-500 uppercase tracking-widest italic mb-2 block">
-                        {safeFormatDate(ann.createdAt, 'MMM dd, yyyy')}
-                      </span>
-                      <h4 className="text-lg font-black text-white italic uppercase tracking-tight group-hover:text-cyan-400 transition-colors mb-3">
-                        {ann.title}
-                      </h4>
-                      <p className="text-xs text-zinc-500 leading-relaxed font-bold uppercase tracking-tight">
-                        {ann.content}
-                      </p>
+                      {ann.image && (
+                         <div className="absolute inset-0 z-0">
+                           <img src={ann.image} className="w-full h-full object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" alt="" />
+                           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent" />
+                         </div>
+                      )}
+                      
+                      <div className="relative z-10 p-8 space-y-4">
+                        <span className="text-[10px] font-black text-cyan-500 uppercase tracking-widest italic bg-cyan-500/10 px-3 py-1 rounded-full">
+                          {safeFormatDate(ann.createdAt, 'MMM dd, yyyy')}
+                        </span>
+                        <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter leading-tight group-hover:text-cyan-400 transition-colors">
+                          {ann.title}
+                        </h4>
+                        <p className="text-xs text-zinc-400 font-medium uppercase tracking-[0.02em] leading-relaxed">
+                          {ann.description || ann.content}
+                        </p>
+                      </div>
                     </motion.div>
                   ))
                 )}
-              </CardContent>
+              </div>
 
-              <div className="p-8 border-t border-white/5">
-                <Button variant="outline" className="w-full h-12 rounded-2xl border-white/10 bg-white/5 font-black uppercase italic tracking-widest text-[10px] text-zinc-500 hover:text-white transition-all">
-                  Access Previous Logs
-                </Button>
+              <div className="p-8 border-t border-white/5 bg-zinc-950/50">
+                <Link to={ROUTES.USER_GYM_ANNOUNCEMENTS}>
+                   <Button className="w-full h-14 rounded-2xl bg-white/5 border border-white/10 font-black uppercase italic tracking-[0.2em] text-[11px] text-zinc-500 hover:text-cyan-400 hover:bg-cyan-500/5 hover:border-cyan-500/30 transition-all">
+                     View All HQ Briefings
+                   </Button>
+                </Link>
               </div>
             </Card>
           </div>
         </div>
 
-        {/* System Nodes Section */}
-        <section className="pt-12">
-          <div className="flex items-center justify-between mb-8 px-4">
-            <h2 className="text-3xl font-black uppercase tracking-tighter italic text-white flex items-center gap-3">
-              HQ <span className="text-zinc-500">Inventory</span>
-            </h2>
-            <Link to={ROUTES.USER_GYM_EQUIPMENT}><Button variant="ghost" className="text-cyan-400 font-black uppercase tracking-widest text-[10px] italic hover:bg-transparent">Sector Map <ArrowUpRight className="ml-2 h-4 w-4" /></Button></Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {equipment.slice(0, 6).map((item, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ y: -8, scale: 1.02 }}
-                onClick={() => navigate("/gym/equipment-inventory")}
-                className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 flex flex-col items-center gap-4 text-center group cursor-pointer hover:bg-cyan-500/5 hover:border-cyan-500/30 transition-all shadow-xl backdrop-blur-md"
-              >
-                <div className="h-12 w-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-all group-hover:rotate-12">
-                  <Dumbbell className="h-6 w-6 text-cyan-400" />
-                </div>
-                <span className="text-[10px] font-black text-zinc-500 group-hover:text-white uppercase tracking-widest italic transition-colors">
-                  {item.name}
-                </span>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* Feedback Section */}
+        {/* FEEDBACK & PROTOCOL REPORTS */}
         <section className="pt-24">
-          <div className="flex items-end justify-between mb-12">
+          <div className="flex items-end justify-between mb-12 px-4">
             <div className="space-y-4">
-              <Badge className="bg-primary/20 text-primary border-primary/30 px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px] italic">REPORTS</Badge>
-              <h2 className="text-4xl md:text-5xl font-black italic text-white uppercase tracking-tighter">Mission <span className="text-zinc-500">Reports</span></h2>
+              <Badge className="bg-primary/20 text-primary border-primary/30 px-4 py-1 rounded-full font-black uppercase tracking-[0.3em] text-[10px] italic">REPORTS</Badge>
+              <h2 className="text-5xl md:text-7xl font-black italic text-white uppercase tracking-tighter">Sector <span className="text-zinc-500">Feedback</span></h2>
             </div>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-[4rem] p-12 backdrop-blur-3xl">
-            <GymReviews
-              gymId={gym._id}
-              reviews={gym.reviews || []}
-              onReviewAdded={(newReview) => {
-                setGymData((prev: any) => prev ? {
-                  ...prev,
-                  gym: {
-                    ...prev.gym,
-                    reviews: [...(prev.gym.reviews || []), newReview]
-                  }
-                } : null);
-              }}
-              canReview={true}
-              currentUserPlan={userSubscription?.planName}
-            />
+          <div className="bg-white/5 border border-white/10 rounded-[4rem] p-12 backdrop-blur-3xl shadow-2xl relative overflow-hidden group">
+             <div className="absolute top-0 right-0 p-20 opacity-[0.02] pointer-events-none group-hover:scale-125 transition-transform duration-[3s]">
+                <Activity size={400} className="text-white" />
+             </div>
+             <div className="relative z-10">
+               <GymReviews
+                  gymId={gym._id}
+                  reviews={gym.reviews || []}
+                  onReviewAdded={(newReview) => {
+                    setGymData((prev: any) => prev ? {
+                      ...prev,
+                      gym: {
+                        ...prev.gym,
+                        reviews: [...(prev.gym.reviews || []), newReview]
+                      }
+                    } : null);
+                  }}
+                  canReview={true}
+                  currentUserPlan={userSubscription?.planName}
+                />
+             </div>
           </div>
         </section>
       </main>

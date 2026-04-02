@@ -28,6 +28,7 @@ import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 
 import type { IGymProduct as Product } from "@/interfaces/gym/IGymProduct";
+import { API_ROUTES } from "@/constants/api.constants";
 
 export default function UserGymStore() {
     const [products, setProducts] = useState<Product[]>([]);
@@ -67,16 +68,16 @@ export default function UserGymStore() {
     const toggleWishlist = async (productId: string) => {
         setWishlistLoading(productId);
         try {
-            const res = await API.post(`/user/gym-products/wishlist/${productId}`);
-            const isAdded = res.data.isAdded;
+            const res = await API.post(API_ROUTES.USER_GYM_PRODUCT.ADD_TO_WISH_LIST(productId));
+            const isAdded = res.data.added; 
             
             setProducts(prev => prev.map(p => 
-                p._id === productId ? { ...p, isInWishlist: isAdded } : p
+                p._id === productId ? { ...p, isInWishlist: !!isAdded } : p
             ));
             
-            toast.success(isAdded ? "Added to wishlist" : "Removed from wishlist");
+            toast.success(isAdded ? "Tactical Priority Assigned" : "Wishlist Target Neutralized");
         } catch (error) {
-            toast.error("Failed to update wishlist");
+            toast.error("Wishlist sync error");
         } finally {
             setWishlistLoading(null);
         }

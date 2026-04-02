@@ -232,7 +232,7 @@ export const getGymsForUser = async (page: number, limit: number, search: string
     params.set('lat', lat.toString());
     params.set('lng', lng.toString());
   }
-  const res = await API.get(`${API_ROUTES.USER.GYMS}?${params.toString()}`);
+  const res = await API.get(`${API_ROUTES.USER.GYMS.LIST}?${params.toString()}`);
   return res.data;
 };
 
@@ -253,5 +253,15 @@ export const markAttendance = async (gymId: string, location: { lat: number; lng
 
 export const getAttendanceHistoryForUser = async (gymId: string, page: number = 1, limit: number = 10) => {
   const res = await API.get(`${API_ROUTES.USER.ATTENDANCE_HISTORY(gymId)}?page=${page}&limit=${limit}`);
+  return res.data;
+};
+
+export const getUserWishlist = async () => {
+  const res = await API.get(API_ROUTES.USER_GYM_PRODUCT.WISH_LIST);
+  return res.data;
+};
+
+export const toggleWishlist = async (productId: string) => {
+  const res = await API.post(API_ROUTES.USER_GYM_PRODUCT.ADD_TO_WISH_LIST(productId));
   return res.data;
 };

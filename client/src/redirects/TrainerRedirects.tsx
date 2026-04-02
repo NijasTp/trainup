@@ -2,7 +2,7 @@ import { ROUTES } from "@/constants/routes";
 import api from "@/lib/axios";
 import { loginTrainer } from "@/redux/slices/trainerAuthSlice";
 import type { RootState } from "@/redux/store";
-import { useEffect, type JSX } from "react";
+import React, { useEffect, useRef, type JSX } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -45,6 +45,10 @@ export const TrainerProtectedRoute: React.FC<{ children: JSX.Element }> = ({ chi
   const location = useLocation();
   const dispatch = useDispatch();
 
+  const trainerRef = useRef(trainer);
+  useEffect(() => { trainerRef.current = trainer; }, [trainer]);
+
+  const hasChecked = useRef(false);
    useEffect(() => {
   const fetchProfile = async () => {
     try {
@@ -54,11 +58,18 @@ export const TrainerProtectedRoute: React.FC<{ children: JSX.Element }> = ({ chi
       console.error("Failed to fetch trainer profile", err);
     }
   };
-  if (trainer) fetchProfile();
-  const interval = setInterval(() => { if (trainer) fetchProfile(); }, 30000);
+
+  if (trainerRef.current && !hasChecked.current) {
+    fetchProfile();
+    hasChecked.current = true;
+  }
+
+  const interval = setInterval(() => { 
+    if (trainerRef.current) fetchProfile(); 
+  }, 60000);
 
   return () => clearInterval(interval);
-}, [dispatch, trainer]);
+}, [dispatch]);
 
   if (!trainer) {
     return <Navigate to={ROUTES.TRAINER_LOGIN} replace />;
