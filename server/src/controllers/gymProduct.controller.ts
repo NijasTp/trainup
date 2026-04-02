@@ -5,6 +5,7 @@ import TYPES from '../core/types/types';
 import { STATUS_CODE } from '../constants/status';
 import { MESSAGES } from '../constants/messages.constants';
 import { JwtPayload } from '../core/interfaces/services/IJwtService';
+import { GYM_PRODUCT_CONSTANTS } from '../constants/gym.constants';
 
 @injectable()
 export class GymProductController {
@@ -15,8 +16,16 @@ export class GymProductController {
   async createProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const gymId = (req.user as JwtPayload).id;
-      const product = await this._productService.createProduct({ ...req.body, gymId });
-      res.status(STATUS_CODE.CREATED).json({ product, message: 'Product added successfully' });
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const productFiles = files?.[GYM_PRODUCT_CONSTANTS.IMAGE_FIELD] || [];
+      
+      const data = { ...req.body };
+      if (typeof data.isAvailable === 'string') {
+        data.isAvailable = data.isAvailable === 'true';
+      }
+
+      const product = await this._productService.createProduct({ ...data, gymId }, productFiles);
+      res.status(STATUS_CODE.CREATED).json({ product, message: MESSAGES.PRODUCT_CREATED });
     } catch (error) {
       next(error);
     }
@@ -35,8 +44,22 @@ export class GymProductController {
   async updateProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      const product = await this._productService.updateProduct(id, req.body);
-      res.status(STATUS_CODE.OK).json({ product, message: 'Product updated successfully' });
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const productFiles = files?.[GYM_PRODUCT_CONSTANTS.IMAGE_FIELD] || [];
+
+      const data = { ...req.body };
+      if (typeof data.isAvailable === 'string') {
+        data.isAvailable = data.isAvailable === 'true';
+      }
+
+      // Handle existingImages array if it's a single string from FormData
+      const existingImagesField = GYM_PRODUCT_CONSTANTS.EXISTING_IMAGES_FIELD;
+      if (data[existingImagesField] && typeof data[existingImagesField] === 'string') {
+        data[existingImagesField] = [data[existingImagesField]];
+      }
+
+      const product = await this._productService.updateProduct(id, data, productFiles);
+      res.status(STATUS_CODE.OK).json({ product, message: MESSAGES.PRODUCT_UPDATED });
     } catch (error) {
       next(error);
     }

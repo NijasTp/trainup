@@ -95,7 +95,7 @@ const WishlistPage: React.FC = () => {
                         </div>
                         <Link to={ROUTES.USER_GYM_SHOP}>
                            <Button className="h-14 px-8 rounded-2xl bg-white text-black hover:bg-cyan-500 hover:text-black font-black uppercase italic tracking-widest transition-all">
-                                <ShoppingCart className="mr-2 h-4 w-4" /> Product Review
+                                <ShoppingCart className="mr-2 h-4 w-4" /> Browse Products
                            </Button>
                         </Link>
                     </div>

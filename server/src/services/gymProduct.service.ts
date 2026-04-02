@@ -8,6 +8,8 @@ import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
 import { MESSAGES } from '../constants/messages.constants';
 import { Types } from 'mongoose';
+import cloudinary from '../config/cloudinary';
+import { GYM_PRODUCT_CONSTANTS } from '../constants/gym.constants';
 
 @injectable()
 export class GymProductService implements IGymProductService {
@@ -16,8 +18,22 @@ export class GymProductService implements IGymProductService {
     @inject(TYPES.IUserRepository) private _userRepo: IUserRepository
   ) {}
 
-  async createProduct(data: Partial<IGymProduct>): Promise<IGymProduct> {
-    return await this._gymProductRepo.create(data);
+  async createProduct(data: Partial<IGymProduct>, files?: Express.Multer.File[]): Promise<IGymProduct> {
+    const imageUrls: string[] = [];
+    
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const upload = await cloudinary.uploader.upload(file.path, {
+          folder: GYM_PRODUCT_CONSTANTS.CLOUDINARY_FOLDER
+        });
+        imageUrls.push(upload.secure_url);
+      }
+    }
+
+    return await this._gymProductRepo.create({
+      ...data,
+      images: imageUrls
+    });
   }
 
   async getProduct(id: string): Promise<IGymProduct> {
@@ -30,10 +46,32 @@ export class GymProductService implements IGymProductService {
     return await this._gymProductRepo.findByGymId(gymId);
   }
 
-  async updateProduct(id: string, data: Partial<IGymProduct>): Promise<IGymProduct> {
-    const product = await this._gymProductRepo.update(id, data);
+  async updateProduct(id: string, data: any, files?: Express.Multer.File[]): Promise<IGymProduct> {
+    const product = await this._gymProductRepo.findById(id);
     if (!product) throw new AppError(MESSAGES.PRODUCT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
-    return product;
+
+    let images = data.existingImages || [];
+    if (typeof images === 'string') images = [images];
+
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const upload = await cloudinary.uploader.upload(file.path, {
+          folder: GYM_PRODUCT_CONSTANTS.CLOUDINARY_FOLDER
+        });
+        images.push(upload.secure_url);
+      }
+    }
+
+    const updateData = {
+      ...data,
+      images
+    };
+
+    delete updateData.existingImages;
+
+    const updated = await this._gymProductRepo.update(id, updateData);
+    if (!updated) throw new AppError(MESSAGES.PRODUCT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+    return updated;
   }
 
   async deleteProduct(id: string): Promise<void> {

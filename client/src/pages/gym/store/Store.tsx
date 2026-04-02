@@ -147,10 +147,9 @@ const Store = () => {
                                     price: 0,
                                     category: 'supplements',
                                     subcategory: '',
-                                    category: 'supplements',
-                                    subcategory: '',
                                     description: '',
-                                    isAvailable: true
+                                    isAvailable: true,
+                                    stock: 0
                                 });
                                 setView('create');
                             }}

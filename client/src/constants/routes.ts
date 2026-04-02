@@ -46,7 +46,7 @@ export const ROUTES = {
   USER_GYM_ATTENDANCE: '/my-gym/attendance-history',
   USER_GYM_EQUIPMENT: '/my-gym/equipment-inventory',
   USER_GYM_PLAN_SELECTION: '/gym/select-plan/:id',
-  USER_GYM_SHOP: '/gym-shop',
+  USER_GYM_SHOP: '/my-gym/shop',
   USER_GYM_ANNOUNCEMENTS: '/my-gym/announcements',
   USER_SUBSCRIPTIONS: '/my-subscriptions',
   USER_NOT_FOUND: "*",

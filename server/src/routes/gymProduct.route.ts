@@ -3,6 +3,7 @@ import container from '../core/di/inversify.config';
 import TYPES from '../core/types/types';
 import { GymProductController } from '../controllers/gymProduct.controller';
 import { authMiddleware, roleMiddleware } from '../middlewares/auth.middleware';
+import { upload } from '../utils/multer.util';
 
 const router = Router();
 const productController = container.get<GymProductController>(TYPES.GymProductController);
@@ -13,9 +14,9 @@ router.get('/wishlist', authMiddleware, roleMiddleware(['user']), productControl
 router.post('/wishlist/:productId', authMiddleware, roleMiddleware(['user']), productController.toggleWishlist.bind(productController));
 
 // Gym Owner Routes
-router.post('/manage', authMiddleware, roleMiddleware(['gym']), productController.createProduct.bind(productController));
+router.post('/manage', authMiddleware, roleMiddleware(['gym']), upload.fields([{ name: 'images', maxCount: 5 }]), productController.createProduct.bind(productController));
 router.get('/manage', authMiddleware, roleMiddleware(['gym']), productController.getGymProducts.bind(productController));
-router.put('/manage/:id', authMiddleware, roleMiddleware(['gym']), productController.updateProduct.bind(productController));
+router.put('/manage/:id', authMiddleware, roleMiddleware(['gym']), upload.fields([{ name: 'images', maxCount: 5 }]), productController.updateProduct.bind(productController));
 router.delete('/manage/:id', authMiddleware, roleMiddleware(['gym']), productController.deleteProduct.bind(productController));
 router.patch('/manage/:id/availability', authMiddleware, roleMiddleware(['gym']), productController.toggleAvailability.bind(productController));
 
