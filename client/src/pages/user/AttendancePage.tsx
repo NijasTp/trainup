@@ -193,7 +193,7 @@ export default function AttendancePage() {
         <div className="bg-black/60 border border-white/10 rounded-[3.5rem] p-4 md:p-8 backdrop-blur-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative group">
            <div className="grid grid-cols-7 gap-2 md:gap-4">
               {weekDays.map(day => (
-                <div key={day} className="py-4 text-center text-[10px] font-black uppercase tracking-widest text-zinc-600 italic">
+                <div key={day} className="py-4 text-center text-[10px] font-black uppercase tracking-normal text-zinc-600 italic">
                   {day}
                 </div>
               ))}
@@ -214,7 +214,7 @@ export default function AttendancePage() {
                        }
                     }}
                     className={cn(
-                      "relative aspect-square md:h-20 rounded-2xl md:rounded-[1.5rem] flex flex-col items-center justify-center cursor-pointer transition-all border-2 group/day overflow-hidden",
+                      "relative aspect-square w-full rounded-2xl md:rounded-[1.5rem] flex flex-col items-center justify-center cursor-pointer transition-all border-2 group/day overflow-hidden",
                       !isCurrentMonth && "opacity-10 pointer-events-none",
                       getStatusColor(status)
                     )}

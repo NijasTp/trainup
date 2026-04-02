@@ -20,9 +20,9 @@ export const CreateWorkoutTemplateSchema = z.object({
     description: z.string().optional(),
     type: z.nativeEnum(TemplateType),
     difficultyLevel: z.nativeEnum(DifficultyLevel),
-    requiredEquipment: z.array(z.string()).optional(),
+    requiredEquipment: z.preprocess((val) => typeof val === 'string' ? JSON.parse(val) : val, z.array(z.string())).optional(),
     isPublic: z.preprocess((val) => val === 'true' || val === true, z.boolean()).optional(),
-    repetitions: z.preprocess((val) => Number(val), z.number().min(1)).optional(),
+    repetitions: z.preprocess((val) => (val === '' || val === undefined) ? undefined : Number(val), z.number().min(1).optional()),
     days: z.preprocess((val) => typeof val === 'string' ? JSON.parse(val) : val, z.array(DaySchema)),
 });
 
