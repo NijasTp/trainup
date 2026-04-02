@@ -95,7 +95,7 @@ const WishlistPage: React.FC = () => {
                         </div>
                         <Link to={ROUTES.USER_GYM_SHOP}>
                            <Button className="h-14 px-8 rounded-2xl bg-white text-black hover:bg-cyan-500 hover:text-black font-black uppercase italic tracking-widest transition-all">
-                                <ShoppingCart className="mr-2 h-4 w-4" /> Armory Review
+                                <ShoppingCart className="mr-2 h-4 w-4" /> Product Review
                            </Button>
                         </Link>
                     </div>
@@ -192,10 +192,10 @@ const WishlistPage: React.FC = () => {
                             <div className="absolute inset-0 rounded-full border border-zinc-800 animate-ping" />
                         </div>
                         <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">No Targets Logged</h2>
-                        <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs mb-10 max-w-sm mx-auto leading-relaxed">Your tactical priority list is empty. Scan the armory for high-performance gear.</p>
+                        <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs mb-10 max-w-sm mx-auto leading-relaxed">Your tactical priority list is empty. Scan the Product for high-performance gear.</p>
                         <Link to={ROUTES.USER_GYM_SHOP}>
                            <Button className="h-16 px-12 rounded-2xl bg-cyan-500 text-black shadow-[0_0_30px_rgba(34,211,238,0.3)] font-black uppercase italic tracking-widest hover:scale-105 transition-all">
-                                Access Armory
+                                Access Product
                            </Button>
                         </Link>
                     </motion.div>
