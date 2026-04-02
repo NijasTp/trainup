@@ -28,7 +28,7 @@ const WishlistPage: React.FC = () => {
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
     useEffect(() => {
-        document.title = "TrainUp | Wishlist Hub";
+        document.title = "TrainUp | My Wishlist";
         fetchWishlist();
     }, []);
 
@@ -39,7 +39,7 @@ const WishlistPage: React.FC = () => {
             setWishlist(res.products || []);
         } catch (error) {
             console.error("Wishlist error:", error);
-            toast.error("Sector synchronization failed");
+            toast.error("Failed to load wishlist");
         } finally {
             setIsLoading(false);
         }
@@ -50,9 +50,9 @@ const WishlistPage: React.FC = () => {
         try {
             await toggleWishlist(productId);
             setWishlist(prev => prev.filter(p => p._id !== productId));
-            toast.success("Target neutralized from priority list");
+            toast.success("Item removed from wishlist");
         } catch (error) {
-            toast.error("Neutralization failed");
+            toast.error("Failed to remove item");
         } finally {
             setDeletingId(null);
         }
@@ -73,7 +73,7 @@ const WishlistPage: React.FC = () => {
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 pb-12 border-b border-white/5">
                     <div className="space-y-4">
                         <Link to={ROUTES.USER_GYM_DASHBOARD} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 hover:text-cyan-400 transition-all">
-                             <ArrowLeft className="h-3 w-3" /> HQ COMMAND / TACTICAL HUB
+                             <ArrowLeft className="h-3 w-3" /> DASHBOARD / WISHLIST
                         </Link>
                         <div className="flex items-center gap-6">
                             <div className="h-20 w-20 rounded-[2.5rem] bg-fuchsia-500/10 flex items-center justify-center border border-fuchsia-500/20 shadow-[0_0_40px_rgba(217,70,239,0.15)]">
@@ -81,16 +81,16 @@ const WishlistPage: React.FC = () => {
                             </div>
                             <div className="space-y-1">
                                 <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic leading-none text-white">
-                                    Target <span className="text-zinc-500">Wishlist</span>
+                                    My <span className="text-zinc-500">Wishlist</span>
                                 </h1>
-                                <p className="text-zinc-500 font-bold uppercase tracking-widest text-[11px] italic">RESERVED MISSION GEAR & ACQUISITIONS</p>
+                                <p className="text-zinc-500 font-bold uppercase tracking-widest text-[11px] italic">SAVED ITEMS FOR QUICK PURCHASE</p>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-8 bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-3xl">
                         <div className="text-center">
-                            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Priority Targets</p>
+                            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Total Items</p>
                             <p className="text-5xl font-black text-fuchsia-400 italic tabular-nums">{wishlist.length}</p>
                         </div>
                         <Link to={ROUTES.USER_GYM_SHOP}>
@@ -104,7 +104,7 @@ const WishlistPage: React.FC = () => {
                 {isLoading ? (
                     <div className="h-[60vh] flex flex-col items-center justify-center gap-6">
                         <Loader2 className="w-12 h-12 text-cyan-400 animate-spin" />
-                        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 animate-pulse">Synchronizing Intelligence...</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 animate-pulse">Loading your wishlist...</p>
                     </div>
                 ) : wishlist.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -133,7 +133,7 @@ const WishlistPage: React.FC = () => {
                                             {!item.isAvailable && (
                                                 <div className="absolute inset-0 flex items-center justify-center bg-red-950/40 backdrop-blur-[2px]">
                                                     <span className="bg-red-500 text-white font-black px-6 py-2 rounded-full flex items-center gap-2 text-xs italic tracking-widest shadow-[0_0_20px_rgba(239,68,68,0.5)]">
-                                                        <AlertCircle className="h-4 w-4" /> ACQUISITION FAILED: OUT OF STOCK
+                                                        <AlertCircle className="h-4 w-4" /> UNAVAILABLE: OUT OF STOCK
                                                     </span>
                                                 </div>
                                             )}
@@ -172,7 +172,7 @@ const WishlistPage: React.FC = () => {
                                                             : "bg-zinc-900 text-zinc-700 cursor-not-allowed border border-white/5"
                                                     )}
                                                 >
-                                                    {item.isAvailable ? <><ShoppingCart className="mr-3 h-4 w-4" /> Deploy to Cart</> : "Out of Mission Area"}
+                                                    {item.isAvailable ? <><ShoppingCart className="mr-3 h-4 w-4" /> Add to Cart</> : "Currently Unavailable"}
                                                 </Button>
                                             </div>
                                         </CardContent>
@@ -191,11 +191,11 @@ const WishlistPage: React.FC = () => {
                             <Shield className="h-16 w-16 text-zinc-700 group-hover:text-fuchsia-500 transition-colors" />
                             <div className="absolute inset-0 rounded-full border border-zinc-800 animate-ping" />
                         </div>
-                        <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">No Targets Logged</h2>
-                        <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs mb-10 max-w-sm mx-auto leading-relaxed">Your tactical priority list is empty. Scan the Product for high-performance gear.</p>
+                        <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">Your Wishlist is Empty</h2>
+                        <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs mb-10 max-w-sm mx-auto leading-relaxed">Save items from the store to see them here.</p>
                         <Link to={ROUTES.USER_GYM_SHOP}>
                            <Button className="h-16 px-12 rounded-2xl bg-cyan-500 text-black shadow-[0_0_30px_rgba(34,211,238,0.3)] font-black uppercase italic tracking-widest hover:scale-105 transition-all">
-                                Access Product
+                                Go to Shop
                            </Button>
                         </Link>
                     </motion.div>

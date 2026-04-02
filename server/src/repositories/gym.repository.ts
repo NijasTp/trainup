@@ -367,6 +367,7 @@ export class GymRepository implements IGymRepository {
     totalPages: number
   }> {
     const skip = (page - 1) * limit
+    const gymObjectIdField = 'gymId'
 
     const match: {
       verifyStatus: string
@@ -400,6 +401,14 @@ export class GymRepository implements IGymRepository {
           }
         },
         {
+          $lookup: {
+            from: 'subscriptionplans',
+            localField: '_id',
+            foreignField: gymObjectIdField,
+            as: 'plans'
+          }
+        },
+        {
           $project: {
             _id: 1,
             name: 1,
@@ -408,7 +417,7 @@ export class GymRepository implements IGymRepository {
             geoLocation: 1,
             avgRating: { $ifNull: ['$avgRating', 0] },
             memberCount: { $size: { $ifNull: ['$members', []] } },
-            minPlanPrice: { $min: '$subscriptionPlans.price' },
+            minPlanPrice: { $min: '$plans.price' },
             distance: { $divide: ['$distance', 1000] }
           }
         },
@@ -449,6 +458,14 @@ export class GymRepository implements IGymRepository {
         { $match: match },
         { $sort: { createdAt: -1 } },
         {
+          $lookup: {
+            from: 'subscriptionplans',
+            localField: '_id',
+            foreignField: gymObjectIdField,
+            as: 'plans'
+          }
+        },
+        {
           $project: {
             _id: 1,
             name: 1,
@@ -457,7 +474,7 @@ export class GymRepository implements IGymRepository {
             geoLocation: 1,
             avgRating: { $ifNull: ['$avgRating', 0] },
             memberCount: { $size: { $ifNull: ['$members', []] } },
-            minPlanPrice: { $min: '$subscriptionPlans.price' }
+            minPlanPrice: { $min: '$plans.price' }
           }
         },
         { $skip: skip },

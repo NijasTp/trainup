@@ -178,7 +178,7 @@ export default function MyGym() {
               </div>
               <div className="space-y-1">
                 <Badge variant="outline" className="text-[10px] font-black uppercase tracking-[0.3em] border-cyan-500/30 text-cyan-400 py-1 px-3 rounded-full bg-cyan-500/5">
-                  HQ COMMAND
+                  GYM DASHBOARD
                 </Badge>
                 <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic leading-none text-white">
                   {gym.name}
@@ -191,7 +191,7 @@ export default function MyGym() {
               </span>
               <span className="h-1 w-1 bg-zinc-800 rounded-full" />
               <span className="flex items-center gap-2 text-green-500">
-                <Activity className="h-3 w-3" /> ACTIVE PROTOCOL
+                <Activity className="h-3 w-3" /> GYM ACTIVE
               </span>
             </div>
           </div>
@@ -237,8 +237,8 @@ export default function MyGym() {
                       <span className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.2em]">{userSubscription.planName} MEMBER</span>
                     </div>
                     <h2 className="text-4xl md:text-6xl font-black tracking-tight uppercase leading-none italic text-white">
-                      Mission <span className="text-zinc-500">Status</span>: <br />
-                      <span className="text-cyan-400">Deployed</span>
+                      Membership <span className="text-zinc-500">Status</span>: <br />
+                      <span className="text-cyan-400">Active</span>
                     </h2>
                   </div>
 
@@ -251,7 +251,7 @@ export default function MyGym() {
                         return days > 0 ? days : "00";
                       })()}
                     </div>
-                    <p className="text-[10px] text-cyan-500 font-black uppercase tracking-widest mt-1">Operational</p>
+                    <p className="text-[10px] text-cyan-500 font-black uppercase tracking-widest mt-1">Gym Access</p>
                   </div>
                 </div>
 
@@ -269,7 +269,7 @@ export default function MyGym() {
                     <p className="text-xl font-bold text-white italic">{safeFormatDate(userSubscription.expiresAt, 'MMM dd, yy')}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">Sector Price</p>
+                    <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">Plan Price</p>
                     <p className="text-xl font-bold text-cyan-400 italic">₹{userSubscription.planPrice}</p>
                   </div>
                 </div>
@@ -280,7 +280,7 @@ export default function MyGym() {
             <section className="space-y-8">
               <div className="flex items-center justify-between px-4">
                 <h3 className="text-2xl font-black uppercase tracking-tighter italic text-white flex items-center gap-3">
-                  <Dumbbell className="h-5 w-5 text-cyan-500" /> Sector: <span className="text-zinc-500">Armory</span>
+                  <Dumbbell className="h-5 w-5 text-cyan-500" /> Gym Store & <span className="text-zinc-500">Equipment</span>
                 </h3>
               </div>
 
@@ -293,8 +293,8 @@ export default function MyGym() {
                     </div>
                     <div className="space-y-6 relative z-10">
                       <div>
-                        <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30 text-[9px] font-black uppercase tracking-[0.2em] px-3 mb-4">SUPPLIES</Badge>
-                        <h4 className="text-3xl font-black italic uppercase tracking-tighter text-white">Tactical <br /><span className="text-cyan-400">Gear Shop</span></h4>
+                        <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30 text-[9px] font-black uppercase tracking-[0.2em] px-3 mb-4">SHOP</Badge>
+                        <h4 className="text-3xl font-black italic uppercase tracking-tighter text-white">Explore <br /><span className="text-cyan-400">Gym Shop</span></h4>
                         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2">{products.filter(p => p.isAvailable).length} ITEMS AVAILABLE NOW</p>
                       </div>
                       
@@ -322,9 +322,9 @@ export default function MyGym() {
                     </div>
                     <div className="space-y-6 relative z-10">
                       <div>
-                        <Badge className="bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30 text-[9px] font-black uppercase tracking-[0.2em] px-3 mb-4">RESERVED</Badge>
-                        <h4 className="text-3xl font-black italic uppercase tracking-tighter text-white">Target <br /><span className="text-fuchsia-400">Wishlist</span></h4>
-                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2">{wishlist.length} PENDING ACQUISITIONS</p>
+                        <Badge className="bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30 text-[9px] font-black uppercase tracking-[0.2em] px-3 mb-4">FAVORITES</Badge>
+                        <h4 className="text-3xl font-black italic uppercase tracking-tighter text-white">My <br /><span className="text-fuchsia-400">Wishlist</span></h4>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2">{wishlist.length} SAVED ITEMS</p>
                       </div>
 
                       <div className="flex items-center gap-3">
@@ -362,10 +362,10 @@ export default function MyGym() {
             <section className="space-y-6">
               <div className="flex items-center justify-between px-4">
                 <h3 className="text-2xl font-black uppercase tracking-tighter italic flex items-center gap-3 text-white">
-                  <Activity className="h-5 w-5 text-green-500" /> Sector: <span className="text-zinc-500">Logs</span>
+                  <Activity className="h-5 w-5 text-green-500" /> Recent <span className="text-zinc-500">Visits</span>
                 </h3>
                 <Link to={ROUTES.USER_GYM_ATTENDANCE}>
-                  <Button variant="link" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-cyan-400">Tactical History <ArrowUpRight className="ml-2 h-3 w-3" /></Button>
+                  <Button variant="link" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-cyan-400">Attendance History <ArrowUpRight className="ml-2 h-3 w-3" /></Button>
                 </Link>
               </div>
 
@@ -408,7 +408,7 @@ export default function MyGym() {
             <Card className="bg-black/40 border border-white/10 rounded-[3rem] h-full flex flex-col overflow-hidden backdrop-blur-3xl shadow-2xl sticky top-24">
               <div className="p-8 border-b border-white/5 bg-white/5 flex items-center justify-between">
                 <h3 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 text-white">
-                  <Bell className="h-5 w-5 text-cyan-400" /> Sector: <span className="text-zinc-500">Updates</span>
+                  <Bell className="h-5 w-5 text-cyan-400" /> <span className="text-zinc-500">Announcements</span>
                 </h3>
               </div>
 
@@ -416,7 +416,7 @@ export default function MyGym() {
                 {announcements.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-20">
                     <AlertCircle className="h-10 w-10 text-zinc-800" />
-                    <p className="text-zinc-600 font-bold uppercase tracking-widest text-[10px]">Digital silence maintained from HQ...</p>
+                    <p className="text-zinc-600 font-bold uppercase tracking-widest text-[10px]">No new announcements at the moment.</p>
                   </div>
                 ) : (
                   announcements.map((ann, i) => (
@@ -452,7 +452,7 @@ export default function MyGym() {
               <div className="p-8 border-t border-white/5 bg-zinc-950/50">
                 <Link to={ROUTES.USER_GYM_ANNOUNCEMENTS}>
                    <Button className="w-full h-14 rounded-2xl bg-white/5 border border-white/10 font-black uppercase italic tracking-[0.2em] text-[11px] text-zinc-500 hover:text-cyan-400 hover:bg-cyan-500/5 hover:border-cyan-500/30 transition-all">
-                     View All HQ Briefings
+                     View All Announcements
                    </Button>
                 </Link>
               </div>
@@ -464,8 +464,8 @@ export default function MyGym() {
         <section className="pt-24">
           <div className="flex items-end justify-between mb-12 px-4">
             <div className="space-y-4">
-              <Badge className="bg-primary/20 text-primary border-primary/30 px-4 py-1 rounded-full font-black uppercase tracking-[0.3em] text-[10px] italic">REPORTS</Badge>
-              <h2 className="text-5xl md:text-7xl font-black italic text-white uppercase tracking-tighter">Sector <span className="text-zinc-500">Feedback</span></h2>
+              <Badge className="bg-primary/20 text-primary border-primary/30 px-4 py-1 rounded-full font-black uppercase tracking-[0.3em] text-[10px] italic">REVIEWS</Badge>
+              <h2 className="text-5xl md:text-7xl font-black italic text-white uppercase tracking-tighter">Gym <span className="text-zinc-500">Reviews</span></h2>
             </div>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-[4rem] p-12 backdrop-blur-3xl shadow-2xl relative overflow-hidden group">

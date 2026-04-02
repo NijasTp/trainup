@@ -239,6 +239,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
             navigate(mode === 'trainer' ? "/trainer/templates" : "/admin/templates");
         } catch (error: unknown) {
             toast.error("Process failed in the forge");
+            console.log(error)
         } finally {
             setSaving(false);
         }
@@ -254,10 +255,10 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                         </div>
                         <div>
                             <h1 className="text-4xl font-black text-white italic uppercase tracking-tighter">
-                                {id ? "Override" : "Forge"} <span className="text-cyan-400">Blueprint</span>
+                                {id ? "Update" : "Create"} <span className="text-cyan-400">Template</span>
                             </h1>
                             <p className="text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px] italic">
-                                Technical Training Architecture
+                                Workout Plan Builder
                             </p>
                         </div>
                     </div>
@@ -272,10 +273,10 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                         <Button
                             onClick={handleSave}
                             disabled={saving}
-                            className="flex-1 md:flex-none bg-cyan-500 hover:bg-cyan-400 text-black font-black italic uppercase text-xs px-10 h-14 rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all hover:scale-105"
+                            className="flex-1 md:flex-none bg-cyan-500 hover:bg-cyan-400 text-black font-black italic uppercase text-xs px-10 h-14 rounded-2xl shadow-[0_0_20_rgba(6,182,212,0.3)] transition-all hover:scale-105"
                         >
                             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                            Store Architecture
+                            Save Template
                         </Button>
                     </div>
                 </header>
@@ -285,7 +286,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                         <Card className="bg-white/5 backdrop-blur-xl border-white/10 rounded-[3rem] overflow-hidden shadow-2xl p-0">
                             <CardHeader className="bg-white/5 p-8 border-b border-white/10">
                                 <CardTitle className="text-white text-xl font-black italic uppercase tracking-widest flex items-center gap-3">
-                                    <FileText className="h-6 w-6 text-cyan-400" /> Core Meta-Data
+                                    <FileText className="h-6 w-6 text-cyan-400" /> Template Information
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-10 space-y-10">
@@ -293,7 +294,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                 <div className="space-y-4">
                                     <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic flex items-center gap-2">
                                         <ImagePlus size={16} className="text-cyan-400" />
-                                        Visual Signature (Mandatory)
+                                        Cover Image (Required)
                                     </label>
                                     <div className="relative group cursor-pointer aspect-[21/9] rounded-[2rem] overflow-hidden border-2 border-dashed border-white/10 hover:border-cyan-500/50 transition-all bg-black/40">
                                         {formData.image ? (
@@ -306,7 +307,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                         ) : (
                                             <div onClick={() => document.getElementById('imageInput')?.click()} className="flex flex-col items-center justify-center h-full gap-4 text-gray-500 group-hover:text-cyan-400 transition-colors">
                                                 <ImagePlus size={48} className="opacity-20 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" />
-                                                <p className="font-black uppercase tracking-widest text-[10px]">Select High-Res Architecture Banner</p>
+                                                <p className="font-black uppercase tracking-widest text-[10px]">Select Template Header Image</p>
                                             </div>
                                         )}
                                         <input id="imageInput" type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
@@ -315,17 +316,17 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
 
                                 <div className="grid md:grid-cols-2 gap-10">
                                     <div className="space-y-4">
-                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Architecture Title</label>
+                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Template Title</label>
                                         <Input
                                             name="title"
                                             value={formData.title}
                                             onChange={handleInputChange}
-                                            placeholder="E.G., TITAN STRENGTH"
+                                            placeholder="E.G., STRENGTH FOUNDATION"
                                             className="bg-black/40 border-white/10 h-16 rounded-2xl text-white font-black italic uppercase text-sm focus:ring-1 focus:ring-cyan-500/50 transition-all"
                                         />
                                     </div>
                                     <div className="space-y-4">
-                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Protocol Category</label>
+                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Template Type</label>
                                         <Select
                                             value={formData.type}
                                             onValueChange={(v: 'one-time' | 'series') => {
@@ -340,8 +341,8 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                                 <SelectValue placeholder="Selection" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-zinc-900 border-white/10 text-white rounded-2xl overflow-hidden">
-                                                <SelectItem value="one-time">One-Time Tactical Session</SelectItem>
-                                                <SelectItem value="series">Structural Program / Series</SelectItem>
+                                                <SelectItem value="one-time">One-Time Workout</SelectItem>
+                                                <SelectItem value="series">Recurring Program</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -349,7 +350,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
 
                                 <div className="grid md:grid-cols-3 gap-10">
                                     <div className="space-y-4">
-                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Intensity Matrix</label>
+                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Intensity Level</label>
                                         <Select
                                             value={formData.difficultyLevel}
                                             onValueChange={(v: 'beginner' | 'intermediate' | 'advanced') => setFormData(p => ({ ...p, difficultyLevel: v }))}
@@ -358,9 +359,9 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                                 <SelectValue placeholder="Intensity" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-zinc-900 border-white/10 text-white rounded-2xl overflow-hidden">
-                                                <SelectItem value="beginner">RECRUIT (LEVEL 1)</SelectItem>
-                                                <SelectItem value="intermediate">ELITE (LEVEL 2)</SelectItem>
-                                                <SelectItem value="advanced">TITAN (LEVEL 3)</SelectItem>
+                                                <SelectItem value="beginner">Beginner</SelectItem>
+                                                <SelectItem value="intermediate">Intermediate</SelectItem>
+                                                <SelectItem value="advanced">Advanced</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -383,7 +384,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                     <div className="space-y-4">
                                         <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Visibility Status</label>
                                         <div className="flex items-center gap-3 h-16 bg-black/40 border border-white/10 rounded-2xl px-5">
-                                            <span className="text-[10px] font-black text-gray-400 uppercase italic tracking-widest mr-auto">Vault Public</span>
+                                            <span className="text-[10px] font-black text-gray-400 uppercase italic tracking-widest mr-auto">Make Template Public</span>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
                                                     type="checkbox"
@@ -400,7 +401,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                 <div className="space-y-4">
                                     <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic flex items-center gap-2">
                                         <Settings size={16} className="text-cyan-400" />
-                                        Operational Inventory (Equipment)
+                                        Required Equipment
                                     </label>
                                     <div className="flex flex-wrap gap-2 min-h-[64px] p-5 bg-black/40 border border-white/10 rounded-2xl items-center">
                                         {formData.requiredEquipment.map((eq, i) => (
@@ -410,7 +411,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                             </Badge>
                                         ))}
                                         <Input
-                                            placeholder="+ ADD INVENTORY (ENTER)"
+                                            placeholder="+ ADD EQUIPMENT (ENTER)"
                                             className="flex-1 bg-transparent border-0 h-8 text-[10px] font-black italic uppercase text-white focus-visible:ring-0 p-0 placeholder:text-gray-700"
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
@@ -427,12 +428,12 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Strategic Objectives (Description)</label>
+                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Template Description</label>
                                     <Textarea
                                         name="description"
                                         value={formData.description}
                                         onChange={handleInputChange}
-                                        placeholder="OUTLINE THE CORE ARCHITECTURAL GOALS FOR THIS PROTOCOL..."
+                                        placeholder="OUTLINE THE CORE GOALS FOR THIS TEMPLATE..."
                                         className="bg-black/40 border-white/10 text-white min-h-[160px] rounded-[2rem] font-black italic uppercase text-xs p-8 tracking-widest leading-relaxed focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
                                     />
                                 </div>
@@ -443,18 +444,18 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                         <div className="space-y-6">
                             <div className="flex justify-between items-center px-4">
                                 <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
-                                    <Calendar className="h-6 w-6 text-cyan-400" /> Schedule Architecture
+                                    <Calendar className="h-6 w-6 text-cyan-400" /> Workout Schedule
                                 </h3>
                                 {formData.type !== 'one-time' && (
                                     <Button onClick={addDay} className="bg-white/5 border border-white/10 text-white hover:bg-cyan-500 hover:text-black font-black italic uppercase text-[10px] h-10 px-6 rounded-xl transition-all">
-                                        <Plus className="h-4 w-4 mr-2" /> Add Deployment Day
+                                        <Plus className="h-4 w-4 mr-2" /> Add Training Day
                                     </Button>
                                 )}
                             </div>
 
                             <div className="space-y-6">
                                 {formData.days.map((day, dIdx) => (
-                                    <div key={dIdx} className="bg-white/5 backdrop-blur-xl border border-white/5 rounded-[3rem] shadow-2xl overflow-hidden group/day">
+                                    <div key={dIdx} className="bg-white/5 backdrop-blur-xl border border-white/5 rounded-[3rem] shadow-2xl group/day">
                                         <div
                                             className="p-6 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-all"
                                             onClick={() => setActiveDayIndex(activeDayIndex === dIdx ? null : dIdx)}
@@ -464,8 +465,8 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                                     {day.dayNumber}
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-white font-black italic uppercase text-lg tracking-tight">Technical Phase {day.dayNumber}</h4>
-                                                    <p className="text-gray-500 font-bold text-[10px] uppercase tracking-widest italic">{day.exercises.length} Exercises Initialized</p>
+                                                    <h4 className="text-white font-black italic uppercase text-lg tracking-tight">Day {day.dayNumber}</h4>
+                                                    <p className="text-gray-500 font-bold text-[10px] uppercase tracking-widest italic">{day.exercises.length} Exercises Added</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">
@@ -491,13 +492,13 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: "auto", opacity: 1 }}
                                                     exit={{ height: 0, opacity: 0 }}
-                                                    className="overflow-hidden"
+                                                    className="overflow-visible"
                                                 >
                                                     <div className="p-10 border-t border-white/5 space-y-8 bg-black/20 font-outfit">
                                                         {day.exercises.length === 0 ? (
                                                             <div className="text-center py-20 border-2 border-dashed border-white/5 rounded-[2rem] text-gray-600 space-y-4">
                                                                 <Layers className="h-10 w-10 mx-auto opacity-20" />
-                                                                <p className="font-black uppercase italic tracking-[0.3em] text-[10px]">No Modules Mapped in this Phase</p>
+                                                                <p className="font-black uppercase italic tracking-[0.3em] text-[10px]">No Exercises Added for this Day</p>
                                                             </div>
                                                         ) : (
                                                             <div className="space-y-4 font-outfit">
@@ -505,7 +506,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                                                     <div key={eIdx} className="bg-white/5 p-6 rounded-[2rem] border border-white/5 flex flex-wrap lg:grid lg:grid-cols-[1fr_repeat(3,120px)_40px] gap-6 items-center group/ex hover:border-cyan-500/20 transition-all font-outfit">
                                                                         <div>
                                                                             <div className="font-black text-white italic uppercase tracking-tight text-sm mb-1">{ex.name}</div>
-                                                                            <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest italic">Exercise Module</div>
+                                                                            <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest italic">Exercise Details</div>
                                                                         </div>
 
                                                                         <div className="flex flex-col gap-2 font-outfit">
@@ -543,10 +544,10 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                                         <div className="relative pt-8 border-t border-white/5">
                                                             <div className="flex items-center gap-4 mb-4">
                                                                 <Search className="h-5 w-5 text-gray-600" />
-                                                                <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Access Exercise Database</h5>
+                                                                <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Search Exercises</h5>
                                                             </div>
                                                             <Input
-                                                                placeholder="SEARCH DATABASE FOR TECHNICAL MODULES..."
+                                                                placeholder="SEARCH FOR EXERCISES..."
                                                                 className="h-14 bg-black/40 border-white/5 text-xs rounded-2xl pl-6 font-black italic uppercase tracking-widest focus:ring-cyan-500/30"
                                                                 value={activeDayIndex === dIdx ? searchQuery : ''}
                                                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -606,40 +607,40 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                         <Card className="bg-white/5 backdrop-blur-3xl border-white/10 rounded-[2.5rem] p-8 shadow-2xl sticky top-36 overflow-hidden">
                             <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] bg-cyan-500/5 blur-[60px] rounded-full" />
                             <h3 className="text-xl font-black text-white italic uppercase tracking-tighter mb-8 border-b border-white/10 pb-4">
-                                Blueprint <span className="text-cyan-400">Metrics</span>
+                                Template <span className="text-cyan-400">Metrics</span>
                             </h3>
                             <div className="space-y-6 relative z-10">
                                 <div className="flex justify-between items-center group/metric">
-                                    <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-gray-300 transition-colors">Net Duration</span>
+                                    <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-gray-300 transition-colors">Total Duration</span>
                                     <span className="text-cyan-400 font-black italic text-sm">{formData.days.length * formData.repetitions} DAYS</span>
                                 </div>
                                 <div className="flex justify-between items-center group/metric">
-                                    <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-gray-300 transition-colors">Plan Iterations</span>
-                                    <span className="text-white font-black italic text-sm">{formData.repetitions}x Repetitions</span>
+                                    <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-gray-300 transition-colors">Repetitions</span>
+                                    <span className="text-white font-black italic text-sm">{formData.repetitions}x Cycles</span>
                                 </div>
                                 <div className="flex justify-between items-center group/metric">
-                                    <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-gray-300 transition-colors">Structural Phases</span>
-                                    <span className="text-white font-black italic text-sm font-outfit">{formData.days.length} PHASES</span>
+                                    <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-gray-300 transition-colors">Training Days</span>
+                                    <span className="text-white font-black italic text-sm font-outfit">{formData.days.length} DAYS</span>
                                 </div>
                                 <div className="flex justify-between items-center group/metric">
-                                    <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-gray-300 transition-colors">Total Modules</span>
+                                    <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-gray-300 transition-colors">Total Exercises</span>
                                     <span className="text-white font-black italic text-sm">
-                                        {formData.days.reduce((acc, day) => acc + day.exercises.length, 0)} UNITS
+                                        {formData.days.reduce((acc, day) => acc + day.exercises.length, 0)} TOTAL
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center group/metric">
-                                    <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-gray-300 transition-colors">Inventory Requirements</span>
+                                    <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-gray-300 transition-colors">Equipment Required</span>
                                     <span className="text-cyan-400 font-black italic text-sm">{formData.requiredEquipment.length} ITEMS</span>
                                 </div>
                             </div>
 
                             <div className="mt-10 pt-10 border-t border-white/10 space-y-6">
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400 italic">Technical Briefing</h4>
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400 italic">Training Tips</h4>
                                 <ul className="space-y-4">
                                     {[
-                                        "3-5 phase architectures yield highest user retention.",
-                                        "Detailed objective mapping increases plan effectiveness.",
-                                        "One-time sessions are optimized for tactical execution."
+                                        "3-5 training days yield highest user retention.",
+                                        "Detailed descriptions increase template effectiveness.",
+                                        "One-time sessions are optimized for quick execution."
                                     ].map((tip, i) => (
                                         <li key={i} className="flex gap-3 text-[10px] text-gray-500 font-bold italic uppercase leading-relaxed font-outfit">
                                             <div className="w-1.5 h-1.5 bg-cyan-500/40 rounded-full mt-1 shrink-0" />

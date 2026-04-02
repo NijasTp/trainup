@@ -179,7 +179,7 @@ export const SiteHeader: React.FC = () => {
 
   const navLinks = [
     { 
-      name: user?.assignedTrainerDetails ? "Trainer" : "Trainers", 
+      name: user?.assignedTrainerDetails ? "Coach" : "Coaches", 
       path: user?.assignedTrainerDetails ? ROUTES.MY_TRAINER_PROFILE : ROUTES.USER_TRAINER_PAGE, 
       icon: Users, 
       show: true 
@@ -191,7 +191,7 @@ export const SiteHeader: React.FC = () => {
       show: true 
     },
     { name: "Workouts", path: ROUTES.USER_WORKOUTS_PAGE, icon: Activity, show: true },
-    { name: "My Trainer Profile", path: ROUTES.MY_TRAINER_PROFILE, icon: MessageSquare, show: !!user?.assignedTrainerDetails },
+    { name: "My Coach", path: ROUTES.MY_TRAINER_PROFILE, icon: MessageSquare, show: !!user?.assignedTrainerDetails },
   ].filter(link => link.show)
 
 
@@ -328,7 +328,7 @@ export const SiteHeader: React.FC = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:text-cyan-400 transition-colors" onClick={() => navigate("/my-subscriptions")}>
                   <CreditCard className="h-4 w-4 mr-2" />
-                  <span className="text-xs font-bold uppercase italic tracking-tighter">My Subscriptions</span>
+                  <span className="text-xs font-bold uppercase italic tracking-tighter">Billing & Plans</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-white/5 focus:bg-white/5 focus:text-cyan-400 transition-colors" onClick={() => navigate("/settings")}>
                   <Settings className="h-4 w-4 mr-2" />

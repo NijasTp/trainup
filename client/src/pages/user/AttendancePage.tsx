@@ -9,7 +9,6 @@ import {
   Shield,
   Zap,
   Target,
-  Trophy,
   AlertCircle
 } from "lucide-react";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
@@ -31,7 +30,8 @@ import {
   isSameDay, 
   eachDayOfInterval,
   isFuture,
-  isToday
+  isToday,
+  startOfDay
 } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,9 +45,19 @@ export default function AttendancePage() {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [joinDate, setJoinDate] = useState<Date | null>(null);
+
+  const calculateActiveDays = () => {
+    const activeDates = new Set<string>();
+    gymAttendance.forEach(a => activeDates.add(format(new Date(a.date), "yyyy-MM-dd")));
+    workoutSessions.forEach(s => {
+      if (s.isDone) activeDates.add(format(new Date(s.date), "yyyy-MM-dd"));
+    });
+    return activeDates.size;
+  };
 
   useEffect(() => {
-    document.title = "TrainUp | Mission Logs";
+    document.title = "TrainUp | Attendance History";
     fetchLogs();
   }, []);
 
@@ -61,6 +71,7 @@ export default function AttendancePage() {
       ]);
       setGymAttendance(history.attendance || []);
       setWorkoutSessions(sessions.workoutSessions || sessions.sessions || []);
+      setJoinDate(gymData.userSubscription?.subscribedAt ? new Date(gymData.userSubscription.subscribedAt) : null);
     } catch (error) {
       console.error("Fetch logs error:", error);
     } finally {
@@ -73,6 +84,12 @@ export default function AttendancePage() {
 
   const getDayStatus = (day: Date) => {
     if (isFuture(day)) return 'future';
+    
+    // Check if before join date
+    if (joinDate && day < startOfDay(joinDate)) return 'preJoin';
+    
+    // Check for Sundays
+    if (day.getDay() === 0) return 'sunday';
 
     const attendedGym = gymAttendance.some(a => isSameDay(new Date(a.date), day));
     const sessions = workoutSessions.filter(s => isSameDay(new Date(s.date), day));
@@ -93,8 +110,10 @@ export default function AttendancePage() {
       case 'perfect': return 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] border-emerald-400';
       case 'active': return 'bg-cyan-500 shadow-[0_0_15px_rgba(34,211,238,0.3)] border-cyan-400';
       case 'missed': return 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] border-red-400';
+      case 'sunday': 
+      case 'preJoin': return 'bg-white/5 border-white/5 text-zinc-700';
       case 'future': return 'bg-transparent border-white/5 opacity-20';
-      default: return 'bg-yellow-500/20 border-yellow-500/20 text-yellow-500/40';
+      default: return 'bg-yellow-500/10 border-yellow-500/10 text-yellow-500/20';
     }
   };
 
@@ -108,16 +127,16 @@ export default function AttendancePage() {
     <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 pb-12 border-b border-white/5 relative z-20">
       <div className="space-y-4">
         <Link to={ROUTES.USER_GYM_DASHBOARD} className="group inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 hover:text-cyan-400 transition-all">
-          <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" /> HQ COMMAND / SECTOR LOGS
+          <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" /> GYM DASHBOARD / ATTENDANCE HISTORY
         </Link>
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-6">
           <div className="h-20 w-20 rounded-[2.5rem] bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-[0_0_40px_rgba(34,211,238,0.15)]">
             <CalendarDays className="h-10 w-10 text-cyan-400" />
           </div>
           <div className="space-y-1">
-             <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 text-[10px] font-black tracking-[0.3em] uppercase px-4 py-1 rounded-full mb-2">OPERATIONAL DATA</Badge>
+             <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 text-[10px] font-black tracking-[0.3em] uppercase px-4 py-1 rounded-full mb-2">GYM DATA</Badge>
              <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase italic leading-none text-white">
-               Mission <span className="text-zinc-500">History</span>
+               Attendance <span className="text-zinc-500">History</span>
              </h1>
           </div>
         </motion.div>
@@ -125,16 +144,8 @@ export default function AttendancePage() {
 
       <div className="flex items-center gap-12 bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-3xl">
         <div className="text-center">
-          <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Deployment Rank</p>
-          <div className="flex items-center gap-3">
-             <Trophy className="h-6 w-6 text-yellow-500" />
-             <p className="text-4xl font-black text-white italic">ELITE</p>
-          </div>
-        </div>
-        <div className="w-px h-12 bg-white/10" />
-        <div className="text-center">
-          <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Total Deployments</p>
-          <p className="text-5xl font-black text-cyan-400 italic tabular-nums">{gymAttendance.length}</p>
+          <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Total Active Days</p>
+          <p className="text-5xl font-black text-cyan-400 italic tabular-nums">{calculateActiveDays()}</p>
         </div>
       </div>
     </header>
@@ -182,7 +193,7 @@ export default function AttendancePage() {
         <div className="bg-black/60 border border-white/10 rounded-[3.5rem] p-4 md:p-8 backdrop-blur-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative group">
            <div className="grid grid-cols-7 gap-2 md:gap-4">
               {weekDays.map(day => (
-                <div key={day} className="py-4 text-center text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 italic">
+                <div key={day} className="py-4 text-center text-[10px] font-black uppercase tracking-widest text-zinc-600 italic">
                   {day}
                 </div>
               ))}
@@ -203,10 +214,9 @@ export default function AttendancePage() {
                        }
                     }}
                     className={cn(
-                      "relative aspect-square md:h-28 rounded-[1.5rem] md:rounded-[2.5rem] flex flex-col items-center justify-center cursor-pointer transition-all border-2 group/day overflow-hidden",
+                      "relative aspect-square md:h-20 rounded-2xl md:rounded-[1.5rem] flex flex-col items-center justify-center cursor-pointer transition-all border-2 group/day overflow-hidden",
                       !isCurrentMonth && "opacity-10 pointer-events-none",
-                      getStatusColor(status),
-                      isDayToday && "ring-2 ring-white/20"
+                      getStatusColor(status)
                     )}
                   >
                     {/* Interior Effects */}
@@ -254,7 +264,7 @@ export default function AttendancePage() {
         {isLoading ? (
            <div className="h-[60vh] flex flex-col items-center justify-center gap-6">
               <Activity className="h-12 w-12 text-cyan-400 animate-pulse" />
-              <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 animate-pulse">Decrypting Mission Logs...</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 animate-pulse">Loading Attendance History...</p>
            </div>
         ) : (
           <>
@@ -273,7 +283,7 @@ export default function AttendancePage() {
                    </div>
                    <div>
                       <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white">
-                        Deployment <span className="text-cyan-400">Report</span>
+                        Attendance <span className="text-cyan-400">Details</span>
                       </h2>
                       <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">{format(selectedDay, "EEEE, MMMM do yyyy")}</p>
                    </div>
@@ -281,7 +291,7 @@ export default function AttendancePage() {
 
                 <div className="p-10 space-y-8">
                    {/* Results */}
-                   <div className="grid grid-cols-2 gap-6">
+                   <div>
                       <div className="bg-white/5 border border-white/5 rounded-3xl p-6 space-y-3">
                          <div className="flex items-center justify-between">
                             <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Gym Attendance</span>
@@ -292,29 +302,17 @@ export default function AttendancePage() {
                             <p className="text-[10px] font-bold text-emerald-500/60 uppercase">Check-in: {format(new Date(getDayData(selectedDay).gym.checkInTime), "hh:mm a")}</p>
                          )}
                       </div>
-                      
-                      <div className="bg-white/5 border border-white/5 rounded-3xl p-6 space-y-3">
-                         <div className="flex items-center justify-between">
-                            <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">Tactical Protocol</span>
-                            <Zap size={14} className={cn(getDayData(selectedDay).sessions.some(s => s.isDone) ? "text-cyan-500" : "text-zinc-700")} />
-                         </div>
-                         <p className="text-xl font-black italic text-white uppercase">
-                            {getDayData(selectedDay).sessions.length > 0 
-                              ? `${getDayData(selectedDay).sessions.filter(s => s.isDone).length}/${getDayData(selectedDay).sessions.length} DONE` 
-                              : "Rest Day"}
-                         </p>
-                      </div>
                    </div>
 
                    {/* Session List */}
                    <div className="space-y-4">
                       <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                         <Activity size={12} className="text-cyan-500" /> Operational Details
+                         <Activity size={12} className="text-cyan-500" /> Day Activity
                       </h4>
                       {getDayData(selectedDay).sessions.length === 0 ? (
                          <div className="p-10 rounded-3xl bg-white/[0.02] border border-dashed border-white/5 flex flex-col items-center justify-center text-center gap-4">
                             <AlertCircle size={24} className="text-zinc-700" />
-                            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">No tactical protocols were assigned for this window.</p>
+                            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">No workouts were scheduled for this day.</p>
                          </div>
                       ) : (
                         getDayData(selectedDay).sessions.map((session, i) => (

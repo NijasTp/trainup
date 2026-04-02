@@ -40,7 +40,7 @@ export default function TrainerClients() {
       setError("Failed to load clients")
       toast.error("Failed to load clients")
       setIsLoading(false)
-    fetchClients()
+    }
   }, [page, search, planFilter])
 
   useEffect(() => {
@@ -295,4 +295,4 @@ export default function TrainerClients() {
       <SiteFooter />
     </div >
   )
-}
+}

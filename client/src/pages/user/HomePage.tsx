@@ -382,8 +382,8 @@ export default function HomePage() {
         <section className="space-y-6 pt-4">
           <div className="flex items-end justify-between px-2">
             <div className="space-y-1">
-              <h2 className="text-3xl font-black tracking-tight uppercase italic">Popular <span className="text-primary">Blueprints</span></h2>
-              <p className="text-gray-500 font-medium">Elite training templates by industry experts</p>
+              <h2 className="text-3xl font-black tracking-tight uppercase italic">Popular <span className="text-primary">Workout Plans</span></h2>
+              <p className="text-gray-500 font-medium">Expert training templates for every goal</p>
             </div>
             <Link to={ROUTES.USER_ADMIN_WORKOUT_TEMPLATES}>
               <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all">
@@ -421,7 +421,7 @@ export default function HomePage() {
 
                     <div className="absolute top-6 right-6">
                       <Badge className="bg-primary/20 backdrop-blur-md text-primary border-primary/20 text-[10px] font-black tracking-widest px-3 py-1 uppercase italic">
-                        {template.difficulty || "Expert"}
+                        {template.difficulty || "Pro"}
                       </Badge>
                     </div>
 
@@ -481,7 +481,7 @@ export default function HomePage() {
                       {user.assignedTrainerDetails.name}
                     </h2>
                     <p className="text-primary font-bold uppercase tracking-widest text-sm mt-1">
-                      {user.assignedTrainerDetails.specialization} • ELITE PERFORMANCE
+                      {user.assignedTrainerDetails.specialization} • PROFESSIONAL COACH
                     </p>
                   </div>
                   
@@ -730,7 +730,7 @@ export default function HomePage() {
                 <div className="p-2 bg-blue-500/20 rounded-xl">
                   <Dumbbell className="h-5 w-5 text-blue-500" />
                 </div>
-                <h3 className="text-xl font-bold">Today's Regimen</h3>
+                <h3 className="text-xl font-bold">Today's Schedule</h3>
               </div>
               <Link to="/workouts">
                 <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">

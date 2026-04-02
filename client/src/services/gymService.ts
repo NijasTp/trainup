@@ -237,12 +237,12 @@ export const getGymsForUser = async (page: number, limit: number, search: string
 };
 
 export const getGymForUser = async (id: string) => {
-  const res = await API.get(`${API_ROUTES.USER.GYMS}/${id}`);
+  const res = await API.get(API_ROUTES.USER.GYMS.DETAIL(id));
   return res.data;
 };
 
 export const getActiveSubscriptionPlans = async (gymId: string) => {
-  const res = await API.get(`${API_ROUTES.USER.GYMS}/${gymId}/subscription-plans`);
+  const res = await API.get(API_ROUTES.USER.GYMS.PLANS(gymId));
   return res.data;
 };
 

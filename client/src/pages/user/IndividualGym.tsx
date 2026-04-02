@@ -78,6 +78,13 @@ export default function IndividualGym() {
         );
     }
 
+    if (!gym) {
+        return (
+            <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+                 <p className="text-gray-500 font-black uppercase tracking-widest italic animate-pulse">Loading Gym Identity...</p>
+            </div>
+        );
+    }
     const allImages = [gym.profileImage, ...(gym.images || [])].filter(Boolean);
 
     return (
