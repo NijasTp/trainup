@@ -8,4 +8,5 @@ export interface IMessageRepository {
   getUnreadCount(userId: string): Promise<number>;
   getUnreadCountsBySender(receiverId: string): Promise<{ senderId: string; count: number }[]>;
   getConversations(userId: string): Promise<any[]>;
+  getRecipientsWithUnreadMessages(): Promise<{ recipientId: string; recipientRole: 'user' | 'trainer' }[]>;
 }

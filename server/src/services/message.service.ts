@@ -37,4 +37,8 @@ export class MessageService implements IMessageService {
   async getConversations(userId: string): Promise<any[]> {
     return await this._messageRepository.getConversations(userId);
   }
+
+  async getRecipientsWithUnreadMessages(): Promise<{ recipientId: string; recipientRole: 'user' | 'trainer' }[]> {
+    return await this._messageRepository.getRecipientsWithUnreadMessages();
+  }
 }

@@ -76,6 +76,25 @@ export class MessageRepository implements IMessageRepository {
     }));
   }
 
+  async getRecipientsWithUnreadMessages(): Promise<{ recipientId: string; recipientRole: 'user' | 'trainer' }[]> {
+    const result = await MessageModel.aggregate([
+      { $match: { readStatus: false } },
+      {
+        $group: {
+          _id: {
+            recipientId: '$receiverId',
+            senderType: '$senderType'
+          }
+        }
+      }
+    ]);
+
+    return result.map(item => ({
+      recipientId: item._id.recipientId.toString(),
+      recipientRole: item._id.senderType === 'user' ? 'trainer' : 'user'
+    }));
+  }
+
   async getConversations(userId: string): Promise<any[]> {
     const userObjectId = new Types.ObjectId(userId);
 

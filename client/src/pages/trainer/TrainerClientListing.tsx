@@ -23,7 +23,6 @@ export default function TrainerClients() {
   const [search, setSearch] = useState("")
   const [planFilter, setPlanFilter] = useState("all")
   const [page, setPage] = useState(1)
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
   const limit = 10
 
 
@@ -41,27 +40,13 @@ export default function TrainerClients() {
       setError("Failed to load clients")
       toast.error("Failed to load clients")
       setIsLoading(false)
-    }
+    fetchClients()
   }, [page, search, planFilter])
-
-  const fetchUnreadCounts = useCallback(async () => {
-    try {
-      const { data } = await API.get<{ counts: { senderId: string; count: number }[] }>("/trainer/chat/unread-counts");
-      const countsMap: Record<string, number> = {};
-      data.counts.forEach(item => {
-        countsMap[item.senderId] = item.count;
-      });
-      setUnreadCounts(countsMap);
-    } catch (err) {
-      console.error("Failed to fetch unread counts");
-    }
-  }, [])
 
   useEffect(() => {
     document.title = "TrainUp - My Clients"
     fetchClients()
-    fetchUnreadCounts()
-  }, [fetchClients, fetchUnreadCounts])
+  }, [fetchClients])
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
@@ -238,11 +223,6 @@ export default function TrainerClients() {
                             >
                                 <MessageSquare className="h-4 w-4 mr-2 text-cyan-400" />
                                 Send Message
-                                {unreadCounts[client._id] > 0 && (
-                                    <span className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 text-white text-[10px] font-black italic rounded-full flex items-center justify-center shadow-lg shadow-red-500/40">
-                                        {unreadCounts[client._id]}
-                                    </span>
-                                )}
                             </Button>
                             <div className="grid grid-cols-2 gap-3">
                                 <Button

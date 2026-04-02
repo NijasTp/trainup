@@ -37,4 +37,5 @@ export interface INotificationService {
   sendAttendanceReminders(targetTime: string): Promise<void>;
   processScheduledNotifications(): Promise<void>;
   cleanupExpiredNotifications(): Promise<void>;
+  getLatestNotification(recipientId: string, recipientRole: string, type: string): Promise<INotification | null>;
 }

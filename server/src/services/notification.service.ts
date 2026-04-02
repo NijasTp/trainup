@@ -325,4 +325,8 @@ export class NotificationService implements INotificationService {
       logger.error('Error sending attendance reminders:', error);
     }
   }
+
+  async getLatestNotification(recipientId: string, recipientRole: string, type: string): Promise<INotification | null> {
+    return await this._notificationRepo.getLatestNotification(recipientId, recipientRole, type);
+  }
 }

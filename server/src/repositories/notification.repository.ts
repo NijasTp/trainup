@@ -102,4 +102,12 @@ export class NotificationRepository implements INotificationRepository {
       isRead: false
     });
   }
+
+  async getLatestNotification(recipientId: string, recipientRole: string, type: string): Promise<INotification | null> {
+    return await NotificationModel.findOne({
+      recipientId: new Types.ObjectId(recipientId),
+      recipientRole,
+      type
+    }).sort({ createdAt: -1 }).lean() as INotification | null;
+  }
 }

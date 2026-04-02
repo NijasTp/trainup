@@ -62,7 +62,6 @@ export const SiteHeader: React.FC = () => {
 
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
-  const [chatUnreadCount, setChatUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentStreak, setCurrentStreak] = useState(user?.streak ?? 0)
@@ -82,16 +81,6 @@ export const SiteHeader: React.FC = () => {
       toast.error("Failed to load notifications")
     } finally {
       setLoading(false)
-    }
-  }, [])
-
-  const fetchChatUnread = useCallback(async () => {
-    try {
-      const { data } = await API.get<{ counts: { senderId: string; count: number }[] }>("/user/chat/unread-counts")
-      const totalUnread = data.counts.reduce((acc, curr) => acc + curr.count, 0)
-      setChatUnreadCount(totalUnread)
-    } catch (err) {
-      toast.error("Failed to load chat unread counts")
     }
   }, [])
 
@@ -151,7 +140,7 @@ export const SiteHeader: React.FC = () => {
     });
 
     socket.on("new_message", () => {
-      setChatUnreadCount(prev => prev + 1);
+      // Chat unread count polling removed. Notification will arrive via cron.
     });
 
     return () => {
@@ -165,13 +154,11 @@ export const SiteHeader: React.FC = () => {
       return
     }
     fetchNotifications()
-    fetchChatUnread()
     const interval = setInterval(() => {
       fetchNotifications();
-      fetchChatUnread();
     }, 30_000)
     return () => clearInterval(interval)
-  }, [user, navigate, fetchNotifications, fetchChatUnread])
+  }, [user, navigate, fetchNotifications])
 
   const handleSignOut = async () => {
     dispatch(logout())
@@ -240,11 +227,6 @@ export const SiteHeader: React.FC = () => {
                     "absolute -bottom-1 left-0 h-0.5 bg-cyan-500 transition-all",
                     isActive ? "w-full" : "w-0 group-hover:w-full"
                   )} />
-                  {link.name === "My Trainer" && chatUnreadCount > 0 && (
-                    <span className="absolute -top-3 -right-3 h-4 min-w-4 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1 shadow-lg shadow-red-500/20">
-                      {chatUnreadCount}
-                    </span>
-                  )}
                 </Link>
               )
             })}
@@ -393,9 +375,6 @@ export const SiteHeader: React.FC = () => {
                     )}
                   >
                     {link.name}
-                    {link.name === "My Trainer" && chatUnreadCount > 0 && (
-                      <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{chatUnreadCount}</span>
-                    )}
                   </Link>
                 ))}
                 <div className="h-px bg-white/5 my-4" />

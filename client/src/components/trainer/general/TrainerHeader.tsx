@@ -53,7 +53,6 @@ export default function TrainerSiteHeader() {
 
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
-    const [chatUnreadCount, setChatUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -68,16 +67,6 @@ export default function TrainerSiteHeader() {
             console.error("Failed to load notifications");
         } finally {
             setLoading(false);
-        }
-    }, []);
-
-    const fetchChatUnread = useCallback(async () => {
-        try {
-            const { data } = await API.get<{ counts: { senderId: string; count: number }[] }>("/trainer/chat/unread-counts");
-            const total = data.counts.reduce((acc, curr) => acc + curr.count, 0);
-            setChatUnreadCount(total);
-        } catch (err) {
-            console.error("Failed to load chat unread counts");
         }
     }, []);
 
@@ -118,13 +107,11 @@ export default function TrainerSiteHeader() {
     useEffect(() => {
         if (!trainer) return;
         fetchNotifications();
-        fetchChatUnread();
         const int = setInterval(() => {
             fetchNotifications();
-            fetchChatUnread();
         }, 30_000);
         return () => clearInterval(int);
-    }, [trainer, fetchNotifications, fetchChatUnread]);
+    }, [trainer, fetchNotifications]);
 
     const navLinks = [
         { name: "Dashboard", path: "/trainer/dashboard", icon: LayoutDashboard },
@@ -187,11 +174,6 @@ export default function TrainerSiteHeader() {
                             )}
                         >
                             Chats
-                            {chatUnreadCount > 0 && (
-                                <span className="absolute -top-3 -right-3 h-4 min-w-4 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1 shadow-lg shadow-red-500/20">
-                                    {chatUnreadCount}
-                                </span>
-                            )}
                         </Link>
                     </div>
 

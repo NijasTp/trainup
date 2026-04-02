@@ -15,4 +15,5 @@ export interface INotificationRepository {
   findExpiredNotifications(): Promise<INotification[]>;
   deleteExpired(): Promise<void>;
   getUnreadCount(recipientId: string, recipientRole: string): Promise<number>;
+  getLatestNotification(recipientId: string, recipientRole: string, type: string): Promise<INotification | null>;
 }
