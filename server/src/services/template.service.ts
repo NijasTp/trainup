@@ -134,7 +134,7 @@ export class TemplateService implements ITemplateService {
     }
 
     // User Template Management
-    async startWorkoutTemplate(userId: string, templateId: string): Promise<void> {
+    async startWorkoutTemplate(userId: string, templateId: string): Promise<{ sessionId?: string }> {
         const template = await this._workoutTemplateRepo.findById(templateId);
         if (!template) throw new AppError("Template not found", STATUS_CODE.NOT_FOUND);
 
@@ -155,7 +155,7 @@ export class TemplateService implements ITemplateService {
         });
 
         await this._userRepo.updateUser(userId, {
-            activeWorkoutTemplate: snapshot._id as any, // Link to snapshot instead of original template
+            activeWorkoutTemplate: snapshot._id as any,
             workoutTemplateStartDate: new Date()
         });
 
@@ -163,6 +163,31 @@ export class TemplateService implements ITemplateService {
         await this._workoutTemplateRepo.update(templateId, {
             popularityCount: (template.popularityCount || 0) + 1
         });
+
+        // For one-time sessions, create a WorkoutSession immediately
+        if (template.type === 'one-time' && template.days.length > 0) {
+            const templateDay = template.days[0];
+            const WorkoutSession = (await import('../models/workout.model')).default;
+            const session = await WorkoutSession.create({
+                userId: userId,
+                name: template.title,
+                givenBy: 'admin',
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toTimeString().split(' ')[0].substring(0, 5),
+                exercises: templateDay.exercises.map((ex: any) => ({
+                    id: ex.exerciseId || Math.random().toString(36).substring(7),
+                    name: ex.name,
+                    sets: ex.sets,
+                    reps: ex.reps,
+                    time: ex.time
+                })),
+                goal: template.goal,
+                isDone: false
+            });
+            return { sessionId: session._id.toString() };
+        }
+
+        return {};
     }
 
     async stopWorkoutTemplate(userId: string): Promise<void> {
@@ -218,6 +243,7 @@ export class TemplateService implements ITemplateService {
             type: t.type,
             repetitions: t.repetitions,
             difficultyLevel: t.difficultyLevel,
+            goal: t.goal,
             requiredEquipment: t.requiredEquipment,
             isPublic: t.isPublic,
             popularityCount: t.popularityCount,

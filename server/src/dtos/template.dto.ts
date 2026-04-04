@@ -21,6 +21,7 @@ export class CreateWorkoutTemplateRequestDto {
     type: 'one-time' | 'series';
     repetitions: number;
     difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
+    goal?: string;
     requiredEquipment: string[];
     isPublic: boolean;
     days: WorkoutTemplateDayDto[];

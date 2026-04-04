@@ -25,6 +25,7 @@ export interface IWorkoutTemplate extends Document {
     type: 'one-time' | 'series';
     repetitions: number; // How many times the 'days' cycle repeats
     difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
+    goal?: string;
     requiredEquipment: string[];
     isPublic: boolean;
     popularityCount: number;
@@ -70,6 +71,7 @@ const WorkoutTemplateSchema = new Schema<IWorkoutTemplate>(
         type: { type: String, enum: ['one-time', 'series'], required: true },
         repetitions: { type: Number, required: true, default: 1 },
         difficultyLevel: { type: String, enum: ['beginner', 'intermediate', 'advanced'], default: 'beginner' },
+        goal: { type: String },
         requiredEquipment: { type: [String], default: [] },
         isPublic: { type: Boolean, default: false },
         popularityCount: { type: Number, default: 0 },

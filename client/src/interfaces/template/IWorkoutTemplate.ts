@@ -4,31 +4,36 @@ export interface IWorkoutTemplateExercise {
     image?: string;
     sets: number;
     reps?: string;
+    weight?: string;
     time?: string;
-    allowWeight: boolean;
 }
 
 export interface IWorkoutTemplateDay {
     dayNumber: number;
-    name: string;
-    workoutName?: string;
+    name?: string;
     exercises: IWorkoutTemplateExercise[];
 }
 
 export interface IWorkoutTemplate {
     _id: string;
-    name: string; // The backend uses title, frontend seems to use name? Let's check.
     title: string;
     description: string;
-    duration: number;
-    goal: string;
-    equipment: boolean;
-    bodyType: string;
-    difficulty?: 'Beginner' | 'Intermediate' | 'Advanced';
-    image?: string;
-    equipmentNeeded?: string[];
+    image: string;
+    type: 'one-time' | 'series';
+    repetitions: number;
+    difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
+    goal?: string;
+    requiredEquipment: string[];
+    isPublic: boolean;
+    popularityCount: number;
+    averageRating: number;
+    reviewCount: number;
     days: IWorkoutTemplateDay[];
-    createdBy: string;
+    createdById: string;
+    createdByType: 'Admin' | 'Trainer' | 'Gym';
+    gymId?: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface WorkoutTemplatesResponse {

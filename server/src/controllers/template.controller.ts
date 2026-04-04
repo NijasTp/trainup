@@ -130,8 +130,8 @@ export class TemplateController {
             const userId = (req.user as JwtPayload).id;
             const { templateId } = req.body;
             if (!templateId) throw new AppError("Template ID is required", STATUS_CODE.BAD_REQUEST);
-            await this._templateService.startWorkoutTemplate(userId, templateId);
-            res.status(STATUS_CODE.OK).json({ message: "Workout template started" });
+            const result = await this._templateService.startWorkoutTemplate(userId, templateId);
+            res.status(STATUS_CODE.OK).json({ message: "Workout template started", ...result });
         } catch (err) {
             next(err);
         }

@@ -190,7 +190,7 @@ export default function AttendancePage() {
            </div>
         </div>
 
-        <div className="bg-black/60 border border-white/10 rounded-[3.5rem] p-4 md:p-8 backdrop-blur-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative group">
+        <div className="max-w-4xl mx-auto bg-black/60 border border-white/10 rounded-[3.5rem] p-4 md:p-8 backdrop-blur-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative group">
            <div className="grid grid-cols-7 gap-2 md:gap-4">
               {weekDays.map(day => (
                 <div key={day} className="py-4 text-center text-[10px] font-black uppercase tracking-normal text-zinc-600 italic">
@@ -225,7 +225,7 @@ export default function AttendancePage() {
                     {/* Deployment Markings */}
                     <span className={cn(
                       "text-xl md:text-3xl font-black italic tabular-nums relative z-10",
-                      status === 'neutral' ? "text-white/20" : "text-black"
+                      status === 'neutral' ? "text-yellow-500/40" : status === 'sunday' || status === 'preJoin' ? "text-zinc-600" : "text-black"
                     )}>
                       {format(day, "d")}
                     </span>
