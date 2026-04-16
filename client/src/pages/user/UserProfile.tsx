@@ -1,18 +1,12 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Award,
   Flame,
-  Lock,
   Mail,
   Phone,
-  Trophy,
   User,
-  CreditCard,
   ArrowRight,
-  Eye,
   Activity,
   Target,
   Scale,
@@ -26,13 +20,11 @@ import { getProfilePageData } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import type { UserProfile } from "@/interfaces/user/profileInterface";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/redux/store";
 import API from "@/lib/axios";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import Aurora from "@/components/ui/Aurora";
-import MagicBento from './MagicBento';
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -41,7 +33,6 @@ export default function Profile() {
   const [isTransactionsLoading, setIsTransactionsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate()
-  const reduxUser = useSelector((state: RootState) => state.userAuth.user);
 
   useEffect(() => {
     document.title = "TrainUp - Your Profile";
@@ -69,7 +60,7 @@ export default function Profile() {
   async function fetchRecentTransactions() {
     setIsTransactionsLoading(true);
     try {
-      const response = await API.get('/payment/transactions?limit=5');
+      const response = await API.get('/payment/transactions?limit=2');
       setTransactions(response.data.transactions || []);
     } catch (err: any) {
       console.error("Failed to fetch transactions:", err);
@@ -201,9 +192,6 @@ export default function Profile() {
                   </p>
                 </div>
               </div>
-
-              {/* Achievements */}
-              
             </div>
 
             {/* Right Column: Info & Transactions */}
@@ -242,18 +230,28 @@ export default function Profile() {
                     profile.activeSubscriptions.map((sub: any, idx: number) => (
                       <div key={idx} className="p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-primary/30 transition-all group">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-black italic uppercase text-white group-hover:text-primary transition-colors">{sub.planName} Plan</span>
+                          <span className="text-sm font-black italic uppercase text-white group-hover:text-primary transition-colors">
+                            {sub.subscriptionType === 'gym' ? (sub.gymId?.name || 'Gym') : (sub.trainerId?.name || 'Trainer')}
+                          </span>
                           <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-[8px] font-black uppercase">Active</Badge>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                          <Calendar className="h-3 w-3" />
-                          <span>Renews: {formatDate(sub.expiryDate)}</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-tight">
+                            <Badge variant="outline" className="text-[8px] py-0 h-4 border-white/10 uppercase">
+                              {sub.subscriptionType}
+                            </Badge>
+                            <span>{sub.planId?.name || sub.planType || 'Premium'} Plan</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                            <Calendar className="h-3 w-3" />
+                            <span>{formatDate(sub.expiryDate || sub.endDate)}</span>
+                          </div>
                         </div>
                       </div>
                     ))
                   ) : (
                     <div className="p-6 text-center bg-black/20 rounded-2xl border border-dashed border-white/5">
-                      <p className="text-xs text-gray-500 italic">No active subscriptions logic implemented yet.</p>
+                      <p className="text-xs text-gray-500 italic">No active subscriptions found.</p>
                       <Button variant="link" onClick={() => navigate('/trainers')} className="text-primary h-auto p-0 text-xs mt-2 uppercase font-bold">Browse Plans</Button>
                     </div>
                   )}
@@ -273,18 +271,34 @@ export default function Profile() {
                     <div className="flex justify-center py-4"><div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" /></div>
                   ) : transactions.length > 0 ? (
                     transactions.map((tx: any) => (
-                      <div key={tx._id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 group hover:border-white/10 transition-colors">
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter truncate w-32">
-                            {tx.trainerId?.name || "Premium Plan"}
-                          </span>
-                          <span className="text-[10px] text-gray-500">{formatDate(tx.createdAt)}</span>
+                      <div key={tx._id} className="flex flex-col gap-2 p-4 bg-white/5 rounded-2xl border border-white/5 group hover:border-white/10 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter truncate w-32">
+                              {tx.type === 'gym' ? (tx.gymId?.name || "Gym Plan") : (tx.trainerId?.name || "Trainer Plan")}
+                            </span>
+                            <span className="text-[10px] text-gray-500 font-mono">{formatDate(tx.createdAt)}</span>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-black italic text-sm">₹{tx.amount}</p>
+                            <Badge className={cn(
+                              "text-[8px] h-4 font-black uppercase",
+                              tx.transactionType === 'credit' ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
+                            )}>
+                              {tx.transactionType || 'DEBIT'}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-black italic">₹{tx.amount}</p>
-                          <span className={getStatusColor(tx.status) + " text-[8px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-widest"}>
+                        {tx.description && (
+                          <p className="text-[10px] text-gray-500 italic line-clamp-1 border-t border-white/5 pt-2">
+                            {tx.description}
+                          </p>
+                        )}
+                        <div className="flex justify-between items-center mt-1">
+                           <Badge className={getStatusColor(tx.status) + " text-[8px] px-2 py-0 h-4 border font-bold uppercase tracking-widest"}>
                             {tx.status}
-                          </span>
+                          </Badge>
+                          <span className="text-[8px] text-gray-600 font-bold uppercase">{tx.type}</span>
                         </div>
                       </div>
                     ))

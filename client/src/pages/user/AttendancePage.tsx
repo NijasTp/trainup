@@ -102,18 +102,18 @@ export default function AttendancePage() {
     if (anyWorkoutDone || attendedGym) return 'active'; // Cyan/Green
     if (hasWorkout && !anyWorkoutDone && !isToday(day)) return 'missed'; // Red
     
-    return 'neutral'; // Yellow (Rest)
+    return 'neutral'; // Subtle Rest
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'perfect': return 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] border-emerald-400';
-      case 'active': return 'bg-cyan-500 shadow-[0_0_15px_rgba(34,211,238,0.3)] border-cyan-400';
-      case 'missed': return 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] border-red-400';
+      case 'perfect': return 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] border-emerald-400 text-black';
+      case 'active': return 'bg-cyan-500 shadow-[0_0_15px_rgba(34,211,238,0.3)] border-cyan-400 text-black';
+      case 'missed': return 'bg-red-500/20 border-red-500/30 text-red-500 shadow-[inset_0_0_10px_rgba(239,68,68,0.1)]';
       case 'sunday': 
-      case 'preJoin': return 'bg-white/5 border-white/5 text-zinc-700';
-      case 'future': return 'bg-transparent border-white/5 opacity-20';
-      default: return 'bg-yellow-500/10 border-yellow-500/10 text-yellow-500/20';
+      case 'preJoin': return 'bg-white/5 border-white/5 text-zinc-800 opacity-40';
+      case 'future': return 'bg-transparent border-white/5 opacity-5';
+      default: return 'bg-zinc-900 border-white/5 text-zinc-600';
     }
   };
 
@@ -124,28 +124,27 @@ export default function AttendancePage() {
   };
 
   const renderHeader = () => (
-    <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 pb-12 border-b border-white/5 relative z-20">
+    <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-8 border-b border-white/5 relative z-20">
       <div className="space-y-4">
         <Link to={ROUTES.USER_GYM_DASHBOARD} className="group inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 hover:text-cyan-400 transition-all">
-          <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" /> GYM DASHBOARD / ATTENDANCE HISTORY
+          <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" /> GYM / ATTENDANCE
         </Link>
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-6">
-          <div className="h-20 w-20 rounded-[2.5rem] bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-[0_0_40px_rgba(34,211,238,0.15)]">
-            <CalendarDays className="h-10 w-10 text-cyan-400" />
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-4">
+          <div className="h-14 w-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+            <CalendarDays className="h-7 w-7 text-cyan-400" />
           </div>
-          <div className="space-y-1">
-             <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 text-[10px] font-black tracking-[0.3em] uppercase px-4 py-1 rounded-full mb-2">GYM DATA</Badge>
-             <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase italic leading-none text-white">
-               Attendance <span className="text-zinc-500">History</span>
+          <div className="space-y-0.5">
+             <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none text-white">
+               Attendance <span className="text-zinc-500">Log</span>
              </h1>
           </div>
         </motion.div>
       </div>
 
-      <div className="flex items-center gap-12 bg-white/5 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-3xl">
+      <div className="flex items-center gap-8 bg-white/5 border border-white/10 rounded-[2rem] p-6 backdrop-blur-3xl">
         <div className="text-center">
-          <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Total Active Days</p>
-          <p className="text-5xl font-black text-cyan-400 italic tabular-nums">{calculateActiveDays()}</p>
+          <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">Total Active Days</p>
+          <p className="text-3xl font-black text-cyan-400 italic tabular-nums">{calculateActiveDays()}</p>
         </div>
       </div>
     </header>
@@ -161,39 +160,39 @@ export default function AttendancePage() {
     const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
            <div className="flex items-center gap-4">
-              <Button onClick={prevMonth} variant="ghost" className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 hover:bg-cyan-500 hover:text-black transition-all">
-                <ChevronLeft size={24} />
+              <Button onClick={prevMonth} variant="ghost" className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 hover:bg-cyan-500 hover:text-black transition-all">
+                <ChevronLeft size={18} />
               </Button>
-              <h2 className="text-3xl font-black uppercase italic tracking-widest text-white">
+              <h2 className="text-xl font-black uppercase italic tracking-widest text-white">
                 {format(currentMonth, "MMMM / yyyy")}
               </h2>
-              <Button onClick={nextMonth} variant="ghost" className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 hover:bg-cyan-500 hover:text-black transition-all">
-                <ChevronRight size={24} />
+              <Button onClick={nextMonth} variant="ghost" className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 hover:bg-cyan-500 hover:text-black transition-all">
+                <ChevronRight size={18} />
               </Button>
            </div>
            
-           <div className="hidden md:flex items-center gap-6">
+           <div className="hidden md:flex items-center gap-4">
               {[
                 { label: 'Perfect', color: 'bg-emerald-500' },
                 { label: 'Active', color: 'bg-cyan-500' },
-                { label: 'Missed', color: 'bg-red-500' },
-                { label: 'Rest', color: 'bg-yellow-500/20 border-yellow-500/20' }
+                { label: 'Missed', color: 'bg-red-500/40 border-red-500/40' },
+                { label: 'Rest', color: 'bg-zinc-800' }
               ].map(item => (
-                <div key={item.label} className="flex items-center gap-2">
-                   <div className={cn("w-3 h-3 rounded-full", item.color)} />
-                   <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{item.label}</span>
+                <div key={item.label} className="flex items-center gap-1.5">
+                   <div className={cn("w-2 h-2 rounded-full", item.color)} />
+                   <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600">{item.label}</span>
                 </div>
               ))}
            </div>
         </div>
 
-        <div className="max-w-4xl mx-auto bg-black/60 border border-white/10 rounded-[3.5rem] p-4 md:p-8 backdrop-blur-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative group">
-           <div className="grid grid-cols-7 gap-2 md:gap-4">
+        <div className="max-w-2xl mx-auto bg-white/5 border border-white/10 rounded-[2.5rem] p-6 backdrop-blur-3xl shadow-2xl relative group">
+           <div className="grid grid-cols-7 gap-2">
               {weekDays.map(day => (
-                <div key={day} className="py-4 text-center text-[10px] font-black uppercase tracking-normal text-zinc-600 italic">
+                <div key={day} className="py-2 text-center text-[9px] font-black uppercase tracking-normal text-zinc-600 italic">
                   {day}
                 </div>
               ))}
@@ -206,7 +205,7 @@ export default function AttendancePage() {
                 return (
                   <motion.div
                     key={i}
-                    whileHover={status !== 'future' ? { scale: 1.05, y: -5 } : {}}
+                    whileHover={status !== 'future' ? { scale: 1.1, y: -2 } : {}}
                     onClick={() => {
                        if (status !== 'future') {
                          setSelectedDay(day);
@@ -214,32 +213,26 @@ export default function AttendancePage() {
                        }
                     }}
                     className={cn(
-                      "relative aspect-square w-full rounded-2xl md:rounded-[1.5rem] flex flex-col items-center justify-center cursor-pointer transition-all border-2 group/day overflow-hidden",
-                      !isCurrentMonth && "opacity-10 pointer-events-none",
+                      "relative aspect-square w-full rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all border-2 group/day overflow-hidden",
+                      !isCurrentMonth && "opacity-5 pointer-events-none",
                       getStatusColor(status)
                     )}
                   >
-                    {/* Interior Effects */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover/day:opacity-100 transition-opacity" />
-                    
-                    {/* Deployment Markings */}
                     <span className={cn(
-                      "text-xl md:text-3xl font-black italic tabular-nums relative z-10",
-                      status === 'neutral' ? "text-yellow-500/40" : status === 'sunday' || status === 'preJoin' ? "text-zinc-600" : "text-black"
+                      "text-sm font-black italic tabular-nums relative z-10",
+                      (status === 'perfect' || status === 'active') ? "text-black" : ""
                     )}>
                       {format(day, "d")}
                     </span>
 
                     {status === 'perfect' && (
-                       <div className="absolute top-2 right-2">
-                          <Zap size={10} className="text-black fill-black" />
+                       <div className="absolute top-1 right-1">
+                          <Zap size={8} className="text-black fill-black" />
                        </div>
                     )}
                     
-                    {isDayToday && (
-                      <div className="absolute bottom-2 px-2 py-0.5 rounded-full bg-white/20 text-[6px] font-black uppercase tracking-tighter text-white">
-                        Current
-                      </div>
+                    {isDayToday && !isFuture(day) && (
+                      <div className="absolute inset-0 border-2 border-white/50 rounded-xl" />
                     )}
                   </motion.div>
                 );

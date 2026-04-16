@@ -151,8 +151,13 @@ export class UserTrainerController {
     async getUserSessions(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = (req.user as JwtPayload).id
-            const sessions = await this._slotService.getUserSessions(userId)
-            res.status(STATUS_CODE.OK).json({ sessions })
+            const type = (req.query.type as 'upcoming' | 'past') || 'upcoming'
+            const page = Number(req.query.page) || 1
+            const limit = Number(req.query.limit) || 10
+            const date = req.query.date as string | undefined
+
+            const { sessions, total } = await this._slotService.getUserSessionsPaginated(userId, type, page, limit, date)
+            res.status(STATUS_CODE.OK).json({ sessions, total, page, limit })
         } catch (err) {
             logger.error('Error fetching user sessions:', err)
             next(err)

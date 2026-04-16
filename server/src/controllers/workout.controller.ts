@@ -226,4 +226,28 @@ export class WorkoutController {
       next(err);
     }
   }
+
+  async getWorkoutHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const jwtUser = req.user as JwtPayload;
+      const {
+        page = '1',
+        limit = '20',
+        source
+      } = req.query as {
+        page?: string;
+        limit?: string;
+        source?: string;
+      };
+      const result = await this._workoutService.getWorkoutHistory(
+        jwtUser.id,
+        parseInt(page, 10),
+        parseInt(limit, 10),
+        source
+      );
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
 }

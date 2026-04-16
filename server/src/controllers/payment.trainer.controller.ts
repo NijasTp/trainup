@@ -163,6 +163,8 @@ export class PaymentTrainerController {
                         paymentIntentId: session.payment_intent as string,
                         status: 'completed',
                         provider: 'stripe',
+                        transactionType: 'debit',
+                        description: `Premium Fitness Plan - ${metadata.trainerName || 'Trainer'}`,
                         createdAt: new Date(),
                     });
 

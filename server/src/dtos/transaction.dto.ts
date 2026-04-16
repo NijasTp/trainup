@@ -1,6 +1,7 @@
 import { ITransaction } from '../models/transaction.model';
 import { IGymTransaction } from '../models/gymTransaction.model';
 
+
 export interface ITransactionDTO {
     _id: string;
     userId: { _id?: string; name: string; email: string } | string;
@@ -16,6 +17,8 @@ export interface ITransactionDTO {
     status: 'pending' | 'completed' | 'failed' | 'cancelled';
     planType?: string;
     type: 'trainer' | 'gym';
+    transactionType: 'debit' | 'credit';
+    description?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -47,6 +50,8 @@ export class TransactionDto {
             status: transaction.status,
             planType: transaction.planType,
             type: 'trainer',
+            transactionType: transaction.transactionType || 'debit',
+            description: transaction.description || `Trainer Subscription - ${transaction.planType?.toUpperCase()}`,
             createdAt: transaction.createdAt,
             updatedAt: transaction.updatedAt
         };
@@ -76,6 +81,8 @@ export class TransactionDto {
             status: transaction.status as any,
             planType: planObj?.name || 'Gym Plan',
             type: 'gym',
+            transactionType: (transaction as any).transactionType || 'debit',
+            description: (transaction as any).description || `Gym Membership - ${planObj?.name || 'Standard'}`,
             createdAt: transaction.createdAt,
             updatedAt: transaction.updatedAt
         };

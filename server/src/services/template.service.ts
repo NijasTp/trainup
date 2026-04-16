@@ -182,7 +182,9 @@ export class TemplateService implements ITemplateService {
                     time: ex.time
                 })),
                 goal: template.goal,
-                isDone: false
+                isDone: false,
+                source: 'template',
+                templateId: template._id
             });
             return { sessionId: session._id.toString() };
         }

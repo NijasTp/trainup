@@ -20,7 +20,11 @@ import {
     MoreHorizontal,
     Trash2,
     Paperclip,
-    Mic
+    Mic,
+    X,
+    Play,
+    StopCircle,
+    CheckCircle2
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -30,14 +34,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import API from "@/lib/axios";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import io, { Socket } from 'socket.io-client';
 import { debounce } from 'lodash';
 import Aurora from "@/components/ui/Aurora";
+import { motion, AnimatePresence } from "framer-motion";
 
 import type { Message, ChatTrainer as Trainer, UserPlan } from "@/interfaces/user/IUserChat";
 
 export default function ChatPage() {
+    const navigate = useNavigate();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -67,7 +73,7 @@ export default function ChatPage() {
     const shouldSendRef = useRef(false);
 
     useEffect(() => {
-        document.title = "TrainUp - Chat";
+        document.title = "TrainUp - Private Messaging";
         initializeChat();
         return () => {
             if (socketRef.current) {
@@ -83,15 +89,13 @@ export default function ChatPage() {
         scrollToBottom();
     }, [messages]);
 
-
-
     const initializeChat = async () => {
         try {
             const planResponse = await API.get("/user/plan");
             const plan = planResponse.data.plan;
 
             if (!plan || plan.planType === 'basic') {
-                setError("Chat is not available with Basic plan. Please upgrade to Premium or Pro");
+                setError("Messaging is reserved for Premium & Pro members. Elevate your training to unlock direct access.");
                 setIsLoading(false);
                 return;
             }
@@ -102,7 +106,7 @@ export default function ChatPage() {
             const trainerData = trainerResponse.data.trainer;
 
             if (!trainerData) {
-                setError("No trainer assigned. Please contact support.");
+                setError("No trainer assigned. Connect with a professional to begin your journey.");
                 setIsLoading(false);
                 return;
             }
@@ -113,7 +117,6 @@ export default function ChatPage() {
             const messagesResponse = await API.get(`/user/chat/messages/${fetchedTrainerId}`);
             setMessages(messagesResponse.data.messages);
 
-            // Mark messages as read
             await API.put(`/user/chat/read/${fetchedTrainerId}`);
 
             socketRef.current = io(import.meta.env.VITE_API_URL, {
@@ -124,39 +127,28 @@ export default function ChatPage() {
             socketRef.current.emit('join_chat', { trainerId: fetchedTrainerId });
 
             socketRef.current.on('new_message', (message: Message) => {
-                console.log('Received new_message:', message);
                 setMessages(prev => {
-                    if (prev.some(m => m._id === message._id)) {
-                        return prev;
-                    }
+                    if (prev.some(m => m._id === message._id)) return prev;
                     return [...prev, message];
                 });
             });
 
             socketRef.current.on('typing', ({ userId, isTyping }) => {
-                console.log('Typing event received:', { userId, isTyping });
                 if (userId === fetchedTrainerId) {
                     setIsOtherUserTyping(isTyping);
                 }
             });
 
             socketRef.current.on('message_limit_reached', () => {
-                toast.error("You've reached your monthly message limit. Upgrade to Pro for unlimited messages.");
+                toast.error("Message Limit Reached", {
+                    description: "Upgrade to Pro for unlimited strategic communication."
+                });
             });
 
-            socketRef.current.on('error', ({ message }: { message: string }) => {
-                console.log('Socket error:', message);
-                toast.error(message);
-            });
-
-            socketRef.current.on('connect_error', (err) => {
-                console.error('Socket connect error:', err);
-                toast.error('Chat connection failed');
-            });
             setIsLoading(false);
         } catch (err: any) {
             console.error("Failed to initialize chat:", err);
-            setError(err.response?.data?.message || "Failed to load chat. Please ensure you have an assigned trainer.");
+            setError(err.response?.data?.message || "Secure connection failed. Please try again.");
             setIsLoading(false);
         }
     };
@@ -164,17 +156,22 @@ export default function ChatPage() {
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error("File size should be less than 5MB");
+            if (file.size > 10 * 1024 * 1024) {
+                toast.error("File oversized. Limit is 10MB.");
                 return;
             }
-            if (!file.type.startsWith('image/')) {
-                toast.error("Only image files are allowed");
+            if (!file.type.startsWith('image/') && file.type !== 'application/pdf' && !file.type.startsWith('audio/')) {
+                toast.error("Format not supported. Use images, PDFs, or audio.");
                 return;
             }
             setSelectedFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
-            setIsPreviewOpen(true);
+            if (file.type.startsWith('image/')) {
+                setPreviewUrl(URL.createObjectURL(file));
+                setIsPreviewOpen(true);
+            } else {
+                // For PDF or Audio, we can just send it or show a different preview
+                sendMessage(); 
+            }
         }
     };
 
@@ -185,18 +182,12 @@ export default function ChatPage() {
             chunksRef.current = [];
 
             mediaRecorderRef.current.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    chunksRef.current.push(e.data);
-                }
+                if (e.data.size > 0) chunksRef.current.push(e.data);
             };
 
             mediaRecorderRef.current.onstop = () => {
                 const blob = new Blob(chunksRef.current, { type: 'audio/webm;codecs=opus' });
                 setAudioBlob(blob);
-                if (shouldSendRef.current) {
-                    sendMessage(blob);
-                    shouldSendRef.current = false;
-                }
                 stream.getTracks().forEach(track => track.stop());
             };
 
@@ -207,8 +198,8 @@ export default function ChatPage() {
                 setRecordingDuration(prev => prev + 1);
             }, 1000);
         } catch (err) {
-            console.error("Error accessing microphone:", err);
-            toast.error("Could not access microphone");
+            console.error("Mic access denied:", err);
+            toast.error("Microphone access required for audio memos.");
         }
     };
 
@@ -216,28 +207,24 @@ export default function ChatPage() {
         if (mediaRecorderRef.current && isRecording) {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-            }
+            if (timerRef.current) clearInterval(timerRef.current);
         }
     };
 
-    const cancelRecording = () => {
-        if (mediaRecorderRef.current && isRecording) {
-            mediaRecorderRef.current.stop();
+    const discardAudio = () => {
+        setAudioBlob(null);
+        chunksRef.current = [];
+        if (isRecording) {
+            mediaRecorderRef.current?.stop();
             setIsRecording(false);
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-            }
-            setAudioBlob(null);
-            chunksRef.current = [];
+            if (timerRef.current) clearInterval(timerRef.current);
         }
     };
 
     const uploadFile = async (file: File | Blob): Promise<string> => {
         const formData = new FormData();
         if (file instanceof Blob && !(file instanceof File)) {
-            formData.append('file', file, 'audio.webm');
+            formData.append('file', file, 'memo.webm');
         } else {
             formData.append('file', file);
         }
@@ -253,13 +240,8 @@ export default function ChatPage() {
 
         if ((!newMessage.trim() && !selectedFile && !audioToUpload) || !socketRef.current || !trainer) return;
 
-        if (newMessage.length > 1000) {
-            toast.error("Message cannot exceed 1000 characters");
-            return;
-        }
-
         if (userPlan?.planType === 'premium' && userPlan.messagesLeft <= 0) {
-            toast.error("You've reached your monthly message limit. Upgrade to Pro for unlimited messages.");
+            toast.error("Monthly quota exhausted.");
             return;
         }
 
@@ -297,22 +279,19 @@ export default function ChatPage() {
             setAudioBlob(null);
             handleStopTyping();
         } catch (err: any) {
-            console.error("Failed to send message:", err);
-            toast.error("Failed to send message");
+            console.error("Message transmission failed:", err);
+            toast.error("Encryption error. Message not delivered.");
         } finally {
             setIsSending(false);
         }
     };
 
-
     const deleteMessage = async (messageId: string) => {
         try {
             await API.delete(`/user/chat/message/${messageId}`);
             setMessages(prev => prev.filter(m => m._id !== messageId));
-            toast.success("Message deleted");
         } catch (err: any) {
-            console.error("Failed to delete message:", err);
-            toast.error("Failed to delete message");
+            toast.error("Recall failed.");
         }
     };
 
@@ -333,7 +312,7 @@ export default function ChatPage() {
     };
 
     const formatTime = (dateString: string) => {
-        return new Date(dateString).toLocaleTimeString('en-US', {
+        return new Date(dateString).toLocaleTimeString('en-IN', {
             hour: 'numeric',
             minute: '2-digit',
             hour12: true
@@ -352,38 +331,20 @@ export default function ChatPage() {
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
 
-        if (date.toDateString() === today.toDateString()) {
-            return 'Today';
-        } else if (date.toDateString() === yesterday.toDateString()) {
-            return 'Yesterday';
-        } else {
-            return date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-            });
-        }
+        if (date.toDateString() === today.toDateString()) return 'Today';
+        if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+        return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     if (isLoading) {
         return (
             <div className="relative h-screen flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-                {/* Background Visuals */}
                 <div className="absolute inset-0 z-0">
-                    <Aurora
-                        colorStops={["#020617", "#0f172a", "#020617"]}
-                        amplitude={1.1}
-                        blend={0.6}
-                    />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                    <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
                 </div>
-                <div className="flex-1 flex items-center justify-center relative z-10">
-                    <div className="text-center space-y-4">
-                        <div className="relative">
-                            <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                        </div>
-                        <p className="text-muted-foreground font-medium">Loading chat...</p>
-                    </div>
+                <div className="flex-1 flex flex-col items-center justify-center relative z-10 space-y-4">
+                    <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                    <p className="text-gray-400 font-bold uppercase tracking-widest animate-pulse">Establishing Secure Uplink...</p>
                 </div>
             </div>
         );
@@ -392,28 +353,19 @@ export default function ChatPage() {
     if (error) {
         return (
             <div className="relative h-screen flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-                {/* Background Visuals */}
                 <div className="absolute inset-0 z-0">
-                    <Aurora
-                        colorStops={["#020617", "#0f172a", "#020617"]}
-                        amplitude={1.1}
-                        blend={0.6}
-                    />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                    <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
                 </div>
                 <div className="flex-1 flex items-center justify-center relative z-10">
-                    <div className="text-center space-y-6 p-8">
-                        <AlertCircle className="h-16 w-16 mx-auto text-destructive/50" />
+                    <div className="text-center space-y-8 p-8 max-w-md">
+                        <AlertCircle className="h-20 w-20 mx-auto text-red-500/50" />
                         <div className="space-y-2">
-                            <h3 className="text-2xl font-bold">Chat Unavailable</h3>
-                            <p className="text-muted-foreground">{error}</p>
+                            <h3 className="text-3xl font-black italic uppercase">Access Denied</h3>
+                            <p className="text-gray-400 font-medium leading-relaxed">{error}</p>
                         </div>
-                        <Link to="/my-trainer/profile">
-                            <Button>
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                Back to Trainer Profile
-                            </Button>
-                        </Link>
+                        <Button onClick={() => navigate("/my-trainer")} className="bg-white text-black hover:bg-gray-200 px-8 h-12 rounded-xl font-black italic uppercase tracking-widest text-xs shadow-2xl">
+                            <ArrowLeft className="h-4 w-4 mr-2" /> Trainer Portal
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -422,319 +374,328 @@ export default function ChatPage() {
 
     return (
         <div className="relative h-screen flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-            {/* Background Visuals */}
             <div className="absolute inset-0 z-0">
-                <Aurora
-                    colorStops={["#020617", "#0f172a", "#020617"]}
-                    amplitude={1.1}
-                    blend={0.6}
-                />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
             </div>
 
-            {/* Fixed Header */}
-            <div className="relative z-10 border-b bg-card/5 backdrop-blur-md">
-                <div className="flex items-center justify-between p-4">
-                    <div className="flex items-center space-x-3">
-                        <Link to="/my-trainer/profile">
-                            <Button variant="ghost" size="icon">
-                                <ArrowLeft className="h-4 w-4" />
-                            </Button>
-                        </Link>
-                        <Avatar className="h-10 w-10">
-                            <AvatarImage
-                                src={trainer?.profileImage || "/placeholder.svg"}
-                                alt={trainer?.name}
-                            />
-                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                                {trainer?.name?.charAt(0)}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <h2 className="font-semibold">{trainer?.name}</h2>
-                            <p className="text-sm text-muted-foreground">Your Trainer</p>
+            {/* Premium Header */}
+            <header className="relative z-20 bg-white/5 backdrop-blur-3xl border-b border-white/10 px-4 py-4 md:px-8 shadow-2xl">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="icon" onClick={() => navigate("/my-trainer")} className="hover:bg-white/10 rounded-xl">
+                            <ArrowLeft className="h-6 w-6" />
+                        </Button>
+                        <div className="flex items-center gap-4">
+                            <div className="relative">
+                                <Avatar className="h-12 w-12 ring-2 ring-primary/20 border border-white/10">
+                                    <AvatarImage src={trainer?.profileImage} alt={trainer?.name} className="object-cover" />
+                                    <AvatarFallback className="bg-primary/20 text-primary font-black italic">{trainer?.name?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-4 border-[#030303] shadow-lg" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-black italic uppercase tracking-tight leading-none">{trainer?.name}</h2>
+                                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">Personal Strategic Coach</p>
+                            </div>
                         </div>
                     </div>
 
-                    {userPlan && (
-                        <div className="flex items-center space-x-2">
-                            <Badge variant={userPlan.planType === 'premium' ? 'secondary' : 'default'}>
-                                {userPlan.planType.charAt(0).toUpperCase() + userPlan.planType.slice(1)}
-                            </Badge>
-                            {userPlan.planType === 'premium' && (
-                                <Badge variant="outline" className="text-xs">
-                                    {userPlan.messagesLeft} left
+                    <div className="hidden md:flex items-center gap-4">
+                        {userPlan && (
+                            <div className="flex items-center gap-3">
+                                <Badge className={`${userPlan.planType === 'pro' ? 'bg-purple-500/20 text-purple-400 border-purple-500/20' : 'bg-amber-500/20 text-amber-400 border-amber-500/20'} font-black italic uppercase text-[10px] px-3 py-1 rounded-full border`}>
+                                    {userPlan.planType} ACCESS
                                 </Badge>
-                            )}
-                        </div>
-                    )}
+                                {userPlan.planType === 'premium' && (
+                                    <Badge variant="outline" className="border-white/10 text-gray-400 text-[10px] font-bold py-1 px-3">
+                                        {userPlan.messagesLeft} REMAINING
+                                    </Badge>
+                                )}
+                            </div>
+                        )}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="hover:bg-white/10 rounded-xl">
+                                    <MoreHorizontal className="h-5 w-5" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-[#0f172a]/95 backdrop-blur-xl border-white/10 rounded-2xl p-2 min-w-[200px]">
+                                <DropdownMenuItem onClick={() => navigate("/my-trainer")} className="rounded-xl hover:bg-white/10 font-bold uppercase text-[10px] tracking-widest py-3">
+                                    Coach Profile
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate("/my-trainer/sessions")} className="rounded-xl hover:bg-white/10 font-bold uppercase text-[10px] tracking-widest py-3">
+                                    My Training Sessions
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
-            </div>
+            </header>
 
-            {/* Messages Area */}
-            <div className="flex-1 overflow-hidden relative z-10">
-                <div className="h-full overflow-y-auto p-4 space-y-4">
+            {/* Chat Messages */}
+            <main className="flex-1 overflow-hidden relative z-10">
+                <div className="h-full overflow-y-auto px-4 py-8 md:px-8 space-y-6">
                     {messages.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                            <MessageSquare className="h-16 w-16 text-muted-foreground/30 mb-4" />
-                            <p className="text-muted-foreground">No messages yet</p>
-                            <p className="text-sm text-muted-foreground/60 mt-1">
-                                Start a conversation with your trainer!
-                            </p>
+                        <div className="h-full flex flex-col items-center justify-center text-center space-y-6 p-8 opacity-50">
+                            <div className="p-8 bg-white/5 rounded-[3rem] border border-dashed border-white/10">
+                                <MessageSquare className="h-16 w-16 mx-auto text-primary mb-4" />
+                                <h3 className="text-xl font-black italic uppercase">Initialize Dialogue</h3>
+                                <p className="text-gray-400 text-sm font-medium mt-2 max-w-xs">Direct communication with your personal trainer is active. Start sharing your progress.</p>
+                            </div>
                         </div>
                     ) : (
-                        messages.map((message, index) => {
-                            const isUser = message.senderType === 'user';
-                            const showDate = index === 0 ||
-                                formatDate(message.createdAt) !== formatDate(messages[index - 1].createdAt);
+                        <div className="max-w-5xl mx-auto space-y-8">
+                            {messages.map((message, index) => {
+                                const isUser = message.senderType === 'user';
+                                const showDate = index === 0 || formatDate(message.createdAt) !== formatDate(messages[index - 1].createdAt);
 
-                            return (
-                                <div
-                                    key={message._id}
-                                    className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
-                                    onMouseEnter={() => isUser && setHoveredMessageId(message._id)}
-                                    onMouseLeave={() => isUser && setHoveredMessageId(null)}
-                                >
-                                    {showDate && (
-                                        <div className="text-center py-2 w-full">
-                                            <Badge variant="outline" className="text-xs">
-                                                {formatDate(message.createdAt)}
-                                            </Badge>
-                                        </div>
-                                    )}
-
-                                    <div className={`relative max-w-[70%] rounded-2xl p-3 ${isUser
-                                        ? 'bg-primary text-primary-foreground ml-auto'
-                                        : 'bg-muted text-foreground mr-auto'
-                                        }`}>
-
-                                        <div className="flex flex-col items-center">
-                                            {message.messageType === 'image' && message.fileUrl && (
-                                                <div className="mb-2 w-full">
-                                                    <img
-                                                        src={message.fileUrl}
-                                                        alt="Shared image"
-                                                        className="rounded-lg max-h-60 w-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                                        onClick={() => setViewImageUrl(message.fileUrl || null)}
-                                                    />
-                                                </div>
-                                            )}
-
-                                            {message.messageType === 'audio' && message.fileUrl && (
-                                                <div className="mb-2 min-w-[200px] w-full">
-                                                    <audio controls src={message.fileUrl} className="w-full h-8" />
-                                                </div>
-                                            )}
-
-                                            {message.message && (
-                                                <p className="text-sm break-words w-full text-left">{message.message}</p>
-                                            )}
-                                        </div>
-
-                                        <p className={`text-xs mt-1 text-right ${isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                                            {formatTime(message.createdAt)}
-                                        </p>
-
-                                        {/* Three dots menu */}
-                                        {hoveredMessageId === message._id && isUser && (
-                                            <div className={`absolute top-2 ${isUser ? '-left-8' : '-right-8'}`}>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-6 w-6 bg-background/80 hover:bg-background shadow-sm"
-                                                        >
-                                                            <MoreHorizontal className="h-3 w-3" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem
-                                                            onClick={() => deleteMessage(message._id)}
-                                                            className="text-destructive focus:text-destructive"
-                                                        >
-                                                            <Trash2 className="h-4 w-4 mr-2" />
-                                                            Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                return (
+                                    <AnimatePresence key={message._id}>
+                                        {showDate && (
+                                            <div className="flex justify-center my-8">
+                                                <Badge className="bg-white/5 text-gray-400 border-white/10 font-black italic uppercase text-[10px] px-4 py-1.5 rounded-full">
+                                                    {formatDate(message.createdAt)}
+                                                </Badge>
                                             </div>
                                         )}
-                                    </div>
-                                </div>
-                            );
-                        })
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            className={`flex ${isUser ? 'justify-end' : 'justify-start'} group items-end gap-3`}
+                                            onMouseEnter={() => isUser && setHoveredMessageId(message._id)}
+                                            onMouseLeave={() => isUser && setHoveredMessageId(null)}
+                                        >
+                                            {!isUser && (
+                                                <Avatar className="h-8 w-8 ring-1 ring-white/10 mb-1">
+                                                    <AvatarImage src={trainer?.profileImage} />
+                                                    <AvatarFallback className="bg-primary/20 text-primary text-[10px] font-black">{trainer?.name?.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                            )}
+
+                                            <div className={`relative flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-[70%]`}>
+                                                <div className={`relative overflow-hidden p-4 rounded-3xl shadow-2xl border ${isUser
+                                                    ? 'bg-gradient-to-br from-primary to-accent text-black border-transparent rounded-br-[4px]'
+                                                    : 'bg-white/5 backdrop-blur-2xl text-white border-white/10 rounded-bl-[4px]'
+                                                    }`}>
+                                                    
+                                                    {message.messageType === 'image' && message.fileUrl && (
+                                                        <div className="mb-3 rounded-2xl overflow-hidden border border-black/10">
+                                                            <img
+                                                                src={message.fileUrl}
+                                                                alt="Media"
+                                                                className="max-h-72 w-full object-cover cursor-zoom-in hover:scale-105 transition-transform duration-500"
+                                                                onClick={() => setViewImageUrl(message.fileUrl || null)}
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    {message.messageType === 'audio' && message.fileUrl && (
+                                                        <div className={`mb-3 p-4 rounded-2xl flex items-center gap-4 min-w-[240px] ${isUser ? 'bg-black/10' : 'bg-white/5'}`}>
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isUser ? 'bg-black/20' : 'bg-primary/20'}`}>
+                                                                <Play className={`h-4 w-4 ${isUser ? 'fill-black' : 'fill-primary'}`} />
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <div className={`h-1.5 w-full rounded-full ${isUser ? 'bg-black/10' : 'bg-white/10'}`}>
+                                                                    <div className={`h-full w-1/3 rounded-full ${isUser ? 'bg-black/40' : 'bg-primary'}`} />
+                                                                </div>
+                                                                <p className={`text-[10px] mt-2 font-black uppercase tracking-widest ${isUser ? 'text-black/60' : 'text-gray-400'}`}>Audio memo</p>
+                                                            </div>
+                                                            <audio preload="auto" className="hidden" src={message.fileUrl} />
+                                                        </div>
+                                                    )}
+
+                                                    {message.message && (
+                                                        <p className={`text-sm md:text-base font-bold tracking-tight leading-relaxed italic ${isUser ? 'font-black' : 'font-medium'}`}>
+                                                            {message.message}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-2 mt-2 px-1">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{formatTime(message.createdAt)}</span>
+                                                    {isUser && <CheckCircle2 className="h-3 w-3 text-primary opacity-50" />}
+                                                </div>
+
+                                                {hoveredMessageId === message._id && isUser && (
+                                                    <div className={`absolute -left-10 top-2 opacity-0 group-hover:opacity-100 transition-opacity`}>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/10 rounded-full">
+                                                                    <MoreHorizontal className="h-4 w-4 text-gray-500" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent className="bg-[#0f172a]/95 backdrop-blur-xl border-white/10 rounded-xl">
+                                                                <DropdownMenuItem onClick={() => deleteMessage(message._id)} className="text-red-500 hover:text-red-400 font-bold uppercase text-[10px] tracking-widest">
+                                                                    <Trash2 className="h-3 w-3 mr-2" /> Recall Message
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    </AnimatePresence>
+                                );
+                            })}
+                        </div>
                     )}
                     <div ref={messagesEndRef} />
                 </div>
-            </div>
+            </main>
 
-            {/* Fixed Footer */}
-            <div className="relative z-10 border-t bg-card/5 backdrop-blur-md p-4">
-                {isOtherUserTyping && (
-                    <p className="text-xs text-muted-foreground mb-2 animate-pulse">
-                        {trainer?.name} is typing...
-                    </p>
-                )}
-
-                {/* Audio Recording UI */}
-                {isRecording ? (
-                    <div className="flex items-center space-x-4 bg-red-500/10 p-3 rounded-2xl mb-2 border border-red-500/20 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="relative flex items-center justify-center">
-                            <div className="absolute w-4 h-4 bg-red-500 rounded-full animate-ping opacity-75" />
-                            <div className="relative w-3 h-3 bg-red-500 rounded-full" />
+            {/* Premium Input Bar */}
+            <div className="relative z-20 bg-white/5 backdrop-blur-3xl border-t border-white/10 p-4 md:p-8">
+                <div className="max-w-5xl mx-auto">
+                    {isOtherUserTyping && (
+                        <div className="flex items-center gap-2 mb-4 px-2">
+                            <div className="flex gap-1">
+                                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" />
+                            </div>
+                            <span className="text-[10px] font-black italic uppercase tracking-widest text-primary">{trainer?.name} is strategizing...</span>
                         </div>
-                        <span className="text-sm font-bold font-mono text-red-500">{formatDuration(recordingDuration)}</span>
-                        <div className="flex-1" />
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={cancelRecording}
-                            className="text-muted-foreground hover:text-white hover:bg-white/5"
-                        >
-                            Cancel
-                        </Button>
-                        <Button 
-                            size="sm" 
-                            onClick={() => {
-                                shouldSendRef.current = true;
-                                stopRecording();
-                            }}
-                            className="bg-red-500 hover:bg-red-600 text-white font-bold px-4"
-                        >
-                            <Send className="h-4 w-4 mr-2" />
-                            Send
-                        </Button>
-                    </div>
-                ) : (
-                    <div className="flex space-x-2">
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleFileSelect}
-                        />
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isSending}
-                        >
-                            <Paperclip className="h-4 w-4" />
-                        </Button>
+                    )}
 
-                        <Input
-                            value={newMessage}
-                            onChange={(e) => {
-                                setNewMessage(e.target.value);
-                                handleTyping();
-                            }}
-                            onBlur={handleStopTyping}
-                            placeholder="Type your message..."
-                            className="flex-1"
-                            onKeyDownCapture={(e) => {
-                                if (e.key === 'Enter') {
-                                    sendMessage();
-                                }
-                            }}
-                            disabled={userPlan?.planType === 'premium' && userPlan.messagesLeft <= 0}
-                            maxLength={1000}
-                        />
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileSelect} />
+                            <Button 
+                                variant="outline" 
+                                size="icon" 
+                                onClick={() => fileInputRef.current?.click()} 
+                                disabled={isSending}
+                                className="h-12 w-12 rounded-2xl bg-white/5 border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all"
+                            >
+                                <Paperclip className="h-5 w-5" />
+                            </Button>
+                        </div>
 
-                        {newMessage.trim() ? (
+                        <div className="flex-1 relative">
+                            <Input
+                                value={newMessage}
+                                onChange={(e) => {
+                                    setNewMessage(e.target.value);
+                                    handleTyping();
+                                }}
+                                onBlur={handleStopTyping}
+                                onKeyDownCapture={(e) => e.key === 'Enter' && sendMessage()}
+                                placeholder="Consult with your strategic coach..."
+                                className="h-14 bg-white/5 border-white/10 rounded-2xl px-6 focus:ring-primary/20 focus:border-primary/30 font-bold italic transition-all"
+                                disabled={userPlan?.planType === 'premium' && userPlan.messagesLeft <= 0}
+                                maxLength={1000}
+                            />
+                        </div>
+
+                        {newMessage.trim() || audioBlob ? (
                             <Button
                                 onClick={() => sendMessage()}
                                 disabled={isSending || (userPlan?.planType === 'premium' && userPlan.messagesLeft <= 0)}
-                                size="icon"
+                                className="h-14 px-8 rounded-2xl bg-white text-black hover:bg-gray-200 font-black italic uppercase tracking-widest shadow-2xl flex gap-2"
                             >
-                                {isSending ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Send className="h-4 w-4" />
+                                {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+                                    <>
+                                        <Send className="h-5 w-5 fill-black" />
+                                        {audioBlob && <span className="text-[10px] font-black">SEND VOICE</span>}
+                                    </>
                                 )}
                             </Button>
                         ) : (
                             <Button
-                                variant="outline"
+                                variant={isRecording ? "destructive" : "outline"}
                                 size="icon"
-                                onClick={startRecording}
-                                disabled={isSending}
+                                onMouseDown={startRecording}
+                                onMouseUp={stopRecording}
+                                className={`h-14 w-14 rounded-2xl transition-all shadow-xl ${isRecording ? 'animate-pulse scale-110' : 'bg-primary text-black hover:bg-primary/80 border-transparent'}`}
                             >
-                                <Mic className="h-4 w-4" />
+                                {isRecording ? <StopCircle className="h-6 w-6" /> : <Mic className={`h-6 w-6 ${!isRecording && 'fill-black'}`} />}
                             </Button>
                         )}
                     </div>
-                )}
 
-                {userPlan?.planType === 'premium' && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                        {userPlan.messagesLeft > 0
-                            ? `${userPlan.messagesLeft} messages remaining this month`
-                            : "Message limit reached. Upgrade to Pro for unlimited messages."
-                        }
-                    </p>
-                )}
+                    {audioBlob && !isRecording && (
+                        <div className="flex items-center justify-between mt-4 p-4 bg-primary/10 rounded-2xl border border-primary/20 animate-in fade-in slide-in-from-bottom-1">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                                    <Mic className="h-4 w-4 text-primary fill-primary" />
+                                </div>
+                                <span className="text-xs font-black uppercase tracking-widest text-primary">Voice Memo Prepared</span>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={discardAudio} className="text-red-400 hover:text-red-300 hover:bg-red-500/10 font-bold uppercase text-[10px] tracking-tighter">
+                                <Trash2 className="h-4 w-4 mr-2" /> Discard
+                            </Button>
+                        </div>
+                    )}
+
+                    {isRecording && (
+                        <div className="absolute inset-0 bg-red-500/95 backdrop-blur-3xl flex items-center justify-between px-8 z-30 animate-in fade-in slide-in-from-bottom-2 duration-300 rounded-t-[3rem]">
+                            <div className="flex items-center gap-4">
+                                <div className="w-3 h-3 bg-white rounded-full animate-ping" />
+                                <span className="font-mono text-xl font-black text-white">{formatDuration(recordingDuration)}</span>
+                                <span className="text-xs font-black uppercase tracking-[0.2em] text-white/50">Recording Audio Memo...</span>
+                            </div>
+                            <Button variant="ghost" onClick={discardAudio} className="text-white hover:bg-white/10 font-black uppercase tracking-widest text-[10px]">
+                                <X className="h-4 w-4 mr-2" /> Discard memo
+                            </Button>
+                        </div>
+                    )}
+
+                    {userPlan?.planType === 'premium' && (
+                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mt-4 text-center">
+                            {userPlan.messagesLeft > 0
+                                ? `Strategic Uplink: ${userPlan.messagesLeft} TRANSMISSIONS REMAINING`
+                                : "ENCRYPTION LIMIT REACHED. UPGRADE TO PRO FOR UNLIMITED STRATEGIC COMMS."
+                            }
+                        </p>
+                    )}
+                </div>
             </div>
 
-            {/* Image Preview Modal (Sending) */}
+            {/* Image Preview / Caption Modal */}
             <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-                <DialogContent>
+                <DialogContent className="bg-[#030303] border-white/10 rounded-[2.5rem] p-8 max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Send Image</DialogTitle>
+                        <DialogTitle className="text-2xl font-black italic uppercase">Share Performance Media</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {previewUrl && (
-                            <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
-                                <img
-                                    src={previewUrl}
-                                    alt="Preview"
-                                    className="h-full w-full object-contain"
-                                />
+                            <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+                                <img src={previewUrl} alt="Preview" className="h-full w-full object-contain" />
+                                <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(false)} className="absolute top-4 right-4 bg-black/50 backdrop-blur-lg hover:bg-black/70 rounded-full">
+                                    <X className="h-4 w-4" />
+                                </Button>
                             </div>
                         )}
                         <div className="space-y-2">
-                            <Label htmlFor="caption">Caption (optional)</Label>
+                            <Label htmlFor="caption" className="text-[10px] font-black uppercase tracking-widest text-gray-500">Contextual Caption</Label>
                             <Input
                                 id="caption"
                                 value={imageCaption}
                                 onChange={(e) => setImageCaption(e.target.value)}
-                                placeholder="Add a caption..."
+                                placeholder="Describe this development..."
+                                className="h-14 bg-white/5 border-white/10 rounded-2xl px-6 focus:ring-primary/20 focus:border-primary/30 font-bold italic"
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button onClick={() => sendMessage()} disabled={isSending}>
-                            {isSending ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Sending...
-                                </>
-                            ) : (
-                                <>
-                                    <Send className="mr-2 h-4 w-4" />
-                                    Send
-                                </>
-                            )}
+                    <DialogFooter className="gap-4 pt-4">
+                        <Button variant="outline" onClick={() => setIsPreviewOpen(false)} className="h-12 flex-1 rounded-xl font-black uppercase text-[10px] border-white/10">Abort</Button>
+                        <Button onClick={() => sendMessage()} disabled={isSending} className="h-12 flex-1 bg-white text-black hover:bg-gray-200 rounded-xl font-black italic uppercase tracking-widest text-[10px]">
+                            {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Transmit Media"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            {/* Image Lightbox (Viewing) */}
+            {/* Image Full Size Viewer */}
             <Dialog open={!!viewImageUrl} onOpenChange={(open) => !open && setViewImageUrl(null)}>
-                <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-transparent border-none shadow-none flex items-center justify-center">
-                    <div className="relative w-full h-full flex items-center justify-center">
+                <DialogContent className="max-w-7xl w-[95vw] h-[90vh] p-0 bg-black/95 border-none shadow-none flex items-center justify-center overflow-hidden rounded-[3rem]">
+                    <div className="relative w-full h-full flex items-center justify-center p-8">
                         {viewImageUrl && (
-                            <img
-                                src={viewImageUrl}
-                                alt="Full size"
-                                className="max-w-full max-h-full object-contain rounded-lg"
-                            />
+                            <img src={viewImageUrl} alt="Full Resolution" className="max-w-full max-h-full object-contain shadow-2xl" />
                         )}
+                        <Button onClick={() => setViewImageUrl(null)} variant="ghost" size="icon" className="absolute top-8 right-8 bg-white/10 backdrop-blur-3xl hover:bg-white/20 rounded-full w-12 h-12">
+                            <X className="h-6 w-6" />
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>

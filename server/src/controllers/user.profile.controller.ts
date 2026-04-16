@@ -10,6 +10,10 @@ import { logger } from '../utils/logger.util'
 import { MESSAGES } from '../constants/messages.constants'
 import { AppError } from '../utils/appError.util'
 import { AddWeightDto } from '../dtos/user.dto'
+import { IUserPlanService } from '../core/interfaces/services/IUserPlanService'
+import { IUserSubscriptionService } from '../core/interfaces/services/IUserSubscriptionService'
+import { WorkoutSnapshotModel } from '../models/workoutSnapshot.model'
+
 
 
 @injectable()
@@ -18,7 +22,9 @@ export class UserProfileController {
         @inject(TYPES.IUserService) private _userService: IUserService,
         @inject(TYPES.IJwtService) private _jwtService: IJwtService,
         @inject(TYPES.IStreakService) private _streakService: IStreakService,
-        @inject(TYPES.IProgressService) private _progressService: IProgressService
+        @inject(TYPES.IProgressService) private _progressService: IProgressService,
+        @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
+        @inject(TYPES.IUserSubscriptionService) private _userSubscriptionService: IUserSubscriptionService
     ) { }
 
     async getProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -47,10 +53,30 @@ export class UserProfileController {
                     ? user.weightHistory[user.weightHistory.length - 1].weight
                     : user.currentWeight
 
+            const { gymSubscriptions, trainerSubscriptions } = await this._userSubscriptionService.getUserSubscriptions(userId)
+            
+            const activeSubscriptions = [
+                ...gymSubscriptions.map(s => ({ ...s, subscriptionType: 'gym' })),
+                ...trainerSubscriptions.map(s => ({ ...s, subscriptionType: 'trainer' }))
+            ].filter(s => s.status === 'active');
+            
+            const populatedTemplates = await Promise.all(
+                (user.activeWorkoutTemplates || []).map(async (t: any) => {
+                    const snapshot = await WorkoutSnapshotModel.findById(t.templateId).select('title image').lean();
+                    return {
+                        ...t,
+                        title: snapshot?.title || 'Unknown Workout',
+                        image: snapshot?.image || ''
+                    };
+                })
+            );
+
             res.status(STATUS_CODE.OK).json({
                 user: {
                     ...user,
-                    weight
+                    weight,
+                    activeSubscriptions,
+                    activeWorkoutTemplates: populatedTemplates
                 }
             })
         } catch (err) {

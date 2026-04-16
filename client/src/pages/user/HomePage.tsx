@@ -34,6 +34,7 @@ import type { IWorkoutTemplate } from "@/interfaces/template/IWorkoutTemplate";
 
 import { useSelector } from "react-redux";
 import ProfileCompletionModal from "@/components/user/general/ProfileCompletionModal";
+import api from "@/lib/axios";
 // import API from "@/lib/axios";
 
 const containerVariants = {
@@ -101,6 +102,7 @@ export default function HomePage() {
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [templates, setTemplates] = useState<IWorkoutTemplate[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
+  const [activeTemplates, setActiveTemplates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const navigate = useNavigate();
@@ -202,6 +204,14 @@ export default function HomePage() {
         setTemplates(templateResponse.templates || []);
       } catch (err: any) {
         console.error("Failed to fetch templates:", err);
+      }
+
+      // Fetch active programs from profile
+      try {
+        const profileResponse = await api.get('/user/profile');
+        setActiveTemplates(profileResponse.data.activeWorkoutTemplates || []);
+      } catch (err: any) {
+        console.error("Failed to fetch active programs:", err);
       }
 
     } catch (error) {
@@ -377,6 +387,50 @@ export default function HomePage() {
             </div>
           </GlassCard>
         </section>
+
+        {/* Active Programs Section */}
+        {activeTemplates.length > 0 && (
+          <section className="space-y-6">
+            <div className="flex items-end justify-between px-2">
+              <div className="space-y-1">
+                <h2 className="text-3xl font-black tracking-tight uppercase italic">Your <span className="text-primary">Daily Programs</span></h2>
+                <p className="text-gray-500 font-medium">Currently active training protocols from your coach</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {activeTemplates.map((prog) => (
+                <motion.div
+                  key={prog.id}
+                  whileHover={{ y: -10 }}
+                  className="group relative h-72 rounded-[2.5rem] overflow-hidden border border-white/10 bg-white/5 cursor-pointer shadow-2xl"
+                  onClick={() => navigate(`/workouts/template/${prog.id}`)}
+                >
+                  <img
+                    src={prog.image || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop"}
+                    alt={prog.title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                  
+                  <div className="absolute bottom-6 left-6 right-6 space-y-2">
+                     <Badge className="bg-primary text-black font-black uppercase italic text-[8px] px-2 py-0.5 rounded-full mb-2">
+                        Active Protocol
+                     </Badge>
+                     <h3 className="text-xl font-black italic tracking-tighter text-white uppercase line-clamp-1 group-hover:text-primary transition-colors">
+                        {prog.title}
+                     </h3>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">By {prog.trainerName || 'Elite Coach'}</p>
+                  </div>
+                  
+                  <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Target className="h-5 w-5 text-primary" />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Popular Templates Carousel */}
         <section className="space-y-6 pt-4">

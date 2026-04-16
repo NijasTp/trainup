@@ -20,6 +20,9 @@ export interface UserProfile {
     xp?: number;
     achievements?: string[];
     gender?: string;
+    medicalConditions?: string;
+    dietaryPreferences?: string;
+    activeSubscriptions?: any[];
     createdAt: string;
     updatedAt: string;
 }

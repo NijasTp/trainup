@@ -123,19 +123,19 @@ const handleTokenRefresh = async (originalRequest: any) => {
   let loginPath: string = ROUTES.USER_LOGIN;
 
   if (state.userAuth.user) {
-    refreshUrl = "/user/refresh-token"; 
+    refreshUrl = "/api/user/refresh-token"; 
     logoutAction = userLogout;
     loginPath = ROUTES.USER_LOGIN;
   } else if (state.trainerAuth.trainer) {
-    refreshUrl = "/trainer/refresh-token";
+    refreshUrl = "/api/trainer/refresh-token";
     logoutAction = logoutTrainer;
     loginPath = ROUTES.TRAINER_LOGIN;
   } else if (state.gymAuth.gym) {
-    refreshUrl = "/gym/refresh-token";
+    refreshUrl = "/api/gym/refresh-token";
     logoutAction = logoutGym;
     loginPath = ROUTES.GYM_LOGIN;
   } else if (state.adminAuth.admin) {
-    refreshUrl = "/admin/refresh-token";
+    refreshUrl = "/api/admin/refresh-token";
     logoutAction = adminLogout;
     loginPath = ROUTES.ADMIN_LOGIN;
   }

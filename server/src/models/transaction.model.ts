@@ -15,6 +15,8 @@ export interface ITransaction extends Document {
   razorpayPaymentId?: string
   status: 'pending' | 'completed' | 'failed'
   provider: 'razorpay' | 'stripe'
+  transactionType: 'debit' | 'credit'
+  description?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -50,6 +52,8 @@ export const TransactionSchema = new Schema<ITransaction>(
       default: 'pending'
     },
     provider: { type: String, enum: ['razorpay', 'stripe'], default: 'stripe' },
+    transactionType: { type: String, enum: ['debit', 'credit'], default: 'debit' },
+    description: { type: String },
     createdAt: { type: Date, default: Date.now }
   },
   { timestamps: true }

@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './constants/routes';
 import { Role } from './constants/role';
 import Login from './pages/user/Login';
@@ -116,9 +116,37 @@ import GymPaymentSuccess from './pages/user/GymPaymentSuccess';
 import GymPaymentCancel from './pages/user/GymPaymentCancel';
 import AttendancePage from './pages/user/AttendancePage';
 import UserGymEquipment from './pages/user/UserGymEquipment';
+import WorkoutHistoryPage from './pages/user/WorkoutHistoryPage';
+import WorkoutPreviewPage from './pages/user/WorkoutPreviewPage';
 
+
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import API from './lib/axios';
+import { updateUser } from './redux/slices/userAuthSlice';
+import type { RootState } from './redux/store';
 
 function App() {
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector((state: RootState) => state.userAuth.isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshProfile();
+    }
+  }, [isAuthenticated]);
+
+  const refreshProfile = async () => {
+    try {
+      const res = await API.get('/user/get-profile');
+      if (res.data.user) {
+        dispatch(updateUser(res.data.user));
+      }
+    } catch (e) {
+      console.error("Auto-refresh profile failed", e);
+    }
+  };
+
   return (
     <>
       <ToastContainer />
@@ -127,6 +155,7 @@ function App() {
         <Route path={ROUTES.CHOOSE_LOGIN} element={<RoleSelectionPage />} />
         <Route path={ROUTES.GLOBAL_LOGIN} element={<RoleSelectionPage />} />
         <Route path={ROUTES.USER_LOGIN} element={<Login initialRole={Role.USER} />} />
+        <Route path="/user/login" element={<Login initialRole={Role.USER} />} />
         <Route path={ROUTES.USER_FORGOT_PASSWORD} element={<PreventLoggedIn><ForgotPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_NEW_PASSWORD} element={<PreventLoggedIn><NewPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_SIGNUP} element={<PreventLoggedIn><Signup /></PreventLoggedIn>} />
@@ -143,6 +172,7 @@ function App() {
         <Route path={ROUTES.USER_TRAINER_PAGE} element={<ProtectedRoute><Trainers /></ProtectedRoute>} />
         <Route path={ROUTES.USER_INDIVIDUAL_TRAINER} element={<ProtectedRoute><TrainerPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_INDIVIDUAL_GYM} element={<ProtectedRoute><IndividualGym /></ProtectedRoute>} />
+        <Route path="/my-trainer" element={<Navigate to={ROUTES.MY_TRAINER_PROFILE} replace />} />
         <Route path={ROUTES.MY_TRAINER_PROFILE} element={<ProtectedRoute><MyTrainerProfile /></ProtectedRoute>} />
         <Route path={ROUTES.MY_TRAINER_SESSIONS} element={<ProtectedRoute><UserSessions /></ProtectedRoute>} />
         <Route path={ROUTES.MY_TRAINER_CHAT} element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
@@ -161,6 +191,8 @@ function App() {
         <Route path={ROUTES.USER_DIET} element={<ProtectedRoute><Diets /></ProtectedRoute>} />
         <Route path={ROUTES.USER_ADD_DIET} element={<ProtectedRoute><UserAddDiet /></ProtectedRoute>} />
         <Route path={ROUTES.USER_PROGRESS} element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_WORKOUT_HISTORY} element={<ProtectedRoute><WorkoutHistoryPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_WORKOUT_PREVIEW} element={<ProtectedRoute><WorkoutPreviewPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYMS} element={<ProtectedRoute><GymListing /></ProtectedRoute>} />
         <Route path={ROUTES.USER_TRAINER_PRICING} element={<ProtectedRoute><TrainerPricingPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYM_PLAN_SELECTION} element={<ProtectedRoute><GymPlanSelection /></ProtectedRoute>} />

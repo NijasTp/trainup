@@ -24,11 +24,12 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
     // Accept images and PDFs (for certifications)
     if (
         file.mimetype.startsWith('image/') ||
-        file.mimetype === 'application/pdf'
+        file.mimetype === 'application/pdf' ||
+        file.mimetype.startsWith('audio/')
     ) {
         cb(null, true);
     } else {
-        cb(new AppError('Not an image or PDF! Please upload only images or PDFs.', STATUS_CODE.BAD_REQUEST) as any, false);
+        cb(new AppError('Not an image, PDF, or audio file! Please upload only supported formats.', STATUS_CODE.BAD_REQUEST) as any, false);
     }
 };
 

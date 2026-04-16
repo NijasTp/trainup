@@ -12,6 +12,7 @@ import { IUserGymMembershipRepository } from '../core/interfaces/repositories/IU
 import { IAttendanceRepository } from '../core/interfaces/repositories/IAttendanceRepository';
 
 import { IQueueService } from '../core/interfaces/services/IQueueService';
+import { IMailService } from '../core/interfaces/services/IMailService';
 
 @injectable()
 export class NotificationService implements INotificationService {
@@ -22,7 +23,8 @@ export class NotificationService implements INotificationService {
     @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository,
     @inject(TYPES.IQueueService) private _queueService: IQueueService,
     @inject(TYPES.IUserGymMembershipRepository) private _membershipRepo: IUserGymMembershipRepository,
-    @inject(TYPES.IAttendanceRepository) private _attendanceRepo: IAttendanceRepository
+    @inject(TYPES.IAttendanceRepository) private _attendanceRepo: IAttendanceRepository,
+    @inject(TYPES.IMailService) private _mailService: IMailService
   ) { }
 
   async createNotification(data: CreateNotificationDto): Promise<INotification> {
@@ -288,10 +290,10 @@ export class NotificationService implements INotificationService {
 
   async sendAttendanceReminders(targetTime: string): Promise<void> {
     try {
-      logger.info(`Checking attendance reminders for target time: ${targetTime}`);
-      
       const memberships = await this._membershipRepo.findActiveByPreferredTime(targetTime);
       if (memberships.length === 0) return;
+
+      logger.info(`Processing ${memberships.length} attendance reminders for target time: ${targetTime}`);
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -303,21 +305,36 @@ export class NotificationService implements INotificationService {
         const attendance = await this._attendanceRepo.findTodayAttendance(userId, gymId, today);
         
         if (!attendance) {
-          // Send reminder
+          // Check if reminder was already sent today
+          const existingReminder = await this.getLatestNotification(userId, 'user', 'GYM_ATTENDANCE_REMINDER');
+          const lastSentDate = existingReminder ? new Date(existingReminder.createdAt).setHours(0,0,0,0) : null;
+          
+          if (lastSentDate === today.getTime()) {
+            continue; // Already sent today
+          }
+
           const user = await this._userRepo.findById(userId);
           const gym = await this._gymRepo.findById(gymId);
           
           if (user && gym) {
+            const message = `Don't forget to mark your attendance at ${gym.name}! It's past your preferred time of ${membership.preferredTime}.`;
+            
             await this.createNotification({
               recipientId: userId,
               recipientRole: 'user',
-              type: NOTIFICATION_TYPES.USER.GYM_ANNOUNCEMENT, // Using generic type for now or define new one
+              type: 'GYM_ATTENDANCE_REMINDER',
               title: 'Gym Attendance Reminder',
-              message: `Don't forget to mark your attendance at ${gym.name}! It's past your preferred time of ${membership.preferredTime}.`,
+              message,
               priority: 'medium',
               category: 'warning'
             });
-            logger.info(`Sent attendance reminder to user ${userId} for gym ${gymId}`);
+
+            // Send Email
+            if (user.email) {
+              await this._mailService.sendReminderMail(user.email, message);
+            }
+
+            logger.info(`Sent attendance reminder email and notification to user ${userId} for gym ${gymId}`);
           }
         }
       }

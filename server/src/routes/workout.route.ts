@@ -14,6 +14,7 @@ router
   .patch("/sessions/:id", authMiddleware, (req, res, next) => workoutController.updateSession(req, res, next))
   .delete("/sessions/:id", authMiddleware, (req, res, next) => workoutController.deleteSession(req, res, next))
 router.get("/get-sessions", authMiddleware, (req, res, next) => workoutController.getSessions(req, res, next));
+router.get("/history", authMiddleware, (req, res, next) => workoutController.getWorkoutHistory(req, res, next));
 
 router.post("/days", authMiddleware, (req, res, next) => workoutController.createOrGetDay(req, res, next));
 router.post("/days/:date/sessions", authMiddleware, (req, res, next) => workoutController.addSessionToDay(req, res, next));

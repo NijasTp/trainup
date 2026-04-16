@@ -109,6 +109,8 @@ export class PaymentGymController {
                             amount,
                             status: 'completed',
                             provider: 'stripe',
+                            transactionType: 'debit',
+                            description: `Gym Membership - ${subscriptionPlan.name}`,
                             preferredTime
                         });
 

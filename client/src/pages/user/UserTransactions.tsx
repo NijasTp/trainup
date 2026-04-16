@@ -248,8 +248,19 @@ export default function Transactions() {
                               <Badge className="bg-primary/5 text-primary border-primary/10 text-[10px] font-black h-5 uppercase">
                                 {transaction.planType || (transaction.months ? `${transaction.months} MONTHS` : 'PLAN')}
                               </Badge>
+                              <Badge className={cn(
+                                "text-[10px] font-black h-5 uppercase",
+                                transaction.transactionType === 'credit' ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"
+                              )}>
+                                {transaction.transactionType || 'DEBIT'}
+                              </Badge>
                               <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{transaction.type}</span>
                             </div>
+                            {transaction.description && (
+                              <p className="text-sm text-slate-400 font-medium">
+                                {transaction.description}
+                              </p>
+                            )}
                             <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1">
                               <div className="flex items-center gap-1 font-medium">
                                 <Calendar className="h-3.5 w-3.5" />

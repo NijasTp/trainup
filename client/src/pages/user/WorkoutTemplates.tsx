@@ -2,35 +2,43 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Search, Dumbbell, Target, Clock, Play, Info, CheckCircle2, ChevronRight } from "lucide-react";
+import { 
+  Search, 
+  Dumbbell, 
+  Target, 
+  Clock, 
+  ChevronRight,
+  TrendingUp,
+  Star
+} from "lucide-react";
+import { motion } from "framer-motion";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import { getWorkoutTemplates, toggleWorkoutTemplate, startWorkoutTemplate } from "@/services/templateService";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
+import { getWorkoutTemplates } from "@/services/templateService";
+import { fetchWorkoutHistory } from "@/services/workoutService";
 import { toast } from "sonner";
 import Aurora from "@/components/ui/Aurora";
-import { useSelector, useDispatch } from "react-redux";
-import { updateUser } from "@/redux/slices/userAuthSlice";
+import { useSelector } from "react-redux";
 import type { IWorkoutTemplate } from "@/interfaces/template/IWorkoutTemplate";
 import type { RootState } from "@/redux/store";
-import API from "@/lib/axios";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
 
 export default function WorkoutTemplates() {
   const [templates, setTemplates] = useState<IWorkoutTemplate[]>([]);
+  const [recentHistory, setRecentHistory] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<IWorkoutTemplate | null>(null);
-  const [isToggleModalOpen, setIsToggleModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const user = useSelector((state: RootState) => state.userAuth.user);
-  const dispatch = useDispatch();
 
   useEffect(() => {
-    document.title = "TrainUp - Workout Templates";
+    document.title = "TrainUp - Workout Library";
     fetchTemplates();
+    fetchHistory();
   }, [search]);
 
   async function fetchTemplates() {
@@ -45,55 +53,17 @@ export default function WorkoutTemplates() {
     }
   }
 
-  const refreshProfile = async () => {
+  async function fetchHistory() {
     try {
-      const res = await API.get('/user/get-profile');
-      if (res.data.user) {
-        dispatch(updateUser(res.data.user));
-      }
-    } catch (e) {
-      console.error("Failed to refresh profile", e);
+      const res = await fetchWorkoutHistory(1, 4);
+      setRecentHistory(res.sessions || []);
+    } catch (err) {
+      console.error("Failed to fetch history", err);
     }
   }
 
-  const handleToggleTemplate = async () => {
-    if (!selectedTemplate) return;
-    try {
-      const isActive = isTemplateActive(selectedTemplate._id);
-      const action = isActive ? "stopped" : "started";
-
-      await toggleWorkoutTemplate(selectedTemplate._id);
-      await refreshProfile();
-
-      toast.success(`Successfully ${action} ${selectedTemplate.title}!`);
-      setIsToggleModalOpen(false);
-    } catch (err) {
-      toast.error("Failed to update template status");
-    }
-  };
-
-  const handleStartOneTime = async (templateId: string) => {
-    try {
-      const res = await startWorkoutTemplate(templateId);
-      if (res.sessionId) {
-        toast.success("Workout session created!");
-        navigate(`/workouts/${res.sessionId}/start`);
-      } else {
-        toast.success("Program added to your active sessions!");
-      }
-    } catch (err) {
-      toast.error("Failed to start workout");
-    }
-  };
-
   const isTemplateActive = (templateId: string) => {
     return user?.activeWorkoutTemplates?.some(t => t.templateId === templateId) || user?.activeWorkoutTemplate === templateId;
-  };
-
-  const difficultyColors = {
-    beginner: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-    intermediate: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    advanced: "bg-rose-500/10 text-rose-500 border-rose-500/20"
   };
 
   const oneTimeTemplates = templates.filter(t => t.type === 'one-time');
@@ -106,92 +76,148 @@ export default function WorkoutTemplates() {
       </div>
       <SiteHeader />
 
-      <section className="relative py-16 overflow-hidden z-10">
-        <div className="container mx-auto px-4 text-center space-y-8">
-          <Badge variant="outline" className="px-4 py-1 text-primary border-primary/20 bg-primary/5">
-            Professional Workout Library
-          </Badge>
-          <div className="space-y-4 max-w-3xl mx-auto">
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white">
-              FIND YOUR <span className="text-primary italic">PERFECTION</span>
+      <main className="container mx-auto px-4 py-12 relative z-10 space-y-20 flex-1">
+        {/* Hero Section */}
+        <header className="flex flex-col lg:flex-row gap-12 items-center justify-between">
+          <div className="space-y-6 max-w-2xl text-center lg:text-left">
+            <Badge variant="outline" className="px-5 py-1.5 text-primary border-primary/20 bg-primary/5 rounded-full font-black uppercase tracking-[0.2em] text-[10px]">
+              Elite Training Library
+            </Badge>
+            <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-white uppercase italic leading-[0.9]">
+              Level Up Your <br />
+              <span className="text-primary not-italic">Performance</span>
             </h1>
-            <p className="text-lg md:text-xl text-slate-400">
-              Discover expertly crafted routines for any goal, from single sessions to 12-week transformations.
+            <p className="text-xl text-slate-400 font-light max-w-xl mx-auto lg:mx-0">
+              Expertly engineered routines for every goal. From quick sessions to professional-grade series.
             </p>
+            <div className="max-w-xl relative group">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-primary transition-colors" />
+              <Input
+                placeholder="Search goals, equipment, or body focus..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-16 py-8 bg-white/5 border-white/10 focus:border-primary/50 text-lg rounded-[2rem] backdrop-blur-xl transition-all shadow-2xl"
+              />
+            </div>
           </div>
 
-          <div className="max-w-xl mx-auto relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-primary transition-colors" />
-            <Input
-              placeholder="Search goals, equipment, or body focus..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-12 py-7 bg-slate-900/50 border-slate-800 focus:border-primary/50 text-lg rounded-2xl backdrop-blur-sm"
+          <div className="hidden lg:block w-[450px] relative">
+            <div className="absolute -inset-4 bg-primary/20 blur-[100px] rounded-full animate-pulse"></div>
+            <img 
+               src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop"
+               className="relative rounded-[3rem] border border-white/10 shadow-3xl rotate-2 hover:rotate-0 transition-transform duration-700"
+               alt="Aesthetics"
             />
           </div>
-        </div>
-      </section>
+        </header>
 
-      <main className="container mx-auto px-4 pb-24 relative z-10 space-y-16">
+        {/* Assigned by Trainer - Conditional */}
+        {user?.assignedTrainer && (
+          <section className="space-y-8">
+            <div className="flex items-center gap-4 border-l-4 border-yellow-500 pl-6">
+              <div>
+                <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">Trainer Assigned</h2>
+                <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">Exclusive Routines from your Professional Coach</p>
+              </div>
+              <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 px-4 py-1.5 rounded-full font-black text-[10px] uppercase animate-pulse">Elite Priority</Badge>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {templates.filter(t => t.isAssignedByTrainer).map(template => (
+                <TemplateCard 
+                  key={template._id} 
+                  template={template} 
+                  isActive={isTemplateActive(template._id)}
+                  onPreview={() => navigate(`/workouts/preview/${template._id}`)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Recently Done Showcase */}
+        {recentHistory.length > 0 && (
+          <section className="space-y-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                  <TrendingUp className="h-6 w-6 text-emerald-400" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-black italic uppercase tracking-tighter">Recently <span className="text-emerald-400">Accomplished</span></h2>
+                  <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">Your Hall of Fame</p>
+                </div>
+              </div>
+              <Link to="/workouts/history">
+                <Button variant="ghost" className="text-primary hover:text-primary hover:bg-primary/5 font-black uppercase text-xs tracking-widest flex gap-2">
+                  View Full History <ChevronRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {recentHistory.map((session, idx) => (
+                <HistoryShowcaseCard key={session._id} session={session} index={idx} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-80 rounded-[2.5rem] bg-slate-900/50 animate-pulse border border-slate-800"></div>
+              <div key={i} className="h-[450px] rounded-[3rem] bg-white/5 animate-pulse border border-white/10"></div>
             ))}
           </div>
         ) : templates.length === 0 ? (
-          <div className="text-center py-20 space-y-6">
-            <div className="w-24 h-24 bg-slate-900 rounded-full flex items-center justify-center mx-auto border border-slate-800 text-slate-500">
-              <Dumbbell className="h-10 w-10" />
+          <div className="text-center py-24 space-y-6">
+            <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/10 text-slate-500">
+              <Dumbbell className="h-10 w-10 opacity-20" />
             </div>
-            <h2 className="text-2xl font-bold">No Templates Found</h2>
-            <Button onClick={() => setSearch("")} variant="outline" className="border-slate-800">Clear Search</Button>
+            <h2 className="text-2xl font-bold uppercase italic tracking-widest">Zero Intelligence Found</h2>
+            <Button onClick={() => setSearch("")} variant="outline" className="border-white/10 rounded-2xl px-8 h-12">System Reset</Button>
           </div>
         ) : (
           <>
             {/* Quick Sessions */}
             {oneTimeTemplates.length > 0 && (
-              <section className="space-y-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-8 bg-blue-500 rounded-full" />
-                  <h2 className="text-3xl font-black italic uppercase tracking-tight">Quick Sessions</h2>
-                  <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/5">One-Time</Badge>
+              <section className="space-y-10">
+                <div className="flex items-center gap-4 border-l-4 border-blue-500 pl-6">
+                  <div>
+                    <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">Quick Hits</h2>
+                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">One-Time Tactical Sessions</p>
+                  </div>
+                  <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 px-4 py-1.5 rounded-full font-black text-[10px] uppercase">Instant Access</Badge>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                   {oneTimeTemplates.map(template => (
                     <TemplateCard 
                       key={template._id} 
                       template={template} 
                       isActive={isTemplateActive(template._id)}
-                      onStart={() => handleStartOneTime(template._id)}
-                      onView={() => navigate(`/workouts/details/${template._id}`)}
-                      difficultyColors={difficultyColors}
+                      onPreview={() => navigate(`/workouts/preview/${template._id}`)}
                     />
                   ))}
                 </div>
               </section>
             )}
 
-            {/* Training Programs */}
+            {/* Training Series */}
             {seriesTemplates.length > 0 && (
-              <section className="space-y-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-8 bg-primary rounded-full" />
-                  <h2 className="text-3xl font-black italic uppercase tracking-tight">Training Programs</h2>
-                  <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5">Recurring</Badge>
+              <section className="space-y-12">
+                <div className="flex items-center gap-4 border-l-4 border-primary pl-6">
+                  <div>
+                    <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">Elite Programs</h2>
+                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">Multi-Session Transformations</p>
+                  </div>
+                  <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1.5 rounded-full font-black text-[10px] uppercase">Series</Badge>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                   {seriesTemplates.map(template => (
                     <TemplateCard 
                       key={template._id} 
                       template={template} 
                       isActive={isTemplateActive(template._id)}
-                      onStart={() => {
-                        setSelectedTemplate(template);
-                        setIsToggleModalOpen(true);
-                      }}
-                      onView={() => navigate(`/workouts/details/${template._id}`)}
-                      difficultyColors={difficultyColors}
+                      onPreview={() => navigate(`/workouts/preview/${template._id}`)}
                     />
                   ))}
                 </div>
@@ -200,107 +226,125 @@ export default function WorkoutTemplates() {
           </>
         )}
       </main>
-
-      {/* Toggle Confirmation Modal */}
-      <Dialog open={isToggleModalOpen} onOpenChange={setIsToggleModalOpen}>
-        <DialogContent className="bg-slate-950 border-slate-800 text-white rounded-[2rem] sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-black italic">
-              {selectedTemplate && isTemplateActive(selectedTemplate._id) ? 'STOP PROGRAM?' : 'START PROGRAM?'}
-            </DialogTitle>
-            <DialogDescription className="text-slate-400">
-              {selectedTemplate && isTemplateActive(selectedTemplate._id)
-                ? `Confirm to stop "${selectedTemplate.title}". You can restart it anytime from this library.`
-                : `Add "${selectedTemplate?.title}" to your active programs? It will appear in your "My Workouts" schedule.`
-              }
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex gap-3 pt-4">
-            <Button variant="ghost" onClick={() => setIsToggleModalOpen(false)} className="text-slate-400 hover:bg-white/5 font-bold">
-              Cancel
-            </Button>
-            <Button
-              onClick={handleToggleTemplate}
-              className={cn(
-                "rounded-xl px-8 font-black italic tracking-widest text-white shadow-lg",
-                selectedTemplate && isTemplateActive(selectedTemplate._id) 
-                  ? "bg-rose-600 hover:bg-rose-700 shadow-rose-900/20" 
-                  : "bg-primary hover:bg-primary/90 shadow-primary/20"
-              )}
-            >
-              CONFIRM
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SiteFooter />
     </div>
   );
 }
 
-function TemplateCard({ template, isActive, onStart, onView, difficultyColors }: { 
+function HistoryShowcaseCard({ session, index }: { session: any, index: number }) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: index * 0.1 }}
+      className="group relative bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-6 hover:border-emerald-500/30 transition-all cursor-pointer overflow-hidden shadow-2xl"
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Badge className="bg-emerald-500/10 text-emerald-400 border-0 font-black text-[9px] px-3 py-1 rounded-lg">
+            {session.source?.toUpperCase() || 'SESSION'}
+          </Badge>
+          <span className="text-[10px] font-bold text-slate-500 italic">
+            {formatDistanceToNow(new Date(session.completedAt || session.updatedAt), { addSuffix: true })}
+          </span>
+        </div>
+        <h4 className="text-lg font-black italic uppercase text-white truncate group-hover:text-emerald-400 transition-colors">
+          {session.name}
+        </h4>
+        <div className="flex items-center gap-3">
+          <div className="flex -space-x-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="w-6 h-6 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center">
+                <Dumbbell className="h-3 w-3 text-emerald-400" />
+              </div>
+            ))}
+          </div>
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{session.exercises?.length || 0} Drills Finished</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function TemplateCard({ template, isActive, onPreview }: { 
   template: IWorkoutTemplate; 
   isActive: boolean; 
-  onStart: () => void; 
-  onView: () => void;
-  difficultyColors: any;
+  onPreview: () => void;
 }) {
+  const difficultyColors: any = {
+    beginner: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    intermediate: "bg-primary/10 text-primary border-primary/20",
+    advanced: "bg-rose-500/10 text-rose-400 border-rose-500/20"
+  };
+
   return (
-    <Card className="group relative bg-[#0a0a10]/60 border-slate-800/50 hover:border-primary/40 transition-all duration-500 overflow-hidden rounded-[2.5rem] flex flex-col shadow-xl">
-      <div className="relative h-56 overflow-hidden">
+    <Card 
+      className="group relative bg-white/5 backdrop-blur-xl border-white/10 hover:border-primary/40 transition-all duration-700 overflow-hidden rounded-[3rem] flex flex-col shadow-2xl hover:-translate-y-4"
+    >
+      <div className="relative h-64 overflow-hidden">
         <img
-          src={template.image || "https://images.unsplash.com/photo-1541534741688-6078c64b52d3?q=80&w=800&auto=format&fit=crop"}
+          src={template.image || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"}
           alt={template.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a10] via-[#0a0a10]/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
         
-        <div className="absolute top-6 left-6 z-10 flex flex-wrap gap-2">
-          <Badge className={cn("uppercase text-[10px] font-black tracking-widest px-3 py-1 border-0 shadow-lg", difficultyColors[template.difficultyLevel] || difficultyColors.intermediate)}>
+        <div className="absolute top-8 left-8 z-10 flex flex-col gap-3">
+          <Badge className={cn("uppercase text-[10px] font-black tracking-widest px-4 py-1.5 border backdrop-blur-md shadow-xl", difficultyColors[template.difficultyLevel] || difficultyColors.intermediate)}>
             {template.difficultyLevel}
           </Badge>
           {isActive && (
-            <Badge className="bg-emerald-500 text-white font-black tracking-widest text-[10px] uppercase shadow-lg shadow-emerald-900/30">
-              ACTIVE
+            <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-black tracking-widest text-[10px] uppercase backdrop-blur-md shadow-xl">
+              Currently Engaged
             </Badge>
           )}
         </div>
+
+        <div className="absolute bottom-8 left-8 right-8">
+           <div className="flex items-center gap-1 mb-2">
+             {[1, 2, 3, 4, 5].map(i => (
+               <Star key={i} className={cn("h-3 w-3 fill-current", i <= 4 ? "text-primary" : "text-slate-600")} />
+             ))}
+             <span className="text-[10px] font-black text-white/50 ml-1">4.8 AVERAGE</span>
+           </div>
+           <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none shadow-black drop-shadow-2xl">
+             {template.title}
+           </h3>
+        </div>
       </div>
 
-      <CardContent className="p-8 flex flex-col flex-1 space-y-6">
-        <div className="space-y-4">
-          <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white group-hover:text-primary transition-colors leading-none">
-            {template.title}
-          </h3>
-          <div className="flex items-center gap-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
-            <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> {template.days?.length} Sessions</span>
-            <span className="flex items-center gap-1.5"><Target className="h-4 w-4 text-primary" /> {template.type === 'one-time' ? 'Quick' : 'Program'}</span>
+      <CardContent className="p-8 flex flex-col flex-1 space-y-8">
+        <div className="flex items-center justify-between pointer-events-none">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-primary" />
+            <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{template.days?.length || 1} Phases</span>
           </div>
-          <p className="text-slate-400 text-sm line-clamp-2 leading-relaxed">
-            {template.description || "Achieve your peak performance with this specialized training regime."}
-          </p>
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 text-primary" />
+            <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{template.type}</span>
+          </div>
         </div>
 
-        <div className="mt-auto pt-6 border-t border-slate-800/50 flex items-center justify-between gap-4">
-          <Button 
-            onClick={onView}
-            variant="ghost" 
-            className="text-primary hover:text-primary hover:bg-primary/10 rounded-xl px-0"
-          >
-            Learn More <Info className="h-4 w-4 ml-2" />
-          </Button>
-          
-          <Button 
-            onClick={onStart}
-            className={cn(
-              "h-12 rounded-xl px-6 font-black italic tracking-widest text-white transition-all shadow-lg",
-              isActive 
-                ? "bg-rose-600 hover:bg-rose-700 shadow-rose-900/20" 
-                : "bg-primary hover:bg-primary/90 shadow-primary/20"
-            )}
-          >
-            {isActive ? "STOP" : template.type === 'one-time' ? "DO IT NOW" : "START"}
-          </Button>
-        </div>
+        <p className="text-slate-400 text-sm leading-relaxed line-clamp-3 font-light">
+          {template.description || "Achieve tactical superiority with this precision engineered training protocol designed for maximum hypertrophy."}
+        </p>
+
+        <Button 
+          onClick={onPreview}
+          className={cn(
+            "w-full h-16 rounded-2xl font-black italic tracking-widest transition-all shadow-xl uppercase text-lg group/btn relative overflow-hidden",
+            isActive 
+              ? "bg-white text-black hover:bg-slate-200" 
+              : "bg-primary text-white hover:bg-primary/90"
+          )}
+        >
+          <span className="relative z-10 flex items-center justify-center gap-3">
+             {isActive ? 'Continue Session' : template.type === 'one-time' ? 'Preview Drill' : 'View Protocol'}
+             <ChevronRight className="h-5 w-5 group-hover/btn:translate-x-2 transition-transform" />
+          </span>
+          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" />
+        </Button>
       </CardContent>
     </Card>
   );

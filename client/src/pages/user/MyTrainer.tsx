@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,9 +17,13 @@ import {
     AlertTriangle,
     Video,
     Calendar,
-    Crown
+    Crown,
+    CheckCircle2,
+    Zap,
+    Trophy,
+    Target
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import API from "@/lib/axios";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -29,20 +33,69 @@ import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TrainerReviews from "@/components/user/reviews/TrainerReviews";
 import Aurora from "@/components/ui/Aurora";
+import { motion } from "framer-motion";
 
 import type { User, Trainer, UserPlan } from "@/interfaces/user/IMyTrainer";
 
+const SpotlightCard = ({
+    children,
+    className = "",
+    spotlightColor = "rgba(255, 255, 255, 0.15)"
+}: {
+    children: React.ReactNode;
+    className?: string;
+    spotlightColor?: string;
+}) => {
+    const divRef = useRef<HTMLDivElement>(null);
+    const [isFocused, setIsFocused] = useState<boolean>(false);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [opacity, setOpacity] = useState<number>(0);
+
+    const handleMouseMove: React.MouseEventHandler<HTMLDivElement> = e => {
+        if (!divRef.current || isFocused) return;
+        const rect = divRef.current.getBoundingClientRect();
+        setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    };
+
+    const handleFocus = () => { setIsFocused(true); setOpacity(0.3); };
+    const handleBlur = () => { setIsFocused(false); setOpacity(0); };
+    const handleMouseEnter = () => setOpacity(0.3);
+    const handleMouseLeave = () => setOpacity(0);
+
+    return (
+        <div
+            ref={divRef}
+            onMouseMove={handleMouseMove}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className={`relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden transition-all duration-500 hover:bg-white/10 ${className}`}
+        >
+            <div
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out"
+                style={{
+                    opacity,
+                    background: `radial-gradient(circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 80%)`
+                }}
+            />
+            {children}
+        </div>
+    );
+};
+
 export default function MyTrainerProfile() {
+    const navigate = useNavigate();
     const [trainer, setTrainer] = useState<Trainer | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [userPlan, setUserPlan] = useState<UserPlan | null>(null);
-    const [isOpen, setIsOpen] = useState(false);
+    const [isCertOpen, setIsCertOpen] = useState(false);
 
     useEffect(() => {
-        document.title = "TrainUp - My Trainer Profile";
+        document.title = "TrainUp - My Trainer";
         fetchMyTrainer();
         fetchUser();
         fetchUserPlan();
@@ -54,11 +107,11 @@ export default function MyTrainerProfile() {
         try {
             const response = await API.get("/user/my-trainer");
             setTrainer(response.data.trainer);
-            setIsLoading(false);
         } catch (err: any) {
             console.error("Failed to fetch my trainer:", err);
             setError("Failed to load trainer details");
             toast.error("Failed to load trainer details");
+        } finally {
             setIsLoading(false);
         }
     };
@@ -69,9 +122,9 @@ export default function MyTrainerProfile() {
             setUser(response.data.user);
         } catch (err: any) {
             console.error("Failed to fetch user:", err);
-            toast.error("Failed to load user data");
         }
     };
+
     const fetchUserPlan = async () => {
         try {
             const response = await API.get("/user/plan");
@@ -81,15 +134,13 @@ export default function MyTrainerProfile() {
         }
     };
 
-
-
-
     const handleCancelSubscription = async () => {
         try {
             await API.post("/user/cancel-subscription");
             toast.success("Subscription cancelled successfully");
             setTrainer(null);
             setUser(null);
+            navigate('/trainers');
         } catch (err: any) {
             console.error("Failed to cancel subscription:", err);
             toast.error("Failed to cancel subscription");
@@ -108,7 +159,7 @@ export default function MyTrainerProfile() {
     };
 
     const getDaysLeft = () => {
-        if (!userPlan?.expiryDate) return null;
+        if (!userPlan?.expiryDate) return 0;
         const expiry = new Date(userPlan.expiryDate);
         const today = new Date();
         const diffTime = expiry.getTime() - today.getTime();
@@ -116,50 +167,24 @@ export default function MyTrainerProfile() {
         return diffDays > 0 ? diffDays : 0;
     };
 
-    const getPlanColor = (plan: string) => {
+    const getPlanBadge = (plan: string) => {
         switch (plan) {
-            case 'basic':
-                return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
-            case 'premium':
-                return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
-            case 'pro':
-                return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
-            default:
-                return 'bg-gray-500/10 text-gray-600 border-gray-500/20';
-        }
-    };
-
-    const getPlanIcon = (plan: string) => {
-        switch (plan) {
-            case 'basic':
-                return <Star className="h-4 w-4" />;
-            case 'premium':
-                return <MessageSquare className="h-4 w-4" />;
-            case 'pro':
-                return <Crown className="h-4 w-4" />;
-            default:
-                return <Star className="h-4 w-4" />;
+            case 'basic': return { label: 'Basic', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20', icon: Star };
+            case 'premium': return { label: 'Premium', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20', icon: Zap };
+            case 'pro': return { label: 'Pro', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20', icon: Crown };
+            default: return { label: plan, color: 'bg-gray-500/10 text-gray-400 border-gray-500/20', icon: Award };
         }
     };
 
     if (isLoading) {
         return (
             <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-                {/* Background Visuals */}
                 <div className="absolute inset-0 z-0">
-                    <Aurora
-                        colorStops={["#020617", "#0f172a", "#020617"]}
-                        amplitude={1.1}
-                        blend={0.6}
-                    />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                    <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
                 </div>
-                <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6">
-                    <div className="relative">
-                        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                        <div className="absolute inset-0 w-16 h-16 border-2 border-transparent border-t-accent rounded-full animate-pulse"></div>
-                    </div>
-                    <p className="text-muted-foreground font-medium text-lg">Loading your trainer profile...</p>
+                <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6 flex-1">
+                    <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                    <p className="text-gray-400 font-bold uppercase tracking-widest animate-pulse">Syncing Trainer Data...</p>
                 </div>
             </div>
         );
@@ -167,18 +192,19 @@ export default function MyTrainerProfile() {
 
     if (error || !trainer) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-                <div className="relative container mx-auto px-4 py-16 text-center space-y-6">
-                    <div className="w-24 h-24 mx-auto bg-muted/30 rounded-full flex items-center justify-center mb-6">
-                        <Users className="h-10 w-10 text-muted-foreground/50" />
+            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+                <div className="absolute inset-0 z-0">
+                    <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+                </div>
+                <div className="relative container mx-auto px-4 py-16 text-center space-y-8 flex-1 flex flex-col items-center justify-center">
+                    <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10 ring-4 ring-primary/5">
+                        <Users className="h-10 w-10 text-gray-500" />
                     </div>
-                    <h3 className="text-2xl font-bold text-foreground">No Trainer Hired</h3>
-                    <p className="text-muted-foreground text-lg">{error || "You haven't hired a trainer yet"}</p>
+                    <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter">No Active Trainer</h1>
+                    <p className="text-gray-400 text-lg font-medium max-w-md mx-auto">{error || "You haven't assigned a personal trainer to your profile yet. Ready to start your journey?"}</p>
                     <Link to="/trainers">
-                        <Button className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300">
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Find a Trainer
+                        <Button className="bg-white text-black hover:bg-gray-200 px-10 h-14 rounded-2xl font-black italic uppercase tracking-widest shadow-2xl">
+                            Find a Trainer <Zap className="ml-2 h-4 w-4 fill-black" />
                         </Button>
                     </Link>
                 </div>
@@ -186,394 +212,289 @@ export default function MyTrainerProfile() {
         );
     }
 
+    const planInfo = getPlanBadge(user?.trainerPlan || 'basic');
+    const PlanIcon = planInfo.icon;
+
     return (
         <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-            {/* Background Visuals */}
             <div className="absolute inset-0 z-0">
-                <Aurora
-                    colorStops={["#020617", "#0f172a", "#020617"]}
-                    amplitude={1.1}
-                    blend={0.6}
-                />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
             </div>
+
             <SiteHeader />
 
-            <div className="relative border-b border-border/50 bg-card/20 backdrop-blur-sm">
-                <div className="container mx-auto px-4 py-6">
-                    <Link to="/home">
-                        <Button variant="ghost" className="group hover:bg-primary/5 transition-all duration-300">
-                            <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                            Back to Home
-                        </Button>
-                    </Link>
-                </div>
-            </div>
-
-            <main className="relative container mx-auto px-4 py-12 space-y-12 flex-1">
-                <div className="relative">
-                    <Card className="group relative overflow-hidden bg-card/40 backdrop-blur-sm border-border/50 shadow-2xl">
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-
-                        <CardHeader className="relative p-8 md:p-12">
-                            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
-                                <div className="relative group/image">
-                                    <div className="relative w-48 h-48 lg:w-56 lg:h-56 rounded-2xl overflow-hidden shadow-2xl">
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent z-10"></div>
-
-                                        {!imageLoaded && (
-                                            <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted/30 animate-pulse flex items-center justify-center">
-                                                <Users className="h-16 w-16 text-muted-foreground/30" />
-                                            </div>
-                                        )}
-
-                                        <img
-                                            src={trainer.profileImage || "/placeholder.svg"}
-                                            alt={trainer.name}
-                                            className={`w-full h-full object-cover transition-all duration-700 group-hover/image:scale-105 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
-                                            onLoad={() => setImageLoaded(true)}
-                                        />
-
-                                        {trainer.isVerified && (
-                                            <div className="absolute top-4 right-4 z-20">
-                                                <div className="flex items-center gap-1 px-3 py-1.5 bg-green-500/90 backdrop-blur-md rounded-full border border-white/20">
-                                                    <Shield className="h-3.5 w-3.5 text-white" />
-                                                    <span className="text-white text-xs font-semibold">Verified</span>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+            <main className="relative container mx-auto px-4 py-12 space-y-12 flex-1 z-10">
+                {/* Hero Profile Section */}
+                <SpotlightCard className="p-8 md:p-12">
+                    <div className="flex flex-col lg:flex-row items-center lg:items-start gap-10">
+                        <div className="relative">
+                            <div className="w-48 h-48 lg:w-64 lg:h-64 rounded-[2.5rem] overflow-hidden shadow-2xl ring-4 ring-white/5">
+                                <img
+                                    src={trainer.profileImage || "/placeholder.svg"}
+                                    alt={trainer.name}
+                                    className={`w-full h-full object-cover transition-transform duration-700 hover:scale-110 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                    onLoad={() => setImageLoaded(true)}
+                                />
+                                {!imageLoaded && <div className="absolute inset-0 bg-white/5 animate-pulse" />}
+                            </div>
+                            {trainer.isVerified && (
+                                <div className="absolute -top-3 -right-3 bg-green-500 text-black p-3 rounded-2xl shadow-xl border-4 border-[#030303]">
+                                    <Shield className="h-6 w-6 fill-black" />
                                 </div>
+                            )}
+                        </div>
 
-                                <div className="flex-1 space-y-6">
-                                    <div className="space-y-4">
-                                        <div className="flex items-center gap-4 flex-wrap">
-                                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
-                                                <Award className="h-4 w-4 text-primary" />
-                                                <span className="text-sm font-medium text-primary">Your Trainer</span>
-                                            </div>
-                                            {user?.trainerPlan && (
-                                                <Badge className={`${getPlanColor(user.trainerPlan)} font-medium px-4 py-2`}>
-                                                    {getPlanIcon(user.trainerPlan)}
-                                                    <span className="ml-2">{user.trainerPlan.charAt(0).toUpperCase() + user.trainerPlan.slice(1)} Plan</span>
-                                                </Badge>
-                                            )}
-                                        </div>
+                        <div className="flex-1 space-y-6 text-center lg:text-left">
+                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+                                <div className="flex items-center gap-2 px-4 py-2 bg-primary/20 rounded-full border border-primary/30">
+                                    <Trophy className="h-4 w-4 text-primary" />
+                                    <span className="text-xs font-black italic uppercase text-primary">Your Elite Coach</span>
+                                </div>
+                                <Badge className={`${planInfo.color} font-black italic uppercase px-4 py-2 text-xs rounded-full border shadow-lg`}>
+                                    <PlanIcon className="h-4 w-4 mr-2" />
+                                    {planInfo.label} Plan
+                                </Badge>
+                            </div>
 
-                                        <div className="space-y-3">
-                                            <h1 className="font-display text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-                                                {trainer.name}
-                                            </h1>
-
-                                            <div className="flex flex-wrap items-center gap-3">
-                                                <Badge
-                                                    variant="secondary"
-                                                    className="bg-primary/10 text-primary border-primary/20 font-medium px-4 py-2"
-                                                >
-                                                    {trainer.specialization}
-                                                </Badge>
-                                                {trainer.isVerified && (
-                                                    <Badge className="bg-green-500/10 text-green-600 border-green-500/20 font-medium px-4 py-2">
-                                                        <Shield className="h-3 w-3 mr-1" />
-                                                        Verified
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
-                                            <div className="flex items-center gap-2">
-                                                <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
-                                                <span className="font-semibold text-foreground">{trainer.rating}</span>
-                                                <span className="text-sm">rating</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="h-5 w-5 text-primary" />
-                                                <span className="font-medium">{trainer.location}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-5 w-5 text-accent" />
-                                                <span className="font-medium">{trainer.experience} years experience</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Calendar className="h-5 w-5 text-orange-500" />
-                                                <span className="font-semibold text-foreground">{getDaysLeft() ?? 0} days left</span>
-                                            </div>
-                                            {user?.trainerPlan === 'pro' && (
-                                                <div className="flex items-center gap-2 text-purple-600">
-                                                    <Video className="h-5 w-5" />
-                                                    <span className="font-semibold">{userPlan?.videoCallsLeft ?? 0} sessions left</span>
-                                                </div>
-                                            )}
-                                            {user?.trainerPlan === 'premium' && (
-                                                <div className="flex items-center gap-2 text-blue-600">
-                                                    <MessageSquare className="h-5 w-5" />
-                                                    <span className="font-semibold">{userPlan?.messagesLeft ?? 0} chats left</span>
-                                                </div>
-                                            )}
-                                        </div>
+                            <div className="space-y-4">
+                                <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none">
+                                    {trainer.name}
+                                </h1>
+                                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-gray-400 font-bold uppercase tracking-widest text-xs">
+                                    <div className="flex items-center gap-2">
+                                        <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                                        <span className="text-white">{trainer.rating} RATING</span>
                                     </div>
-
-                                    <div className="flex flex-wrap gap-4 pt-4">
-                                        {/* Chat Button */}
-                                        {user?.trainerPlan !== 'basic' && (
-                                            <Link to={`/my-trainer/chat/${trainer._id}`}>
-                                                <Button
-                                                    variant="outline"
-                                                    size="lg"
-                                                    className="border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300 font-medium px-8 bg-transparent"
-                                                >
-                                                    <MessageSquare className="h-5 w-5 mr-2" />
-                                                    Chat with Trainer
-                                                </Button>
-                                            </Link>
-                                        )}
-
-
-                                        {/* Sessions/Availability */}
-                                        <Link to="/my-trainer/sessions">
-                                            <Button
-                                                variant="outline"
-                                                size="lg"
-                                                className="border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300 font-medium px-8 bg-transparent"
-                                            >
-                                                <Calendar className="h-5 w-5 mr-2" />
-                                                My Sessions
-                                            </Button>
-                                        </Link>
-
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="lg"
-                                                    className="bg-red-500/90 hover:bg-red-600/90 transition-all duration-300 font-medium px-8"
-                                                >
-                                                    <AlertTriangle className="h-5 w-5 mr-2" />
-                                                    Cancel Subscription
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent className="bg-card/90 backdrop-blur-sm border-border/50">
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle className="text-foreground">Confirm Subscription Cancellation</AlertDialogTitle>
-                                                    <AlertDialogDescription className="text-muted-foreground">
-                                                        Your subscription with {trainer.name} has {getRemainingTime()} remaining this month.
-                                                        Cancelling now means you will lose the payment for the current period. Are you sure you want to proceed?
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel className="border-border/50 hover:bg-muted/50">Keep Subscription</AlertDialogCancel>
-                                                    <AlertDialogAction
-                                                        className="bg-red-500/90 hover:bg-red-600/90"
-                                                        onClick={handleCancelSubscription}
-                                                    >
-                                                        Cancel Subscription
-                                                    </AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="h-4 w-4 text-primary" />
+                                        <span className="text-white">{trainer.experience} YRS EXP</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-accent" />
+                                        <span className="text-white truncate max-w-[150px]">{trainer.location}</span>
                                     </div>
                                 </div>
                             </div>
-                        </CardHeader>
-                    </Card>
-                </div>
 
-                <div className="grid gap-8 lg:grid-cols-3">
-                    <div className="lg:col-span-2 space-y-8">
-                        <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                            <CardHeader>
-                                <h2 className="text-2xl font-bold text-foreground">About {trainer.name}</h2>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <p className="text-muted-foreground leading-relaxed text-lg">{trainer.bio}</p>
-
-                                <div className="grid gap-4 sm:grid-cols-2 pt-4">
-                                    <div className="space-y-3">
-                                        <h3 className="font-semibold text-foreground flex items-center gap-2">
-                                            <Users className="h-4 w-4 text-primary" />
-                                            Experience
-                                        </h3>
-                                        <p className="text-muted-foreground">{trainer.experience} years of professional training</p>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <h3 className="font-semibold text-foreground flex items-center gap-2">
-                                            <Award className="h-4 w-4 text-primary" />
-                                            Specialization
-                                        </h3>
-                                        <p className="text-muted-foreground">{trainer.specialization}</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                            <CardHeader>
-                                <h2 className="text-2xl font-bold text-foreground">Certifications</h2>
-                            </CardHeader>
-                            <CardContent>
-                                <button
-                                    onClick={() => setIsOpen(true)}
-                                    className="group inline-flex items-center gap-3 p-4 bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/20 hover:border-primary/30 transition-all duration-300 w-full text-left"
+                            {/* Action Buttons */}
+                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
+                                {user?.trainerPlan !== 'basic' && (
+                                    <Button
+                                        onClick={() => navigate(`/my-trainer/chat/${trainer._id}`)}
+                                        className="h-14 px-8 bg-white text-black hover:bg-gray-200 rounded-2xl font-black italic uppercase tracking-widest text-sm shadow-xl"
+                                    >
+                                        <MessageSquare className="mr-2 h-5 w-5 fill-black" /> Chat Coach
+                                    </Button>
+                                )}
+                                <Button
+                                    variant="outline"
+                                    onClick={() => navigate('/my-trainer/sessions')}
+                                    className="h-14 px-8 bg-white/5 border-white/10 hover:bg-white/10 rounded-2xl font-black italic uppercase tracking-widest text-sm"
                                 >
-                                    <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                        <FileText className="h-5 w-5 text-primary" />
+                                    <Calendar className="mr-2 h-5 w-5" /> Training Schedule
+                                </Button>
+                                
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            className="h-14 px-8 text-red-500 hover:text-red-400 hover:bg-red-500/5 rounded-2xl font-black italic uppercase tracking-widest text-sm"
+                                        >
+                                            <AlertTriangle className="mr-2 h-5 w-5" /> Terminate Contract
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent className="bg-white/5 border border-white/10 backdrop-blur-2xl rounded-3xl p-8">
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle className="text-2xl font-black italic uppercase">Terminate Subscription?</AlertDialogTitle>
+                                            <AlertDialogDescription className="text-gray-400 font-medium py-4">
+                                                Your current plan with {trainer.name} expires {getRemainingTime()}. 
+                                                Terminating your contract now will end your access immediately. This action cannot be undone.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter className="gap-4">
+                                            <AlertDialogCancel className="bg-white/5 border-white/10 hover:bg-white/10 h-12 rounded-xl font-bold uppercase text-xs">Stay Active</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                onClick={handleCancelSubscription}
+                                                className="bg-red-500 text-white hover:bg-red-600 h-12 rounded-xl font-bold uppercase text-xs"
+                                            >
+                                                Confirm Termination
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+                        </div>
+                    </div>
+                </SpotlightCard>
+
+                {/* Info Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Main Content */}
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Plan Status Bento */}
+                        {user?.trainerPlan && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <SpotlightCard className="p-6 flex flex-col items-center justify-center text-center gap-2 group">
+                                    <div className="p-3 bg-primary/20 rounded-2xl group-hover:scale-110 transition-transform">
+                                        <Calendar className="h-6 w-6 text-primary" />
                                     </div>
                                     <div>
-                                        <p className="font-medium text-foreground">Professional Certificate</p>
-                                        <p className="text-sm text-muted-foreground">Click to view credentials</p>
+                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Time Remaining</p>
+                                        <p className="text-3xl font-black italic uppercase">{getDaysLeft()} Days</p>
                                     </div>
-                                </button>
-                            </CardContent>
-                        </Card>
+                                </SpotlightCard>
 
-                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                            <DialogContent className="max-w-3xl">
-                                <DialogHeader>
-                                    <DialogTitle className="flex items-center justify-between">
-                                        Professional Certificate
-                                    </DialogTitle>
-                                </DialogHeader>
-                                <img
-                                    src={trainer.certificate}
-                                    alt="Professional Certificate"
-                                    className="w-full h-auto rounded-lg border border-border/50"
-                                />
-                            </DialogContent>
-                        </Dialog>
+                                <SpotlightCard className="p-6 flex flex-col items-center justify-center text-center gap-2 group">
+                                    <div className="p-3 bg-blue-500/20 rounded-2xl group-hover:scale-110 transition-transform">
+                                        <MessageSquare className="h-6 w-6 text-blue-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Messages Left</p>
+                                        <p className="text-3xl font-black italic uppercase">
+                                            {user.trainerPlan === 'pro' ? '∞' : (userPlan?.messagesLeft ?? 0)}
+                                        </p>
+                                    </div>
+                                </SpotlightCard>
+
+                                <SpotlightCard className="p-6 flex flex-col items-center justify-center text-center gap-2 group">
+                                    <div className="p-3 bg-purple-500/20 rounded-2xl group-hover:scale-110 transition-transform">
+                                        <Video className="h-6 w-6 text-purple-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Calls Remaining</p>
+                                        <p className="text-3xl font-black italic uppercase">
+                                            {user.trainerPlan === 'pro' ? (userPlan?.videoCallsLeft ?? 0) : '0'}
+                                        </p>
+                                    </div>
+                                </SpotlightCard>
+                            </div>
+                        )}
+
+                        <SpotlightCard className="p-8 md:p-10 space-y-8">
+                            <h2 className="text-3xl font-black italic uppercase tracking-tighter flex items-center gap-4">
+                                <Award className="h-8 w-8 text-primary" /> The Coach's Philosophy
+                            </h2>
+                            <p className="text-xl font-medium text-gray-300 leading-relaxed italic">
+                                "{trainer.bio}"
+                            </p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-white/10">
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <Target className="h-5 w-5 text-primary" />
+                                        <h3 className="font-black italic uppercase tracking-widest text-xs">Specialization</h3>
+                                    </div>
+                                    <p className="text-gray-400 font-bold uppercase text-sm">{trainer.specialization}</p>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                        <h3 className="font-black italic uppercase tracking-widest text-xs">Credentials</h3>
+                                    </div>
+                                    <button 
+                                        onClick={() => setIsCertOpen(true)}
+                                        className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm font-bold uppercase tracking-widest group"
+                                    >
+                                        View Professional Certificate <ArrowLeft className="h-4 w-4 rotate-180 group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                </div>
+                            </div>
+                        </SpotlightCard>
+
+                        <div className="mt-8">
+                            <TrainerReviews
+                                trainerId={trainer._id}
+                                onReviewAdded={fetchMyTrainer}
+                                canReview={true}
+                                currentUserPlan={user?.trainerPlan}
+                            />
+                        </div>
                     </div>
 
-                    <div className="mt-8">
-                        <TrainerReviews
-                            trainerId={trainer._id}
-                            onReviewAdded={() => {
-                                setTrainer(prev => prev ? {
-                                    ...prev,
-                                } : null);
-                            }}
-                            canReview={true}
-                            currentUserPlan={user?.trainerPlan}
+                    {/* Sidebar */}
+                    <div className="space-y-8">
+                        {/* Plan Details Sidebar */}
+                        <SpotlightCard className="p-8 space-y-8 border-primary/20 bg-primary/5">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xl font-black italic uppercase">Contract Specs</h3>
+                                <Badge className="bg-green-500/20 text-green-400 border-green-500/20 font-black italic uppercase text-[10px]">Active</Badge>
+                            </div>
+                            
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-500">
+                                        <span>Contract Expiry</span>
+                                        <span className="text-white">{getRemainingTime()}</span>
+                                    </div>
+                                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${Math.min(100, (getDaysLeft() / 30) * 100)}%` }}
+                                            className="h-full bg-primary"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 italic font-medium">Synced with Stripe Billing Cycle</p>
+                                </div>
+
+                                <div className="space-y-4 pt-4 border-t border-white/10">
+                                    <h4 className="text-xs font-black italic uppercase tracking-widest">Coach Privileges</h4>
+                                    <div className="space-y-3">
+                                        {[
+                                            "Personalized Training Portals",
+                                            "Nutritional Architecture",
+                                            user?.trainerPlan !== 'basic' ? "Direct Secure Messsaging" : null,
+                                            user?.trainerPlan === 'pro' ? "1-on-1 Strategic Consultations" : null
+                                        ].filter(Boolean).map((perk, i) => (
+                                            <div key={i} className="flex items-center gap-3 text-xs font-bold text-gray-300">
+                                                <CheckCircle2 className="h-4 w-4 text-primary" />
+                                                <span>{perk}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </SpotlightCard>
+
+                        {/* Contact Sidebar */}
+                        <SpotlightCard className="p-8 space-y-6">
+                            <h3 className="text-xl font-black italic uppercase">Digital Comms</h3>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                    <Phone className="h-5 w-5 text-primary" />
+                                    <div className="overflow-hidden">
+                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Mobile Direct</p>
+                                        <p className="font-bold truncate">{trainer.phone}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                    <Mail className="h-5 w-5 text-primary" />
+                                    <div className="overflow-hidden">
+                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Coach Email</p>
+                                        <p className="font-bold truncate">{trainer.email}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </SpotlightCard>
+                    </div>
+                </div>
+            </main>
+
+            <Dialog open={isCertOpen} onOpenChange={setIsCertOpen}>
+                <DialogContent className="max-w-4xl bg-[#030303] border-white/10 p-2 overflow-hidden rounded-[2rem]">
+                    <DialogHeader className="p-6">
+                        <DialogTitle className="text-2xl font-black italic uppercase">Professional Credentials</DialogTitle>
+                    </DialogHeader>
+                    <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden border border-white/10">
+                        <img 
+                            src={trainer.certificate} 
+                            alt="Credentials" 
+                            className="w-full h-full object-contain bg-white/5" 
                         />
                     </div>
-                </div>
+                </DialogContent>
+            </Dialog>
 
-                <div className="space-y-6">
-                    {/* Current Plan Card */}
-                    {user?.trainerPlan && (
-                        <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                            <CardHeader>
-                                <h3 className="text-xl font-bold text-foreground">Current Plan Details</h3>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10 flex flex-col items-center justify-center text-center">
-                                        <Calendar className="h-8 w-8 text-primary mb-2" />
-                                        <div className="text-2xl font-bold text-foreground">{getDaysLeft() ?? 0}</div>
-                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Days Remaining</p>
-                                    </div>
-
-                                    <div className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10 flex flex-col items-center justify-center text-center">
-                                        <MessageSquare className="h-8 w-8 text-blue-500 mb-2" />
-                                        <div className="text-2xl font-bold text-foreground">
-                                            {user.trainerPlan === 'pro' ? 'Unlimited' : (userPlan?.messagesLeft ?? 0)}
-                                        </div>
-                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Chats Left</p>
-                                    </div>
-
-                                    <div className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10 flex flex-col items-center justify-center text-center">
-                                        <Video className="h-8 w-8 text-purple-500 mb-2" />
-                                        <div className="text-2xl font-bold text-foreground">
-                                            {user.trainerPlan === 'pro' ? (userPlan?.videoCallsLeft ?? 0) : '0'}
-                                        </div>
-                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Video Calls Left</p>
-                                    </div>
-                                </div>
-
-                                <div className="p-6 bg-primary/5 rounded-xl border border-primary/10">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-2">
-                                            {getPlanIcon(user.trainerPlan)}
-                                            <span className="font-bold text-lg uppercase">{user.trainerPlan} Plan</span>
-                                        </div>
-                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">Active</Badge>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-muted-foreground">Expires on</span>
-                                            <span className="font-medium">{userPlan?.expiryDate ? new Date(userPlan.expiryDate).toLocaleDateString(undefined, { dateStyle: 'long' }) : 'N/A'}</span>
-                                        </div>
-                                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                            <div
-                                                className="bg-primary h-full transition-all duration-500"
-                                                style={{ width: `${Math.min(100, (getDaysLeft() || 0) / 30 * 100)}%` }}
-                                            />
-                                        </div>
-                                        <p className="text-right text-xs text-muted-foreground">{getRemainingTime()}</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 text-sm">
-                                    <h4 className="font-semibold text-foreground mb-3">Included in your plan:</h4>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <div className="flex items-center gap-2 text-green-600">
-                                            <Shield className="h-4 w-4" />
-                                            Personalized workout plans
-                                        </div>
-                                        <div className="flex items-center gap-2 text-green-600">
-                                            <Shield className="h-4 w-4" />
-                                            Custom diet recommendations
-                                        </div>
-                                        {user.trainerPlan !== 'basic' && (
-                                            <div className="flex items-center gap-2 text-green-600">
-                                                <Shield className="h-4 w-4" />
-                                                Direct messaging with trainer
-                                            </div>
-                                        )}
-                                        {user.trainerPlan === 'pro' && (
-                                            <div className="flex items-center gap-2 text-green-600">
-                                                <Shield className="h-4 w-4" />
-                                                1-on-1 video call sessions
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                        <CardHeader>
-                            <h3 className="text-xl font-bold text-foreground">Pricing</h3>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="text-center p-6 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/10">
-                                <div className="text-3xl font-bold text-primary mb-2">₹{trainer.price ? (typeof trainer.price === 'object' ? trainer.price.basic.toLocaleString() : trainer.price) : "5,000"}</div>
-                                <p className="text-muted-foreground">starting per month</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                        <CardHeader>
-                            <h3 className="text-xl font-bold text-foreground">Contact Information</h3>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                                    <Phone className="h-4 w-4 text-primary" />
-                                    <span className="text-sm font-medium">{trainer.phone}</span>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                                    <Mail className="h-4 w-4 text-primary" />
-                                    <span className="text-sm font-medium">{trainer.email}</span>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </main >
             <SiteFooter />
-        </div >
+        </div>
     );
 }

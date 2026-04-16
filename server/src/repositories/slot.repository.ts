@@ -59,6 +59,116 @@ export class SlotRepository implements ISlotRepository {
       .sort({ date: 1, startTime: 1 })
   }
 
+  async findUserSessionsPaginated(
+    userId: string,
+    type: 'upcoming' | 'past',
+    page: number,
+    limit: number,
+    date?: string
+  ): Promise<{ sessions: ISlot[], total: number }> {
+    const skip = (page - 1) * limit;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    let matchQuery: any = {
+      $or: [
+        { bookedBy: new Types.ObjectId(userId) },
+        { 'requestedBy.userId': new Types.ObjectId(userId) }
+      ]
+    };
+
+    if (type === 'upcoming') {
+      matchQuery.date = { $gte: now };
+      matchQuery['requestedBy'] = {
+        $elemMatch: {
+          userId: new Types.ObjectId(userId),
+          status: { $in: ['pending', 'approved'] }
+        }
+      };
+    } else {
+      matchQuery = {
+        $and: [
+          {
+            $or: [
+              { bookedBy: new Types.ObjectId(userId) },
+              { 'requestedBy.userId': new Types.ObjectId(userId) }
+            ]
+          },
+          {
+            $or: [
+              { date: { $lt: now } },
+              {
+                requestedBy: {
+                  $elemMatch: {
+                    userId: new Types.ObjectId(userId),
+                    status: 'rejected'
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      };
+    }
+
+    // Add date filter if provided
+    if (date) {
+      const filterDate = new Date(date);
+      filterDate.setHours(0, 0, 0, 0);
+      const nextDay = new Date(filterDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      matchQuery.date = {
+        $gte: filterDate,
+        $lt: nextDay
+      };
+    }
+
+    const pipeline: any[] = [
+      { $match: matchQuery },
+      {
+        $lookup: {
+          from: 'trainers',
+          localField: 'trainerId',
+          foreignField: '_id',
+          as: 'trainer'
+        }
+      },
+      { $unwind: '$trainer' }
+    ];
+
+    const totalPipeline = [...pipeline, { $count: 'total' }];
+    const totalResult = await SlotModel.aggregate(totalPipeline);
+    const total = totalResult.length > 0 ? totalResult[0].total : 0;
+
+    pipeline.push(
+      { $sort: { date: type === 'upcoming' ? 1 : -1, startTime: type === 'upcoming' ? 1 : -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          trainerId: {
+            _id: '$trainer._id',
+            name: '$trainer.name',
+            profileImage: '$trainer.profileImage'
+          },
+          date: 1,
+          startTime: 1,
+          endTime: 1,
+          isBooked: 1,
+          bookedBy: 1,
+          requestedBy: 1,
+          videoCallLink: 1,
+          createdAt: 1
+        }
+      }
+    );
+
+    const sessions = await SlotModel.aggregate(pipeline);
+
+    return { sessions, total };
+  }
+
   async findTrainerSessionRequests(trainerId: string): Promise<ISlot[]> {
     return await SlotModel.find({
       trainerId,

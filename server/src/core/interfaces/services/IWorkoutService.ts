@@ -39,4 +39,10 @@ export interface IWorkoutService {
   createDay(userId: string, date: string): Promise<WorkoutDayResponseDto>;
   addSessionToDay(userId: string, date: string, sessionId: string): Promise<WorkoutDayResponseDto>;
   getDay(userId: string, date: string): Promise<WorkoutDayResponseDto | null>;
+  getWorkoutHistory(
+    userId: string,
+    page: number,
+    limit: number,
+    source?: string
+  ): Promise<{ sessions: WorkoutSessionResponseDto[]; total: number; totalPages: number }>;
 }

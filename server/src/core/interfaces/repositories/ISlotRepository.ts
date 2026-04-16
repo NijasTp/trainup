@@ -8,6 +8,7 @@ export interface ISlotRepository {
   findAvailableSlots(userId?: string): Promise<ISlot[]>;
   findUserSessions(userId: string): Promise<ISlot[]>;
   findTrainerSessionRequests(trainerId: string): Promise<ISlot[]>;
+  findUserSessionsPaginated(userId: string, type: 'upcoming' | 'past', page: number, limit: number, date?: string): Promise<{ sessions: ISlot[], total: number }>;
   updateSlot(id: string, updateData: UpdateQuery<ISlot>, options?: QueryOptions): Promise<ISlot | null>;
   deleteSlot(id: string): Promise<void>;
   addBookingRequest(slotId: string, userId: string): Promise<ISlot | null>;

@@ -1,8 +1,8 @@
 export const ROUTES = {
   //User Routes
   CHOOSE_LOGIN: "/",
-  GLOBAL_LOGIN: "/login",
-  USER_LOGIN: "/user/login",
+  GLOBAL_LOGIN: "/landing",
+  USER_LOGIN: "/login",
   USER_FORGOT_PASSWORD: "/forgot-password",
   USER_NEW_PASSWORD: "/new-password",
   USER_SIGNUP: "/signup",
@@ -33,6 +33,8 @@ export const ROUTES = {
   USER_EDIT_WORKOUT_SESSION: '/workouts/:id',
   USER_START_WORKOUT: '/workouts/:id/start',
   USER_WORKOUT_SUCCESS: '/workouts/:id/success',
+  USER_WORKOUT_HISTORY: '/workouts/history',
+  USER_WORKOUT_PREVIEW: '/workouts/preview/:id',
 
   USER_DIET: '/diets',
   USER_ADD_DIET: '/diets/add',

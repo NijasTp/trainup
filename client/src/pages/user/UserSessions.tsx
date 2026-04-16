@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import {
     Calendar,
     Clock,
@@ -11,69 +12,75 @@ import {
     XCircle,
     AlertCircle,
     ArrowLeft,
-    RefreshCw
+    ChevronLeft,
+    ChevronRight,
+    Target,
+    X
 } from "lucide-react";
 import API from "@/lib/axios";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
+import Aurora from "@/components/ui/Aurora";
+import { motion, AnimatePresence } from "framer-motion";
 
 import type { Session } from "@/interfaces/user/IUserSessions";
-import Aurora from "@/components/ui/Aurora";
-
 
 export default function UserSessions() {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+    const [selectedDate, setSelectedDate] = useState<string>("");
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const limit = 8;
+    
     const user = useSelector((state: RootState) => state.userAuth.user);
     const currentUserId = user?._id;
     const navigate = useNavigate();
 
     useEffect(() => {
-        document.title = "TrainUp - My Sessions";
+        document.title = "TrainUp - Training Sessions";
         fetchSessions();
-    }, []);
+    }, [activeTab, page, selectedDate]);
 
     const fetchSessions = async () => {
         setIsLoading(true);
-        setError(null);
         try {
-            const response = await API.get("/user/sessions");
-            // Sort sessions: Latest date first
-            const sortedSessions = (response.data.sessions || []).sort((a: Session, b: Session) => {
-                const dateA = new Date(`${a.date.split('T')[0]}T${a.startTime}`);
-                const dateB = new Date(`${b.date.split('T')[0]}T${b.startTime}`);
-                return dateB.getTime() - dateA.getTime();
+            const response = await API.get("/user/sessions", {
+                params: {
+                    type: activeTab,
+                    page,
+                    limit,
+                    date: selectedDate
+                }
             });
-            setSessions(sortedSessions);
-            setIsLoading(false);
+            setSessions(response.data.sessions || []);
+            setTotal(response.data.total || 0);
         } catch (err: any) {
             console.error("Failed to fetch sessions:", err);
-            setError("Failed to load sessions");
-            toast.error("Failed to load sessions");
+            toast.error("Network connection error. Failed to sync sessions.");
+        } finally {
             setIsLoading(false);
         }
     };
 
     const canJoinSession = (session: Session) => {
         if (!currentUserId) return false;
-        const userRequest = session.requestedBy.find(req => req.userId === currentUserId);
+        const userRequest = session.requestedBy.find(req => 
+            (typeof req.userId === 'string' ? req.userId : req.userId._id) === currentUserId
+        );
         if (!userRequest || userRequest.status !== 'approved' || !session.isBooked) return false;
 
-        // Parse the slot date ensuring we get the correct local year, month, day
         const slotDate = new Date(session.date);
-        const year = slotDate.getFullYear();
-        const month = slotDate.getMonth();
-        const day = slotDate.getDate();
-
         const [hours, minutes] = session.startTime.split(':').map(Number);
         const [endHours, endMinutes] = session.endTime.split(':').map(Number);
 
-        const start = new Date(year, month, day, hours, minutes);
-        const end = new Date(year, month, day, endHours, endMinutes);
+        const start = new Date(slotDate.setHours(hours, minutes, 0, 0));
+        const end = new Date(slotDate.setHours(endHours, endMinutes, 0, 0));
 
         const now = new Date();
         const tenMinutesBefore = new Date(start.getTime() - 10 * 60000);
@@ -85,317 +92,247 @@ export default function UserSessions() {
         try {
             const response = await API.get(`/video-call/slot/${slotId}`);
             const roomId = response.data.videoCall.roomId;
-            console.log('Navigating to video call with roomId:', roomId, 'With slotId:', slotId);
             navigate(`/video-call/${roomId}`);
         } catch (error: any) {
-            console.error('Error joining video call:', error);
-            toast.error(error.response?.data?.message || 'Failed to join video call');
+            toast.error(error.response?.data?.message || 'Uplink failed. Please try again.');
         }
     };
 
-    const getStatusColor = (status: string) => {
+    const getStatusInfo = (status: string) => {
         switch (status) {
-            case 'approved':
-                return 'bg-green-500/10 text-green-600 border-green-500/20';
-            case 'rejected':
-                return 'bg-red-500/10 text-red-600 border-red-500/20';
-            case 'pending':
-                return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
-            default:
-                return 'bg-gray-500/10 text-gray-600 border-gray-500/20';
-        }
-    };
-
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'approved':
-                return <CheckCircle className="h-4 w-4" />;
-            case 'rejected':
-                return <XCircle className="h-4 w-4" />;
-            case 'pending':
-                return <AlertCircle className="h-4 w-4" />;
-            default:
-                return <Clock className="h-4 w-4" />;
+            case 'approved': return { color: 'bg-green-500/10 text-green-400 border-green-500/20', icon: CheckCircle, label: 'Approved' };
+            case 'rejected': return { color: 'bg-red-500/10 text-red-400 border-red-500/20', icon: XCircle, label: 'Rejected' };
+            case 'pending': return { color: 'bg-amber-500/10 text-amber-400 border-amber-500/20', icon: Clock, label: 'Pending' };
+            default: return { color: 'bg-gray-500/10 text-gray-400 border-gray-500/20', icon: AlertCircle, label: status };
         }
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+        return new Date(dateString).toLocaleDateString('en-IN', {
             weekday: 'long',
-            year: 'numeric',
-            month: 'long',
+            month: 'short',
             day: 'numeric'
         });
     };
 
     const formatTime = (time: string) => {
-        return new Date(`1970-01-01T${time}`).toLocaleTimeString('en-US', {
+        return new Date(`1970-01-01T${time}`).toLocaleTimeString('en-IN', {
             hour: 'numeric',
             minute: '2-digit',
             hour12: true
         });
     };
 
-    if (isLoading) {
-        return (
-            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-                {/* Background Visuals */}
-                <div className="absolute inset-0 z-0">
-                    <Aurora
-                        colorStops={["#020617", "#0f172a", "#020617"]}
-                        amplitude={1.1}
-                        blend={0.6}
-                    />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
-                </div>
-                <SiteHeader />
-                <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6">
-                    <div className="relative">
-                        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                        <div className="absolute inset-0 w-16 h-16 border-2 border-transparent border-t-accent rounded-full animate-pulse"></div>
-                    </div>
-                    <p className="text-muted-foreground font-medium text-lg">Loading sessions...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-                {/* Background Visuals */}
-                <div className="absolute inset-0 z-0">
-                    <Aurora
-                        colorStops={["#020617", "#0f172a", "#020617"]}
-                        amplitude={1.1}
-                        blend={0.6}
-                    />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
-                </div>
-                <SiteHeader />
-                <div className="relative container mx-auto px-4 py-16 text-center space-y-6">
-                    <h3 className="text-2xl font-bold text-foreground">Error</h3>
-                    <p className="text-muted-foreground text-lg">{error}</p>
-                    <Button
-                        className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
-                        onClick={fetchSessions}
-                    >
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Retry
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-
-    if (!currentUserId) {
-        return (
-            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-                {/* Background Visuals */}
-                <div className="absolute inset-0 z-0">
-                    <Aurora
-                        colorStops={["#020617", "#0f172a", "#020617"]}
-                        amplitude={1.1}
-                        blend={0.6}
-                    />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
-                </div>
-                <SiteHeader />
-                <div className="relative container mx-auto px-4 py-16 text-center space-y-6">
-                    <h3 className="text-2xl font-bold text-foreground">Authentication Error</h3>
-                    <p className="text-muted-foreground text-lg">Please log in to view your sessions</p>
-                    <Link to="/login">
-                        <Button className="bg-gradient-to-r from-primary to-primary/90">
-                            Log In
-                        </Button>
-                    </Link>
-                </div>
-            </div>
-        );
-    }
+    const totalPages = Math.ceil(total / limit);
 
     return (
         <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-            {/* Background Visuals */}
             <div className="absolute inset-0 z-0">
-                <Aurora
-                    colorStops={["#020617", "#0f172a", "#020617"]}
-                    amplitude={1.1}
-                    blend={0.6}
-                />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
             </div>
+
             <SiteHeader />
 
-            <div className="relative border-b border-border/50 bg-card/20 backdrop-blur-sm">
-                <div className="container mx-auto px-4 py-6">
-                    <Link to="/my-trainer/profile">
-                        <Button variant="ghost" className="group hover:bg-primary/5 transition-all duration-300">
-                            <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                            Back to Trainer Profile
-                        </Button>
-                    </Link>
-                </div>
-            </div>
-
-            <main className="relative container mx-auto px-4 py-12 space-y-8">
-                <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
-                    <CardHeader className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                                <Video className="h-8 w-8 text-primary" />
-                                My Sessions
+            <main className="relative container mx-auto px-4 py-12 space-y-12 flex-1 z-10">
+                {/* Header Section */}
+                <header className="space-y-8">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div className="space-y-2">
+                            <Link to="/my-trainer/profile" className="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 transition-colors group mb-4">
+                                <ArrowLeft className="h-3 w-3 mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Coach Profile
+                            </Link>
+                            <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
+                                Strategic <span className="text-primary">Sessions</span>
                             </h1>
-                            <Badge variant="secondary" className="text-sm">
-                                {sessions.length} Total Sessions
-                            </Badge>
+                            <p className="text-gray-400 font-medium max-w-lg text-sm md:text-base leading-relaxed">Manage your scheduled high-performance training sessions and connect with your professional coach.</p>
                         </div>
-                        <p className="text-muted-foreground">
-                            View all your session requests, approvals, and scheduled video calls with your trainer.
-                        </p>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {sessions.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <Video className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
-                                    <p className="text-muted-foreground text-lg">No sessions found</p>
-                                    <p className="text-sm text-muted-foreground mt-2">
-                                        Book a session from your trainer's availability page to get started
-                                    </p>
-                                    <Link to="/my-trainer/availability">
-                                        <Button className="mt-4 bg-gradient-to-r from-primary to-primary/90">
-                                            <Calendar className="h-4 w-4 mr-2" />
-                                            View Availability
-                                        </Button>
-                                    </Link>
-                                </div>
-                            ) : (
-                                sessions.map((session) => {
-                                    // Find the user's request in requestedBy
-                                    const userRequest = session.requestedBy.find(req => req.userId === currentUserId);
-                                    const status = userRequest?.status || 'pending';
-                                    const rejectionReason = userRequest?.rejectionReason;
-                                    const canJoin = canJoinSession(session);
 
-                                    return (
-                                        <Card
-                                            key={session._id}
-                                            className="bg-background/50 border-border/50 hover:shadow-md transition-all duration-200"
-                                        >
-                                            <CardContent className="p-6">
-                                                <div className="flex items-start justify-between mb-4">
-                                                    <div className="flex items-center space-x-3">
-                                                        <Avatar className="h-12 w-12">
-                                                            <AvatarImage
-                                                                src={session.trainerId?.profileImage || "/placeholder.svg"}
-                                                                alt={session.trainerId?.name || "Trainer"}
-                                                            />
-                                                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                                                                {session.trainerId?.name?.charAt(0) || "T"}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <div>
-                                                            <h3 className="font-semibold text-foreground">
-                                                                Session with {session.trainerId?.name || "Unknown Trainer"}
-                                                            </h3>
-                                                            <p className="text-sm text-muted-foreground">
-                                                                Requested on {new Date(session.createdAt).toLocaleDateString()}
-                                                            </p>
-                                                        </div>
+                        <div className="flex flex-col sm:flex-row items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-2xl">
+                            <button 
+                                onClick={() => { setActiveTab('upcoming'); setPage(1); }}
+                                className={`px-8 py-3 rounded-xl font-black italic uppercase tracking-widest text-xs transition-all ${activeTab === 'upcoming' ? 'bg-primary text-black shadow-xl ring-4 ring-primary/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                            >
+                                Upcoming
+                            </button>
+                            <button 
+                                onClick={() => { setActiveTab('past'); setPage(1); }}
+                                className={`px-8 py-3 rounded-xl font-black italic uppercase tracking-widest text-xs transition-all ${activeTab === 'past' ? 'bg-primary text-black shadow-xl ring-4 ring-primary/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                            >
+                                Past Performance
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 max-w-xl">
+                        <div className="relative flex-1 group">
+                            <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-primary transition-colors" />
+                            <Input 
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => { setSelectedDate(e.target.value); setPage(1); }}
+                                className="h-16 pl-14 pr-6 bg-white/5 border-white/10 rounded-2xl focus:ring-primary/20 focus:border-primary/30 font-bold transition-all [color-scheme:dark]"
+                            />
+                        </div>
+                        {selectedDate && (
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => { setSelectedDate(""); setPage(1); }}
+                                className="h-16 w-16 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 hover:border-red-500/30 transition-all text-red-400 group"
+                            >
+                                <X className="h-6 w-6 group-hover:scale-110 transition-transform" />
+                            </Button>
+                        )}
+                    </div>
+                </header>
+
+                {/* Session Grid */}
+                {isLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="h-64 bg-white/5 border border-white/10 rounded-[2.5rem] animate-pulse" />
+                        ))}
+                    </div>
+                ) : sessions.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-center space-y-6 opacity-50 bg-white/5 border border-dashed border-white/10 rounded-[3rem]">
+                        <Video className="h-20 w-20 text-gray-500" />
+                        <div>
+                            <h3 className="text-2xl font-black italic uppercase">No Sessions Found</h3>
+                            <p className="text-gray-400 font-medium mt-2 max-w-sm mx-auto">
+                                {selectedDate 
+                                    ? `Zero coordinates found for ${formatDate(selectedDate)}. Try another date?` 
+                                    : "Direct training dialogue has not been initialized. Ready to begin?"
+                                }
+                            </p>
+                        </div>
+                        <Button onClick={() => navigate('/my-trainer/availability')} className="bg-white text-black hover:bg-gray-200 px-8 h-12 rounded-xl font-black italic uppercase tracking-widest text-xs shadow-2xl">
+                            Explore Availability
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <AnimatePresence mode="popLayout">
+                            {sessions.map((session, index) => {
+                                const userReq = session.requestedBy.find(req => (typeof req.userId === 'string' ? req.userId : req.userId._id) === currentUserId);
+                                const status = userReq?.status || 'pending';
+                                const statusInfo = getStatusInfo(status);
+                                const StatusIcon = statusInfo.icon;
+                                const canJoin = canJoinSession(session);
+
+                                return (
+                                    <motion.div
+                                        key={session._id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.05 }}
+                                    >
+                                        <div className="group relative bg-white/5 border border-white/10 rounded-[2.5rem] p-8 hover:bg-white/10 hover:border-primary/20 transition-all duration-500 shadow-2xl overflow-hidden h-full flex flex-col">
+                                            {/* Top Section */}
+                                            <div className="flex items-start justify-between mb-6">
+                                                <div className="flex items-center gap-4">
+                                                    <Avatar className="h-14 w-14 ring-2 ring-primary/20 border-4 border-[#030303]">
+                                                        <AvatarImage src={session.trainerId?.profileImage} />
+                                                        <AvatarFallback className="bg-primary/20 text-primary font-black italic">{session.trainerId?.name?.charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <div>
+                                                        <h3 className="text-lg font-black italic uppercase tracking-tight group-hover:text-primary transition-colors">{session.trainerId?.name}</h3>
+                                                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">Personal Coach</p>
                                                     </div>
-                                                    <div className="flex items-center space-x-2">
-                                                        <Badge className={`${getStatusColor(status)} font-medium`}>
-                                                            {getStatusIcon(status)}
-                                                            <span className="ml-2">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
-                                                        </Badge>
-                                                        {canJoin && (
+                                                </div>
+                                                <Badge className={`${statusInfo.color} font-black italic uppercase text-[8px] px-3 py-1 rounded-full border shadow-lg`}>
+                                                    <StatusIcon className="h-3 w-3 mr-1.5" />
+                                                    {statusInfo.label}
+                                                </Badge>
+                                            </div>
+
+                                            {/* Timing Details */}
+                                            <div className="space-y-4 mb-8 flex-1">
+                                                <div className="flex items-center gap-4 bg-black/20 p-4 rounded-2xl border border-white/5">
+                                                    <Calendar className="h-5 w-5 text-primary" />
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Training Date</p>
+                                                        <p className="text-sm font-bold">{formatDate(session.date)}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4 bg-black/20 p-4 rounded-2xl border border-white/5">
+                                                    <Clock className="h-5 w-5 text-accent" />
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Time Window</p>
+                                                        <p className="text-sm font-bold">{formatTime(session.startTime)} - {formatTime(session.endTime)}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Action Section */}
+                                            <div className="pt-6 border-t border-white/10">
+                                                {status === 'approved' ? (
+                                                    <div className="space-y-4">
+                                                        {canJoin ? (
                                                             <Button
                                                                 onClick={() => joinVideoCall(session._id)}
-                                                                className="bg-green-600 hover:bg-green-700 text-white"
-                                                                size="sm"
+                                                                className="w-full h-14 bg-green-500 text-black hover:bg-green-600 rounded-2xl font-black italic uppercase tracking-widest shadow-[0_0_20px_rgba(34,197,94,0.3)] animate-pulse"
                                                             >
-                                                                <Video className="h-4 w-4 mr-2" />
-                                                                Join Session
+                                                                <Video className="mr-2 h-5 w-5 fill-black" /> Join Active Stream
                                                             </Button>
+                                                        ) : (
+                                                            <div className="flex items-center justify-center p-4 bg-green-500/5 border border-green-500/10 rounded-2xl text-[10px] font-black uppercase text-green-500 tracking-widest text-center">
+                                                                Uplink active 10min prior to start
+                                                            </div>
                                                         )}
                                                     </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                                    <div className="flex items-center space-x-2 text-sm">
-                                                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                                                        <span className="text-foreground font-medium">
-                                                            {formatDate(session.date)}
-                                                        </span>
+                                                ) : status === 'rejected' ? (
+                                                    <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl text-[10px] font-black uppercase text-red-500 tracking-widest text-center leading-relaxed">
+                                                        Session Cancelled: {userReq?.rejectionReason || "Unavailable"}
                                                     </div>
-                                                    <div className="flex items-center space-x-2 text-sm">
-                                                        <Clock className="h-4 w-4 text-muted-foreground" />
-                                                        <span className="text-foreground font-medium">
-                                                            {formatTime(session.startTime)} - {formatTime(session.endTime)}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center space-x-2 text-sm">
-                                                        <Video className="h-4 w-4 text-muted-foreground" />
-                                                        <span className="text-foreground font-medium">
-                                                            1 Hour Session
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                {status === 'rejected' && rejectionReason && (
-                                                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-                                                        <div className="flex items-start space-x-2">
-                                                            <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                                                            <div>
-                                                                <p className="font-medium text-red-700">Session Rejected</p>
-                                                                <p className="text-sm text-red-600 mt-1">
-                                                                    {rejectionReason}
-                                                                </p>
-                                                            </div>
-                                                        </div>
+                                                ) : (
+                                                    <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl text-[10px] font-black uppercase text-amber-500 tracking-widest text-center">
+                                                        Awaiting coach authentication...
                                                     </div>
                                                 )}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </AnimatePresence>
+                    </div>
+                )}
 
-                                                {status === 'approved' && (
-                                                    <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-                                                        <div className="flex items-start space-x-2">
-                                                            <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                                                            <div className="flex-1">
-                                                                <p className="font-medium text-green-700">Session Approved</p>
-                                                                <p className="text-sm text-green-600 mt-1">
-                                                                    {canJoin
-                                                                        ? "You can now join the video call session!"
-                                                                        : "You can join the session 10 minutes before the scheduled time."
-                                                                    }
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {status === 'pending' && (
-                                                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                                                        <div className="flex items-start space-x-2">
-                                                            <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
-                                                            <div>
-                                                                <p className="font-medium text-amber-700">Awaiting Approval</p>
-                                                                <p className="text-sm text-amber-600 mt-1">
-                                                                    Your session request is pending approval from your trainer.
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-                                    );
-                                })
-                            )}
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-4 pt-8">
+                        <Button 
+                            variant="ghost" 
+                            disabled={page === 1} 
+                            onClick={() => setPage(page - 1)}
+                            className="w-12 h-12 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-20"
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                        </Button>
+                        <div className="flex items-center gap-2">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                                <button
+                                    key={p}
+                                    onClick={() => setPage(p)}
+                                    className={`w-12 h-12 rounded-full font-black italic text-xs transition-all ${page === p ? 'bg-primary text-black shadow-lg scale-110' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    {p}
+                                </button>
+                            ))}
                         </div>
-                    </CardContent>
-                </Card>
+                        <Button 
+                            variant="ghost" 
+                            disabled={page === totalPages} 
+                            onClick={() => setPage(page + 1)}
+                            className="w-12 h-12 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-20"
+                        >
+                            <ChevronRight className="h-5 w-5" />
+                        </Button>
+                    </div>
+                )}
             </main>
+
+            <SiteFooter />
         </div>
     );
 }

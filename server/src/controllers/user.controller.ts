@@ -512,12 +512,31 @@ export class UserController implements IUserController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const userId = (req.user as JwtPayload).id
-      const sessions = await this._slotService.getUserSessions(userId)
-      res.status(STATUS_CODE.OK).json({ sessions })
+      const userId = (req.user as JwtPayload).id;
+      const {
+        type = 'upcoming',
+        page = '1',
+        limit = '10',
+        date
+      } = req.query as {
+        type?: 'upcoming' | 'past';
+        page?: string;
+        limit?: string;
+        date?: string;
+      };
+
+      const result = await this._slotService.getUserSessionsPaginated(
+        userId,
+        type,
+        parseInt(page, 10),
+        parseInt(limit, 10),
+        date
+      );
+
+      res.status(STATUS_CODE.OK).json(result);
     } catch (err) {
-      logger.error('Error fetching user sessions:', err)
-      next(err)
+      logger.error('Error fetching user sessions:', err);
+      next(err);
     }
   }
 

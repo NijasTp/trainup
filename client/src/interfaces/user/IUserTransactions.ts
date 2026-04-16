@@ -3,6 +3,8 @@ export interface Transaction {
     amount: number;
     status: 'completed' | 'failed' | 'pending' | 'cancelled';
     type: 'trainer' | 'gym';
+    transactionType: 'debit' | 'credit';
+    description?: string;
     trainerId?: {
         _id: string;
         name: string;

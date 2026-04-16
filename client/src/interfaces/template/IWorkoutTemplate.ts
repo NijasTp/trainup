@@ -32,6 +32,7 @@ export interface IWorkoutTemplate {
     createdById: string;
     createdByType: 'Admin' | 'Trainer' | 'Gym';
     gymId?: string;
+    isAssignedByTrainer?: boolean;
     createdAt: string;
     updatedAt: string;
 }

@@ -26,6 +26,8 @@ export interface IWorkoutSession extends Document {
   notes?: string;
   isDone?: boolean;
   completedAt?: Date;
+  source: "template" | "trainer" | "gym" | "direct";
+  templateId?: Types.ObjectId | string;
 }
 
 const ExerciseSchema = new Schema<IExercise>(
@@ -55,6 +57,8 @@ const WorkoutSessionSchema = new Schema<IWorkoutSession>(
     notes: { type: String },
     isDone: { type: Boolean, default: false },
     completedAt: { type: Date },
+    source: { type: String, enum: ["trainer", "user", "admin", "template", "gym"], default: "user" },
+    templateId: { type: Schema.Types.ObjectId, ref: "WorkoutTemplate" },
   },
   { timestamps: true }
 );

@@ -16,6 +16,8 @@ export interface IGymTransaction extends Document {
   status: 'pending' | 'completed' | 'failed' | 'cancelled';
   paymentMethod: string;
   provider: 'razorpay' | 'stripe';
+  transactionType: 'debit' | 'credit';
+  description?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,6 +41,8 @@ const gymTransactionSchema: Schema<IGymTransaction> = new Schema(
     },
     paymentMethod: { type: String },
     provider: { type: String, enum: ['razorpay', 'stripe'], default: 'stripe' },
+    transactionType: { type: String, enum: ['debit', 'credit'], default: 'debit' },
+    description: { type: String },
   },
   { timestamps: true }
 );

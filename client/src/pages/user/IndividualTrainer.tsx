@@ -201,19 +201,7 @@ export default function TrainerPage() {
         setCheckingPendingTransaction(false);
 
         if (hasPending) {
-            toast.error("You have a pending transaction. Please complete or cancel it first.", {
-                action: {
-                    label: "Cancel Pending",
-                    onClick: async () => {
-                        try {
-                            await API.post("/payment/cleanup-pending");
-                            toast.success("Pending transaction cancelled");
-                        } catch (error) {
-                            toast.error("Failed to cancel pending transaction");
-                        }
-                    }
-                }
-            });
+            toast.error("You have a pending transaction. Please complete or cancel it first.");
             return;
         }
 

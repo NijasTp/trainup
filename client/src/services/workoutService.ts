@@ -53,3 +53,9 @@ export const getRecentWorkouts = async (limit: number = 4) => {
   })
   return res.data
 }
+export const fetchWorkoutHistory = async (page: number = 1, limit: number = 20, source?: string) => {
+  const res = await API.get(API_ROUTES.WORKOUT.HISTORY, {
+    params: { page, limit, source }
+  })
+  return res.data
+}

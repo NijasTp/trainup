@@ -64,6 +64,16 @@ export class WorkoutService implements IWorkoutService {
         session._id.toString()
       )
     }
+
+    // Set source based on context if not provided
+    if (payload.givenBy === 'admin') {
+      session.source = 'template';
+      await session.save();
+    } else if (payload.givenBy === 'trainer') {
+      session.source = 'trainer';
+      await session.save();
+    }
+
     return this.mapToSessionResponseDto(session)
   }
 
@@ -143,6 +153,9 @@ export class WorkoutService implements IWorkoutService {
       day._id.toString(),
       session._id.toString()
     )
+
+    session.source = 'trainer';
+    await session.save();
 
     return this.mapToSessionResponseDto(session)
   }
@@ -354,6 +367,24 @@ export class WorkoutService implements IWorkoutService {
       response.sessions.push(...virtualSessions);
     }
     return { ...response, ...templateInfo };
+  }
+  
+  async getWorkoutHistory(
+    userId: string,
+    page: number = 1,
+    limit: number = 20,
+    source?: string
+  ): Promise<{ sessions: WorkoutSessionResponseDto[]; total: number; totalPages: number }> {
+    const query: any = { userId, isDone: true };
+    if (source) query.source = source;
+
+    const { sessions, total } = await this._sessionRepo.findSessions(query, page, limit);
+
+    return {
+      sessions: sessions.map((session: any) => this.mapToSessionResponseDto(session as IWorkoutSession)),
+      total,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 
   private mapToSessionResponseDto(session: IWorkoutSession): WorkoutSessionResponseDto {
