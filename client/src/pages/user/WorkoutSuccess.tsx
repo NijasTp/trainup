@@ -1,10 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { useLocation, useParams, useNavigate, Link, } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDispatch } from "react-redux";
 import { updateUser } from "@/redux/slices/userAuthSlice";
-import { getProfile } from "@/services/userService";
 import { Trophy, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
@@ -83,7 +82,7 @@ export default function SuccessPage() {
           });
         }
       } catch (err: any) {
-        didUpdate.current = false; // Allow retry on failure
+        didUpdate.current = false;
         toast.error("Failed to update workout status", {
           description: err.message || "An error occurred",
         });

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -83,13 +83,13 @@ export default function ChatPage() {
                 URL.revokeObjectURL(previewUrl);
             }
         };
-    }, []);
+    }, [initializeChat, previewUrl]);
 
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
-    const initializeChat = async () => {
+    const initializeChat = useCallback(async () => {
         try {
             const planResponse = await API.get("/user/plan");
             const plan = planResponse.data.plan;
@@ -151,7 +151,7 @@ export default function ChatPage() {
             setError(err.response?.data?.message || "Secure connection failed. Please try again.");
             setIsLoading(false);
         }
-    };
+    }, [navigate]);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

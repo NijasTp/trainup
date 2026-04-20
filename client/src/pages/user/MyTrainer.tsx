@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -99,9 +99,9 @@ export default function MyTrainerProfile() {
         fetchMyTrainer();
         fetchUser();
         fetchUserPlan();
-    }, []);
+    }, [fetchMyTrainer, fetchUser, fetchUserPlan]);
 
-    const fetchMyTrainer = async () => {
+    const fetchMyTrainer = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -114,25 +114,25 @@ export default function MyTrainerProfile() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
-    const fetchUser = async () => {
+    const fetchUser = useCallback(async () => {
         try {
             const response = await API.get("/user/me");
             setUser(response.data.user);
         } catch (err: any) {
             console.error("Failed to fetch user:", err);
         }
-    };
+    }, []);
 
-    const fetchUserPlan = async () => {
+    const fetchUserPlan = useCallback(async () => {
         try {
             const response = await API.get("/user/plan");
             setUserPlan(response.data.plan);
         } catch (err) {
             console.error("Failed to fetch user plan:", err);
         }
-    };
+    }, []);
 
     const handleCancelSubscription = async () => {
         try {

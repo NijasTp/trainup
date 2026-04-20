@@ -2,6 +2,75 @@ import API from '@/lib/axios'
 import { API_ROUTES } from '@/constants/api.constants';
 import type { CreateSubscriptionPlanPayload } from '@/interfaces/gym/IGymSubscription';
 
+export interface IGym {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  profileImage?: string;
+  description?: string;
+  isVerified?: boolean;
+  isBanned?: boolean;
+}
+
+export interface IGymMember {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    profileImage?: string;
+  };
+  gym: string;
+  plan: string;
+  startDate: string;
+  endDate: string;
+  status: 'active' | 'expired' | 'canceled';
+}
+
+export interface IGymAttendance {
+  _id: string;
+  user: string;
+  gym: string;
+  date: string;
+  status: 'present' | 'absent';
+}
+
+export interface IGymJob {
+  _id: string;
+  title: string;
+  description: string;
+  requirements?: string[];
+  salary?: string | number;
+  type: 'full-time' | 'part-time' | 'contract';
+  status: 'open' | 'closed';
+}
+
+export interface IGymWorkoutTemplate {
+  _id: string;
+  title: string;
+  description: string;
+  difficultyLevel: 'beginner' | 'intermediate' | 'pro';
+  goal: string;
+  image?: string;
+}
+
+export interface IGymAnnouncement {
+  _id: string;
+  title: string;
+  content: string;
+  image?: string;
+  date: string;
+}
+
+export interface IGymDashboardStats {
+  membersCount: number;
+  revenue: number;
+  activePlans: number;
+  pendingRequests: number;
+}
+
 export const getMyGym = async () => {
   const res = await API.get(API_ROUTES.USER.MY_GYM);
   return res.data;
@@ -138,12 +207,12 @@ export const getGymJobs = async (page: number = 1, limit: number = 10, search: s
   return res.data;
 };
 
-export const createGymJob = async (data: any) => {
+export const createGymJob = async (data: Partial<IGymJob>) => {
   const res = await API.post(API_ROUTES.GYM.JOBS.BASE, data);
   return res.data;
 };
 
-export const updateGymJob = async (id: string, data: any) => {
+export const updateGymJob = async (id: string, data: Partial<IGymJob>) => {
   const res = await API.put(API_ROUTES.GYM.JOBS.DETAIL(id), data);
   return res.data;
 };
@@ -159,12 +228,12 @@ export const getGymWorkoutTemplates = async (page: number = 1, limit: number = 1
   return res.data;
 };
 
-export const createGymWorkoutTemplate = async (data: any) => {
+export const createGymWorkoutTemplate = async (data: Partial<IGymWorkoutTemplate>) => {
   const res = await API.post(API_ROUTES.GYM.WORKOUT_TEMPLATES.BASE, data);
   return res.data;
 };
 
-export const updateGymWorkoutTemplate = async (id: string, data: any) => {
+export const updateGymWorkoutTemplate = async (id: string, data: Partial<IGymWorkoutTemplate>) => {
   const res = await API.put(API_ROUTES.GYM.WORKOUT_TEMPLATES.DETAIL(id), data);
   return res.data;
 };

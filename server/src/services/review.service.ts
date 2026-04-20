@@ -20,9 +20,9 @@ export class ReviewService implements IReviewService {
     ) { }
 
     async addReview(userId: string, targetId: string, targetModel: 'Trainer' | 'Gym', rating: number, comment: string, subscriptionPlan?: string): Promise<IReview> {
-        const existingReview = await this.reviewRepository.findOne({ userId, targetId });
+        const existingReview = await this.reviewRepository.findOne({ userId, targetId, targetModel });
         if (existingReview) {
-            throw new AppError('You have already reviewed this.', STATUS_CODE.BAD_REQUEST);
+            throw new AppError(`You have already reviewed this ${targetModel.toLowerCase()}.`, STATUS_CODE.BAD_REQUEST);
         }
 
         const reviewData: Partial<IReview> = {

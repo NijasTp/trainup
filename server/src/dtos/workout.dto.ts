@@ -31,6 +31,7 @@ export class WorkoutSessionResponseDto {
   notes?: string;
   isDone?: boolean;
   completedAt?: Date;
+  source?: "trainer" | "user" | "admin" | "template" | "gym";
   createdAt: Date;
   updatedAt: Date;
 }

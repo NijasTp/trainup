@@ -375,10 +375,18 @@ export class WorkoutService implements IWorkoutService {
     limit: number = 20,
     source?: string
   ): Promise<{ sessions: WorkoutSessionResponseDto[]; total: number; totalPages: number }> {
-    const query: any = { userId, isDone: true };
+    const query: any = { 
+      userId, 
+      $or: [
+        { isDone: true }, 
+        { completedAt: { $exists: true, $ne: null } }
+      ]
+    };
     if (source) query.source = source;
 
+    console.log('DEBUG: Workout history query:', JSON.stringify(query));
     const { sessions, total } = await this._sessionRepo.findSessions(query, page, limit);
+    console.log('DEBUG: Found sessions count:', sessions.length, 'Total:', total);
 
     return {
       sessions: sessions.map((session: any) => this.mapToSessionResponseDto(session as IWorkoutSession)),
@@ -408,6 +416,7 @@ export class WorkoutService implements IWorkoutService {
       goal: session.goal,
       notes: session.notes,
       isDone: session.isDone,
+      source: (session.source as any) === 'direct' ? 'user' : session.source || 'user',
       createdAt: session.createdAt!,
       updatedAt: session.updatedAt!
     };

@@ -32,8 +32,8 @@ export default function WorkoutPreviewPage() {
         try {
             const response = await getWorkoutTemplateById(id!);
             setTemplate(response.template || response);
-        } catch (err) {
-            toast.error("Failed to load template details");
+        } catch (err: any) {
+            toast.error(err.response.data.error || "Failed to load template details");
         } finally {
             setIsLoading(false);
         }
@@ -50,8 +50,8 @@ export default function WorkoutPreviewPage() {
                 toast.success("Program added to your active programs!");
                 navigate("/workouts");
             }
-        } catch (err) {
-            toast.error("Failed to start workout");
+        } catch (err: any) {
+            toast.error(err.response.data.error || "Failed to start workout");
         }
     };
 

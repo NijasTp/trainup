@@ -201,6 +201,10 @@ export class SlotRepository implements ISlotRepository {
     slotId: string,
     userId: string
   ): Promise<ISlot | null> {
+
+      let user = SlotModel.find({userId})
+      
+
     return await SlotModel.findByIdAndUpdate(
       slotId,
       {

@@ -9,13 +9,17 @@ import { IGymRepository } from '../core/interfaces/repositories/IGymRepository';
 import { logger } from '../utils/logger.util';
 
 import { IWalletRepository } from '../core/interfaces/repositories/IWalletRepository';
+import { ITransactionRepository } from '../core/interfaces/repositories/ITransactionRepository';
+import { IGymTransactionRepository } from '../core/interfaces/repositories/IGymTransactionRepository';
 
 @injectable()
 export class RefundService implements IRefundService {
     constructor(
         @inject(TYPES.IUserPlanRepository) private _userPlanRepo: IUserPlanRepository,
         @inject(TYPES.IWalletRepository) private _walletRepo: IWalletRepository,
-        @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository
+        @inject(TYPES.IGymRepository) private _gymRepo: IGymRepository,
+        @inject(TYPES.ITransactionRepository) private _transactionRepo: ITransactionRepository,
+        @inject(TYPES.IGymTransactionRepository) private _gymTransactionRepo: IGymTransactionRepository
     ) { }
 
 
@@ -77,6 +81,20 @@ export class RefundService implements IRefundService {
                 `Refund for gym membership cancellation: ${membershipId}`,
                 membershipId
             );
+
+            // Also create a GymTransaction record for the history page
+            await this._gymTransactionRepo.create({
+                gymId: membership.gymId,
+                userId,
+                subscriptionPlanId: membership.planId,
+                amount: refundResult.refundAmount,
+                status: 'completed',
+                transactionType: 'credit',
+                description: `Refund for membership cancellation`,
+                provider: 'stripe', // Assuming stripe as default for now
+                paymentMethod: 'wallet',
+                preferredTime: membership.preferredTime
+            });
         }
 
         logger.info(`Gym refund applied: ${refundResult.refundAmount} for membership ${membershipId}`);
@@ -117,6 +135,18 @@ export class RefundService implements IRefundService {
                 `Refund for trainer plan cancellation: ${userPlanId}`,
                 userPlanId
             );
+
+            // Also create a Transaction record for the history page
+            await this._transactionRepo.createTransaction({
+                userId,
+                trainerId: userPlan.trainerId,
+                amount: refundResult.refundAmount,
+                status: 'completed',
+                transactionType: 'credit',
+                description: `Refund for trainer plan cancellation`,
+                planType: userPlan.planType,
+                provider: 'stripe'
+            });
         }
 
         logger.info(`Trainer refund applied: ${refundResult.refundAmount} for plan ${userPlanId}`);

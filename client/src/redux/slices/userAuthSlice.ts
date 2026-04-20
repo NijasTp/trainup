@@ -16,6 +16,21 @@ export interface ActiveTemplate {
   startDate: string;
 }
 
+export interface AssignedTrainerDetails {
+  _id: string;
+  name: string;
+  profileImage?: string;
+  specialization?: string;
+  specialty?: string;
+}
+
+export interface ActiveGymDetails {
+  _id: string;
+  name: string;
+  profileImage?: string;
+  address?: string;
+}
+
 export interface UserType {
   _id: string;
   name: string;
@@ -43,8 +58,8 @@ export interface UserType {
   activeWorkoutTemplate?: string | null;
   activeWorkoutTemplates?: ActiveTemplate[];
   activeDietTemplate?: string | null;
-  assignedTrainerDetails?: any;
-  activeGymDetails?: any;
+  assignedTrainerDetails?: AssignedTrainerDetails | null;
+  activeGymDetails?: ActiveGymDetails | null;
   isVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -66,7 +81,7 @@ export const userAuthSlice = createSlice({
   name: 'userAuth',
   initialState,
   reducers: {
-    login: (state, action: PayloadAction<any>) => {
+    login: (state, action: PayloadAction<UserType & { todaysWeight?: number }>) => {
       const payload = action.payload;
       state.user = {
         _id: payload._id,

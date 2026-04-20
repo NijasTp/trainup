@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,9 +42,9 @@ export default function TrainerTransactions() {
   useEffect(() => {
     document.title = "TrainUp - Synergy Ledgers";
     fetchTransactions();
-  }, [page, search, statusFilter, planFilter]);
+  }, [fetchTransactions]);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await API.get("/trainer/transactions", {
@@ -62,7 +62,7 @@ export default function TrainerTransactions() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, search, statusFilter, planFilter]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -208,7 +208,7 @@ export default function TrainerTransactions() {
               </div>
             ) : (
               <div className="divide-y divide-white/5">
-                {transactions.transactions.map((tx: any) => (
+                {transactions.transactions.map((tx) => (
                   <div key={tx._id} className="p-10 hover:bg-white/[0.02] transition-colors flex flex-col md:flex-row md:items-center justify-between gap-8 group">
                     <div className="flex items-center gap-8">
                       <Avatar className="h-16 w-16 border-2 border-white/10 group-hover:border-cyan-500/50 transition-all shadow-2xl">

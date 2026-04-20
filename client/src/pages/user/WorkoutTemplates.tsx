@@ -272,7 +272,7 @@ function TemplateCard({ template, isActive, onPreview }: {
   isActive: boolean; 
   onPreview: () => void;
 }) {
-  const difficultyColors: any = {
+  const difficultyColors = {
     beginner: "bg-blue-500/10 text-blue-400 border-blue-500/20",
     intermediate: "bg-primary/10 text-primary border-primary/20",
     advanced: "bg-rose-500/10 text-rose-400 border-rose-500/20"
@@ -348,4 +348,4 @@ function TemplateCard({ template, isActive, onPreview }: {
       </CardContent>
     </Card>
   );
-}
+}

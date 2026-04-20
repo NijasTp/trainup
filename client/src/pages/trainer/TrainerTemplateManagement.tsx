@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,36 +25,36 @@ const TrainerTemplateManagement = () => {
     const navigate = useNavigate();
     const templatesPerPage = 9;
 
-    useEffect(() => {
-        const fetchTemplates = async () => {
-            if (!trainer?._id) return;
-            setLoading(true);
-            try {
-                const endpoint = templateType === "workout" ? '/template/workout' : '/template/diet';
-                const apiResponse = await API.get(endpoint, {
-                    params: {
-                        page: currentPage,
-                        limit: templatesPerPage,
-                        search: searchQuery,
-                        createdById: trainer._id
-                    },
-                });
-                setResponse({
-                    templates: apiResponse.data.templates || [],
-                    total: apiResponse.data.total,
-                    page: apiResponse.data.page,
-                    totalPages: apiResponse.data.totalPages,
-                });
-            } catch (error: any) {
-                console.error("Error fetching trainer templates:", error);
-                setResponse({ templates: [], total: 0, page: 1, totalPages: 1 });
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchTemplates();
+    const fetchTemplates = useCallback(async () => {
+        if (!trainer?._id) return;
+        setLoading(true);
+        try {
+            const endpoint = templateType === "workout" ? '/template/workout' : '/template/diet';
+            const apiResponse = await API.get(endpoint, {
+                params: {
+                    page: currentPage,
+                    limit: templatesPerPage,
+                    search: searchQuery,
+                    createdById: trainer._id
+                },
+            });
+            setResponse({
+                templates: apiResponse.data.templates || [],
+                total: apiResponse.data.total,
+                page: apiResponse.data.page,
+                totalPages: apiResponse.data.totalPages,
+            });
+        } catch (error: any) {
+            console.error("Error fetching trainer templates:", error);
+            setResponse({ templates: [], total: 0, page: 1, totalPages: 1 });
+        } finally {
+            setLoading(false);
+        }
     }, [currentPage, searchQuery, templateType, trainer?._id]);
+
+    useEffect(() => {
+        fetchTemplates();
+    }, [fetchTemplates]);
 
     const handleSearch = () => {
         setSearchQuery(searchInput);

@@ -39,15 +39,15 @@ export default function TrainerProfile() {
   useEffect(() => {
     document.title = "TrainUp - My Hub";
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
   useEffect(() => {
     if (activeTab === "transactions" && !transactions) {
       fetchTransactions();
     }
-  }, [activeTab]);
+  }, [activeTab, transactions, fetchTransactions]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const response = await API.get("/trainer/get-details");
       setProfile(response.data.trainer);
@@ -56,16 +56,16 @@ export default function TrainerProfile() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       const response = await API.get("/trainer/transactions", { params: { limit: 10 } });
       setTransactions(response.data);
     } catch (err: any) {
       toast.error("Failed to load records");
     }
-  };
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {

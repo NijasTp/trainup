@@ -26,7 +26,7 @@ export interface IWorkoutSession extends Document {
   notes?: string;
   isDone?: boolean;
   completedAt?: Date;
-  source: "template" | "trainer" | "gym" | "direct";
+  source: "trainer" | "user" | "admin" | "template" | "gym";
   templateId?: Types.ObjectId | string;
 }
 

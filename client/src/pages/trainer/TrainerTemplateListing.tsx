@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,9 +45,9 @@ export default function TrainerTemplateList() {
   useEffect(() => {
     document.title = "TrainUp - My Templates";
     fetchTemplates();
-  }, [workoutPage, dietPage, searchQuery]);
+  }, [fetchTemplates]);
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     setIsLoading(true);
     try {
       const [workoutRes, dietRes] = await Promise.all([
@@ -63,7 +63,7 @@ export default function TrainerTemplateList() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [workoutPage, dietPage, searchQuery]);
 
   const handleDeleteTemplate = async (id: string, type: 'workout' | 'diet') => {
     if (!confirm("Are you sure you want to delete this template?")) return;

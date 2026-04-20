@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { MapPin, Star, Search, Users, Dumbbell, Navigation, Filter } from "lucide-react";
-import { getGymsForUser, getSubscriptionPlan } from "@/services/gymService";
+import { getGymsForUser, getSubscriptionPlan, type IGym } from "@/services/gymService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,7 +14,7 @@ import Aurora from "@/components/ui/Aurora";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function GymListing() {
-    const [gyms, setGyms] = useState<any[]>([]);
+    const [gyms, setGyms] = useState<IGym[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [search, setSearch] = useState("");
@@ -29,7 +29,7 @@ export default function GymListing() {
     useEffect(() => {
         document.title = "TrainUp - Discover Elite Gyms";
         fetchGyms();
-    }, [page, location]);
+    }, [fetchGyms]);
 
     useEffect(() => {
         const debounce = setTimeout(() => {
@@ -39,7 +39,7 @@ export default function GymListing() {
         return () => clearTimeout(debounce);
     }, [search]);
 
-    async function fetchGyms() {
+    const fetchGyms = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -58,7 +58,7 @@ export default function GymListing() {
         } finally {
             setIsLoading(false);
         }
-    }
+    }, [page, location, search, limit]);
 
 
     const handleDetectLocation = () => {
@@ -259,7 +259,7 @@ export default function GymListing() {
     );
 }
 
-function GymCard({ gym, index, navigate }: { gym: any; index: number; navigate: any }) {
+function GymCard({ gym, index, navigate }: { gym: IGym & { distance?: number; memberCount?: number; avgRating?: number; minPlanPrice?: number }; index: number; navigate: (path: string) => void }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 30 }}

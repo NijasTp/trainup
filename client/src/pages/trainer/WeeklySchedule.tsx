@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,13 +74,13 @@ export default function WeeklySchedule() {
     useEffect(() => {
         document.title = "TrainUp - Schedule & Requests";
         fetchAllData();
-    }, []);
+    }, [fetchAllData]);
 
     const getTodayDate = () => {
         return format(new Date(), 'yyyy-MM-dd');
     };
 
-    const fetchAllData = async () => {
+    const fetchAllData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
 
@@ -127,7 +127,9 @@ export default function WeeklySchedule() {
             }
             try {
                 await API.get("/trainer/session-requests");
-            } catch (e) { }
+            } catch (error) {
+                console.error("Session requests fetch error:", error);
+            }
 
         } catch (err) {
             console.error("General fetch error:", err);
@@ -135,10 +137,10 @@ export default function WeeklySchedule() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [getTodayDate]);
 
 
-    const isDayInPast = (_: string) => {
+    const isDayInPast = () => {
 
         return false;
     };
@@ -330,7 +332,9 @@ export default function WeeklySchedule() {
             try {
                 const slotsRes = await API.get("/trainer/slots");
                 setSlots(slotsRes.data.slots || []);
-            } catch (e) { }
+            } catch (error) {
+                console.error("Failed to refresh slots:", error);
+            }
 
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to save schedule");

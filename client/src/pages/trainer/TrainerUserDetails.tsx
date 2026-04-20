@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,9 +37,9 @@ export default function TrainerUserDetails() {
             fetchUserPlan();
             fetchProgress();
         }
-    }, [id]);
+    }, [id, fetchUser, fetchUserPlan, fetchProgress]);
 
-    const fetchUser = async () => {
+    const fetchUser = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -52,18 +52,18 @@ export default function TrainerUserDetails() {
             toast.error("Failed to load user details");
             setIsLoading(false);
         }
-    };
+    }, [id]);
 
-    const fetchUserPlan = async () => {
+    const fetchUserPlan = useCallback(async () => {
         try {
             const response = await API.get(`/trainer/user-plan/${id}`);
             setUserPlan(response.data.plan);
         } catch (err: any) {
             console.error("Failed to fetch user plan:", err);
         }
-    };
+    }, [id]);
 
-    const fetchProgress = async () => {
+    const fetchProgress = useCallback(async () => {
         try {
             const response = await API.get(`/trainer/client-progress/${id}`);
             const sorted = response.data.progress.sort((a: Progress, b: Progress) =>
@@ -76,7 +76,7 @@ export default function TrainerUserDetails() {
         } catch (err) {
             console.error("Failed to fetch progress:", err);
         }
-    };
+    }, [id]);
 
     const handleStartChat = () => {
         if (!user?.trainerPlan || user.trainerPlan === 'basic') {

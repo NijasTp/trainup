@@ -24,6 +24,6 @@ const ReviewSchema: Schema = new Schema(
 );
 
 // Prevent duplicate reviews from same user to same target
-ReviewSchema.index({ userId: 1, targetId: 1 }, { unique: true });
+ReviewSchema.index({ userId: 1, targetId: 1, targetModel: 1 }, { unique: true });
 
 export default mongoose.model<IReview>('Review', ReviewSchema);

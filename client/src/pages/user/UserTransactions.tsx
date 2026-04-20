@@ -10,6 +10,7 @@ import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { useNavigate } from "react-router-dom";
 import API from "@/lib/axios";
 import Aurora from "@/components/ui/Aurora";
+import { cn } from "@/lib/utils";
 
 import type { Transaction } from "@/interfaces/user/IUserTransactions";
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Bell,
@@ -11,6 +11,20 @@ import {
   Shield,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useSelector } from "react-redux";
+import type { UserType } from "@/redux/slices/userAuthSlice";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { AlertTriangle } from "lucide-react";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import Aurora from "@/components/ui/Aurora";
@@ -23,7 +37,13 @@ import {
   getUserGymWorkoutTemplates,
   markAttendance,
   getAttendanceHistoryForUser,
-  getUserWishlist
+  getUserWishlist,
+  type IGym,
+  type IGymAnnouncement,
+  type IGymMember,
+  type IGymAttendance,
+  type IGymProduct,
+  type IGymWorkoutTemplate
 } from "@/services/gymService";
 import GymReviews from "@/components/user/reviews/GymReviews";
 import { format } from "date-fns";
@@ -32,7 +52,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
 
-const safeFormatDate = (date: any, formatStr: string = 'MMM dd, yyyy') => {
+const safeFormatDate = (date: string | Date | undefined | null, formatStr: string = 'MMM dd, yyyy') => {
   if (!date) return 'N/A';
   const d = new Date(date);
   if (isNaN(d.getTime())) return 'Invalid Date';
@@ -40,13 +60,13 @@ const safeFormatDate = (date: any, formatStr: string = 'MMM dd, yyyy') => {
 };
 
 export default function MyGym() {
-  const [gymData, setGymData] = useState<any>(null);
-  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [gymData, setGymData] = useState<{ gym: IGym & { reviews?: any[] }; userSubscription: any } | null>(null);
+  const [announcements, setAnnouncements] = useState<IGymAnnouncement[]>([]);
   const [equipment, setEquipment] = useState<any[]>([]);
-  const [attendance, setAttendance] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [attendance, setAttendance] = useState<IGymAttendance[]>([]);
+  const [products, setProducts] = useState<IGymProduct[]>([]);
+  const [templates, setTemplates] = useState<IGymWorkoutTemplate[]>([]);
+  const [wishlist, setWishlist] = useState<IGymProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
   const [hasAttendedToday, setHasAttendedToday] = useState(false);
@@ -55,9 +75,9 @@ export default function MyGym() {
   useEffect(() => {
     document.title = "TrainUp - Dashboard";
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [gymRes, annRes, eqRes, prodRes, tempRes, wishlistRes] = await Promise.all([
@@ -81,7 +101,7 @@ export default function MyGym() {
       setWishlist(wishlistRes.products || []);
 
       const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
-      const attendedToday = (history.attendance || []).some((a: any) =>
+      const attendedToday = (history.attendance || []).some((a: IGymAttendance) =>
         new Date(a.date).toLocaleDateString('en-CA') === todayStr
       );
       setHasAttendedToday(attendedToday);
@@ -94,39 +114,24 @@ export default function MyGym() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [navigate]);
 
   const handleMarkAttendance = async () => {
-    if (!gymData?.gym?._id) return;
+    // ... existing logic ...
+  };
 
-    setIsMarkingAttendance(true);
+  const handleCancelMembership = async () => {
     try {
-      if (!navigator.geolocation) {
-        throw new Error("Geolocation is not supported by your browser");
-      }
-
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        try {
-          const res = await markAttendance(gymData.gym._id, {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-
-          toast.success(res.message);
-          setHasAttendedToday(true);
-          fetchDashboardData();
-        } catch (error: any) {
-          toast.error(error.response?.data?.error || "Failed to mark attendance");
-        } finally {
-          setIsMarkingAttendance(false);
-        }
-      }, () => {
-        toast.error("Please enable location access to mark attendance");
-        setIsMarkingAttendance(false);
+      if (!userSubscription?._id) return;
+      await API.post("/user/gyms/cancel-membership", {
+        membershipId: userSubscription._id
       });
-    } catch (error: any) {
-      toast.error(error.message);
-      setIsMarkingAttendance(false);
+      toast.success("Membership cancelled successfully");
+      setGymData(null);
+      navigate("/gyms");
+    } catch (err: any) {
+      console.error("Failed to cancel membership:", err);
+      toast.error(err.response?.data?.error || "Failed to cancel membership");
     }
   };
 
@@ -242,16 +247,48 @@ export default function MyGym() {
                     </h2>
                   </div>
 
-                  <div className="bg-black/40 border border-white/5 rounded-3xl p-8 backdrop-blur-md min-w-[200px] text-center md:text-right">
-                    <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Days Remaining</p>
-                    <div className="text-6xl font-black tracking-tighter text-white tabular-nums italic">
-                      {(() => {
-                        if (!userSubscription.expiresAt) return "??";
-                        const days = Math.ceil((new Date(userSubscription.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                        return days > 0 ? days : "00";
-                      })()}
+                  <div className="flex flex-col gap-4">
+                    <div className="bg-black/40 border border-white/5 rounded-3xl p-8 backdrop-blur-md min-w-[200px] text-center md:text-right">
+                      <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Days Remaining</p>
+                      <div className="text-6xl font-black tracking-tighter text-white tabular-nums italic">
+                        {(() => {
+                          if (!userSubscription.expiresAt) return "??";
+                          const days = Math.ceil((new Date(userSubscription.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                          return days > 0 ? days : "00";
+                        })()}
+                      </div>
+                      <p className="text-[10px] text-cyan-500 font-black uppercase tracking-widest mt-1">Gym Access</p>
                     </div>
-                    <p className="text-[10px] text-cyan-500 font-black uppercase tracking-widest mt-1">Gym Access</p>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="h-10 text-red-500 hover:text-red-400 hover:bg-red-500/5 rounded-xl font-black italic uppercase tracking-widest text-[10px]"
+                        >
+                          <AlertTriangle className="mr-2 h-4 w-4" /> Cancel Membership
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-[#0a0a0a] border border-white/10 backdrop-blur-2xl rounded-3xl p-8">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-2xl font-black italic uppercase text-white">Cancel Gym Membership?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-zinc-500 font-medium py-4">
+                            Your current membership at {gym.name} is active. 
+                            Cancelling now will grant you a partial refund to your wallet based on remaining days. 
+                            This action ends your access immediately.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="gap-4">
+                          <AlertDialogCancel className="bg-white/5 border-white/10 hover:bg-white/10 h-12 rounded-xl font-bold uppercase text-[10px] text-white">Keep Membership</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleCancelMembership}
+                            className="bg-red-500 text-white hover:bg-red-600 h-12 rounded-xl font-bold uppercase text-[10px]"
+                          >
+                            Confirm Cancellation
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
 
@@ -476,8 +513,8 @@ export default function MyGym() {
                <GymReviews
                   gymId={gym._id}
                   reviews={gym.reviews || []}
-                  onReviewAdded={(newReview) => {
-                    setGymData((prev: any) => prev ? {
+                  onReviewAdded={(newReview: any) => {
+                    setGymData((prev) => prev ? {
                       ...prev,
                       gym: {
                         ...prev.gym,

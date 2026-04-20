@@ -92,7 +92,8 @@ export default function WorkoutHistoryPage() {
                   <ChevronDown className="h-3 w-3 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-                {sources.map((s) => (
+              <DropdownMenuContent className="bg-[#0c0c0c] border-white/10 rounded-2xl w-56 p-2 backdrop-blur-2xl">
+                {sources.map((s: any) => (
                   <DropdownMenuItem 
                     key={s.label} 
                     onClick={() => { setSource(s.value); setPage(1); }}
@@ -105,6 +106,7 @@ export default function WorkoutHistoryPage() {
                     <span className="font-bold text-sm tracking-wide">{s.label}</span>
                   </DropdownMenuItem>
                 ))}
+              </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
@@ -198,7 +200,12 @@ function HistoryCard({ session, index }: { session: any, index: number }) {
               {style.icon} {session.source || 'Session'}
             </Badge>
             <span className="text-slate-500 text-xs font-bold tracking-widest uppercase flex items-center gap-2">
-              <CalendarIcon className="h-3 w-3" /> {format(new Date(session.completedAt || session.updatedAt), "MMMM d, yyyy")}
+              <CalendarIcon className="h-3 w-3" /> {
+                (() => {
+                  const date = new Date(session.completedAt || session.updatedAt || Date.now());
+                  return isNaN(date.getTime()) ? 'Recent Session' : format(date, "MMMM d, yyyy");
+                })()
+              }
             </span>
           </div>
 

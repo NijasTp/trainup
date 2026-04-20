@@ -56,9 +56,9 @@ export class UserProfileController {
             const { gymSubscriptions, trainerSubscriptions } = await this._userSubscriptionService.getUserSubscriptions(userId)
             
             const activeSubscriptions = [
-                ...gymSubscriptions.map(s => ({ ...s, subscriptionType: 'gym' })),
-                ...trainerSubscriptions.map(s => ({ ...s, subscriptionType: 'trainer' }))
-            ].filter(s => s.status === 'active');
+                ...gymSubscriptions.map((s: any) => ({ ...s, subscriptionType: 'gym' })),
+                ...trainerSubscriptions.map((s: any) => ({ ...s, subscriptionType: 'trainer' }))
+            ].filter((s: any) => s.status === 'active');
             
             const populatedTemplates = await Promise.all(
                 (user.activeWorkoutTemplates || []).map(async (t: any) => {

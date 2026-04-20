@@ -8,6 +8,7 @@ import { logout } from "@/redux/slices/userAuthSlice";
 import { checkUserSession } from "@/services/authService";
 import LoadingSpinner from "@/components/ui/LoadSpinner";
 import { ROUTES } from "@/constants/routes";
+import type { AxiosError } from "axios";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.userAuth);
@@ -26,7 +27,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
             const { login } = await import("@/redux/slices/userAuthSlice");
             dispatch(login(userWithRole));
           }
-        } catch (error: any) {
+        } catch (error: any ) {
           console.error("Session check failed:", error);
           if (error.response?.status === 403 && error.response.data?.error === 'Banned') {
             toast.error('You are banned');
@@ -42,7 +43,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     };
 
     checkSession();
-  }, [isAuthenticated, location.pathname, dispatch]);
+  }, [isAuthenticated, user, location.pathname, dispatch, navigate]);
 
   if (checking) return <LoadingSpinner />;
 

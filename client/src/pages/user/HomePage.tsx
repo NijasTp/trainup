@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Lenis from "lenis";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ const containerVariants = {
   },
 };
 
-const itemVariants: any = {
+const itemVariants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
     y: 0,
@@ -77,8 +77,8 @@ const AnimatedNumber = ({ value }: { value: number }) => {
     const end = value;
     if (start === end) return;
 
-    let totalDuration = 1000;
-    let increment = end / (totalDuration / 16);
+    const totalDuration = 1000;
+    const increment = end / (totalDuration / 16);
 
     const timer = setInterval(() => {
       start += increment;
@@ -98,7 +98,7 @@ const AnimatedNumber = ({ value }: { value: number }) => {
 
 export default function HomePage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
-  const [gyms, setGyms] = useState<any[]>([]);
+  const [gyms, setGyms] = useState<any[]>([]); // TODO: Define IGym interface in services/gymService.ts and use it here
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [templates, setTemplates] = useState<IWorkoutTemplate[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
@@ -106,7 +106,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const navigate = useNavigate();
-  const user = useSelector((state: any) => state.userAuth.user);
+  const user = useSelector((state: { userAuth: { user: UserType } }) => state.userAuth.user);
   const streak = user ? user.streak : 0;
 
   const today = format(new Date(), "yyyy-MM-dd");
@@ -128,9 +128,9 @@ export default function HomePage() {
       cancelAnimationFrame(rafId);
       lenis.destroy();
     };
-  }, []);
+  }, [fetchHomeData, checkProfileCompletion]); // Added missing dependencies
 
-  const checkProfileCompletion = () => {
+  const checkProfileCompletion = useCallback(() => {
     if (!user) return;
 
     const skipped = localStorage.getItem("profileCompletionSkipped");
@@ -157,9 +157,9 @@ export default function HomePage() {
     if (completionPercentage < 70) {
       setShowProfileModal(true);
     }
-  };
+  }, [user]);
 
-  const fetchHomeData = async () => {
+  const fetchHomeData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch trainers
@@ -219,7 +219,7 @@ export default function HomePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [today, user?.goals]);
 
   const calculateDietProgress = () => {
     const manualMeals = diet?.meals || [];
