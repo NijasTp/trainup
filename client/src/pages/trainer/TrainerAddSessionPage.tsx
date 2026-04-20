@@ -195,9 +195,10 @@ export default function TrainerAddSessionPage() {
       setNotes(session.notes || "");
       setDate(session.date);
       setExercises(session.exercises || []);
-    } catch (err: any) {
+    } catch (_err: unknown) {
       setError("Failed to fetch session");
-      toast.error("Failed to load session", { description: err.message });
+      const errorMessage = _err instanceof Error ? _err.message : "Failed to load session";
+      toast.error("Failed to load session", { description: errorMessage });
     } finally {
       setIsLoading(false);
     }
@@ -211,10 +212,11 @@ export default function TrainerAddSessionPage() {
       if (!response.ok) throw new Error("Failed to fetch exercise suggestions");
       const data = await response.json();
       setAllSuggestions(data.suggestions || []);
-    } catch (err: any) {
-      setError(err.message || "Error fetching exercise suggestions");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Error fetching exercise suggestions";
+      setError(errorMessage);
       console.error('err', err);
-      toast.error("Failed to load suggestions", { description: err.message });
+      toast.error("Failed to load suggestions", { description: errorMessage });
     } finally {
       setIsSuggestionsLoading(false);
     }
@@ -236,10 +238,11 @@ export default function TrainerAddSessionPage() {
       setReps("10-12");
       setTimeDuration("30 min");
       setWeight(0);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Fetch error:", err);
-      setError(err.message || "Error fetching exercise details");
-      toast.error("Failed to load exercise details", { description: err.message });
+      const errorMessage = err instanceof Error ? err.message : "Error fetching exercise details";
+      setError(errorMessage);
+      toast.error("Failed to load exercise details", { description: errorMessage });
     } finally {
       setIsLoading(false);
     }
@@ -304,7 +307,7 @@ export default function TrainerAddSessionPage() {
         toast.success("Session created");
       }
       navigate(`/trainer/workout/${clientId}`);
-    } catch (err: any) {
+    } catch (_err: unknown) {
       toast.error(sessionId ? "Failed to update session" : "Failed to create session");
       setError(sessionId ? "Failed to update session" : "Failed to create session");
     } finally {

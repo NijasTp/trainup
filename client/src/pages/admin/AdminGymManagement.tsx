@@ -38,13 +38,13 @@ import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 
 const AdminGymManagement = () => {
-    const [gyms, setGyms] = useState<any[]>([]);
+    const [gyms, setGyms] = useState<IGym[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [search, setSearch] = useState('');
     const [verifyStatus, setVerifyStatus] = useState('all');
     const [loading, setLoading] = useState(true);
-    const [selectedGym, setSelectedGym] = useState<any>(null);
+    const [selectedGym, setSelectedGym] = useState<any>(null); // Keeping any for now as it has many nested operational fields
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
     const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
@@ -55,7 +55,7 @@ const AdminGymManagement = () => {
             const data = await getGyms(page, 5, search, undefined, verifyStatus);
             setGyms(data.gyms || []);
             setTotalPages(data.totalPages || 1);
-        } catch (error) {
+        } catch (_err) {
             toast.error('Failed to fetch gyms');
         } finally {
             setLoading(false);
@@ -77,7 +77,7 @@ const AdminGymManagement = () => {
             setIsPreviewOpen(false);
             setIsRejectDialogOpen(false);
             setRejectReason('');
-        } catch (error) {
+        } catch (_err) {
             toast.error('Failed to update status');
         }
     };
@@ -87,7 +87,7 @@ const AdminGymManagement = () => {
             await updateGymStatus(gymId, { isBanned: !isBanned });
             toast.success(`Gym ${!isBanned ? 'banned' : 'unbanned'} successfully`);
             fetchGyms();
-        } catch (error) {
+        } catch (_err) {
             toast.error('Failed to toggle ban status');
         }
     };

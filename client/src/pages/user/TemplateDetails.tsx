@@ -33,24 +33,24 @@ export default function TemplateDetails() {
     const [isLoading, setIsLoading] = useState(true);
     const user = useSelector((state: RootState) => state.userAuth.user);
 
-    useEffect(() => {
-        if (id) {
-            fetchTemplateDetails();
-        }
-    }, [id]);
-
-    async function fetchTemplateDetails() {
+    const fetchTemplateDetails = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await getWorkoutTemplateById(id!);
             // Handle possible wrapper or direct object
             setTemplate(response.template || response);
-        } catch (err) {
+        } catch (_err) {
             toast.error("Failed to load template details");
         } finally {
             setIsLoading(false);
         }
-    }
+    }, [id]);
+
+    useEffect(() => {
+        if (id) {
+            fetchTemplateDetails();
+        }
+    }, [id, fetchTemplateDetails]);
 
     const refreshProfile = async () => {
         try {
@@ -58,8 +58,8 @@ export default function TemplateDetails() {
             if (res.data.user) {
                 dispatch(updateUser(res.data.user));
             }
-        } catch (e) {
-            console.error("Failed to refresh profile", e);
+        } catch (_err) {
+            console.error("Failed to refresh profile", _err);
         }
     };
 
@@ -89,7 +89,7 @@ export default function TemplateDetails() {
             }
 
             toast.success(`Successfully ${action} ${template.title}!`);
-        } catch (err) {
+        } catch (_err) {
             toast.error("Failed to update template status");
         }
     };

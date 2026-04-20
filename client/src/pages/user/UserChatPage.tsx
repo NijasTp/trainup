@@ -70,7 +70,6 @@ export default function ChatPage() {
     const chunksRef = useRef<Blob[]>([]);
     const [recordingDuration, setRecordingDuration] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const shouldSendRef = useRef(false);
 
     useEffect(() => {
         document.title = "TrainUp - Private Messaging";
@@ -146,9 +145,10 @@ export default function ChatPage() {
             });
 
             setIsLoading(false);
-        } catch (err: any) {
-            console.error("Failed to initialize chat:", err);
-            setError(err.response?.data?.message || "Secure connection failed. Please try again.");
+        } catch (_err: unknown) {
+            console.error("Failed to initialize chat:", _err);
+            const errorMessage = _err instanceof Error ? _err.message : "Secure connection failed. Please try again.";
+            setError(errorMessage);
             setIsLoading(false);
         }
     }, [navigate]);
@@ -197,8 +197,8 @@ export default function ChatPage() {
             timerRef.current = setInterval(() => {
                 setRecordingDuration(prev => prev + 1);
             }, 1000);
-        } catch (err) {
-            console.error("Mic access denied:", err);
+        } catch (_err: unknown) {
+            console.error("Mic access denied:", _err);
             toast.error("Microphone access required for audio memos.");
         }
     };
@@ -278,8 +278,8 @@ export default function ChatPage() {
             setImageCaption('');
             setAudioBlob(null);
             handleStopTyping();
-        } catch (err: any) {
-            console.error("Message transmission failed:", err);
+        } catch (_err: unknown) {
+            console.error("Message transmission failed:", _err);
             toast.error("Encryption error. Message not delivered.");
         } finally {
             setIsSending(false);
@@ -290,7 +290,7 @@ export default function ChatPage() {
         try {
             await API.delete(`/user/chat/message/${messageId}`);
             setMessages(prev => prev.filter(m => m._id !== messageId));
-        } catch (err: any) {
+        } catch (_err: unknown) {
             toast.error("Recall failed.");
         }
     };

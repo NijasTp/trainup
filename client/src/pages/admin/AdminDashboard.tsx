@@ -8,20 +8,21 @@ import UserGrowth from "@/components/admin/dashboard/UserGrowth"
 import TrainerInsights from "@/components/admin/dashboard/TrainerInsights"
 import DashboardTransactions from "@/components/admin/dashboard/DashboardTransactions"
 import { motion } from "framer-motion"
+import type { IDashboardStats, IGraphData, ITrainer, IReview } from "@/interfaces/admin/IAdminDashboard"
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<IDashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   const [revenueFilter, setRevenueFilter] = useState<'day' | 'week' | 'month' | 'year'>('month')
-  const [revenueData, setRevenueData] = useState<any[]>([])
+  const [revenueData, setRevenueData] = useState<IGraphData[]>([])
 
   const [userFilter, setUserFilter] = useState<'day' | 'week' | 'month' | 'year'>('day')
-  const [userData, setUserData] = useState<any[]>([])
+  const [userData, setUserData] = useState<IGraphData[]>([])
 
-  const [trainers, setTrainers] = useState<any[]>([])
-  const [selectedTrainer, setSelectedTrainer] = useState<any>(null)
-  const [trainerReviews, setTrainerReviews] = useState<any[]>([])
+  const [trainers, setTrainers] = useState<ITrainer[]>([])
+  const [selectedTrainer, setSelectedTrainer] = useState<ITrainer | null>(null)
+  const [trainerReviews, setTrainerReviews] = useState<IReview[]>([])
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -35,7 +36,7 @@ const AdminDashboard = () => {
         if (trainerList.length > 0) {
           setSelectedTrainer(trainerList[0])
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Failed to fetch dashboard data", error)
       } finally {
         setLoading(false)
@@ -50,7 +51,7 @@ const AdminDashboard = () => {
         try {
           const data = await getTrainerReviews(selectedTrainer._id)
           setTrainerReviews(data.reviews || [])
-        } catch (error) {
+        } catch (error: unknown) {
           console.error("Failed to fetch reviews", error)
         }
       }
@@ -63,7 +64,7 @@ const AdminDashboard = () => {
       try {
         const data = await getDashboardGraphData(revenueFilter, 'revenue')
         setRevenueData(data)
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Failed to fetch revenue data", error)
       }
     }
@@ -75,7 +76,7 @@ const AdminDashboard = () => {
       try {
         const data = await getDashboardGraphData(userFilter, 'users')
         setUserData(data)
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Failed to fetch user data", error)
       }
     }

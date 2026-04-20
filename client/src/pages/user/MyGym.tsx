@@ -105,9 +105,9 @@ export default function MyGym() {
         new Date(a.date).toLocaleDateString('en-CA') === todayStr
       );
       setHasAttendedToday(attendedToday);
-    } catch (err: any) {
-      console.error("Dashboard fetch error:", err);
-      if (err.response?.status === 404) {
+    } catch (_err: unknown) {
+      console.error("Dashboard fetch error:", _err);
+      if (_err && typeof _err === 'object' && 'response' in _err && (_err as any).response?.status === 404) {
         toast.error("Active membership required");
         navigate("/gyms");
       }
@@ -129,9 +129,10 @@ export default function MyGym() {
       toast.success("Membership cancelled successfully");
       setGymData(null);
       navigate("/gyms");
-    } catch (err: any) {
-      console.error("Failed to cancel membership:", err);
-      toast.error(err.response?.data?.error || "Failed to cancel membership");
+    } catch (_err: unknown) {
+      console.error("Failed to cancel membership:", _err);
+      const errorMessage = (_err && typeof _err === 'object' && 'response' in _err) ? (_err as any).response?.data?.error : "Failed to cancel membership";
+      toast.error(errorMessage || "Failed to cancel membership");
     }
   };
 
@@ -513,7 +514,7 @@ export default function MyGym() {
                <GymReviews
                   gymId={gym._id}
                   reviews={gym.reviews || []}
-                  onReviewAdded={(newReview: any) => {
+                  onReviewAdded={(newReview: unknown) => {
                     setGymData((prev) => prev ? {
                       ...prev,
                       gym: {

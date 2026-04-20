@@ -107,8 +107,8 @@ export default function MyTrainerProfile() {
         try {
             const response = await API.get("/user/my-trainer");
             setTrainer(response.data.trainer);
-        } catch (err: any) {
-            console.error("Failed to fetch my trainer:", err);
+        } catch (_err: unknown) {
+            console.error("Failed to fetch my trainer:", _err);
             setError("Failed to load trainer details");
             toast.error("Failed to load trainer details");
         } finally {
@@ -120,8 +120,8 @@ export default function MyTrainerProfile() {
         try {
             const response = await API.get("/user/me");
             setUser(response.data.user);
-        } catch (err: any) {
-            console.error("Failed to fetch user:", err);
+        } catch (_err: unknown) {
+            console.error("Failed to fetch user:", _err);
         }
     }, []);
 
@@ -129,8 +129,8 @@ export default function MyTrainerProfile() {
         try {
             const response = await API.get("/user/plan");
             setUserPlan(response.data.plan);
-        } catch (err) {
-            console.error("Failed to fetch user plan:", err);
+        } catch (_err: unknown) {
+            console.error("Failed to fetch user plan:", _err);
         }
     }, []);
 
@@ -141,8 +141,8 @@ export default function MyTrainerProfile() {
             setTrainer(null);
             setUser(null);
             navigate('/trainers');
-        } catch (err: any) {
-            console.error("Failed to cancel subscription:", err);
+        } catch (_err: unknown) {
+            console.error("Failed to cancel subscription:", _err);
             toast.error("Failed to cancel subscription");
         }
     };

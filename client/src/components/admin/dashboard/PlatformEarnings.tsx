@@ -2,8 +2,13 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianG
 import { Button } from "@/components/ui/button";
 import { DollarSign } from "lucide-react";
 
+interface EarningsData {
+    date: string;
+    amount: number;
+}
+
 interface PlatformEarningsProps {
-    data: any[];
+    data: EarningsData[];
     filter: string;
     setFilter: (f: 'day' | 'week' | 'month' | 'year') => void;
 }

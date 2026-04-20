@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,19 +26,6 @@ export default function GymListing() {
     const navigate = useNavigate();
     const limit = 8;
 
-    useEffect(() => {
-        document.title = "TrainUp - Discover Elite Gyms";
-        fetchGyms();
-    }, [fetchGyms]);
-
-    useEffect(() => {
-        const debounce = setTimeout(() => {
-            if (page === 1) fetchGyms();
-            else setPage(1);
-        }, 500);
-        return () => clearTimeout(debounce);
-    }, [search]);
-
     const fetchGyms = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -52,13 +39,26 @@ export default function GymListing() {
             );
             setGyms(response.gyms || []);
             setTotalPages(response.totalPages || 1);
-        } catch (err) {
+        } catch (_err) {
             setError("Failed to fetch gyms. Please try again later.");
-            console.error("API error:", err);
+            console.error("API error:", _err);
         } finally {
             setIsLoading(false);
         }
     }, [page, location, search, limit]);
+
+    useEffect(() => {
+        document.title = "TrainUp - Discover Elite Gyms";
+        fetchGyms();
+    }, [fetchGyms]);
+
+    useEffect(() => {
+        const debounce = setTimeout(() => {
+            if (page === 1) fetchGyms();
+            else setPage(1);
+        }, 500);
+        return () => clearTimeout(debounce);
+    }, [search, page, fetchGyms]);
 
 
     const handleDetectLocation = () => {

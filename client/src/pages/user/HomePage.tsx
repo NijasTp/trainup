@@ -25,7 +25,7 @@ import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { Link, useNavigate } from "react-router-dom";
 import { getWorkoutDays } from "@/services/workoutService";
 import { getMealsByDate as getDiet } from "@/services/dietServices";
-import { getGymsForUser } from "@/services/gymService";
+import { getGymsForUser, type IGym } from "@/services/gymService";
 import { ROUTES } from "@/constants/routes";
 import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/IHomePage";
 import Aurora from "@/components/ui/Aurora";
@@ -33,6 +33,7 @@ import { getWorkoutTemplates } from "@/services/templateService";
 import type { IWorkoutTemplate } from "@/interfaces/template/IWorkoutTemplate";
 
 import { useSelector } from "react-redux";
+import type { UserType } from "@/redux/slices/userAuthSlice";
 import ProfileCompletionModal from "@/components/user/general/ProfileCompletionModal";
 import api from "@/lib/axios";
 // import API from "@/lib/axios";
@@ -98,15 +99,15 @@ const AnimatedNumber = ({ value }: { value: number }) => {
 
 export default function HomePage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
-  const [gyms, setGyms] = useState<any[]>([]); // TODO: Define IGym interface in services/gymService.ts and use it here
+  const [gyms, setGyms] = useState<IGym[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [templates, setTemplates] = useState<IWorkoutTemplate[]>([]);
   const [diet, setDiet] = useState<DietResponse | null>(null);
-  const [activeTemplates, setActiveTemplates] = useState<any[]>([]);
+  const [activeTemplates, setActiveTemplates] = useState<IWorkoutTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const navigate = useNavigate();
-  const user = useSelector((state: { userAuth: { user: UserType } }) => state.userAuth.user);
+  const user = useSelector((state: { userAuth: { user: UserType | null } }) => state.userAuth.user);
   const streak = user ? user.streak : 0;
 
   const today = format(new Date(), "yyyy-MM-dd");
@@ -166,8 +167,8 @@ export default function HomePage() {
       try {
         const trainerResponse = await getTrainers(1, 5, "");
         setTrainers(trainerResponse.trainers.trainers || []);
-      } catch (err: any) {
-        console.error("Failed to fetch trainers:", err);
+      } catch (_err) {
+        console.error("Failed to fetch trainers:", _err);
         toast.error("Failed to fetch trainers");
       }
 
@@ -175,8 +176,8 @@ export default function HomePage() {
       try {
         const workoutResponse = await getWorkoutDays(today);
         setWorkouts(workoutResponse.sessions);
-      } catch (err: any) {
-        console.error("Failed to fetch workouts:", err);
+      } catch (_err) {
+        console.error("Failed to fetch workouts:", _err);
         toast.error("Failed to fetch workouts");
       }
 
@@ -184,8 +185,8 @@ export default function HomePage() {
       try {
         const dietResponse = await getDiet(today);
         setDiet(dietResponse);
-      } catch (err: any) {
-        console.error("Failed to fetch diet:", err);
+      } catch (_err) {
+        console.error("Failed to fetch diet:", _err);
         toast.error("Failed to fetch diet");
       }
 
@@ -193,8 +194,8 @@ export default function HomePage() {
       try {
         const gymResponse = await getGymsForUser(1, 3);
         setGyms(gymResponse.gyms || []);
-      } catch (err: any) {
-        console.error("Failed to fetch gyms:", err);
+      } catch (_err) {
+        console.error("Failed to fetch gyms:", _err);
       }
 
       // Fetch popular templates
@@ -202,16 +203,16 @@ export default function HomePage() {
         const goal = user?.goals && user.goals.length > 0 ? user.goals[0] : undefined;
         const templateResponse = await getWorkoutTemplates({ limit: 6, goal });
         setTemplates(templateResponse.templates || []);
-      } catch (err: any) {
-        console.error("Failed to fetch templates:", err);
+      } catch (_err) {
+        console.error("Failed to fetch templates:", _err);
       }
 
       // Fetch active programs from profile
       try {
         const profileResponse = await api.get('/user/profile');
         setActiveTemplates(profileResponse.data.activeWorkoutTemplates || []);
-      } catch (err: any) {
-        console.error("Failed to fetch active programs:", err);
+      } catch (_err) {
+        console.error("Failed to fetch active programs:", _err);
       }
 
     } catch (error) {
@@ -726,7 +727,7 @@ export default function HomePage() {
                 <p className="text-gray-500 text-xl font-medium">No gyms found in your area.</p>
               </div>
             ) : (
-              gyms.slice(0, 3).map((gym: any) => (
+              gyms.slice(0, 3).map((gym: IGym & { avgRating?: number, minPlanPrice?: number }) => (
                 <motion.div
                   key={gym._id}
                   variants={itemVariants}

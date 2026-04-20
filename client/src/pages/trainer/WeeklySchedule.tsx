@@ -91,7 +91,7 @@ export default function WeeklySchedule() {
                 if (scheduleRes.data.schedule) {
                     const storedSchedule = scheduleRes.data.schedule;
                     const mappedSchedule = DYNAMIC_DAYS.map(dayName => {
-                        const storedDay = storedSchedule.schedule.find((s: { day: string }) => s.day === dayName);
+                        const storedDay = storedSchedule.schedule.find((s: { day: string; isActive: boolean; slots: TimeSlot[] }) => s.day === dayName);
                         return storedDay ? { ...storedDay, day: dayName } : { day: dayName, isActive: false, slots: [] };
                     });
 
@@ -109,8 +109,8 @@ export default function WeeklySchedule() {
                     });
                     setIsScheduleSaved(false);
                 }
-            } catch (err) {
-                console.error("Schedule fetch error:", err);
+            } catch (_err) {
+                console.error("Schedule fetch error:", _err);
                 setSchedule({
                     trainerId: '',
                     weekStart: getTodayDate(),
@@ -122,22 +122,23 @@ export default function WeeklySchedule() {
             try {
                 const slotsRes = await API.get("/trainer/slots");
                 setSlots(slotsRes.data.slots || []);
-            } catch (err) {
-                console.error("Slots fetch error:", err);
+            } catch (_err) {
+                console.error("Slots fetch error:", _err);
             }
             try {
+                // Fetching session requests (result could be used to update UI if needed)
                 await API.get("/trainer/session-requests");
-            } catch (error) {
-                console.error("Session requests fetch error:", error);
+            } catch (_err) {
+                console.error("Session requests fetch error:", _err);
             }
 
-        } catch (err) {
-            console.error("General fetch error:", err);
+        } catch (_err) {
+            console.error("General fetch error:", _err);
             setError("Failed to load some data. Please reload.");
         } finally {
             setIsLoading(false);
         }
-    }, [getTodayDate]);
+    }, []); // getTodayDate removed as a dependency if we want to follow best practices or use a ref for it.
 
 
     const isDayInPast = () => {
@@ -336,8 +337,9 @@ export default function WeeklySchedule() {
                 console.error("Failed to refresh slots:", error);
             }
 
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Failed to save schedule");
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to save schedule";
+            toast.error(errorMessage);
         } finally {
             setIsSavingSchedule(false);
         }
@@ -348,8 +350,9 @@ export default function WeeklySchedule() {
         try {
             const response = await API.get(`/video-call/slot/${slotId}`);
             navigate(`/trainer/video-call/${response.data.videoCall.roomId}`);
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to join video call");
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to join video call";
+            toast.error(errorMessage);
         }
     };
 
@@ -395,7 +398,7 @@ export default function WeeklySchedule() {
             await API.post(`/trainer/session-requests/${requestId}/approve/${userId}`);
             toast.success("Approved!");
             fetchAllData();
-        } catch (err) {
+        } catch (_err: unknown) {
             toast.error("Failed to approve");
         } finally {
             setProcessingId(null);
@@ -413,7 +416,7 @@ export default function WeeklySchedule() {
             setShowRejectModal(false);
             setRejectionReason('');
             fetchAllData();
-        } catch (err) {
+        } catch (_err: unknown) {
             toast.error("Failed to reject");
         } finally {
             setProcessingId(null);

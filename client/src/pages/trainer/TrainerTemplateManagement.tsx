@@ -44,8 +44,9 @@ const TrainerTemplateManagement = () => {
                 page: apiResponse.data.page,
                 totalPages: apiResponse.data.totalPages,
             });
-        } catch (error: any) {
-            console.error("Error fetching trainer templates:", error);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Error fetching trainer templates";
+            console.error(errorMessage, err);
             setResponse({ templates: [], total: 0, page: 1, totalPages: 1 });
         } finally {
             setLoading(false);
@@ -76,8 +77,8 @@ const TrainerTemplateManagement = () => {
             await API.delete(endpoint);
             setSearchQuery("");
             setCurrentPage(1);
-        } catch (error) {
-            console.error("Error deleting template:", error);
+        } catch (_error: unknown) {
+            console.error("Error deleting template:", _error);
         }
     };
 
@@ -152,8 +153,8 @@ const TrainerTemplateManagement = () => {
                                 className="group flex flex-col bg-black/40 border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-2xl"
                             >
                                 <div className="relative aspect-video overflow-hidden">
-                                    {(template as any).image ? (
-                                        <img src={(template as any).image} alt={template.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    {('image' in template && template.image) ? (
+                                        <img src={template.image as string} alt={template.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                     ) : (
                                         <div className="w-full h-full bg-gradient-to-br from-primary/10 to-black flex items-center justify-center">
                                             <Layers size={40} className="text-primary/20" />
@@ -173,7 +174,9 @@ const TrainerTemplateManagement = () => {
                                     <div className="flex items-center gap-6">
                                         <div className="flex items-center gap-2 text-gray-500 font-bold italic text-[10px]">
                                             <Clock size={12} className="text-primary" />
-                                            {(template as any).repetitions ? `${(template as any).days.length * (template as any).repetitions} DAYS` : `${(template as any).durationDays || (template as any).duration} DAYS`}
+                                            {('repetitions' in template && 'days' in template) 
+                                                ? `${(template.days as any[]).length * (template.repetitions as number)} DAYS` 
+                                                : `${(template as any).durationDays || (template as any).duration || 0} DAYS`}
                                         </div>
                                     </div>
                                     <p className="text-gray-500 text-[10px] font-bold line-clamp-2 uppercase italic leading-relaxed">{template.description}</p>

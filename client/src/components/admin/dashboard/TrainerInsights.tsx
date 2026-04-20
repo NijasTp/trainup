@@ -1,11 +1,25 @@
 import { ChevronDown, Star, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 
+interface Trainer {
+    _id: string;
+    name: string;
+}
+
+interface Review {
+    user?: {
+        name?: string;
+    };
+    rating: number;
+    comment?: string;
+    message?: string;
+}
+
 interface TrainerInsightsProps {
-    trainers: any[];
+    trainers: Trainer[];
     selectedTrainer: string;
     setSelectedTrainer: (id: string) => void;
-    reviews: any[];
+    reviews: Review[];
 }
 
 export default function TrainerInsights({

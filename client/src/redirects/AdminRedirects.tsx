@@ -31,12 +31,14 @@ export const AdminPreventLoggedIn: React.FC<AdminPreventLoggedInProps> = ({ chil
         try {
           await checkAdminSession();
           navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error("Session check failed:", error);
 
-          if (error.response?.status === 403 && error.response.data?.error === "Banned") {
+          // Handle unknown error with type guard or casting for response
+          const err = error as { response?: { status: number; data?: { error?: string } } };
+          if (err.response?.status === 403 && err.response.data?.error === "Banned") {
             toast.error("You are banned");
-          } else if (error.response?.status === 401) {
+          } else if (err.response?.status === 401) {
             toast.error("Session expired");
           }
 

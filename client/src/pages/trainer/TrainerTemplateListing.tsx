@@ -57,7 +57,7 @@ export default function TrainerTemplateList() {
 
       setWorkoutTemplates(workoutRes.data);
       setDietTemplates(dietRes.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to fetch templates:", error);
       toast.error("Failed to load templates");
     } finally {
@@ -72,7 +72,7 @@ export default function TrainerTemplateList() {
       await API.delete(`/${type}/trainer/${type}-templates/${id}`);
       toast.success("Template deleted successfully");
       fetchTemplates();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to delete template:", error);
       toast.error("Failed to delete template");
     }

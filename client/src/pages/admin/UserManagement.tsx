@@ -37,15 +37,13 @@ const UserManagement = () => {
       setUsers(users);
       setTotal(total);
       setTotalPages(totalPages);
-    } catch (err: any) {
+    } catch (_err: unknown) {
       setUsers([]);
       setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
+  };  useEffect(() => {
     fetchUsers();
   }, [currentPage, searchQuery, isBannedFilter, startDate]);
 

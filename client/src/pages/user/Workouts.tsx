@@ -296,42 +296,43 @@ export default function WorkoutPage() {
     setSelectedDate(newDate);
   };
 
-  useEffect(() => {
-    document.title = "TrainUp - Your Daily Workouts";
-    fetchWorkouts();
-  }, [selectedDate]);
-
-  useEffect(() => {
-    fetchAllHistory();
-  }, []);
-
-  async function fetchAllHistory() {
-    try {
-      const data = await getAllSessions();
-      if (data && data.sessions) {
-        setAllSessions(data.sessions);
-      }
-    } catch (err) {
-      console.error("Failed to fetch history:", err);
-    }
-  }
-
-  async function fetchWorkouts() {
+  const fetchWorkouts = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await getWorkoutDays(format(selectedDate, "yyyy-MM-dd"));
       const workoutDay = response ? [response] : [{ _id: "", userId: "", date: format(selectedDate, "yyyy-MM-dd"), sessions: [] }];
       setDailyWorkouts(workoutDay);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError("Failed to fetch workouts");
       console.error("API error:", err);
-      toast.error("Failed to load workouts", { description: err.message });
+      const errorMessage = err instanceof Error ? err.message : "Failed to load workouts";
+      toast.error("Failed to load workouts", { description: errorMessage });
       setDailyWorkouts([]);
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [selectedDate]);
+
+  const fetchAllHistory = useCallback(async () => {
+    try {
+      const data = await getAllSessions();
+      if (data && data.sessions) {
+        setAllSessions(data.sessions);
+      }
+    } catch (_err: unknown) {
+      console.error("Failed to fetch history:", _err);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.title = "TrainUp - Your Daily Workouts";
+    fetchWorkouts();
+  }, [fetchWorkouts]);
+
+  useEffect(() => {
+    fetchAllHistory();
+  }, [fetchAllHistory]);
 
   useEffect(() => {
     if (isToday(selectedDate)) {

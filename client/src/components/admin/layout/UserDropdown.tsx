@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logoutAdmin } from "../../../services/authService";
 import { logout } from "../../../redux/slices/adminAuthSlice";
@@ -23,7 +23,7 @@ export default function UserDropdown() {
             dispatch(logout());
             await logoutAdmin();
             navigate("/admin/login");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.log('error logout:', error);
         }
     };

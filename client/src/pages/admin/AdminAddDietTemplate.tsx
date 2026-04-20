@@ -62,7 +62,7 @@ export default function NewDietTemplate({ mode = "admin" }: { mode?: "admin" | "
         try {
           const res = await API.get(`/template/diet/${id}`);
           setTemplate(res.data);
-        } catch (err) {
+        } catch (_err) {
           toast.error("Failed to load template");
         }
       };
@@ -87,11 +87,11 @@ export default function NewDietTemplate({ mode = "admin" }: { mode?: "admin" | "
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setTemplate((prev: any) => ({ ...prev, [name]: name === 'duration' ? parseInt(value) || 0 : value }));
+    setTemplate(prev => ({ ...prev, [name]: name === 'duration' ? parseInt(value) || 0 : value }));
   };
 
   const addDay = () => {
-    setTemplate((prev: any) => ({
+    setTemplate(prev => ({
       ...prev,
       days: [...(prev.days || []), { dayNumber: (prev.days?.length || 0) + 1, meals: [] }]
     }));
@@ -99,16 +99,17 @@ export default function NewDietTemplate({ mode = "admin" }: { mode?: "admin" | "
   };
 
   const removeDay = (index: number) => {
-    setTemplate((prev: any) => ({
+    setTemplate(prev => ({
       ...prev,
-      days: (prev.days || []).filter((_: any, i: number) => i !== index).map((d: any, i: number) => ({ ...d, dayNumber: i + 1 }))
+      days: (prev.days || []).filter((_, i) => i !== index).map((d, i) => ({ ...d, dayNumber: i + 1 }))
     }));
     if (activeDayIndex === index) setActiveDayIndex(null);
   };
 
   const addMealToDay = (dayIndex: number, meal: TemplateMeal) => {
-    setTemplate((prev: any) => {
-      const newDays = [...(prev.days || [])];
+    setTemplate(prev => {
+      const newDays = JSON.parse(JSON.stringify(prev.days || []));
+      if (!newDays[dayIndex]) return prev;
       newDays[dayIndex].meals.push(meal);
       return { ...prev, days: newDays };
     });
@@ -117,9 +118,10 @@ export default function NewDietTemplate({ mode = "admin" }: { mode?: "admin" | "
   };
 
   const removeMealFromDay = (dayIndex: number, mealIndex: number) => {
-    setTemplate((prev: any) => {
-      const newDays = [...(prev.days || [])];
-      newDays[dayIndex].meals = newDays[dayIndex].meals.filter((_: any, i: number) => i !== mealIndex);
+    setTemplate(prev => {
+      const newDays = JSON.parse(JSON.stringify(prev.days || []));
+      if (!newDays[dayIndex]) return prev;
+      newDays[dayIndex].meals = newDays[dayIndex].meals.filter((_: unknown, i: number) => i !== mealIndex);
       return { ...prev, days: newDays };
     });
   };
@@ -129,14 +131,14 @@ export default function NewDietTemplate({ mode = "admin" }: { mode?: "admin" | "
     const nutrients = food.foodNutrients;
     const meal: TemplateMeal = {
       name: food.description,
-      calories: nutrients.find((n: any) => n.nutrientName === "Energy")?.value || 0,
-      protein: nutrients.find((n: any) => n.nutrientName === "Protein")?.value || 0,
-      carbs: nutrients.find((n: any) => n.nutrientName === "Carbohydrate, by difference")?.value || 0,
-      fats: nutrients.find((n: any) => n.nutrientName === "Total lipid (fat)")?.value || 0,
+      calories: nutrients.find(n => n.nutrientName === "Energy")?.value || 0,
+      protein: nutrients.find(n => n.nutrientName === "Protein")?.value || 0,
+      carbs: nutrients.find(n => n.nutrientName === "Carbohydrate, by difference")?.value || 0,
+      fats: nutrients.find(n => n.nutrientName === "Total lipid (fat)")?.value || 0,
       time: usdaMealTime,
       notes: food.ingredients || "",
-      nutritions: nutrients
-        .filter((n: any) => !["Energy", "Protein", "Carbohydrate, by difference", "Total lipid (fat)"].includes(n.nutrientName))
+      nutritions: (nutrients || [])
+        .filter(n => !["Energy", "Protein", "Carbohydrate, by difference", "Total lipid (fat)"].includes(n.nutrientName))
         .map((n) => ({ label: n.nutrientName, value: n.value, unit: n.unitName })),
     };
     addMealToDay(activeDayIndex, meal);

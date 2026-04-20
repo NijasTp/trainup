@@ -2,8 +2,13 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGri
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 
+interface GrowthData {
+    date: string;
+    count: number;
+}
+
 interface UserGrowthProps {
-    data: any[];
+    data: GrowthData[];
     filter: string;
     setFilter: (f: 'day' | 'week' | 'month' | 'year') => void;
 }

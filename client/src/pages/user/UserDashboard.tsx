@@ -33,7 +33,15 @@ import type { WeightEntry, Workout, User, IBackendSession, IActivityData, Transf
 
 // --- Components ---
 
-const BentoTile = ({ children, className, title, icon: Icon, delay = 0 }: any) => (
+interface BentoTileProps {
+  children: React.ReactNode;
+  className?: string;
+  title?: string;
+  icon: any;
+  delay?: number;
+}
+
+const BentoTile = ({ children, className, title, icon: Icon, delay = 0 }: BentoTileProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -124,7 +132,7 @@ const UserDashboard: React.FC = () => {
       }));
       setRecentWorkouts(mappedWorkouts);
 
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Dashboard error:", err);
       toast.error("Failed to sync some dashboard data.");
     } finally {
@@ -141,7 +149,7 @@ const UserDashboard: React.FC = () => {
       toast.success("Weight logged successfully!");
       fetchDashboardData();
       setNewWeight("");
-    } catch (err) {
+    } catch (_err: unknown) {
       toast.error("Failed to log weight");
     }
   };
@@ -441,7 +449,12 @@ const ActivityMatrix: React.FC<{ activityData: IActivityData }> = ({ activityDat
   );
 };
 
-const Play = ({ className, fill }: any) => (
+interface PlayProps {
+  className?: string;
+  fill?: string;
+}
+
+const Play = ({ className, fill }: PlayProps) => (
   <svg viewBox="0 0 24 24" className={className} fill={fill || "currentColor"}>
     <path d="M8 5v14l11-7z" />
   </svg>

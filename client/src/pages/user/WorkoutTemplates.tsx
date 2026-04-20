@@ -28,39 +28,39 @@ import { formatDistanceToNow } from "date-fns";
 
 export default function WorkoutTemplates() {
   const [templates, setTemplates] = useState<IWorkoutTemplate[]>([]);
-  const [recentHistory, setRecentHistory] = useState<any[]>([]);
+  const [recentHistory, setRecentHistory] = useState<any[]>([]); // Sessions can be complex, keeping any for now but could be refined if IWorkoutSession exists
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const user = useSelector((state: RootState) => state.userAuth.user);
 
-  useEffect(() => {
-    document.title = "TrainUp - Workout Library";
-    fetchTemplates();
-    fetchHistory();
-  }, [search]);
-
-  async function fetchTemplates() {
+  const fetchTemplates = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await getWorkoutTemplates({ search, limit: 20 });
       setTemplates(response?.templates || []);
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to fetch workout templates");
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [search]);
 
-  async function fetchHistory() {
+  const fetchHistory = useCallback(async () => {
     try {
       const res = await fetchWorkoutHistory(1, 4);
       setRecentHistory(res.sessions || []);
     } catch (err) {
       console.error("Failed to fetch history", err);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    document.title = "TrainUp - Workout Library";
+    fetchTemplates();
+    fetchHistory();
+  }, [fetchTemplates, fetchHistory]);
 
   const isTemplateActive = (templateId: string) => {
     return user?.activeWorkoutTemplates?.some(t => t.templateId === templateId) || user?.activeWorkoutTemplate === templateId;

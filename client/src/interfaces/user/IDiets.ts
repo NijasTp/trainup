@@ -1,4 +1,10 @@
 
+export interface NutritionItem {
+  label: string;
+  value: number;
+  unit: string;
+}
+
 export interface Meal {
   _id: string;
   name: string;
@@ -13,7 +19,7 @@ export interface Meal {
   sourceId: string;
   createdAt: string;
   updatedAt: string;
-  nutritions: any[];
+  nutritions: NutritionItem[];
   eatenTime?: string;
   image?: string;
   description?: string;

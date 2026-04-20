@@ -6,7 +6,6 @@ import {
     Users,
     Building2,
     Briefcase,
-    Star,
     CreditCard,
     ClipboardList,
     LogOut,
@@ -30,6 +29,7 @@ interface SidebarItemProps {
 }
 
 const SidebarItem = ({ icon: Icon, label, path, active, isOpen, subItems }: SidebarItemProps) => {
+    const location = useLocation();
     const [isSubMenuOpen, setIsSubMenuOpen] = React.useState(active);
 
     return (
@@ -67,7 +67,7 @@ const SidebarItem = ({ icon: Icon, label, path, active, isOpen, subItems }: Side
                         <Link
                             key={item.path}
                             to={item.path}
-                            className={`px-4 py-2 text-sm rounded-lg transition-colors ${useLocation().pathname === item.path
+                            className={`px-4 py-2 text-sm rounded-lg transition-colors ${location.pathname === item.path
                                 ? 'text-primary bg-primary/10'
                                 : 'text-gray-500 hover:text-white hover:bg-white/5'
                                 }`}

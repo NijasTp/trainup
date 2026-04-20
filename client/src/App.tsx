@@ -120,7 +120,7 @@ import WorkoutHistoryPage from './pages/user/WorkoutHistoryPage';
 import WorkoutPreviewPage from './pages/user/WorkoutPreviewPage';
 
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import API from './lib/axios';
 import { updateUser } from './redux/slices/userAuthSlice';
@@ -130,13 +130,7 @@ function App() {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state: RootState) => state.userAuth.isAuthenticated);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      refreshProfile();
-    }
-  }, [isAuthenticated]);
-
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     try {
       const res = await API.get('/user/get-profile');
       if (res.data.user) {
@@ -145,7 +139,13 @@ function App() {
     } catch (e) {
       console.error("Auto-refresh profile failed", e);
     }
-  };
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshProfile();
+    }
+  }, [isAuthenticated, refreshProfile]);
 
   return (
     <>

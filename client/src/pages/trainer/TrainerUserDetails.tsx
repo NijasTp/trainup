@@ -46,8 +46,8 @@ export default function TrainerUserDetails() {
             const response = await API.get(`/trainer/get-client/${id}`);
             setUser(response.data.user);
             setIsLoading(false);
-        } catch (err: any) {
-            console.error("Failed to fetch user:", err);
+        } catch (_err: unknown) {
+            console.error("Failed to fetch user:", _err);
             setError("Failed to load user details");
             toast.error("Failed to load user details");
             setIsLoading(false);
@@ -58,8 +58,8 @@ export default function TrainerUserDetails() {
         try {
             const response = await API.get(`/trainer/user-plan/${id}`);
             setUserPlan(response.data.plan);
-        } catch (err: any) {
-            console.error("Failed to fetch user plan:", err);
+        } catch (_err: unknown) {
+            console.error("Failed to fetch user plan:", _err);
         }
     }, [id]);
 
@@ -73,8 +73,8 @@ export default function TrainerUserDetails() {
             if (sorted.length > 0) {
                 setSelectedProgress(sorted[0]);
             }
-        } catch (err) {
-            console.error("Failed to fetch progress:", err);
+        } catch (_err: unknown) {
+            console.error("Failed to fetch progress:", _err);
         }
     }, [id]);
 
