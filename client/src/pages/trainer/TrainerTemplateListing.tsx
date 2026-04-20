@@ -42,11 +42,6 @@ export default function TrainerTemplateList() {
   const [dietPage, setDietPage] = useState(1);
   const limit = 10;
 
-  useEffect(() => {
-    document.title = "TrainUp - My Templates";
-    fetchTemplates();
-  }, [fetchTemplates]);
-
   const fetchTemplates = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -64,6 +59,11 @@ export default function TrainerTemplateList() {
       setIsLoading(false);
     }
   }, [workoutPage, dietPage, searchQuery]);
+
+  useEffect(() => {
+    document.title = "TrainUp - My Templates";
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   const handleDeleteTemplate = async (id: string, type: 'workout' | 'diet') => {
     if (!confirm("Are you sure you want to delete this template?")) return;

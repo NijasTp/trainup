@@ -30,15 +30,6 @@ export default function TrainerUserDetails() {
 
     const isExpired = userPlan ? new Date(userPlan.expiryDate) < new Date() : false;
 
-    useEffect(() => {
-        document.title = "TrainUp - Client Dossier";
-        if (id) {
-            fetchUser();
-            fetchUserPlan();
-            fetchProgress();
-        }
-    }, [id, fetchUser, fetchUserPlan, fetchProgress]);
-
     const fetchUser = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -77,6 +68,15 @@ export default function TrainerUserDetails() {
             console.error("Failed to fetch progress:", _err);
         }
     }, [id]);
+
+    useEffect(() => {
+        document.title = "TrainUp - Client Dossier";
+        if (id) {
+            fetchUser();
+            fetchUserPlan();
+            fetchProgress();
+        }
+    }, [id, fetchUser, fetchUserPlan, fetchProgress]);
 
     const handleStartChat = () => {
         if (!user?.trainerPlan || user.trainerPlan === 'basic') {

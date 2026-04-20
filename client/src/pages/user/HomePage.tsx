@@ -112,25 +112,6 @@ export default function HomePage() {
 
   const today = format(new Date(), "yyyy-MM-dd");
 
-  useEffect(() => {
-    document.title = "TrainUp - Your Fitness Journey";
-    fetchHomeData();
-    checkProfileCompletion();
-
-    const lenis = new Lenis();
-
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    const rafId = requestAnimationFrame(raf);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      lenis.destroy();
-    };
-  }, [fetchHomeData, checkProfileCompletion]); // Added missing dependencies
-
   const checkProfileCompletion = useCallback(() => {
     if (!user) return;
 
@@ -221,6 +202,25 @@ export default function HomePage() {
       setIsLoading(false);
     }
   }, [today, user?.goals]);
+
+  useEffect(() => {
+    document.title = "TrainUp - Your Fitness Journey";
+    fetchHomeData();
+    checkProfileCompletion();
+
+    const lenis = new Lenis();
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    const rafId = requestAnimationFrame(raf);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+    };
+  }, [fetchHomeData, checkProfileCompletion]); // Correctly using initialized variables
 
   const calculateDietProgress = () => {
     const manualMeals = diet?.meals || [];

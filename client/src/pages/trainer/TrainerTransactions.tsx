@@ -39,11 +39,6 @@ export default function TrainerTransactions() {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  useEffect(() => {
-    document.title = "TrainUp - Synergy Ledgers";
-    fetchTransactions();
-  }, [fetchTransactions]);
-
   const fetchTransactions = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -57,12 +52,17 @@ export default function TrainerTransactions() {
         },
       });
       setTransactions(response.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Failed to calibrate ledger records");
     } finally {
       setIsLoading(false);
     }
   }, [page, search, statusFilter, planFilter]);
+
+  useEffect(() => {
+    document.title = "TrainUp - Synergy Ledgers";
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);

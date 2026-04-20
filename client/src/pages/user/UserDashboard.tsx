@@ -80,10 +80,6 @@ const UserDashboard: React.FC = () => {
   
   // Removed unused dispatch, navigate, reduxUser
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
@@ -139,6 +135,10 @@ const UserDashboard: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   const handleAddWeight = async (val: string) => {
     const weight = Number(val);

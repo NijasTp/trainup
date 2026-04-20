@@ -71,15 +71,6 @@ export default function WeeklySchedule() {
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-    useEffect(() => {
-        document.title = "TrainUp - Schedule & Requests";
-        fetchAllData();
-    }, [fetchAllData]);
-
-    const getTodayDate = () => {
-        return format(new Date(), 'yyyy-MM-dd');
-    };
-
     const fetchAllData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -139,6 +130,11 @@ export default function WeeklySchedule() {
             setIsLoading(false);
         }
     }, []); // getTodayDate removed as a dependency if we want to follow best practices or use a ref for it.
+
+    useEffect(() => {
+        document.title = "TrainUp - Schedule & Requests";
+        fetchAllData();
+    }, [fetchAllData]);
 
 
     const isDayInPast = () => {

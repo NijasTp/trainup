@@ -71,23 +71,6 @@ export default function ChatPage() {
     const [recordingDuration, setRecordingDuration] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    useEffect(() => {
-        document.title = "TrainUp - Private Messaging";
-        initializeChat();
-        return () => {
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-            }
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-            }
-        };
-    }, [initializeChat, previewUrl]);
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
     const initializeChat = useCallback(async () => {
         try {
             const planResponse = await API.get("/user/plan");
@@ -151,7 +134,20 @@ export default function ChatPage() {
             setError(errorMessage);
             setIsLoading(false);
         }
-    }, [navigate]);
+    }, []);
+
+    useEffect(() => {
+        document.title = "TrainUp - Private Messaging";
+        initializeChat();
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, [initializeChat, previewUrl]);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
