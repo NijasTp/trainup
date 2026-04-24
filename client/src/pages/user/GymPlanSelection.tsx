@@ -78,9 +78,6 @@ export default function GymPlanSelection() {
 
             if (response.data.url) {
                 window.location.href = response.data.url;
-            } else if (response.status === 409) {
-                toast.warning("Payment Pending: You already have a transaction in progress.");
-                setIsProcessing(false);
             } else {
                 throw new Error("No checkout URL received");
             }

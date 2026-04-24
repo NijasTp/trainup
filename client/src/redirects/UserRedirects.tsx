@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import type { RootState } from "../redux/store";
 import { toast } from "sonner";
-import { logout } from "@/redux/slices/userAuthSlice";
+import { logout, syncSubscriptionStatus } from "@/redux/slices/userAuthSlice";
 import { checkUserSession } from "@/services/authService";
 import LoadingSpinner from "@/components/ui/LoadSpinner";
 import { ROUTES } from "@/constants/routes";
@@ -13,7 +13,7 @@ import { ROUTES } from "@/constants/routes";
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.userAuth);
   const location = useLocation();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const [checking, setChecking] = useState(true);
   const [sessionChecked, setSessionChecked] = useState(false);
   const navigate = useNavigate();
@@ -32,6 +32,8 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       if (isAuthenticated && user) {
         setChecking(false);
         setSessionChecked(true);
+        // Silently sync subscription status in the background
+        dispatch(syncSubscriptionStatus());
         return;
       }
 

@@ -66,20 +66,13 @@ export default function TrainerPricingPage() {
 
             if (response.data.url) {
                 window.location.href = response.data.url;
-            } else if (response.status === 409) {
-                toast.warning("Payment Pending: You already have a transaction in progress.");
-                setProcessingPayment(false);
             } else {
                 throw new Error("No checkout URL received");
             }
         } catch (err: any) {
             console.error("Failed to initiate payment:", err);
             const errorMessage = err.response?.data?.message || err.message || "Failed to initiate payment";
-            if (err.response?.status === 409) {
-                toast.warning("Payment Pending: You already have a transaction in progress.");
-            } else {
-                toast.error(errorMessage);
-            }
+            toast.error(errorMessage);
             setProcessingPayment(false);
         }
     };

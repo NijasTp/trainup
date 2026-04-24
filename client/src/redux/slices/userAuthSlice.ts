@@ -1,4 +1,5 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { checkUserSession } from '@/services/authService';
 
 interface XPLog {
   amount: number;
@@ -75,7 +76,7 @@ const initialState: UserAuthState = {
   user: null,
   isAuthenticated: false,
   loading: false,
-};
+}
 
 export const userAuthSlice = createSlice({
   name: 'userAuth',
@@ -133,4 +134,22 @@ export const userAuthSlice = createSlice({
 
 export const { login, logout, setLoading, updateUser } = userAuthSlice.actions;
 
-export default userAuthSlice.reducer;
+export const syncSubscriptionStatus = createAsyncThunk(
+  'userAuth/syncSubscriptionStatus',
+  async (_, { dispatch }) => {
+    try {
+      const response = await checkUserSession();
+      if (response && response.valid && response.user) {
+        dispatch(updateUser({
+          activeGymDetails: response.user.activeGymDetails || null,
+          assignedTrainerDetails: response.user.assignedTrainerDetails || null,
+          assignedTrainer: response.user.assignedTrainer || null,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to sync subscription status', error);
+    }
+  }
+);
+
+export default userAuthSlice.reducer;

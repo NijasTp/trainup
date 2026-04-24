@@ -37,12 +37,7 @@ export class PaymentGymController {
             // Check for pending transaction
             const pending = await this._paymentService.findPendingGymTransactionByUser(userId);
             if (pending) {
-                res.status(STATUS_CODE.CONFLICT).json({ 
-                    message: "You have a pending transaction. Please complete or cancel it first.",
-                    hasPending: true,
-                    transaction: pending
-                });
-                return;
+                await this._paymentService.markUserPendingGymTransactionsAsFailed(userId);
             }
 
             const user = await this._userService.getUserById(userId);
