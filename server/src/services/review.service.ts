@@ -56,6 +56,19 @@ export class ReviewService implements IReviewService {
 
         return newReview;
     }
+    async getUserReview(userId: string, targetId: string, targetModel: 'Trainer' | 'Gym'): Promise<IReview | null> {
+        const userObjectId = new Types.ObjectId(userId);
+        const targetObjectId = new Types.ObjectId(targetId);
+        const review = await this.reviewRepository.findOne({ 
+            userId: userObjectId, 
+            targetId: targetObjectId, 
+            targetModel 
+        });
+        if (review) {
+            await review.populate('userId', 'firstName lastName profilePicture name');
+        }
+        return review;
+    }
 
     async getReviews(targetId: string, page: number = 1, limit: number = 5, search: string = ''): Promise<{ reviews: IReview[], total: number, pages: number }> {
         const skip = (page - 1) * limit;

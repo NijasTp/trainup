@@ -14,7 +14,6 @@ import {
     ArrowLeft,
     ChevronLeft,
     ChevronRight,
-    Target,
     X
 } from "lucide-react";
 import API from "@/lib/axios";
@@ -71,7 +70,7 @@ export default function UserSessions() {
     const canJoinSession = (session: Session) => {
         if (!currentUserId) return false;
         const userRequest = session.requestedBy.find(req => 
-            (typeof req.userId === 'string' ? req.userId : req.userId._id) === currentUserId
+            (typeof req.userId === 'string' ? req.userId : (req.userId as any)._id) === currentUserId
         );
         if (!userRequest || userRequest.status !== 'approved' || !session.isBooked) return false;
 
@@ -223,7 +222,7 @@ export default function UserSessions() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <AnimatePresence mode="popLayout">
                             {sessions.map((session, index) => {
-                                const userReq = session.requestedBy.find(req => (typeof req.userId === 'string' ? req.userId : req.userId._id) === currentUserId);
+                                const userReq = session.requestedBy.find(req => (typeof req.userId === 'string' ? req.userId : (req.userId as any)._id) === currentUserId);
                                 const status = userReq?.status || 'pending';
                                 const statusInfo = getStatusInfo(status);
                                 const StatusIcon = statusInfo.icon;

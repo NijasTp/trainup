@@ -68,22 +68,27 @@ export default function GymReviews({ gymId, onReviewAdded, canReview = false, cu
         }
     };
 
-    useEffect(() => {
-        if (gymId) {
-            fetchReviews();
-        }
-    }, [gymId, page]);
-
-    useEffect(() => {
-        if (user && reviews.length > 0) {
-            const myReview = reviews.find(r => r.userId._id === user._id);
-            if (myReview) {
-                setUserReview(myReview);
+    const fetchMyReview = async () => {
+        try {
+            const response = await API.get(`/user/gym/rating/me/${gymId}`);
+            if (response.data.review) {
+                setUserReview(response.data.review);
             } else {
                 setUserReview(null);
             }
+        } catch (error) {
+            console.error("Failed to fetch my review:", error);
         }
-    }, [reviews, user]);
+    };
+
+    useEffect(() => {
+        if (gymId) {
+            fetchReviews();
+            if (canReview) {
+                fetchMyReview();
+            }
+        }
+    }, [gymId, page]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -100,11 +105,13 @@ export default function GymReviews({ gymId, onReviewAdded, canReview = false, cu
         try {
             if (editingReviewId) {
                 const response = await editReview(editingReviewId, rating, message);
+                setUserReview(response);
                 setReviews(prev => prev.map(r => r._id === editingReviewId ? response : r));
                 setEditingReviewId(null);
                 toast.success("Review updated successfully");
             } else {
                 const response = await addGymRating(gymId, rating, message, currentUserPlan);
+                setUserReview(response);
                 if (onReviewAdded) onReviewAdded(response);
                 toast.success("Review added successfully");
                 setPage(1);

@@ -141,6 +141,7 @@ router.post('/trainer/rating/:id', authMiddleware, userReviewController.addTrain
 router.post('/gym/rating/:id', authMiddleware, userReviewController.addGymRating.bind(userReviewController))
 router.get('/trainer/ratings/:id', authMiddleware, userReviewController.getTrainerRatings.bind(userReviewController))
 router.get('/gym/ratings/:id', authMiddleware, userReviewController.getGymRatings.bind(userReviewController))
+router.get('/gym/rating/me/:id', authMiddleware, userReviewController.getMyGymRating.bind(userReviewController))
 
 router.put('/review/:id', authMiddleware, userReviewController.editReview.bind(userReviewController))
 router.delete('/review/:id', authMiddleware, userReviewController.deleteReview.bind(userReviewController))

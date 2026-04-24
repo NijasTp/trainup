@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import {
     MapPin,
     Star,
-    FileText,
     MessageSquare,
     Clock,
     Users,
@@ -94,12 +93,7 @@ export default function MyTrainerProfile() {
     const [userPlan, setUserPlan] = useState<UserPlan | null>(null);
     const [isCertOpen, setIsCertOpen] = useState(false);
 
-    useEffect(() => {
-        document.title = "TrainUp - My Trainer";
-        fetchMyTrainer();
-        fetchUser();
-        fetchUserPlan();
-    }, [fetchMyTrainer, fetchUser, fetchUserPlan]);
+
 
     const fetchMyTrainer = useCallback(async () => {
         setIsLoading(true);
@@ -133,6 +127,13 @@ export default function MyTrainerProfile() {
             console.error("Failed to fetch user plan:", _err);
         }
     }, []);
+
+    useEffect(() => {
+        document.title = "TrainUp - My Trainer";
+        fetchMyTrainer();
+        fetchUser();
+        fetchUserPlan();
+    }, [fetchMyTrainer, fetchUser, fetchUserPlan]);
 
     const handleCancelSubscription = async () => {
         try {

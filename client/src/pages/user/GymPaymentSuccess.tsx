@@ -89,7 +89,7 @@ export default function GymPaymentSuccess() {
 
                         <div className="pt-4 space-y-3">
                             <Button 
-                                onClick={() => navigate("/gym-dashboard")} 
+                                onClick={() => navigate("/my-gym/dashboard")} 
                                 className="w-full bg-primary text-black hover:bg-primary/90 py-6 font-bold text-lg rounded-xl group transition-all shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]"
                             >
                                 Go to Gym Dashboard

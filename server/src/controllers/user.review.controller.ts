@@ -23,6 +23,17 @@ export class UserReviewController {
             next(err)
         }
     }
+    
+    async getMyGymRating(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { id } = req.params;
+            const userId = (req.user as JwtPayload).id;
+            const myReview = await this._reviewService.getUserReview(userId, id, 'Gym');
+            res.status(STATUS_CODE.OK).json({ review: myReview });
+        } catch (err) {
+            next(err);
+        }
+    }
 
     async getTrainerRatings(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {

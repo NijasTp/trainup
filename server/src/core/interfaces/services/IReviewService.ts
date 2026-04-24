@@ -5,4 +5,5 @@ export interface IReviewService {
     getReviews(targetId: string, page?: number, limit?: number, search?: string): Promise<{ reviews: IReview[], total: number, pages: number }>;
     editReview(userId: string, reviewId: string, rating: number, comment: string): Promise<IReview>;
     deleteReview(userId: string, reviewId: string): Promise<void>;
+    getUserReview(userId: string, targetId: string, targetModel: 'Trainer' | 'Gym'): Promise<IReview | null>;
 }

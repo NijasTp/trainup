@@ -13,6 +13,7 @@ import { addDays, addMonths, addYears } from 'date-fns';
 import { IMailService } from '../core/interfaces/services/IMailService';
 import { IGymReminderService } from '../core/interfaces/services/IGymReminderService';
 import { INotificationService } from '../core/interfaces/services/INotificationService';
+import { IGymTransactionRepository } from '../core/interfaces/repositories/IGymTransactionRepository';
 
 @injectable()
 export class PaymentGymController {
@@ -22,7 +23,8 @@ export class PaymentGymController {
         @inject(TYPES.IGymService) private _gymService: IGymService,
         @inject(TYPES.IMailService) private _emailService: IMailService,
         @inject(TYPES.IGymReminderService) private _gymReminderService: IGymReminderService,
-        @inject(TYPES.INotificationService) private _notificationService: INotificationService
+        @inject(TYPES.INotificationService) private _notificationService: INotificationService,
+        @inject(TYPES.IGymTransactionRepository) private _gymTransactionRepo: IGymTransactionRepository
     ) { }
 
     async createGymCheckoutSession(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -82,7 +84,8 @@ export class PaymentGymController {
 
                 // Check fulfillment
                 const user = await this._userService.getUserById(userId);
-                if (user && !user.gymId) {
+                const existingTransaction = await this._gymTransactionRepo.findOne({ stripeSessionId: sessionId });
+                if (user && !existingTransaction) {
                     const subscriptionPlan = await this._gymService.getSubscriptionPlan(subscriptionPlanId);
                     if (subscriptionPlan) {
                         const startDate = new Date();
