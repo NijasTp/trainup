@@ -11,6 +11,8 @@ import { JwtPayload } from "../core/interfaces/services/IJwtService";
 import { INotificationService } from "../core/interfaces/services/INotificationService";
 import { NOTIFICATION_TYPES } from "../constants/notification.constants";
 import { Types } from "mongoose";
+import { UserGymMembershipModel } from "../models/userGymMembership.model";
+import { IUserGymMembershipRepository } from "../core/interfaces/repositories/IUserGymMembershipRepository";
 
 export const checkSubscriptionExpiry = async (
   req: Request,
@@ -85,6 +87,40 @@ export const checkSubscriptionExpiry = async (
             category: "info"
           });
         }
+      }
+    }
+    
+    // Check Gym Memberships
+    const gymMembershipRepo = container.get<IUserGymMembershipRepository>(TYPES.IUserGymMembershipRepository);
+    const activeGymMemberships = await UserGymMembershipModel.find({
+      userId: new Types.ObjectId(userId),
+      status: 'active'
+    });
+
+    for (const membership of activeGymMemberships) {
+      if (now > new Date(membership.subscriptionEndDate)) {
+        logger.info(`Auto-expiring gym membership for user ${userId} and gym ${membership.gymId}`);
+        
+        await UserGymMembershipModel.updateOne(
+          { _id: membership._id },
+          { $set: { status: 'expired' } }
+        );
+
+        // Clear user's gymId if it points to this gym
+        const user = await userRepo.findById(userId);
+        if (user && user.gymId?.toString() === membership.gymId.toString()) {
+          await userRepo.updateUser(userId, { gymId: null });
+        }
+
+        await notificationService.createNotification({
+          recipientId: userId,
+          recipientRole: "user",
+          type: "gym_membership_expired",
+          title: "Gym Membership Expired",
+          message: `Your gym membership has expired.`,
+          priority: "high",
+          category: "warning"
+        });
       }
     }
 

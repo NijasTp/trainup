@@ -17,7 +17,7 @@ import {
   Award,
   Activity,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { toast } from "sonner";
 import { getTrainers } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
@@ -38,7 +38,7 @@ import ProfileCompletionModal from "@/components/user/general/ProfileCompletionM
 import api from "@/lib/axios";
 // import API from "@/lib/axios";
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -48,7 +48,7 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
     y: 0,
@@ -109,7 +109,6 @@ export default function HomePage() {
   const navigate = useNavigate();
   const user = useSelector((state: { userAuth: { user: UserType | null } }) => state.userAuth.user);
   const streak = user ? user.streak : 0;
-
   const today = format(new Date(), "yyyy-MM-dd");
 
   const checkProfileCompletion = useCallback(() => {
@@ -129,7 +128,7 @@ export default function HomePage() {
       user.gender,
       user.height,
       user.weight,
-      user.goals?.length > 0,
+      user.goals && user.goals?.length > 0,
       user.activityLevel,
     ];
 
@@ -190,7 +189,7 @@ export default function HomePage() {
 
       // Fetch active programs from profile
       try {
-        const profileResponse = await api.get('/user/profile');
+        const profileResponse = await api.get('/user/get-profile');
         setActiveTemplates(profileResponse.data.activeWorkoutTemplates || []);
       } catch (_err) {
         console.error("Failed to fetch active programs:", _err);
@@ -402,10 +401,10 @@ export default function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {activeTemplates.map((prog) => (
                 <motion.div
-                  key={prog.id}
+                  key={prog._id}
                   whileHover={{ y: -10 }}
                   className="group relative h-72 rounded-[2.5rem] overflow-hidden border border-white/10 bg-white/5 cursor-pointer shadow-2xl"
-                  onClick={() => navigate(`/workouts/template/${prog.id}`)}
+                  onClick={() => navigate(`/workouts/template/${prog._id}`)}
                 >
                   <img
                     src={prog.image || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop"}
@@ -421,7 +420,7 @@ export default function HomePage() {
                      <h3 className="text-xl font-black italic tracking-tighter text-white uppercase line-clamp-1 group-hover:text-primary transition-colors">
                         {prog.title}
                      </h3>
-                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">By {prog.trainerName || 'Elite Coach'}</p>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">By {prog.createdByType || 'Coach'}</p>
                   </div>
                   
                   <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity">

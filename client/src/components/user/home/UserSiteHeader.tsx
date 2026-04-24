@@ -67,9 +67,12 @@ export const SiteHeader: React.FC = () => {
   const [currentStreak, setCurrentStreak] = useState(user?.streak ?? 0)
   const [showStreakPopup, setShowStreakPopup] = useState(false)
   const [showStreakModal, setShowStreakModal] = useState(false)
+  const isFetchingRef = React.useRef(false)
 
   const fetchNotifications = useCallback(async () => {
+    if (isFetchingRef.current) return
     try {
+      isFetchingRef.current = true
       setLoading(true)
       const { data } = await API.get<{
         notifications: Notification[]
@@ -78,9 +81,11 @@ export const SiteHeader: React.FC = () => {
       setNotifications(data.notifications)
       setUnreadCount(data.unreadCount)
     } catch (err) {
-      toast.error("Failed to load notifications")
+      // toast.error("Failed to load notifications") // Removed to avoid spam on 401
+      console.error("Failed to load notifications", err)
     } finally {
       setLoading(false)
+      isFetchingRef.current = false
     }
   }, [])
 
@@ -149,16 +154,17 @@ export const SiteHeader: React.FC = () => {
   }, [user?._id, dispatch])
 
   useEffect(() => {
-    if (!user) {
-      navigate("/login")
+    if (!user?._id) {
       return
     }
     fetchNotifications()
     const interval = setInterval(() => {
-      fetchNotifications();
+      if (document.hasFocus()) {
+        fetchNotifications();
+      }
     }, 30_000)
     return () => clearInterval(interval)
-  }, [user, navigate, fetchNotifications])
+  }, [user?._id, fetchNotifications])
 
   const handleSignOut = async () => {
     dispatch(logout())

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -110,13 +110,7 @@ export default function TrainerPage() {
     const isSameTrainer = user?.assignedTrainer === id;
     const hasTrainer = !!user?.assignedTrainer;
 
-    useEffect(() => {
-        document.title = "TrainUp - Trainer Profile";
-        fetchTrainer();
-        fetchUser();
-    }, [id]);
-
-    const fetchTrainer = async () => {
+    const fetchTrainer = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -140,9 +134,9 @@ export default function TrainerPage() {
             toast.error("Failed to load trainer details");
             setIsLoading(false);
         }
-    };
+    }, [id]);
 
-    const fetchUser = async () => {
+    const fetchUser = useCallback(async () => {
         try {
             const response = await API.get("/user/get-profile");
             setUser(response.data.user);
@@ -150,7 +144,13 @@ export default function TrainerPage() {
             console.error("Failed to fetch user:", err);
             toast.error("Failed to load user data");
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        document.title = "TrainUp - Trainer Profile";
+        fetchTrainer();
+        fetchUser();
+    }, [id, fetchTrainer, fetchUser]);
 
     const checkPendingTransaction = async (): Promise<boolean> => {
         try {

@@ -20,14 +20,28 @@ export class ReviewService implements IReviewService {
     ) { }
 
     async addReview(userId: string, targetId: string, targetModel: 'Trainer' | 'Gym', rating: number, comment: string, subscriptionPlan?: string): Promise<IReview> {
-        const existingReview = await this.reviewRepository.findOne({ userId, targetId, targetModel });
+        const userObjectId = new Types.ObjectId(userId);
+        const targetObjectId = new Types.ObjectId(targetId);
+
+        const existingReview = await this.reviewRepository.findOne({ 
+            userId: userObjectId, 
+            targetId: targetObjectId, 
+            targetModel 
+        });
+        
         if (existingReview) {
-            throw new AppError(`You have already reviewed this ${targetModel.toLowerCase()}.`, STATUS_CODE.BAD_REQUEST);
+            // Update existing review instead of throwing error
+            const updatedReview = await this.reviewRepository.update(existingReview._id.toString(), { rating, comment, subscriptionPlan });
+            if (!updatedReview) throw new AppError('Failed to update existing review', STATUS_CODE.INTERNAL_SERVER_ERROR);
+            
+            await this.updateEntityRating(targetId, targetModel);
+            await updatedReview.populate('userId', 'firstName lastName profilePicture name');
+            return updatedReview;
         }
 
         const reviewData: Partial<IReview> = {
-            userId: new Types.ObjectId(userId) as unknown as Types.ObjectId,
-            targetId: new Types.ObjectId(targetId) as unknown as Types.ObjectId,
+            userId: userObjectId as unknown as Types.ObjectId,
+            targetId: targetObjectId as unknown as Types.ObjectId,
             targetModel,
             rating,
             comment,

@@ -188,4 +188,17 @@ export class UserTrainerController {
             next(err)
         }
     }
+
+    async cancelSessionBooking(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { slotId } = req.body
+            const userId = (req.user as JwtPayload).id
+            if (!slotId) throw new AppError('Slot ID is required', STATUS_CODE.BAD_REQUEST)
+            await this._slotService.cancelSessionBooking(slotId, userId)
+            res.status(STATUS_CODE.OK).json({ message: 'Session booking cancelled successfully' })
+        } catch (err) {
+            logger.error('Error cancelling session booking:', err)
+            next(err)
+        }
+    }
 }

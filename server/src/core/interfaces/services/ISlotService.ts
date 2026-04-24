@@ -11,5 +11,6 @@ export interface ISlotService {
   bookSession(slotId: string, userId: string): Promise<void>;
   approveSessionRequest(slotId: string, userId: string, trainerId: string): Promise<void>;
   rejectSessionRequest(slotId: string, userId: string, trainerId: string, rejectionReason: string): Promise<void>;
+  cancelSessionBooking(slotId: string, userId: string): Promise<void>;
   generateVideoCallLink(slotId: string): Promise<string>;
 }

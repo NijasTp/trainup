@@ -98,6 +98,16 @@ export default function UserSessions() {
         }
     };
 
+    const handleCancelBooking = async (slotId: string) => {
+        try {
+            await API.post("/user/cancel-session-booking", { slotId });
+            toast.success("Booking cancelled successfully");
+            fetchSessions();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to cancel booking");
+        }
+    };
+
     const getStatusInfo = (status: string) => {
         switch (status) {
             case 'approved': return { color: 'bg-green-500/10 text-green-400 border-green-500/20', icon: CheckCircle, label: 'Approved' };
@@ -285,8 +295,17 @@ export default function UserSessions() {
                                                         Session Cancelled: {userReq?.rejectionReason || "Unavailable"}
                                                     </div>
                                                 ) : (
-                                                    <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl text-[10px] font-black uppercase text-amber-500 tracking-widest text-center">
-                                                        Awaiting coach authentication...
+                                                    <div className="space-y-4">
+                                                        <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl text-[10px] font-black uppercase text-amber-500 tracking-widest text-center">
+                                                            Awaiting coach authentication...
+                                                        </div>
+                                                        <Button
+                                                            variant="outline"
+                                                            onClick={() => handleCancelBooking(session._id)}
+                                                            className="w-full h-12 border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white rounded-xl font-black italic uppercase tracking-widest text-[10px] transition-all"
+                                                        >
+                                                            <XCircle className="mr-2 h-4 w-4" /> Cancel Booking
+                                                        </Button>
                                                     </div>
                                                 )}
                                             </div>

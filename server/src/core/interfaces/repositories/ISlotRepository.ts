@@ -12,6 +12,7 @@ export interface ISlotRepository {
   updateSlot(id: string, updateData: UpdateQuery<ISlot>, options?: QueryOptions): Promise<ISlot | null>;
   deleteSlot(id: string): Promise<void>;
   addBookingRequest(slotId: string, userId: string): Promise<ISlot | null>;
+  removeBookingRequest(slotId: string, userId: string): Promise<ISlot | null>;
   checkSlotOverlap(trainerId: string, date: Date, startTime: string, endTime: string): Promise<boolean>;
   deleteUnbookedSlotsByWeek(trainerId: string, weekStart: Date): Promise<void> 
 }

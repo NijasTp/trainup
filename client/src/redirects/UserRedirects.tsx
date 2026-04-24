@@ -15,36 +15,52 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const [checking, setChecking] = useState(true);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkSession = async () => {
-      if (isAuthenticated && user) {
-        try {
-          const response = await checkUserSession();
-          if (response.valid && response.user) {
-            const userWithRole = { ...response.user, role: 'user' };
-            const { login } = await import("@/redux/slices/userAuthSlice");
-            dispatch(login(userWithRole));
-          }
-        } catch (error: unknown) {
-          console.error("Session check failed:", error);
-          const err = error as { response?: { status: number; data?: { error?: string } } };
-          if (err.response?.status === 403 && err.response.data?.error === 'Banned') {
-            toast.error('You are banned');
-            dispatch(logout());
-            navigate(ROUTES.USER_LOGIN);
-          } else if (err.response?.status === 401) {
-            dispatch(logout());
-            navigate(ROUTES.USER_LOGIN);
-          }
-        }
+      // If already authenticated and we've checked once in this mount, or if no reason to check
+      if (sessionChecked || !isAuthenticated) {
+        setChecking(false);
+        return;
       }
-      setChecking(false);
+
+      // If we have a user and were already authenticated, assume it's valid for now 
+      // to avoid rapid API calls on every route change. 
+      // The axios interceptor will handle it if a request fails later.
+      if (isAuthenticated && user) {
+        setChecking(false);
+        setSessionChecked(true);
+        return;
+      }
+
+      try {
+        const response = await checkUserSession();
+        if (response.valid && response.user) {
+          const userWithRole = { ...response.user, role: 'user' };
+          const { login } = await import("@/redux/slices/userAuthSlice");
+          // Only dispatch if data is different or on initial check
+          dispatch(login(userWithRole));
+        }
+      } catch (error: unknown) {
+        console.error("Session check failed:", error);
+        const err = error as { response?: { status: number; data?: { error?: string } } };
+        if (err.response?.status === 403 && err.response.data?.error === 'Banned') {
+          toast.error('You are banned');
+          dispatch(logout());
+          navigate(ROUTES.USER_LOGIN);
+        } else if (err.response?.status === 401) {
+          dispatch(logout());
+          navigate(ROUTES.USER_LOGIN);
+        }
+      } finally {
+        setChecking(false);
+      }
     };
 
     checkSession();
-  }, [isAuthenticated, user, location.pathname, dispatch, navigate]);
+  }, [isAuthenticated, location.pathname, dispatch, navigate]);
 
   if (checking) return <LoadingSpinner />;
 

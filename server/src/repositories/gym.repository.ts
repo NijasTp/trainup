@@ -279,6 +279,12 @@ export class GymRepository implements IGymRepository {
     })
   }
 
+  async removeMemberFromGym(gymId: string, userId: string): Promise<void> {
+    await GymModel.findByIdAndUpdate(gymId, {
+      $pull: { members: new Types.ObjectId(userId) }
+    })
+  }
+
   async createAnnouncement(
     gymId: string,
     data: Partial<IGymAnnouncement>
@@ -509,20 +515,53 @@ export class GymRepository implements IGymRepository {
   }
 
   async getMyGymDetails(
-    gymId: string,
+    gymId: string | null,
     userId: string
   ): Promise<MyGymResponseDto | null> {
-    const membership = await UserGymMembershipModel.findOne({
-      gymId: new Types.ObjectId(gymId),
-      userId: new Types.ObjectId(userId)
-    })
+    const query: any = {
+      userId: new Types.ObjectId(userId),
+      status: { $in: ['active', 'pending'] }
+    }
+
+    if (gymId) {
+      query.gymId = new Types.ObjectId(gymId)
+    }
+
+    let membership = await UserGymMembershipModel.findOne(query)
       .populate<{ planId: ISubscriptionPlan }>('planId')
+      .sort({ createdAt: -1 }) // Get the latest one
       .lean()
+
+    // If no active membership found for specified gym, try finding ANY active membership for the user
+    if (!membership && gymId) {
+      const anyMembership = await UserGymMembershipModel.findOne({
+        userId: new Types.ObjectId(userId),
+        status: { $in: ['active', 'pending'] }
+      })
+      .populate<{ planId: ISubscriptionPlan }>('planId')
+      .sort({ createdAt: -1 })
+      .lean()
+      
+      if (anyMembership) {
+        membership = anyMembership
+      }
+    }
 
     if (!membership) return null
 
-    const gym = await GymModel.findById(gymId)
-      .select('name email phone profileImage images certificate members')
+    // Check for expiry
+    const now = new Date()
+    if (membership.status === 'active' && membership.subscriptionEndDate && new Date(membership.subscriptionEndDate) < now) {
+      await UserGymMembershipModel.updateOne(
+        { _id: membership._id },
+        { $set: { status: 'expired' } }
+      )
+      return null
+    }
+
+    const targetGymId = membership.gymId.toString()
+    const gym = await GymModel.findById(targetGymId)
+      .select('name email phone profileImage images certifications geoLocation members')
       .populate<{
         members: {
           _id: string
@@ -773,10 +812,6 @@ export class GymRepository implements IGymRepository {
       })),
       membershipDistribution: membershipDist
     }
-  }
-
-  async getDashboardStats(gymId: string): Promise<any> {
-    // ... existing ...
   }
 
   async countTotalGyms(): Promise<number> {

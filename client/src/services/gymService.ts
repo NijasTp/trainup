@@ -12,6 +12,10 @@ export interface IGym {
   description?: string;
   isVerified?: boolean;
   isBanned?: boolean;
+  geoLocation: {
+    type: string;
+    coordinates: number[];
+  };
 }
 
 export interface IGymMember {
@@ -34,6 +38,8 @@ export interface IGymAttendance {
   user: string;
   gym: string;
   date: string;
+  checkInTime: string;
+  isValidLocation: boolean;
   status: 'present' | 'absent';
 }
 
@@ -45,6 +51,18 @@ export interface IGymJob {
   salary?: string | number;
   type: 'full-time' | 'part-time' | 'contract';
   status: 'open' | 'closed';
+}
+
+export interface IGymProduct {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  images: string[];
+  isAvailable: boolean;
+  stock: number;
+  gymId: string;
 }
 
 export interface IGymWorkoutTemplate {
@@ -60,8 +78,10 @@ export interface IGymAnnouncement {
   _id: string;
   title: string;
   content: string;
+  description?: string;
   image?: string;
   date: string;
+  createdAt: string;
 }
 
 export interface IGymDashboardStats {

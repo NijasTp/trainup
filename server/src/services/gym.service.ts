@@ -318,7 +318,7 @@ export class GymService implements IGymService {
   }
 
   async getMyGymDetails(
-    gymId: string,
+    gymId: string | null,
     userId: string
   ): Promise<MyGymResponseDto | null> {
     return await this._gymRepo.getMyGymDetails(gymId, userId);

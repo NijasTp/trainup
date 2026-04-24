@@ -138,7 +138,7 @@ export interface IGymService {
 
   getActiveSubscriptionPlans(gymId: string): Promise<ISubscriptionPlan[]>;
 
-  getMyGymDetails(gymId: string, userId: string): Promise<unknown>;
+  getMyGymDetails(gymId: string | null, userId: string): Promise<unknown>;
 
   createAnnouncement(
     gymId: string,

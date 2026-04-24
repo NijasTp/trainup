@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
+import { GymSidebar } from "@/components/user/gym/GymSidebar";
 import { getUserWishlist, toggleWishlist } from '@/services/gymService';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -69,7 +70,10 @@ const WishlistPage: React.FC = () => {
 
             <SiteHeader />
 
-            <main className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-12 py-12 flex-1 space-y-12">
+            <div className="relative container mx-auto px-4 sm:px-6 lg:px-12 flex gap-8 flex-1 z-10">
+                <GymSidebar />
+
+                <main className="flex-1 py-12 space-y-12">
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 pb-12 border-b border-white/5">
                     <div className="space-y-4">
                         <Link to={ROUTES.USER_GYM_DASHBOARD} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 hover:text-cyan-400 transition-all">
@@ -201,6 +205,7 @@ const WishlistPage: React.FC = () => {
                     </motion.div>
                 )}
             </main>
+        </div>
 
             <SiteFooter />
         </div>

@@ -221,6 +221,23 @@ export class SlotRepository implements ISlotRepository {
       .populate('requestedBy.userId', 'name profileImage')
   }
 
+  async removeBookingRequest(
+    slotId: string,
+    userId: string
+  ): Promise<ISlot | null> {
+    return await SlotModel.findByIdAndUpdate(
+      slotId,
+      {
+        $pull: {
+          requestedBy: { userId: new Types.ObjectId(userId) }
+        }
+      },
+      { new: true }
+    )
+      .populate('trainerId', 'name profileImage')
+      .populate('requestedBy.userId', 'name profileImage')
+  }
+
   async checkSlotOverlap(
     trainerId: string,
     date: Date,

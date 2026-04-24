@@ -26,6 +26,7 @@ import Aurora from "@/components/ui/Aurora";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
+import { GymSidebar } from "@/components/user/gym/GymSidebar";
 
 import type { IGymProduct as Product } from "@/interfaces/gym/IGymProduct";
 import { API_ROUTES } from "@/constants/api.constants";
@@ -100,7 +101,10 @@ export default function UserGymStore() {
 
             <SiteHeader />
 
-            <main className="relative container mx-auto px-4 py-8 space-y-12 flex-1 z-10">
+            <div className="relative container mx-auto px-4 lg:px-12 flex gap-8 flex-1 z-10">
+                <GymSidebar />
+
+                <main className="flex-1 py-12 space-y-12">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
                     <div className="space-y-2">
@@ -268,6 +272,7 @@ export default function UserGymStore() {
                     </div>
                 </Card>
             </main>
+        </div>
 
             <SiteFooter />
         </div>

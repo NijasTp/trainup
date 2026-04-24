@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import Aurora from "@/components/ui/Aurora";
 import API from "@/lib/axios";
 import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { updateUser } from "@/redux/slices/userAuthSlice";
 
 export default function GymPaymentSuccess() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [isVerifying, setIsVerifying] = useState(true);
     const sessionId = searchParams.get("session_id");
 
@@ -25,6 +28,12 @@ export default function GymPaymentSuccess() {
             const response = await API.get(`/payment/gym-session-status/${sessionId}`);
             if (response.data.status === 'complete' || response.data.status === 'paid') {
                 toast.success("Gym subscription activated!");
+                
+                // Refresh profile to update Redux with new activeGymDetails
+                const profileRes = await API.get('/user/get-profile');
+                if (profileRes.data.user) {
+                    dispatch(updateUser(profileRes.data.user));
+                }
             }
         } catch (error) {
             console.error("Verification error:", error);

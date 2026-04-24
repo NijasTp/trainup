@@ -53,7 +53,8 @@ export interface IGymRepository {
   ): Promise<ISubscriptionPlan | null>;
   deleteSubscriptionPlan(planId: string): Promise<void>;
   countSubscriptionPlans(gymId: string): Promise<number>;
-  addMemberToGym(gymId: string, userId: string): Promise<void>
+  addMemberToGym(gymId: string, userId: string): Promise<void>;
+  removeMemberFromGym(gymId: string, userId: string): Promise<void>;
   addTrainer(gymId: string, data: Partial<ITrainer>): Promise<ITrainer>;
   updateTrainer(
     trainerId: string,
@@ -106,7 +107,7 @@ export interface IGymRepository {
   }>;
   getGymForUser(gymId: string): Promise<IGym | null>;
   getActiveSubscriptionPlans(gymId: string): Promise<ISubscriptionPlan[]>;
-  getMyGymDetails(gymId: string, userId: string): Promise<MyGymResponseDto | null>;
+  getMyGymDetails(gymId: string | null, userId: string): Promise<MyGymResponseDto | null>;
 
   getGymAnnouncementsForUser(
     gymId: string,

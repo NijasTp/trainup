@@ -88,8 +88,23 @@ export class UserGymController {
         try {
             const userId = (req.user as JwtPayload).id
             const user = await this._userService.getUserById(userId)
-            if (!user?.gymId) throw new AppError(MESSAGES.NO_GYM_MEMBERSHIP, STATUS_CODE.NOT_FOUND)
-            const gymData = await this._gymService.getMyGymDetails(user.gymId.toString(), userId)
+            
+            // Try to fetch details - repo will auto-discover if gymId is null or invalid
+            const gymId = user?.gymId?.toString() || null
+            const gymData = await this._gymService.getMyGymDetails(gymId, userId) as any
+            
+            if (!gymData) {
+                // Check if it returned null because of expiry or truly no membership
+                // We'll rely on the repo to have updated the status to 'expired' if needed
+                throw new AppError(MESSAGES.NO_GYM_MEMBERSHIP, STATUS_CODE.NOT_FOUND)
+            }
+
+            // Sync gymId if it's different from what's in the user profile
+            const activeGymId = gymData.gym._id.toString()
+            if (user && user.gymId?.toString() !== activeGymId) {
+                await this._userService.updateUser(userId, { gymId: activeGymId })
+            }
+
             res.status(STATUS_CODE.OK).json(gymData)
         } catch (err) {
             next(err)

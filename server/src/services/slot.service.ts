@@ -289,6 +289,30 @@ export class SlotService implements ISlotService {
     }
   }
 
+  async cancelSessionBooking(slotId: string, userId: string): Promise<void> {
+    const slot = await this._slotRepository.findById(slotId)
+    if (!slot) {
+      throw new AppError('Session booking not found', STATUS_CODE.NOT_FOUND)
+    }
+
+    const request = slot.requestedBy.find(
+      req =>
+        (typeof req.userId === 'object' && req.userId._id
+          ? req.userId._id.toString()
+          : req.userId.toString()) === userId
+    )
+
+    if (!request) {
+      throw new AppError('No booking request found for this user', STATUS_CODE.BAD_REQUEST)
+    }
+
+    if (request.status !== 'pending') {
+      throw new AppError('Only pending requests can be cancelled', STATUS_CODE.BAD_REQUEST)
+    }
+
+    await this._slotRepository.removeBookingRequest(slotId, userId)
+  }
+
   async generateVideoCallLink(slotId: string): Promise<string> {
     const roomId = `session_${slotId}_${uuidv4()}`
     return `${process.env.FRONTEND_URL}/video-call/${roomId}`

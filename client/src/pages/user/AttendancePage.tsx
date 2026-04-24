@@ -16,6 +16,7 @@ import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import Aurora from "@/components/ui/Aurora";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
+import { GymSidebar } from "@/components/user/gym/GymSidebar";
 import { getAttendanceHistoryForUser, getMyGym } from "@/services/gymService";
 import { getAllSessions } from "@/services/workoutService";
 import { 
@@ -253,7 +254,11 @@ export default function AttendancePage() {
 
       <SiteHeader />
 
-      <main className="relative container mx-auto px-4 sm:px-6 lg:px-12 py-12 space-y-12 flex-1 z-10">
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-12 flex gap-8 flex-1 z-10">
+        <GymSidebar />
+
+        <main className="flex-1 py-12 space-y-12">
+
         {isLoading ? (
            <div className="h-[60vh] flex flex-col items-center justify-center gap-6">
               <Activity className="h-12 w-12 text-cyan-400 animate-pulse" />
@@ -329,6 +334,7 @@ export default function AttendancePage() {
           </DialogContent>
         </Dialog>
       </main>
+    </div>
 
       <SiteFooter />
     </div>

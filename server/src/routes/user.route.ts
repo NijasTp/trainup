@@ -113,6 +113,7 @@ router.post(
 
 router.get('/trainer-availability', roleMiddleware(['user']), userTrainerController.getTrainerAvailability.bind(userTrainerController))
 router.post('/book-session', roleMiddleware(['user']), userTrainerController.bookSession.bind(userTrainerController))
+router.post('/cancel-session-booking', roleMiddleware(['user']), userTrainerController.cancelSessionBooking.bind(userTrainerController))
 router.get('/sessions', roleMiddleware(['user']), userTrainerController.getUserSessions.bind(userTrainerController))
 router.get('/plan', roleMiddleware(['user']), userTrainerController.getUserPlan.bind(userTrainerController))
 router.get('/trainer/:trainerId', roleMiddleware(['user']), userTrainerController.getTrainer.bind(userTrainerController))

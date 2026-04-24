@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ import { motion } from "framer-motion";
 import { format, differenceInDays } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
+import { GymSidebar } from "@/components/user/gym/GymSidebar";
 
 export default function UserGymDashboard() {
     const [gymData, setGymData] = useState<any>(null);
@@ -33,12 +34,7 @@ export default function UserGymDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        document.title = "TrainUp | My Gym Dashboard";
-        fetchDashboardData();
-    }, []);
-
-    async function fetchDashboardData() {
+    const fetchDashboardData = useCallback(async () => {
         setIsLoading(true);
         try {
             const [myGym, announces] = await Promise.all([
@@ -58,7 +54,12 @@ export default function UserGymDashboard() {
         } finally {
             setIsLoading(false);
         }
-    }
+    }, [navigate]);
+
+    useEffect(() => {
+        document.title = "TrainUp | My Gym Dashboard";
+        fetchDashboardData();
+    }, [fetchDashboardData]);
 
     const handleCancelMembership = async () => {
         if (!window.confirm("Are you sure you want to cancel your membership? This action cannot be undone.")) return;
@@ -93,7 +94,10 @@ export default function UserGymDashboard() {
 
             <SiteHeader />
 
-            <main className="relative container mx-auto px-4 py-8 space-y-8 flex-1 z-10">
+            <div className="relative container mx-auto px-4 lg:px-12 flex gap-8 flex-1 z-10">
+                <GymSidebar />
+
+                <main className="flex-1 py-12 space-y-12">
                 {/* Top Welcome Section */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="space-y-2">
@@ -273,6 +277,7 @@ export default function UserGymDashboard() {
                     </div>
                 </section>
             </main>
+        </div>
 
             <SiteFooter />
         </div>

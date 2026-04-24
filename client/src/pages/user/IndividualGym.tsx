@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -31,14 +31,7 @@ export default function IndividualGym() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState(0);
 
-    useEffect(() => {
-        if (id) {
-            fetchGymDetails();
-            fetchPlans();
-        }
-    }, [id]);
-
-    async function fetchGymDetails() {
+    const fetchGymDetails = useCallback(async () => {
         try {
             const response = await getGymForUser(id!);
             setGym(response.gym);
@@ -49,25 +42,24 @@ export default function IndividualGym() {
         } finally {
             setIsLoading(false);
         }
-    }
+    }, [id, navigate]);
 
-    async function fetchPlans() {
+    const fetchPlans = useCallback(async () => {
         try {
             const response = await getActiveSubscriptionPlans(id!);
             setPlans(response.plans || []);
         } catch (error) {
             console.error("Failed to fetch plans", error);
         }
-    }
+    }, [id]);
 
-    const handleReviewAdded = (newReview: any) => {
-        if (gym) {
-            setGym({
-                ...gym,
-                reviews: [newReview, ...(gym.reviews || [])]
-            });
+    useEffect(() => {
+        if (id) {
+            fetchGymDetails();
+            fetchPlans();
         }
-    };
+    }, [id, fetchGymDetails, fetchPlans]);
+
 
 
     if (isLoading) {
@@ -273,8 +265,7 @@ export default function IndividualGym() {
                 <section className="pt-12 pb-24 border-t border-white/10">
                     <GymReviews 
                         gymId={id!} 
-                        reviews={gym.reviews || []}
-                        onReviewAdded={handleReviewAdded}
+                        canReview={false} // Only members can review on their dashboard
                     />
                 </section>
 
