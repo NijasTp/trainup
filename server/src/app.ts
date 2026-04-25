@@ -24,7 +24,6 @@ import { errorHandler } from "./middlewares/error.midleware";
 import container from "./core/di/inversify.config";
 import { SocketHandler } from "./utils/socketHandler.util";
 import TYPES from "./core/types/types";
-import { logger } from "./utils/logger.util";
 dotenv.config();
 
 const app = express();

@@ -22,6 +22,8 @@ import {
     Target
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { updateUser } from "@/redux/slices/userAuthSlice";
 import API from "@/lib/axios";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -84,6 +86,7 @@ const SpotlightCard = ({
 
 export default function MyTrainerProfile() {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [trainer, setTrainer] = useState<Trainer | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -138,6 +141,13 @@ export default function MyTrainerProfile() {
         try {
             await API.post("/user/cancel-subscription");
             toast.success("Subscription cancelled successfully");
+            
+            // Sync Redux state to avoid redirection loops or errors on /trainers
+            dispatch(updateUser({ 
+                assignedTrainer: undefined, 
+                assignedTrainerDetails: null 
+            }));
+            
             setTrainer(null);
             setUser(null);
             navigate('/trainers');

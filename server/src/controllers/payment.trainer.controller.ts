@@ -142,10 +142,42 @@ export class PaymentTrainerController {
                 const duration = parseInt(metadata.duration, 10);
                 const amount = parseFloat(metadata.amount);
 
-                // Check if already fulfilled via previous call or webhook (if enabled eventually)
-                const existingTransaction = await this._transactionService.findByOrderId(sessionId);
-                if (!existingTransaction) {
+                // Check if already fulfilled via previous call or webhook
+                const existingTransaction = await this._transactionService.findBySessionId(sessionId);
+                
+                if (existingTransaction && existingTransaction.status === 'pending') {
+                    // Update existing transaction to completed
+                    await this._transactionService.updateTransactionStatusBySessionId(sessionId, 'completed', session.payment_intent as string);
+                    
                     // Start Fulfillment
+                    await this._userService.updateUserTrainerId(userId, trainerId);
+                    await this._userService.updateUserPlan(userId, planType);
+                    await this._trainerService.addClientToTrainer(trainerId, userId);
+
+                    const expiryDate = addMonths(new Date(), duration);
+                    let messagesLeft = 0;
+                    let videoCallsLeft = 0;
+
+                    if (planType === 'premium') messagesLeft = 200 * duration;
+                    if (planType === 'pro') {
+                        messagesLeft = -1;
+                        videoCallsLeft = 5 * duration;
+                    }
+
+                    await this._userPlanService.createUserPlan({
+                        userId,
+                        trainerId,
+                        planType,
+                        messagesLeft,
+                        videoCallsLeft,
+                        expiryDate,
+                        duration,
+                        amount
+                    });
+
+                    await this._notificationService.sendTrainerSubscribedNotification(userId, metadata.trainerName || 'Trainer');
+                } else if (!existingTransaction) {
+                    // Fallback: Create new transaction if none existed (shouldn't happen)
                     await this._transactionService.createTransaction({
                         userId,
                         trainerId,

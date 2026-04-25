@@ -152,5 +152,6 @@ router.post('/progress', authMiddleware, upload.array('photo', 6), userProfileCo
 router.get('/progress', authMiddleware, userProfileController.getProgress.bind(userProfileController))
 router.get('/progress/compare', authMiddleware, userProfileController.compareProgress.bind(userProfileController))
 router.get('/activity-data', authMiddleware, userProfileController.getActivityData.bind(userProfileController))
+router.get('/dashboard/activity', authMiddleware, userProfileController.getActivityData.bind(userProfileController))
 
 export default router

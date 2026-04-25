@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { format, isToday, subWeeks, startOfWeek, addDays } from "date-fns";
+import { format, isToday, subWeeks, startOfWeek, addDays, subDays, eachDayOfInterval, isSameMonth } from "date-fns";
+import ActivityMatrix from "@/components/user/dashboard/ActivityMatrix";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -434,81 +435,7 @@ const UserDashboard: React.FC = () => {
 
 // --- Sub-components ---
 
-const ActivityMatrix: React.FC<{ activityData: IActivityData }> = ({ activityData }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const today = new Date();
-  const startDate = subWeeks(startOfWeek(today), 51); // 1 year data
-  
-  const weeks = [];
-  for (let w = 0; w <= 51; w++) {
-    const week = [];
-    for (let d = 0; d < 7; d++) {
-      week.push(addDays(startDate, w * 7 + d));
-    }
-    weeks.push(week);
-  }
-
-  const getLevel = (date: Date) => {
-    const dStr = format(date, "yyyy-MM-dd");
-    const data = activityData[dStr];
-    if (!data) return 0;
-    return Object.values(data).filter(v => v).length;
-  };
-
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
-  }, [activityData]);
-
-  return (
-    <div className="space-y-4">
-      <div 
-        ref={scrollRef}
-        className="flex gap-[4px] overflow-x-auto pb-4 no-scrollbar cursor-grab active:cursor-grabbing"
-      >
-        {weeks.map((week, wi) => {
-          const prevWeek = wi > 0 ? weeks[wi - 1] : null;
-          const currentMonth = week[0].getMonth();
-          const prevMonth = prevWeek ? prevWeek[0].getMonth() : currentMonth;
-          const isNewMonth = currentMonth !== prevMonth;
-
-          return (
-            <div key={wi} className={cn("flex flex-col gap-[4px]", isNewMonth && "ml-4 relative")}>
-              {isNewMonth && (
-                 <span className="absolute -top-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">{format(week[0], 'MMM')}</span>
-              )}
-              {week.map((date, di) => {
-                const level = getLevel(date);
-                const isFuture = date > today;
-                return (
-                  <div
-                    key={di}
-                    title={format(date, "MMM dd, yyyy")}
-                    className={cn(
-                      "w-[14px] h-[14px] rounded-[3px] transition-all duration-500",
-                      isFuture ? "bg-transparent" :
-                      level === 0 ? "bg-white/[0.03]" :
-                      level === 1 ? "bg-primary/20 shadow-[0_0_10px_rgba(var(--primary-rgb),0.1)]" :
-                      level === 2 ? "bg-primary/40 shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)]" :
-                      level === 3 ? "bg-primary/70 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]" :
-                      "bg-primary shadow-[0_0_25px_rgba(var(--primary-rgb),0.4)]"
-                    )}
-                  />
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex items-center justify-between text-[10px] font-black uppercase italic tracking-widest text-slate-500">
-        <div className="flex gap-4">
-          <span className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-[2px] bg-white/[0.03]" /> INACTIVE</span>
-          <span className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-[2px] bg-primary" /> PEAK</span>
-        </div>
-        <p>365 DAY DEPLOYMENT VISUALIZATION</p>
-      </div>
-    </div>
-  );
-};
+// Removed local ActivityMatrix implementation in favor of reusable component
 
 interface PlayProps {
   className?: string;

@@ -102,7 +102,7 @@ export default function Trainers() {
         minPrice,
         maxPrice
       );
-      const trainersData = response.trainers.trainers.map((t: any) => {
+      const trainersData = (response?.trainers?.trainers || []).map((t: any) => {
         if (t.price && typeof t.price === "string") {
           try {
             t.price = JSON.parse(t.price);
@@ -114,7 +114,7 @@ export default function Trainers() {
       });
       setTrainers(trainersData);
       console.log("Fetched trainers:", response);
-      setTotalPages(response.trainers.totalPages || 1); // Ensure at least 1 page
+      setTotalPages(response?.trainers?.totalPages || 1); // Ensure at least 1 page
     } catch (err) {
       setError("Failed to fetch trainers");
       console.error("API error:", err);

@@ -8,9 +8,11 @@ import { STATUS_CODE } from '../constants/status'
 import { logger } from '../utils/logger.util'
 import { MESSAGES } from '../constants/messages.constants'
 import { AppError } from '../utils/appError.util'
+import { Types } from 'mongoose'
+import { UserGymMembershipModel } from '../models/userGymMembership.model'
+import { UserModel } from '../models/user.model'
 
 import { IRefundService } from '../core/interfaces/services/IRefundService'
-
 import { IGymEquipmentService } from '../core/interfaces/services/IGymEquipmentService'
 
 @injectable()
@@ -22,6 +24,42 @@ export class UserGymController {
         @inject(TYPES.IRefundService) private _refundService: IRefundService,
         @inject(TYPES.IGymEquipmentService) private _equipmentService: IGymEquipmentService
     ) { }
+
+    /**
+     * Resolves the active gymId for a user.
+     * Fast path: user.gymId from the User document.
+     * Fallback: queries UserGymMembershipModel directly — handles the case where
+     * user.gymId wasn't synced yet after payment (membership record exists but
+     * the User document hasn't been updated yet).
+     * When the fallback finds a membership, it self-heals user.gymId for next time.
+     */
+    private async _resolveGymId(userId: string): Promise<string | null> {
+        const user = await this._userService.getUserById(userId)
+
+        if (user?.gymId) {
+            return user.gymId.toString()
+        }
+
+        // Fallback: query membership collection directly
+        const membership = await UserGymMembershipModel.findOne({
+            userId: new Types.ObjectId(userId),
+            status: { $in: ['active', 'pending'] }
+        }).sort({ createdAt: -1 }).lean()
+
+        if (!membership) return null
+
+        // Self-heal: write gymId back to User so next request hits the fast path
+        try {
+            await UserModel.findByIdAndUpdate(userId, {
+                $set: { gymId: membership.gymId }
+            })
+            logger.info(`[GymController] Synced gymId for user ${userId} from membership record`)
+        } catch (syncErr) {
+            logger.warn(`[GymController] Failed to sync gymId for user ${userId}:`, syncErr)
+        }
+
+        return membership.gymId.toString()
+    }
 
     async cancelMembership(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -38,7 +76,6 @@ export class UserGymController {
             next(err)
         }
     }
-
 
     async getGyms(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -88,21 +125,19 @@ export class UserGymController {
         try {
             const userId = (req.user as JwtPayload).id
             const user = await this._userService.getUserById(userId)
-            
-            // Try to fetch details - repo will auto-discover if gymId is null or invalid
+
+            // Try to fetch details — repo will auto-discover if gymId is null or invalid
             const gymId = user?.gymId?.toString() || null
             const gymData = await this._gymService.getMyGymDetails(gymId, userId) as any
-            
+
             if (!gymData) {
-                // Check if it returned null because of expiry or truly no membership
-                // We'll rely on the repo to have updated the status to 'expired' if needed
                 throw new AppError(MESSAGES.NO_GYM_MEMBERSHIP, STATUS_CODE.NOT_FOUND)
             }
 
             // Sync gymId if it's different from what's in the user profile
             const activeGymId = gymData.gym._id.toString()
             if (user && user.gymId?.toString() !== activeGymId) {
-                await this._userService.updateUser(userId, { gymId: activeGymId })
+                await this._userService.updateUserStatus(userId, { gymId: activeGymId as any })
             }
 
             res.status(STATUS_CODE.OK).json(gymData)
@@ -119,10 +154,11 @@ export class UserGymController {
                 limit?: string
                 search?: string
             }
-            const user = await this._userService.getUserById(userId)
-            if (!user?.gymId) throw new AppError('No gym membership found', STATUS_CODE.NOT_FOUND)
+            const gymId = await this._resolveGymId(userId)
+            if (!gymId) throw new AppError('No gym membership found', STATUS_CODE.NOT_FOUND)
+
             const announcements = await this._gymService.getGymAnnouncementsForUser(
-                user.gymId.toString(),
+                gymId,
                 parseInt(page, 10),
                 parseInt(limit, 10),
                 search
@@ -136,10 +172,10 @@ export class UserGymController {
     async getGymEquipment(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = (req.user as JwtPayload).id
-            const user = await this._userService.getUserById(userId)
-            if (!user?.gymId) throw new AppError('No gym membership found', STATUS_CODE.NOT_FOUND)
+            const gymId = await this._resolveGymId(userId)
+            if (!gymId) throw new AppError('No gym membership found', STATUS_CODE.NOT_FOUND)
 
-            const equipment = await this._equipmentService.getEquipmentByGymId(user.gymId.toString())
+            const equipment = await this._equipmentService.getEquipmentByGymId(gymId)
             res.status(STATUS_CODE.OK).json({ equipment })
         } catch (err) {
             next(err)
@@ -155,11 +191,11 @@ export class UserGymController {
                 search?: string
                 category?: string
             }
-            const user = await this._userService.getUserById(userId)
-            if (!user?.gymId) throw new AppError('No gym membership found', STATUS_CODE.NOT_FOUND)
+            const gymId = await this._resolveGymId(userId)
+            if (!gymId) throw new AppError('No gym membership found', STATUS_CODE.NOT_FOUND)
 
             const result = await this._gymService.getGymProducts(
-                user.gymId.toString(),
+                gymId,
                 parseInt(page, 10),
                 parseInt(limit, 10),
                 search,
@@ -179,11 +215,11 @@ export class UserGymController {
                 limit?: string
                 search?: string
             }
-            const user = await this._userService.getUserById(userId)
-            if (!user?.gymId) throw new AppError('No gym membership found', STATUS_CODE.NOT_FOUND)
+            const gymId = await this._resolveGymId(userId)
+            if (!gymId) throw new AppError('No gym membership found', STATUS_CODE.NOT_FOUND)
 
             const result = await this._gymService.getGymWorkoutTemplates(
-                user.gymId.toString(),
+                gymId,
                 parseInt(page, 10),
                 parseInt(limit, 10),
                 search

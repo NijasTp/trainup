@@ -52,6 +52,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
 import { GymSidebar } from "@/components/user/gym/GymSidebar";
+import ActivityMatrix from "@/components/user/dashboard/ActivityMatrix";
+import type { IActivityData } from "@/interfaces/user/IUserDashboard";
+import { Calendar } from "lucide-react";
 
 const safeFormatDate = (date: string | Date | undefined | null, formatStr: string = 'MMM dd, yyyy') => {
   if (!date) return 'N/A';
@@ -68,6 +71,7 @@ export default function MyGym() {
   const [products, setProducts] = useState<IGymProduct[]>([]);
   const [templates, setTemplates] = useState<IGymWorkoutTemplate[]>([]);
   const [wishlist, setWishlist] = useState<IGymProduct[]>([]);
+  const [activityData, setActivityData] = useState<IActivityData>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
   const [hasAttendedToday, setHasAttendedToday] = useState(false);
@@ -77,18 +81,21 @@ export default function MyGym() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [gymRes, annRes, eqRes, prodRes, tempRes, wishlistRes] = await Promise.all([
+      const [gymRes, annRes, eqRes, prodRes, tempRes, wishlistRes, activityRes] = await Promise.all([
         API.get("/user/my-gym"),
         getUserGymAnnouncements(1, 4),
         getUserGymEquipment(),
         getUserGymProducts(1, 4),
         getUserGymWorkoutTemplates(1, 3),
-        getUserWishlist()
+        getUserWishlist(),
+        API.get("/user/dashboard/activity")
       ]);
 
       if (!gymRes.data || !gymRes.data.gym) {
         throw { response: { status: 404 } }; // Mimic axios error for missing data
       }
+
+      setActivityData(activityRes.data.activityData);
 
       const gym = gymRes.data.gym;
       const history = await getAttendanceHistoryForUser(gym._id, 1, 15);
@@ -608,6 +615,16 @@ export default function MyGym() {
           {/* FEEDBACK & PROTOCOL REPORTS */}
           <section className="pt-24">
             <div className="flex items-end justify-between mb-12 px-4">
+              <div className="space-y-4">
+                <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 px-4 py-1 rounded-full font-black uppercase tracking-[0.3em] text-[10px] italic">ENGAGEMENT</Badge>
+                <h2 className="text-5xl md:text-7xl font-black italic text-white uppercase tracking-tighter">Your <span className="text-zinc-500">Activity</span></h2>
+              </div>
+            </div>
+            <div className="bg-white/5 border border-white/10 rounded-[3rem] p-10 backdrop-blur-3xl shadow-2xl">
+              <ActivityMatrix activityData={activityData} />
+            </div>
+
+            <div className="flex items-end justify-between mb-12 mt-24 px-4">
               <div className="space-y-4">
                 <Badge className="bg-primary/20 text-primary border-primary/30 px-4 py-1 rounded-full font-black uppercase tracking-[0.3em] text-[10px] italic">REVIEWS</Badge>
                 <h2 className="text-5xl md:text-7xl font-black italic text-white uppercase tracking-tighter">Gym <span className="text-zinc-500">Reviews</span></h2>
