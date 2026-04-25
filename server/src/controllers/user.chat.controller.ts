@@ -33,7 +33,7 @@ export class UserChatController {
                 throw new Error('No file uploaded')
             }
             const url = await this._userService.uploadChatFile(req.file)
-            res.status(STATUS_CODE.OK).json({ url })
+            res.status(STATUS_CODE.OK).json({ fileUrl: url })
         } catch (err) {
             next(err)
         }

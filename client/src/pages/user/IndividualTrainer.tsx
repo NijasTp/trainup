@@ -105,7 +105,6 @@ export default function TrainerPage() {
     const [error, setError] = useState<string | null>(null);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-    const [checkingPendingTransaction, setCheckingPendingTransaction] = useState(false);
 
     const isSameTrainer = user?.assignedTrainer === id;
     const hasTrainer = !!user?.assignedTrainer;
@@ -152,15 +151,7 @@ export default function TrainerPage() {
         fetchUser();
     }, [id, fetchTrainer, fetchUser]);
 
-    const checkPendingTransaction = async (): Promise<boolean> => {
-        try {
-            const response = await API.get("/payment/check-pending");
-            return response.data.hasPending;
-        } catch (error) {
-            console.error("Failed to check pending transactions:", error);
-            return false;
-        }
-    };
+
 
     const handleChat = () => {
         if (!user?.trainerPlan) {
@@ -195,15 +186,7 @@ export default function TrainerPage() {
             return;
         }
 
-        // Check for pending transactions before opening modal
-        setCheckingPendingTransaction(true);
-        const hasPending = await checkPendingTransaction();
-        setCheckingPendingTransaction(false);
 
-        if (hasPending) {
-            toast.error("You have a pending transaction. Please complete or cancel it first.");
-            return;
-        }
 
         if (trainer) {
             navigate(`/trainers/${trainer._id}/pricing`);
@@ -397,20 +380,11 @@ export default function TrainerPage() {
                                     <Button
                                         onClick={openSubscriptionModal}
                                         size="lg"
-                                        disabled={hasTrainer || checkingPendingTransaction}
+                                        disabled={hasTrainer}
                                         className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-2xl transition-all duration-300 font-semibold px-8 text-base"
                                     >
-                                        {checkingPendingTransaction ? (
-                                            <>
-                                                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                                                Checking...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Calendar className="h-5 w-5 mr-2" />
-                                                Start Your Journey
-                                            </>
-                                        )}
+                                        <Calendar className="h-5 w-5 mr-2" />
+                                        Start Your Journey
                                     </Button>
                                 )}
                                 {isSameTrainer && (
@@ -577,21 +551,12 @@ export default function TrainerPage() {
                             ) : (
                                 <Button
                                     onClick={openSubscriptionModal}
-                                    disabled={hasTrainer || checkingPendingTransaction}
+                                    disabled={hasTrainer}
                                     className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
                                     size="lg"
                                 >
-                                    {checkingPendingTransaction ? (
-                                        <>
-                                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                                            Checking...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Calendar className="h-5 w-5 mr-2" />
-                                            Choose Your Plan
-                                        </>
-                                    )}
+                                    <Calendar className="h-5 w-5 mr-2" />
+                                    Choose Your Plan
                                 </Button>
                             )}
                         </div>
@@ -641,6 +606,11 @@ export default function TrainerPage() {
                     </SpotlightCard>
                 </div>
             </main>
+
+            {/* Reviews Section */}
+            <section className="container mx-auto px-4 pt-12 pb-24 border-t border-white/10 relative z-10">
+                <TrainerReviews trainerId={id!} canReview={false} />
+            </section>
 
             <SiteFooter />
         </div>

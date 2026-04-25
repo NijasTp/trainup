@@ -51,6 +51,7 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
     const [totalReviews, setTotalReviews] = useState(0);
     const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
     const [userReview, setUserReview] = useState<Review | null>(null);
+    const [filterRating, setFilterRating] = useState<number>(0);
     const { user } = useSelector((state: RootState) => state.userAuth);
 
     // Check if user has already reviewed when reviews are loaded
@@ -66,7 +67,8 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
     const fetchReviews = async () => {
         setIsLoading(true);
         try {
-            const response = await API.get(`/user/trainer/ratings/${trainerId}?page=${page}&limit=5`);
+            const url = `/user/trainer/ratings/${trainerId}?page=${page}&limit=5${filterRating > 0 ? `&rating=${filterRating}` : ''}`;
+            const response = await API.get(url);
             setReviews(response.data.reviews);
             setTotalPages(response.data.pages);
             setTotalReviews(response.data.total);
@@ -82,7 +84,7 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
         if (trainerId) {
             fetchReviews();
         }
-    }, [trainerId, page]);
+    }, [trainerId, page, filterRating]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -154,22 +156,36 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Reviews</h2>
-                <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
-                    <span className="font-semibold text-lg">
-                        {totalReviews > 0
-                            ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) // This average is only for current page, ideally backend provides overall average but per design simplicity we accept this or hide it if inaccurate. Actually, totalReviews is better context.
-                            // Let's just show count for now or if we want global average we need it from backend. 
-                            // The backend 'getReviews' doesn't return average rating of ALL reviews, but the Trainer entity has 'rating'.
-                            // However, we don't have trainer entity here.
-                            // Let's just remove the dynamic average calculation based on page data as it's misleading. 
-                            // Or keep it simple: "4.5" (hardcoded or passed prop if needed). 
-                            // Actually, I'll just remove the average calculation from client side based on partial data.
-                            : ""}
-                    </span>
-                    <span className="text-muted-foreground">({totalReviews} reviews)</span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <h2 className="text-2xl font-bold">Reviews</h2>
+                    <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-full">
+                        <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
+                        <span className="font-semibold">{totalReviews}</span>
+                        <span className="text-muted-foreground text-sm">total</span>
+                    </div>
+                </div>
+                
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
+                    <Button 
+                        variant={filterRating === 0 ? "secondary" : "ghost"} 
+                        size="sm" 
+                        onClick={() => { setFilterRating(0); setPage(1); }}
+                        className="rounded-full text-xs font-semibold"
+                    >
+                        All
+                    </Button>
+                    {[5, 4, 3, 2, 1].map(star => (
+                        <Button 
+                            key={star}
+                            variant={filterRating === star ? "secondary" : "ghost"} 
+                            size="sm" 
+                            onClick={() => { setFilterRating(star); setPage(1); }}
+                            className="rounded-full flex items-center gap-1 text-xs px-3"
+                        >
+                            {star} <Star className={`w-3.5 h-3.5 ${filterRating === star ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}`} />
+                        </Button>
+                    ))}
                 </div>
             </div>
 

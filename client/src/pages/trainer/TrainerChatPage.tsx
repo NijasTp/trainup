@@ -35,6 +35,7 @@ import { Link } from "react-router-dom";
 import type { Client, Message } from "@/interfaces/trainer/ITrainerChat";
 import io, { Socket } from 'socket.io-client';
 import { debounce } from 'lodash';
+import ImageCropper from "@/components/common/ImageCropper";
 
 export default function TrainerChatPage() {
     const { clientId } = useParams<{ clientId: string }>();
@@ -56,6 +57,8 @@ export default function TrainerChatPage() {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [imageCaption, setImageCaption] = useState('');
+    const [isCropping, setIsCropping] = useState(false);
+    const [imageToCrop, setImageToCrop] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Lightbox State
@@ -196,8 +199,12 @@ export default function TrainerChatPage() {
                 return;
             }
             setSelectedFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
-            setIsPreviewOpen(true);
+            const reader = new FileReader();
+            reader.onload = () => {
+                setImageToCrop(reader.result as string);
+                setIsCropping(true);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -736,6 +743,27 @@ export default function TrainerChatPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {isCropping && imageToCrop && (
+                <ImageCropper
+                    image={imageToCrop}
+                    aspectRatio={4 / 3}
+                    onCropComplete={(croppedBlob) => {
+                        const croppedFile = new File([croppedBlob], selectedFile?.name || 'cropped.jpg', { type: 'image/jpeg' });
+                        setSelectedFile(croppedFile);
+                        setPreviewUrl(URL.createObjectURL(croppedBlob));
+                        setIsCropping(false);
+                        setImageToCrop(null);
+                        setIsPreviewOpen(true);
+                    }}
+                    onCancel={() => {
+                        setIsCropping(false);
+                        setImageToCrop(null);
+                        setSelectedFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                />
+            )}
         </div>
     );
 }

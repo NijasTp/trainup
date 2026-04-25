@@ -17,6 +17,8 @@ import {
   ChevronRight,
   Flame,
   Award,
+  Droplets,
+  Moon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
@@ -76,7 +78,12 @@ const UserDashboard: React.FC = () => {
   const [transformation, setTransformation] = useState<TransformationData | null>(null);
   const [newWeight, setNewWeight] = useState("");
   const [isWeightLoggedToday, setIsWeightLoggedToday] = useState(false);
+  const [lastLoggedDate, setLastLoggedDate] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Local state for new tools
+  const [waterGlasses, setWaterGlasses] = useState(0);
+  const [sleepHours, setSleepHours] = useState(0);
   
   // Removed unused dispatch, navigate, reduxUser
 
@@ -102,6 +109,8 @@ const UserDashboard: React.FC = () => {
         .sort((a: WeightEntry, b: WeightEntry) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
       const latestWeight = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1].weight : profile.currentWeight || 0;
+      const latestDate = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1].date : null;
+      setLastLoggedDate(latestDate ? format(new Date(latestDate), "MMM dd, yyyy") : null);
       
       setWeightData(sortedHistory.slice(-7).map((e: WeightEntry) => ({
         date: format(new Date(e.date), "yyyy-MM-dd"),
@@ -238,6 +247,11 @@ const UserDashboard: React.FC = () => {
                   <div className="space-y-1">
                     <p className="text-sm font-bold text-slate-500">Current Payload</p>
                     <div className="text-6xl font-black text-white italic tracking-tighter">{userData.currentWeight}<span className="text-2xl not-italic ml-1 opacity-40">KG</span></div>
+                    {lastLoggedDate && (
+                      <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2">
+                        Last Logged: {lastLoggedDate}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="flex-1 space-y-1">
@@ -321,6 +335,43 @@ const UserDashboard: React.FC = () => {
                     <ChevronRight className="h-5 w-5 text-slate-500" />
                   </Link>
                </div>
+            </BentoTile>
+
+            {/* Health Tools - Water & Sleep (Span 8x1) */}
+            <BentoTile title="Hydration Protocol" icon={Droplets} className="md:col-span-4 md:row-span-1">
+                <div className="flex flex-col h-full justify-between">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-4xl font-black italic text-white leading-none">{waterGlasses}</div>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Glasses</p>
+                    </div>
+                    <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-cyan-500 flex items-center justify-center bg-cyan-500/10 text-cyan-500">
+                      <Droplets className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => { setWaterGlasses(Math.max(0, waterGlasses - 1)); toast.success("Hydration updated"); }}>-</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => { setWaterGlasses(waterGlasses + 1); toast.success("Hydration updated"); }}>+</Button>
+                  </div>
+                </div>
+            </BentoTile>
+
+            <BentoTile title="Recovery Protocol" icon={Moon} className="md:col-span-4 md:row-span-1">
+                <div className="flex flex-col h-full justify-between">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-4xl font-black italic text-white leading-none">{sleepHours}</div>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Hours Logged</p>
+                    </div>
+                    <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-indigo-500 flex items-center justify-center bg-indigo-500/10 text-indigo-500">
+                      <Moon className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => { setSleepHours(Math.max(0, sleepHours - 1)); toast.success("Recovery updated"); }}>-</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => { setSleepHours(sleepHours + 1); toast.success("Recovery updated"); }}>+</Button>
+                  </div>
+                </div>
             </BentoTile>
 
             {/* Activity Matrix (Span 12x1) */}
@@ -414,29 +465,39 @@ const ActivityMatrix: React.FC<{ activityData: IActivityData }> = ({ activityDat
         ref={scrollRef}
         className="flex gap-[4px] overflow-x-auto pb-4 no-scrollbar cursor-grab active:cursor-grabbing"
       >
-        {weeks.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-[4px]">
-            {week.map((date, di) => {
-              const level = getLevel(date);
-              const isFuture = date > today;
-              return (
-                <div
-                  key={di}
-                  title={format(date, "MMM dd, yyyy")}
-                  className={cn(
-                    "w-[14px] h-[14px] rounded-[3px] transition-all duration-500",
-                    isFuture ? "bg-transparent" :
-                    level === 0 ? "bg-white/[0.03]" :
-                    level === 1 ? "bg-primary/20 shadow-[0_0_10px_rgba(var(--primary-rgb),0.1)]" :
-                    level === 2 ? "bg-primary/40 shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)]" :
-                    level === 3 ? "bg-primary/70 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]" :
-                    "bg-primary shadow-[0_0_25px_rgba(var(--primary-rgb),0.4)]"
-                  )}
-                />
-              );
-            })}
-          </div>
-        ))}
+        {weeks.map((week, wi) => {
+          const prevWeek = wi > 0 ? weeks[wi - 1] : null;
+          const currentMonth = week[0].getMonth();
+          const prevMonth = prevWeek ? prevWeek[0].getMonth() : currentMonth;
+          const isNewMonth = currentMonth !== prevMonth;
+
+          return (
+            <div key={wi} className={cn("flex flex-col gap-[4px]", isNewMonth && "ml-4 relative")}>
+              {isNewMonth && (
+                 <span className="absolute -top-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">{format(week[0], 'MMM')}</span>
+              )}
+              {week.map((date, di) => {
+                const level = getLevel(date);
+                const isFuture = date > today;
+                return (
+                  <div
+                    key={di}
+                    title={format(date, "MMM dd, yyyy")}
+                    className={cn(
+                      "w-[14px] h-[14px] rounded-[3px] transition-all duration-500",
+                      isFuture ? "bg-transparent" :
+                      level === 0 ? "bg-white/[0.03]" :
+                      level === 1 ? "bg-primary/20 shadow-[0_0_10px_rgba(var(--primary-rgb),0.1)]" :
+                      level === 2 ? "bg-primary/40 shadow-[0_0_15px_rgba(var(--primary-rgb),0.2)]" :
+                      level === 3 ? "bg-primary/70 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]" :
+                      "bg-primary shadow-[0_0_25px_rgba(var(--primary-rgb),0.4)]"
+                    )}
+                  />
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
       <div className="flex items-center justify-between text-[10px] font-black uppercase italic tracking-widest text-slate-500">
         <div className="flex gap-4">

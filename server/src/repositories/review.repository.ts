@@ -9,10 +9,13 @@ export class ReviewRepository {
         return review;
     }
 
-    async findByTargetId(targetId: string, skip: number, limit: number, search: string = ''): Promise<IReview[]> {
+    async findByTargetId(targetId: string, skip: number, limit: number, search: string = '', rating?: number): Promise<IReview[]> {
         const query: FilterQuery<IReview> = { targetId: new mongoose.Types.ObjectId(targetId) };
         if (search) {
             query.comment = { $regex: search, $options: 'i' };
+        }
+        if (rating) {
+            query.rating = rating;
         }
         return await Review.find(query)
             .populate('userId', 'name profilePicture firstName lastName')
@@ -22,10 +25,13 @@ export class ReviewRepository {
             .exec();
     }
 
-    async countByTargetId(targetId: string, search: string = ''): Promise<number> {
+    async countByTargetId(targetId: string, search: string = '', rating?: number): Promise<number> {
         const query: FilterQuery<IReview> = { targetId: new mongoose.Types.ObjectId(targetId) };
         if (search) {
             query.comment = { $regex: search, $options: 'i' };
+        }
+        if (rating) {
+            query.rating = rating;
         }
         return await Review.countDocuments(query);
     }

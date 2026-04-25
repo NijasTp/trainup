@@ -17,7 +17,8 @@ export class UserReviewController {
             const { id } = req.params
             const page = parseInt(req.query.page as string) || 1
             const limit = parseInt(req.query.limit as string) || 5
-            const result = await this._reviewService.getReviews(id, page, limit)
+            const rating = req.query.rating ? parseInt(req.query.rating as string) : undefined
+            const result = await this._reviewService.getReviews(id, page, limit, '', rating)
             res.status(STATUS_CODE.OK).json(result)
         } catch (err) {
             next(err)
@@ -40,7 +41,8 @@ export class UserReviewController {
             const { id } = req.params
             const page = parseInt(req.query.page as string) || 1
             const limit = parseInt(req.query.limit as string) || 5
-            const result = await this._reviewService.getReviews(id, page, limit)
+            const rating = req.query.rating ? parseInt(req.query.rating as string) : undefined
+            const result = await this._reviewService.getReviews(id, page, limit, '', rating)
             res.status(STATUS_CODE.OK).json(result)
         } catch (err) {
             next(err)

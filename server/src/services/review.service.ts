@@ -70,10 +70,10 @@ export class ReviewService implements IReviewService {
         return review;
     }
 
-    async getReviews(targetId: string, page: number = 1, limit: number = 5, search: string = ''): Promise<{ reviews: IReview[], total: number, pages: number }> {
+    async getReviews(targetId: string, page: number = 1, limit: number = 5, search: string = '', rating?: number): Promise<{ reviews: IReview[], total: number, pages: number }> {
         const skip = (page - 1) * limit;
-        const reviews = await this.reviewRepository.findByTargetId(targetId, skip, limit, search);
-        const total = await this.reviewRepository.countByTargetId(targetId, search);
+        const reviews = await this.reviewRepository.findByTargetId(targetId, skip, limit, search, rating);
+        const total = await this.reviewRepository.countByTargetId(targetId, search, rating);
         const pages = Math.ceil(total / limit);
 
         return { reviews, total, pages };

@@ -52,12 +52,14 @@ export default function GymReviews({ gymId, onReviewAdded, canReview = false, cu
     const [totalReviews, setTotalReviews] = useState(0);
     const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
     const [userReview, setUserReview] = useState<Review | null>(null);
+    const [filterRating, setFilterRating] = useState<number>(0);
     const { user } = useSelector((state: RootState) => state.userAuth);
 
     const fetchReviews = async () => {
         setIsLoading(true);
         try {
-            const response = await API.get(`/user/gym/ratings/${gymId}?page=${page}&limit=5`);
+            const url = `/user/gym/ratings/${gymId}?page=${page}&limit=5${filterRating > 0 ? `&rating=${filterRating}` : ''}`;
+            const response = await API.get(url);
             setReviews(response.data.reviews);
             setTotalPages(response.data.pages);
             setTotalReviews(response.data.total);
@@ -88,7 +90,7 @@ export default function GymReviews({ gymId, onReviewAdded, canReview = false, cu
                 fetchMyReview();
             }
         }
-    }, [gymId, page]);
+    }, [gymId, page, filterRating]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -154,11 +156,36 @@ export default function GymReviews({ gymId, onReviewAdded, canReview = false, cu
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Reviews</h2>
-                <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
-                    <span className="text-muted-foreground">({totalReviews} reviews)</span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <h2 className="text-2xl font-bold">Reviews</h2>
+                    <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-full">
+                        <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
+                        <span className="font-semibold">{totalReviews}</span>
+                        <span className="text-muted-foreground text-sm">total</span>
+                    </div>
+                </div>
+                
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
+                    <Button 
+                        variant={filterRating === 0 ? "secondary" : "ghost"} 
+                        size="sm" 
+                        onClick={() => { setFilterRating(0); setPage(1); }}
+                        className="rounded-full text-xs font-semibold"
+                    >
+                        All
+                    </Button>
+                    {[5, 4, 3, 2, 1].map(star => (
+                        <Button 
+                            key={star}
+                            variant={filterRating === star ? "secondary" : "ghost"} 
+                            size="sm" 
+                            onClick={() => { setFilterRating(star); setPage(1); }}
+                            className="rounded-full flex items-center gap-1 text-xs px-3"
+                        >
+                            {star} <Star className={`w-3.5 h-3.5 ${filterRating === star ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}`} />
+                        </Button>
+                    ))}
                 </div>
             </div>
 
