@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import API from "@/lib/axios";
 import { toast } from "sonner";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import io, { Socket } from 'socket.io-client';
 import { debounce } from 'lodash';
 import Aurora from "@/components/ui/Aurora";

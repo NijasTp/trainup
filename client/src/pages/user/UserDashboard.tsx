@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { format, isToday, subWeeks, startOfWeek, addDays, subDays, eachDayOfInterval, isSameMonth } from "date-fns";
+import React, { useState, useEffect } from "react";
+import { format, isToday, addDays } from "date-fns";
 import ActivityMatrix from "@/components/user/dashboard/ActivityMatrix";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -98,7 +98,7 @@ const UserDashboard: React.FC = () => {
   // Removed unused dispatch, navigate, reduxUser
 
   const dispatch = useDispatch();
-  const { data: cachedData, activityData: cachedActivity, lastFetched, loading: reduxLoading } = useSelector((state: RootState) => state.dashboard);
+  const { data: cachedData, activityData: cachedActivity, lastFetched } = useSelector((state: RootState) => state.dashboard);
 
   const fetchDashboardData = async (force = false) => {
     // If we have cached data and it's less than 5 minutes old, don't fetch unless forced

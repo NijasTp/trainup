@@ -31,7 +31,7 @@ export class ReviewService implements IReviewService {
         
         if (existingReview) {
             // Update existing review instead of throwing error
-            const updatedReview = await this.reviewRepository.update(existingReview._id.toString(), { rating, comment, subscriptionPlan });
+            const updatedReview = await this.reviewRepository.update((existingReview as any)._id.toString(), { rating, comment, subscriptionPlan });
             if (!updatedReview) throw new AppError('Failed to update existing review', STATUS_CODE.INTERNAL_SERVER_ERROR);
             
             await this.updateEntityRating(targetId, targetModel);

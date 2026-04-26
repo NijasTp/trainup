@@ -337,31 +337,32 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
                                 </div>
                             ))}
 
-                        {totalPages > 1 && (
-                            <div className="flex justify-center gap-2 mt-4">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handlePreviousPage}
-                                    disabled={page === 1}
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                </Button>
-                                <span className="flex items-center text-sm font-medium">
-                                    Page {page} of {totalPages}
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleNextPage}
-                                    disabled={page === totalPages}
-                                >
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        )}
-                    </div>
-                )}
+                            {totalPages > 1 && (
+                                <div className="flex justify-center gap-2 mt-4">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handlePreviousPage}
+                                        disabled={page === 1}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    <span className="flex items-center text-sm font-medium">
+                                        Page {page} of {totalPages}
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleNextPage}
+                                        disabled={page === totalPages}
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );

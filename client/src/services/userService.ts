@@ -100,7 +100,7 @@ export const getActivityData = async () => {
   return response.data;
 };
 
-export const updateDailyMetrics = async (metrics: { water?: number; sleep?: number }) => {
+export const updateDailyMetrics = async (metrics: { water?: number; sleep?: number; steps?: number; mindfulness?: number }) => {
   const response = await API.put('/user/daily-metrics', metrics);
   return response.data;
 };

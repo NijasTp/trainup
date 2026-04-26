@@ -21,7 +21,11 @@ import {
     MoreHorizontal,
     Trash2,
     Paperclip,
-    Mic
+    Mic,
+    Play,
+    StopCircle,
+    X,
+    CheckCircle2
 } from "lucide-react";
 import {
     DropdownMenu,

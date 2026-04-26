@@ -5,7 +5,7 @@ export interface Message {
     message: string;
     createdAt: string;
     senderType: 'user' | 'trainer';
-    messageType: 'text' | 'image' | 'audio';
+    messageType: 'text' | 'image' | 'audio' | 'file';
     fileUrl?: string;
 }
 
