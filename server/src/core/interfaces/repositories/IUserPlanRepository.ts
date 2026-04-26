@@ -8,4 +8,6 @@ export interface IUserPlanRepository {
   findAllByUserId(userId: string): Promise<IUserPlan[]>;
   findById(id: string): Promise<IUserPlan | null>;
   updateById(id: string, updates: Partial<IUserPlan>): Promise<IUserPlan | null>;
+  /** Returns all plans where expiryDate < now (for cron-based expiry processing) */
+  findAllExpired(now: Date): Promise<IUserPlan[]>;
 }

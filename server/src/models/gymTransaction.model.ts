@@ -47,4 +47,8 @@ const gymTransactionSchema: Schema<IGymTransaction> = new Schema(
   { timestamps: true }
 );
 
+gymTransactionSchema.index({ userId: 1, status: 1 });
+gymTransactionSchema.index({ stripeSessionId: 1 }, { sparse: true });
+gymTransactionSchema.index({ razorpayOrderId: 1 }, { sparse: true });
+
 export const GymTransactionModel = mongoose.model<IGymTransaction>('GymTransaction', gymTransactionSchema);

@@ -190,21 +190,33 @@ export default function TrainerChatPage() {
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                toast.error("File size should be less than 5MB");
+            const isImage = file.type.startsWith('image/');
+            const maxSize = isImage ? 5 * 1024 * 1024 : 25 * 1024 * 1024;
+
+            if (file.size > maxSize) {
+                toast.error(`File oversized. Limit is ${isImage ? '5MB' : '25MB'}.`);
                 return;
             }
-            if (!file.type.startsWith('image/')) {
-                toast.error("Only image files are allowed");
+
+            if (!isImage && file.type !== 'application/pdf' && !file.type.startsWith('audio/')) {
+                toast.error("Format not supported. Use images, PDFs, or audio.");
                 return;
             }
+
             setSelectedFile(file);
-            const reader = new FileReader();
-            reader.onload = () => {
-                setImageToCrop(reader.result as string);
-                setIsCropping(true);
-            };
-            reader.readAsDataURL(file);
+
+            if (isImage) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    setImageToCrop(reader.result as string);
+                    setIsCropping(true);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // For PDF or Audio (from file picker), show the preview/caption dialog
+                setPreviewUrl(file.type === 'application/pdf' ? 'pdf-placeholder' : 'audio-placeholder');
+                setIsPreviewOpen(true);
+            }
         }
     };
 
@@ -309,7 +321,9 @@ export default function TrainerChatPage() {
 
             if (selectedFile) {
                 fileUrl = await uploadFile(selectedFile);
-                messageType = 'image';
+                if (selectedFile.type.startsWith('image/')) messageType = 'image';
+                else if (selectedFile.type.startsWith('audio/')) messageType = 'audio';
+                else messageType = 'file';
             } else if (audioToUpload) {
                 fileUrl = await uploadFile(audioToUpload);
                 messageType = 'audio';
@@ -528,8 +542,47 @@ export default function TrainerChatPage() {
                                             )}
 
                                             {message.messageType === 'audio' && message.fileUrl && (
-                                                <div className="mb-2 min-w-[200px] w-full">
-                                                    <audio controls src={message.fileUrl} className="w-full h-8" />
+                                                <div className={`mb-2 min-w-[200px] w-full flex items-center gap-2 p-2 rounded-xl ${isTrainer ? 'bg-primary-foreground/10' : 'bg-background/10'}`}>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-8 w-8 rounded-full"
+                                                        onClick={(e) => {
+                                                            const audio = e.currentTarget.parentElement?.querySelector('audio');
+                                                            if (audio) {
+                                                                if (audio.paused) audio.play();
+                                                                else audio.pause();
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Play className="h-4 w-4" />
+                                                    </Button>
+                                                    <div className="flex-1 h-1 bg-current/20 rounded-full" />
+                                                    <audio controls src={message.fileUrl} className="hidden" onPlay={(e) => {
+                                                        const audio = e.currentTarget;
+                                                        const others = document.querySelectorAll('audio');
+                                                        others.forEach(a => { if (a !== audio) a.pause(); });
+                                                    }} />
+                                                </div>
+                                            )}
+
+                                            {message.messageType === 'file' && message.fileUrl && (
+                                                <div className={`mb-2 min-w-[200px] w-full flex items-center gap-3 p-3 rounded-xl border ${isTrainer ? 'bg-primary-foreground/10 border-primary-foreground/20' : 'bg-background/10 border-foreground/10'}`}>
+                                                    <Paperclip className="h-5 w-5" />
+                                                    <div className="flex-1 overflow-hidden">
+                                                        <p className="text-xs font-bold truncate">
+                                                            {message.fileUrl.split('/').pop()?.split('?')[0] || 'Document'}
+                                                        </p>
+                                                        <p className="text-[10px] opacity-70">PDF Document</p>
+                                                    </div>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        className="h-8 rounded-lg"
+                                                        onClick={() => window.open(message.fileUrl, '_blank')}
+                                                    >
+                                                        View
+                                                    </Button>
                                                 </div>
                                             )}
 
@@ -690,12 +743,23 @@ export default function TrainerChatPage() {
                     </DialogHeader>
                     <div className="space-y-4">
                         {previewUrl && (
-                            <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
-                                <img
-                                    src={previewUrl}
-                                    alt="Preview"
-                                    className="h-full w-full object-contain"
-                                />
+                            <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted flex items-center justify-center">
+                                {selectedFile?.type.startsWith('image/') ? (
+                                    <img
+                                        src={previewUrl}
+                                        alt="Preview"
+                                        className="h-full w-full object-contain"
+                                    />
+                                ) : (
+                                    <div className="flex flex-col items-center gap-3">
+                                        {selectedFile?.type === 'application/pdf' ? (
+                                            <Paperclip className="h-12 w-12 text-primary" />
+                                        ) : (
+                                            <Mic className="h-12 w-12 text-primary" />
+                                        )}
+                                        <p className="text-sm font-medium text-muted-foreground">{selectedFile?.name}</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                         <div className="space-y-2">

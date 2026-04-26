@@ -20,13 +20,7 @@ import {
 } from "@/services/gymService";
 import API from "@/lib/axios";
 import { toast } from "sonner";
-import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import Aurora from "@/components/ui/Aurora";
-import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
-import { ROUTES } from "@/constants/routes";
-import { GymSidebar } from "@/components/user/gym/GymSidebar";
+import UserGymLayout from "@/layouts/UserGymLayout";
 
 import type { IGymProduct as Product } from "@/interfaces/gym/IGymProduct";
 import { API_ROUTES } from "@/constants/api.constants";
@@ -93,18 +87,7 @@ export default function UserGymStore() {
     }
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-            <div className="absolute inset-0 z-0">
-                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
-            </div>
-
-            <SiteHeader />
-
-            <div className="relative container mx-auto px-4 lg:px-12 flex gap-8 flex-1 z-10">
-                <GymSidebar />
-
-                <main className="flex-1 py-12 space-y-12">
+        <UserGymLayout>
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
                     <div className="space-y-2">
@@ -271,11 +254,7 @@ export default function UserGymStore() {
                         </Button>
                     </div>
                 </Card>
-            </main>
-        </div>
-
-            <SiteFooter />
-        </div>
+        </UserGymLayout>
     );
 }
 

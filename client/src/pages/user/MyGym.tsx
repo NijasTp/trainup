@@ -25,36 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AlertTriangle } from "lucide-react";
-import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import Aurora from "@/components/ui/Aurora";
-import { useNavigate, Link } from "react-router-dom";
-import API from "@/lib/axios";
-import {
-  getUserGymAnnouncements,
-  getUserGymEquipment,
-  getUserGymProducts,
-  getUserGymWorkoutTemplates,
-  markAttendance,
-  getAttendanceHistoryForUser,
-  getUserWishlist,
-  type IGym,
-  type IGymAnnouncement,
-  type IGymMember,
-  type IGymAttendance,
-  type IGymProduct,
-  type IGymWorkoutTemplate
-} from "@/services/gymService";
-import GymReviews from "@/components/user/reviews/GymReviews";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ROUTES } from "@/constants/routes";
-import { GymSidebar } from "@/components/user/gym/GymSidebar";
-import ActivityMatrix from "@/components/user/dashboard/ActivityMatrix";
-import type { IActivityData } from "@/interfaces/user/IUserDashboard";
-import { Calendar } from "lucide-react";
+import UserGymLayout from "@/layouts/UserGymLayout";
 
 const safeFormatDate = (date: string | Date | undefined | null, formatStr: string = 'MMM dd, yyyy') => {
   if (!date) return 'N/A';
@@ -247,20 +218,7 @@ export default function MyGym() {
   const { gym, userSubscription } = gymData;
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-x-hidden font-outfit">
-      {/* Dynamic Background Layer */}
-      <div className="fixed inset-0 z-0">
-        <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03)_0%,transparent_70%)]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] brightness-100" />
-      </div>
-
-      <SiteHeader />
-
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-12 flex gap-8 flex-1 z-10">
-        <GymSidebar />
-
-        <main className="flex-1 py-12 space-y-12">
+    <UserGymLayout>
           {/* Header Section - Modern Brutalist */}
           <section className="flex flex-col md:flex-row justify-between items-end gap-8 pb-12 border-b border-white/5">
             <div className="space-y-4">
@@ -647,10 +605,6 @@ export default function MyGym() {
               </div>
             </div>
           </section>
-        </main>
-      </div>
-
-      <SiteFooter />
-    </div>
+    </UserGymLayout>
   );
 }

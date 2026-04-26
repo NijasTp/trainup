@@ -5,9 +5,9 @@ export interface IMessage extends Document {
   _id: string | Schema.Types.ObjectId;
   senderId: Types.ObjectId | string;
   receiverId: Types.ObjectId | string;
-  message: string;
+  message?: string;
   senderType: 'user' | 'trainer';
-  messageType: 'text' | 'image' | 'audio';
+  messageType: 'text' | 'image' | 'audio' | 'file';
   fileUrl?: string;
   readStatus: boolean;
   createdAt: Date;
@@ -17,9 +17,9 @@ export interface IMessage extends Document {
 export const MessageSchema = new Schema<IMessage>({
   senderId: { type: Schema.Types.ObjectId, required: true },
   receiverId: { type: Schema.Types.ObjectId, required: true },
-  message: { type: String, required: true, trim: true },
+  message: { type: String, trim: true },
   senderType: { type: String, required: true, enum: ['user', 'trainer'] },
-  messageType: { type: String, enum: ['text', 'image', 'audio'], default: 'text' },
+  messageType: { type: String, enum: ['text', 'image', 'audio', 'file'], default: 'text' },
   fileUrl: { type: String },
   readStatus: { type: Boolean, default: false },
 }, { timestamps: true });

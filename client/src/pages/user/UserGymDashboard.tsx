@@ -20,14 +20,7 @@ import {
 import { toast } from "sonner";
 import { getMyGym, getUserGymAnnouncements, cancelGymMembership } from "@/services/gymService";
 
-import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import Aurora from "@/components/ui/Aurora";
-import { motion } from "framer-motion";
-import { format, differenceInDays } from "date-fns";
-import { Link, useNavigate } from "react-router-dom";
-import { ROUTES } from "@/constants/routes";
-import { GymSidebar } from "@/components/user/gym/GymSidebar";
+import UserGymLayout from "@/layouts/UserGymLayout";
 import ActivityMatrix from "@/components/user/dashboard/ActivityMatrix";
 import type { IActivityData } from "@/interfaces/user/IUserDashboard";
 import API from "@/lib/axios";
@@ -93,18 +86,7 @@ export default function UserGymDashboard() {
     const daysLeft = membership ? differenceInDays(new Date(membership.expiresAt), new Date()) : 0;
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-            <div className="absolute inset-0 z-0">
-                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
-            </div>
-
-            <SiteHeader />
-
-            <div className="relative container mx-auto px-4 lg:px-12 flex gap-8 flex-1 z-10">
-                <GymSidebar />
-
-                <main className="flex-1 py-12 space-y-12">
+        <UserGymLayout>
                 {/* Top Welcome Section */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="space-y-2">
@@ -290,9 +272,6 @@ export default function UserGymDashboard() {
                         <ActivityMatrix activityData={activityData} />
                     </Card>
                 </section>
-            </main>
-            </div>
-            <SiteFooter />
-        </div>
+        </UserGymLayout>
     );
 }

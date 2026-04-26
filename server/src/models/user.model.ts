@@ -50,11 +50,18 @@ export interface IUser extends Document {
   dietaryPreferences?: string;
   profileImage?: string;
   activeWorkoutTemplates: IActiveTemplate[];
-  activeWorkoutTemplate?: Types.ObjectId | string | null; // Deprecated
-  workoutTemplateStartDate?: Date | null; // Deprecated
+  activeWorkoutTemplate?: Types.ObjectId | string | null; 
+  workoutTemplateStartDate?: Date | null; 
   activeDietTemplate?: Types.ObjectId | string | null;
   dietTemplateStartDate?: Date | null;
   wishlist: Types.ObjectId[] | string[];
+  dailyMetrics?: {
+    water: number;
+    sleep: number;
+    steps: number;
+    mindfulness: number;
+    lastUpdated: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -115,6 +122,13 @@ const userSchema: Schema<IUser> = new Schema(
     activeDietTemplate: { type: Schema.Types.ObjectId, ref: "DietTemplate", default: null },
     dietTemplateStartDate: { type: Date, default: null },
     wishlist: [{ type: Schema.Types.ObjectId, ref: "GymProduct" }],
+    dailyMetrics: {
+      water: { type: Number, default: 0 },
+      sleep: { type: Number, default: 0 },
+      steps: { type: Number, default: 0 },
+      mindfulness: { type: Number, default: 0 },
+      lastUpdated: { type: Date, default: Date.now }
+    }
   },
   { timestamps: true }
 );

@@ -37,4 +37,8 @@ export class UserPlanRepository implements IUserPlanRepository {
   async updateById(id: string, updates: Partial<IUserPlan>): Promise<IUserPlan | null> {
     return await UserPlanModel.findByIdAndUpdate(id, updates, { new: true });
   }
+
+  async findAllExpired(now: Date): Promise<IUserPlan[]> {
+    return await UserPlanModel.find({ expiryDate: { $lt: now } }).lean() as IUserPlan[];
+  }
 }

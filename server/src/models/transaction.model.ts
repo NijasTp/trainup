@@ -59,6 +59,10 @@ export const TransactionSchema = new Schema<ITransaction>(
   { timestamps: true }
 )
 
+TransactionSchema.index({ userId: 1, status: 1 });
+TransactionSchema.index({ stripeSessionId: 1 }, { sparse: true });
+TransactionSchema.index({ razorpayOrderId: 1 }, { sparse: true });
+
 export const TransactionModel = model<ITransaction>(
   'Transaction',
   TransactionSchema

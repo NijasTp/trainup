@@ -47,28 +47,33 @@ export class TransactionRepository implements ITransactionRepository {
     status: string,
     sort: string
   ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }> {
-    const query: FilterQuery<any> = { userId };
-    if (status && status !== 'all') query.status = status;
+    const skip = (page - 1) * limit;
+
+    const baseTrainerQuery: FilterQuery<any> = { userId };
+    if (status && status !== 'all') baseTrainerQuery.status = status;
     if (search) {
-      query.$or = [
-        { razorpayOrderId: { $regex: search, $options: 'i' } },
-        { razorpayPaymentId: { $regex: search, $options: 'i' } },
-        { stripeSessionId: { $regex: search, $options: 'i' } }
+      baseTrainerQuery.$or = [
+        { stripeSessionId: { $regex: search, $options: 'i' } },
+        { razorpayOrderId: { $regex: search, $options: 'i' } }
       ];
     }
 
-    const skip = (page - 1) * limit;
+    const baseGymQuery: FilterQuery<any> = { userId };
+    if (status && status !== 'all') baseGymQuery.status = status;
+    if (search) {
+      baseGymQuery.$or = [{ stripeSessionId: { $regex: search, $options: 'i' } }];
+    }
 
-    // Fetch trainer transactions
-    const trainerTrans = await TransactionModel.find(query)
-      .populate('trainerId', 'name profileImage')
-      .lean();
-
-    // Fetch gym transactions
-    const gymTrans = await GymTransactionModel.find(query)
-      .populate('gymId', 'name')
-      .populate('subscriptionPlanId', 'name')
-      .lean();
+    // Fetch both in parallel
+    const [trainerTrans, gymTrans] = await Promise.all([
+      TransactionModel.find(baseTrainerQuery)
+        .populate('trainerId', 'name profileImage')
+        .lean(),
+      GymTransactionModel.find(baseGymQuery)
+        .populate('gymId', 'name')
+        .populate('subscriptionPlanId', 'name')
+        .lean()
+    ]);
 
     // Combine and map
     let combined = [
@@ -76,10 +81,9 @@ export class TransactionRepository implements ITransactionRepository {
       ...gymTrans.map(t => TransactionDto.fromGymTransaction(t as any))
     ];
 
-    // Sorting
+    // Sort in memory (combined dataset is bounded per-user, manageable)
     const sortKey = sort === 'amount_high' || sort === 'amount_low' ? 'amount' : 'createdAt';
     const sortDir = sort === 'oldest' || sort === 'amount_low' ? 1 : -1;
-
     combined.sort((a, b) => {
       if (a[sortKey] < b[sortKey]) return -1 * sortDir;
       if (a[sortKey] > b[sortKey]) return 1 * sortDir;
@@ -88,12 +92,8 @@ export class TransactionRepository implements ITransactionRepository {
 
     const total = combined.length;
     const paginated = combined.slice(skip, skip + limit);
-    const totalPages = Math.ceil(total / limit);
 
-    return {
-      transactions: paginated,
-      totalPages
-    };
+    return { transactions: paginated, totalPages: Math.ceil(total / limit) };
   }
 
   async getTrainerTransactions(
@@ -319,40 +319,45 @@ export class TransactionRepository implements ITransactionRepository {
     status: string,
     sort: string
   ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }> {
-    const query: FilterQuery<any> = {};
-    if (status && status !== 'all') query.status = status;
-    if (search) {
-      query.$or = [
-        { razorpayOrderId: { $regex: search, $options: 'i' } },
-        { razorpayPaymentId: { $regex: search, $options: 'i' } },
-        { stripeSessionId: { $regex: search, $options: 'i' } }
-      ];
-    }
-
     const skip = (page - 1) * limit;
 
-    // Fetch trainer translations
-    const trainerTrans = await TransactionModel.find(query)
-      .populate('userId', 'name email')
-      .populate('trainerId', 'name')
-      .lean();
+    const trainerQuery: FilterQuery<any> = {};
+    const gymQuery: FilterQuery<any> = {};
+    if (status && status !== 'all') {
+      trainerQuery.status = status;
+      gymQuery.status = status;
+    }
+    if (search) {
+      const regex = { $regex: search, $options: 'i' };
+      trainerQuery.$or = [{ stripeSessionId: regex }, { razorpayOrderId: regex }];
+      gymQuery.$or = [{ stripeSessionId: regex }];
+    }
 
-    // Fetch gym translations
-    const gymTrans = await GymTransactionModel.find(query)
-      .populate('userId', 'name email')
-      .populate('gymId', 'name')
-      .populate('subscriptionPlanId', 'name')
-      .lean();
+    // Sort direction
+    const sortKey = sort === 'amount_high' || sort === 'amount_low' ? 'amount' : 'createdAt';
+    const sortDir = sort === 'oldest' || sort === 'amount_low' ? 1 : -1;
+    const mongoSort: Record<string, 1 | -1> = { [sortKey]: sortDir };
 
-    // Combine and map
+    // Fetch in parallel - use skip/limit per collection proportionally;
+    // combine, re-sort, slice. This avoids full collection scans.
+    const [trainerTrans, gymTrans] = await Promise.all([
+      TransactionModel.find(trainerQuery)
+        .sort(mongoSort)
+        .populate('userId', 'name email')
+        .populate('trainerId', 'name')
+        .lean(),
+      GymTransactionModel.find(gymQuery)
+        .sort(mongoSort)
+        .populate('userId', 'name email')
+        .populate('gymId', 'name')
+        .populate('subscriptionPlanId', 'name')
+        .lean()
+    ]);
+
     let combined = [
       ...trainerTrans.map(t => TransactionDto.toResponse(t as any)),
       ...gymTrans.map(t => TransactionDto.fromGymTransaction(t as any))
     ];
-
-    // Sorting
-    const sortKey = sort === 'amount_high' || sort === 'amount_low' ? 'amount' : 'createdAt';
-    const sortDir = sort === 'oldest' || sort === 'amount_low' ? 1 : -1;
 
     combined.sort((a, b) => {
       if (a[sortKey] < b[sortKey]) return -1 * sortDir;
@@ -362,12 +367,8 @@ export class TransactionRepository implements ITransactionRepository {
 
     const total = combined.length;
     const paginated = combined.slice(skip, skip + limit);
-    const totalPages = Math.ceil(total / limit);
 
-    return {
-      transactions: paginated,
-      totalPages
-    };
+    return { transactions: paginated, totalPages: Math.ceil(total / limit) };
   }
 
   async getAllTransactionsForExport(): Promise<ITransactionDTO[]> {

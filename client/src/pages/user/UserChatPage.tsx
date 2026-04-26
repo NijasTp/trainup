@@ -155,16 +155,22 @@ export default function ChatPage() {
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 10 * 1024 * 1024) {
-                toast.error("File oversized. Limit is 10MB.");
+            const isImage = file.type.startsWith('image/');
+            const maxSize = isImage ? 5 * 1024 * 1024 : 25 * 1024 * 1024;
+            
+            if (file.size > maxSize) {
+                toast.error(`File oversized. Limit is ${isImage ? '5MB' : '25MB'}.`);
                 return;
             }
-            if (!file.type.startsWith('image/') && file.type !== 'application/pdf' && !file.type.startsWith('audio/')) {
+
+            if (!isImage && file.type !== 'application/pdf' && !file.type.startsWith('audio/')) {
                 toast.error("Format not supported. Use images, PDFs, or audio.");
                 return;
             }
+
             setSelectedFile(file);
-            if (file.type.startsWith('image/')) {
+
+            if (isImage) {
                 const reader = new FileReader();
                 reader.onload = () => {
                     setImageToCrop(reader.result as string);
@@ -172,8 +178,9 @@ export default function ChatPage() {
                 };
                 reader.readAsDataURL(file);
             } else {
-                // For PDF or Audio, we can just send it or show a different preview
-                sendMessage(); 
+                // For PDF or Audio (from file picker), show the preview/caption dialog
+                setPreviewUrl(file.type === 'application/pdf' ? 'pdf-placeholder' : 'audio-placeholder');
+                setIsPreviewOpen(true);
             }
         }
     };
@@ -255,7 +262,9 @@ export default function ChatPage() {
 
             if (selectedFile) {
                 fileUrl = await uploadFile(selectedFile);
-                messageType = 'image';
+                if (selectedFile.type.startsWith('image/')) messageType = 'image';
+                else if (selectedFile.type.startsWith('audio/')) messageType = 'audio';
+                else messageType = 'file';
             } else if (audioToUpload) {
                 fileUrl = await uploadFile(audioToUpload);
                 messageType = 'audio';
@@ -503,7 +512,47 @@ export default function ChatPage() {
                                                                 </div>
                                                                 <p className={`text-[10px] mt-2 font-black uppercase tracking-widest ${isUser ? 'text-black/60' : 'text-gray-400'}`}>Audio memo</p>
                                                             </div>
-                                                            <audio preload="auto" className="hidden" src={message.fileUrl} />
+                                                            <audio controls preload="auto" className="hidden" src={message.fileUrl} onPlay={(e) => {
+                                                                const audio = e.currentTarget;
+                                                                const others = document.querySelectorAll('audio');
+                                                                others.forEach(a => { if (a !== audio) a.pause(); });
+                                                            }} />
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                className="rounded-full"
+                                                                onClick={(e) => {
+                                                                    const audio = e.currentTarget.parentElement?.querySelector('audio');
+                                                                    if (audio) {
+                                                                        if (audio.paused) audio.play();
+                                                                        else audio.pause();
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Play className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    )}
+
+                                                    {message.messageType === 'file' && message.fileUrl && (
+                                                        <div className={`mb-3 p-4 rounded-2xl flex items-center gap-4 min-w-[240px] ${isUser ? 'bg-black/10' : 'bg-white/5'}`}>
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isUser ? 'bg-black/20' : 'bg-primary/20'}`}>
+                                                                <Paperclip className={`h-4 w-4 ${isUser ? 'text-black' : 'text-primary'}`} />
+                                                            </div>
+                                                            <div className="flex-1 overflow-hidden">
+                                                                <p className={`text-xs font-bold truncate ${isUser ? 'text-black' : 'text-white'}`}>
+                                                                    {message.fileUrl.split('/').pop()?.split('?')[0] || 'Document'}
+                                                                </p>
+                                                                <p className={`text-[10px] mt-1 font-black uppercase tracking-widest ${isUser ? 'text-black/60' : 'text-gray-400'}`}>PDF Document</p>
+                                                            </div>
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="sm" 
+                                                                className={`rounded-xl ${isUser ? 'hover:bg-black/10' : 'hover:bg-white/10'}`}
+                                                                onClick={() => window.open(message.fileUrl, '_blank')}
+                                                            >
+                                                                View
+                                                            </Button>
                                                         </div>
                                                     )}
 
@@ -662,8 +711,19 @@ export default function ChatPage() {
                     </DialogHeader>
                     <div className="space-y-6">
                         {previewUrl && (
-                            <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5">
-                                <img src={previewUrl} alt="Preview" className="h-full w-full object-contain" />
+                            <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5 flex items-center justify-center">
+                                {selectedFile?.type.startsWith('image/') ? (
+                                    <img src={previewUrl} alt="Preview" className="h-full w-full object-contain" />
+                                ) : (
+                                    <div className="flex flex-col items-center gap-4">
+                                        {selectedFile?.type === 'application/pdf' ? (
+                                            <Paperclip className="h-16 w-16 text-primary" />
+                                        ) : (
+                                            <Mic className="h-16 w-16 text-primary" />
+                                        )}
+                                        <p className="text-sm font-bold text-gray-400">{selectedFile?.name}</p>
+                                    </div>
+                                )}
                                 <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(false)} className="absolute top-4 right-4 bg-black/50 backdrop-blur-lg hover:bg-black/70 rounded-full">
                                     <X className="h-4 w-4" />
                                 </Button>

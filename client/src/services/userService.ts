@@ -99,3 +99,8 @@ export const getActivityData = async () => {
   const response = await API.get(API_ROUTES.USER.ACTIVITY_DATA);
   return response.data;
 };
+
+export const updateDailyMetrics = async (metrics: { water?: number; sleep?: number }) => {
+  const response = await API.put('/user/daily-metrics', metrics);
+  return response.data;
+};

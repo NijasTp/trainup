@@ -8,12 +8,7 @@ import {
   Flame,
   Award
 } from "lucide-react";
-import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import Aurora from "@/components/ui/Aurora";
-import {  Link } from "react-router-dom";
-import { ROUTES } from "@/constants/routes";
-import { GymSidebar } from "@/components/user/gym/GymSidebar";
+import UserGymLayout from "@/layouts/UserGymLayout";
 import { getUserGymEquipment } from "@/services/gymService";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -74,18 +69,7 @@ export default function UserGymEquipment() {
   );
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-x-hidden font-outfit">
-      <div className="fixed inset-0 z-0">
-        <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03)_0%,transparent_70%)]" />
-      </div>
-
-      <SiteHeader />
-
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-12 flex gap-8 flex-1 z-10">
-        <GymSidebar />
-
-        <main className="flex-1 py-12 space-y-12">
+    <UserGymLayout>
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-12 border-b border-white/5">
           <div className="space-y-4">
             <Link to={ROUTES.USER_GYM_DASHBOARD} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-cyan-400 transition-colors">
@@ -249,10 +233,6 @@ export default function UserGymEquipment() {
              </div>
           </div>
         </section>
-      </main>
-    </div>
-
-      <SiteFooter />
-    </div>
+    </UserGymLayout>
   );
 }

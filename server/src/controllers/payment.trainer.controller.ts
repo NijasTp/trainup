@@ -11,8 +11,8 @@ import { JwtPayload } from '../core/interfaces/services/IJwtService';
 import { MESSAGES } from '../constants/messages.constants';
 import { logger } from '../utils/logger.util';
 import { AppError } from '../utils/appError.util';
-import { addMonths } from 'date-fns';
 import { INotificationService } from '../core/interfaces/services/INotificationService';
+import { ISubscriptionFulfillmentService } from '../core/interfaces/services/ISubscriptionFulfillmentService';
 
 @injectable()
 export class PaymentTrainerController {
@@ -22,7 +22,8 @@ export class PaymentTrainerController {
         @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
         @inject(TYPES.ITransactionService) private _transactionService: ITransactionService,
         @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
-        @inject(TYPES.INotificationService) private _notificationService: INotificationService
+        @inject(TYPES.INotificationService) private _notificationService: INotificationService,
+        @inject(TYPES.ISubscriptionFulfillmentService) private _fulfillmentService: ISubscriptionFulfillmentService
     ) { }
 
     async getTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -135,93 +136,7 @@ export class PaymentTrainerController {
             const session = await this._paymentService.getCheckoutSession(sessionId);
 
             if (session.payment_status === 'paid') {
-                const metadata = session.metadata;
-                const userId = metadata.userId;
-                const trainerId = metadata.trainerId;
-                const planType = metadata.planType as 'basic' | 'premium' | 'pro';
-                const duration = parseInt(metadata.duration, 10);
-                const amount = parseFloat(metadata.amount);
-
-                // Check if already fulfilled via previous call or webhook
-                const existingTransaction = await this._transactionService.findBySessionId(sessionId);
-                
-                if (existingTransaction && existingTransaction.status === 'pending') {
-                    // Update existing transaction to completed
-                    await this._transactionService.updateTransactionStatusBySessionId(sessionId, 'completed', session.payment_intent as string);
-                    
-                    // Start Fulfillment
-                    await this._userService.updateUserTrainerId(userId, trainerId);
-                    await this._userService.updateUserPlan(userId, planType);
-                    await this._trainerService.addClientToTrainer(trainerId, userId);
-
-                    const expiryDate = addMonths(new Date(), duration);
-                    let messagesLeft = 0;
-                    let videoCallsLeft = 0;
-
-                    if (planType === 'premium') messagesLeft = 200 * duration;
-                    if (planType === 'pro') {
-                        messagesLeft = -1;
-                        videoCallsLeft = 5 * duration;
-                    }
-
-                    await this._userPlanService.createUserPlan({
-                        userId,
-                        trainerId,
-                        planType,
-                        messagesLeft,
-                        videoCallsLeft,
-                        expiryDate,
-                        duration,
-                        amount
-                    });
-
-                    await this._notificationService.sendTrainerSubscribedNotification(userId, metadata.trainerName || 'Trainer');
-                } else if (!existingTransaction) {
-                    // Fallback: Create new transaction if none existed (shouldn't happen)
-                    await this._transactionService.createTransaction({
-                        userId,
-                        trainerId,
-                        amount,
-                        platformFee: Math.floor(amount * 0.10),
-                        trainerEarnings: amount - Math.floor(amount * 0.10),
-                        planType,
-                        duration,
-                        stripeSessionId: sessionId, 
-                        paymentIntentId: session.payment_intent as string,
-                        status: 'completed',
-                        provider: 'stripe',
-                        transactionType: 'debit',
-                        description: `Premium Fitness Plan - ${metadata.trainerName || 'Trainer'}`,
-                        createdAt: new Date(),
-                    });
-
-                    await this._userService.updateUserTrainerId(userId, trainerId);
-                    await this._userService.updateUserPlan(userId, planType);
-                    await this._trainerService.addClientToTrainer(trainerId, userId);
-
-                    const expiryDate = addMonths(new Date(), duration);
-                    let messagesLeft = 0;
-                    let videoCallsLeft = 0;
-
-                    if (planType === 'premium') messagesLeft = 200 * duration;
-                    if (planType === 'pro') {
-                        messagesLeft = -1;
-                        videoCallsLeft = 5 * duration;
-                    }
-
-                    await this._userPlanService.createUserPlan({
-                        userId,
-                        trainerId,
-                        planType,
-                        messagesLeft,
-                        videoCallsLeft,
-                        expiryDate,
-                        duration,
-                        amount
-                    });
-
-                    await this._notificationService.sendTrainerSubscribedNotification(userId, metadata.trainerName || 'Trainer');
-                }
+                await this._fulfillmentService.fulfillTrainerSubscription(sessionId, session.metadata);
             }
 
             res.status(STATUS_CODE.OK).json({ 

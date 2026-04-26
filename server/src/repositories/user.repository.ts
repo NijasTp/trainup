@@ -88,7 +88,8 @@ export class UserRepository implements IUserRepository {
   }
 
   async updateUser(id: string, data: Partial<IUser>): Promise<IUser | null> {
-    if (data.assignedTrainer) {
+    // Only convert to ObjectId if assignedTrainer is a non-null string value
+    if (data.assignedTrainer && typeof data.assignedTrainer === 'string') {
       data.assignedTrainer = new Types.ObjectId(data.assignedTrainer)
     }
     return await UserModel.findByIdAndUpdate(
@@ -250,8 +251,9 @@ export class UserRepository implements IUserRepository {
     })
   }
 
-  async updatePassword(email: string, hashedPassword: string): Promise<void> {
-    await UserModel.findOneAndUpdate({ email }, { password: hashedPassword });
+  async updatePassword(userId: string, hashedPassword: string): Promise<void> {
+    // Fixed: was querying by email but receiving a userId. Now queries by _id.
+    await UserModel.findByIdAndUpdate(userId, { $set: { password: hashedPassword } });
   }
 
   async getGrowthStats(days: number): Promise<{ date: string; count: number }[]> {

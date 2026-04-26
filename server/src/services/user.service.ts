@@ -205,6 +205,33 @@ export class UserService implements IUserService {
         return this.mapToResponseDto(user)
     }
 
+    async updateUser(userId: string, data: Partial<IUser>): Promise<IUser | null> {
+        return await this._userRepo.updateUser(userId, data)
+    }
+
+    async updateDailyMetrics(userId: string, metrics: { water?: number; sleep?: number }): Promise<IUser | null> {
+        const user = await this._userRepo.findById(userId);
+        if (!user) return null;
+
+        const today = new Date().setHours(0, 0, 0, 0);
+        const lastUpdate = user.dailyMetrics?.lastUpdated ? new Date(user.dailyMetrics.lastUpdated).setHours(0, 0, 0, 0) : 0;
+
+        let update: any = {};
+        if (today !== lastUpdate) {
+            update = {
+                'dailyMetrics.water': metrics.water ?? 0,
+                'dailyMetrics.sleep': metrics.sleep ?? 0,
+                'dailyMetrics.lastUpdated': new Date()
+            };
+        } else {
+            if (metrics.water !== undefined) update['dailyMetrics.water'] = metrics.water;
+            if (metrics.sleep !== undefined) update['dailyMetrics.sleep'] = metrics.sleep;
+            update['dailyMetrics.lastUpdated'] = new Date();
+        }
+
+        return await this._userRepo.updateUser(userId, update);
+    }
+
     async updateProfile(
         userId: string,
         updateData: Partial<IUser>,
@@ -276,9 +303,11 @@ export class UserService implements IUserService {
         const user = await this._userRepo.findById(userId)
         if (!user)
             throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+        // Clear trainer assignment AND trainerPlan to revoke all permissions
         await this._userRepo.updateUser(userId, {
             assignedTrainer: null,
-            subscriptionStartDate: null
+            subscriptionStartDate: null,
+            trainerPlan: null as any
         })
     }
 
@@ -502,24 +531,24 @@ export class UserService implements IUserService {
     async getActivityData(userId: string): Promise<IActivityData> {
         const activityData: IActivityData = {};
 
-        // 1. Fetch Workout Activities
-        const workouts = await WorkoutSessionModel.find({
-            userId,
-            isDone: true
-        }).select('completedAt updatedAt').lean();
+        // Run all 4 DB queries in parallel instead of sequentially
+        const [workouts, dietDays, user, attendance] = await Promise.all([
+            WorkoutSessionModel.find({ userId, isDone: true })
+                .select('completedAt updatedAt').lean(),
+            DietDayModel.find({ user: userId, 'meals.isEaten': true })
+                .select('date meals').lean(),
+            this._userRepo.findById(userId),
+            AttendanceModel.find({ userId }).select('date').lean()
+        ]);
 
+        // 1. Workout Activities
         workouts.forEach(w => {
             const date = (w.completedAt || w.updatedAt).toISOString().split('T')[0];
             if (!activityData[date]) activityData[date] = { workout: false, meal: false, weight: false, gym: false };
             activityData[date].workout = true;
         });
 
-        // 2. Fetch Meal Activities
-        const dietDays = await DietDayModel.find({
-            user: userId,
-            "meals.isEaten": true
-        }).select('date meals').lean();
-
+        // 2. Meal Activities
         dietDays.forEach(d => {
             const date = d.date;
             const hasEaten = d.meals.some(m => m.isEaten);
@@ -529,8 +558,7 @@ export class UserService implements IUserService {
             }
         });
 
-        // 3. Fetch Weight Activities
-        const user = await this._userRepo.findById(userId);
+        // 3. Weight Activities
         if (user && user.weightHistory) {
             user.weightHistory.forEach(w => {
                 const date = w.date.toISOString().split('T')[0];
@@ -539,11 +567,7 @@ export class UserService implements IUserService {
             });
         }
 
-        // 4. Fetch Gym Attendance
-        const attendance = await AttendanceModel.find({
-            userId
-        }).select('date').lean();
-
+        // 4. Gym Attendance
         attendance.forEach(a => {
             const date = a.date.toISOString().split('T')[0];
             if (!activityData[date]) activityData[date] = { workout: false, meal: false, weight: false, gym: false };

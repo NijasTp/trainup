@@ -11,12 +11,7 @@ import {
   Target,
   AlertCircle
 } from "lucide-react";
-import { SiteHeader } from "@/components/user/home/UserSiteHeader";
-import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import Aurora from "@/components/ui/Aurora";
-import { Link } from "react-router-dom";
-import { ROUTES } from "@/constants/routes";
-import { GymSidebar } from "@/components/user/gym/GymSidebar";
+import UserGymLayout from "@/layouts/UserGymLayout";
 import { getAttendanceHistoryForUser, getMyGym } from "@/services/gymService";
 import { getAllSessions } from "@/services/workoutService";
 import { 
@@ -245,20 +240,7 @@ export default function AttendancePage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-x-hidden font-outfit">
-      <div className="fixed inset-0 z-0">
-        <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03)_0%,transparent_70%)]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03]" />
-      </div>
-
-      <SiteHeader />
-
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-12 flex gap-8 flex-1 z-10">
-        <GymSidebar />
-
-        <main className="flex-1 py-12 space-y-12">
-
+    <UserGymLayout>
         {isLoading ? (
            <div className="h-[60vh] flex flex-col items-center justify-center gap-6">
               <Activity className="h-12 w-12 text-cyan-400 animate-pulse" />
@@ -281,7 +263,7 @@ export default function AttendancePage() {
                    </div>
                    <div>
                       <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white">
-                        Attendance <span className="text-cyan-400">Details</span>
+                         Attendance <span className="text-cyan-400">Details</span>
                       </h2>
                       <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">{format(selectedDay, "EEEE, MMMM do yyyy")}</p>
                    </div>
@@ -333,10 +315,6 @@ export default function AttendancePage() {
             )}
           </DialogContent>
         </Dialog>
-      </main>
-    </div>
-
-      <SiteFooter />
-    </div>
+    </UserGymLayout>
   );
 }

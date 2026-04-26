@@ -64,4 +64,13 @@ const userGymMembershipSchema: Schema<IUserGymMembership> = new Schema(
   { timestamps: true }
 );
 
+// Ensure a user cannot have two ACTIVE memberships for the same gym simultaneously
+userGymMembershipSchema.index({ userId: 1, gymId: 1 }, { 
+  unique: true, 
+  partialFilterExpression: { status: 'active' } 
+});
+
+// Index for frequent lookups by user and status
+userGymMembershipSchema.index({ userId: 1, status: 1 });
+
 export const UserGymMembershipModel = mongoose.model<IUserGymMembership>('UserGymMembership', userGymMembershipSchema);

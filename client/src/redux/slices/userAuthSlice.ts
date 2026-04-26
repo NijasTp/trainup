@@ -56,6 +56,8 @@ export interface UserType {
   isBanned?: boolean;
   isPrivate?: boolean;
   assignedTrainer?: string;
+  trainerPlan?: 'basic' | 'premium' | 'pro' | null;
+  gymId?: string | null;
   activeWorkoutTemplate?: string | null;
   activeWorkoutTemplates?: ActiveTemplate[];
   activeDietTemplate?: string | null;

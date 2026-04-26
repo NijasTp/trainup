@@ -607,10 +607,6 @@ export default function TrainerPage() {
                 </div>
             </main>
 
-            {/* Reviews Section */}
-            <section className="container mx-auto px-4 pt-12 pb-24 border-t border-white/10 relative z-10">
-                <TrainerReviews trainerId={id!} canReview={false} />
-            </section>
 
             <SiteFooter />
         </div>

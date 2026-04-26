@@ -6,16 +6,7 @@ import {
     Loader2,
     Shield
 } from 'lucide-react';
-import { SiteHeader } from '@/components/user/home/UserSiteHeader';
-import { SiteFooter } from '@/components/user/home/UserSiteFooter';
-import Aurora from "@/components/ui/Aurora";
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
-import { ROUTES } from '@/constants/routes';
-import { GymSidebar } from "@/components/user/gym/GymSidebar";
+import UserGymLayout from "@/layouts/UserGymLayout";
 import { getUserWishlist, toggleWishlist } from '@/services/gymService';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -60,20 +51,7 @@ const WishlistPage: React.FC = () => {
     };
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-x-hidden font-outfit">
-            {/* Background Visuals */}
-            <div className="fixed inset-0 z-0">
-                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.03)_0%,transparent_70%)] pointer-events-none" />
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02]" />
-            </div>
-
-            <SiteHeader />
-
-            <div className="relative container mx-auto px-4 sm:px-6 lg:px-12 flex gap-8 flex-1 z-10">
-                <GymSidebar />
-
-                <main className="flex-1 py-12 space-y-12">
+        <UserGymLayout>
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 pb-12 border-b border-white/5">
                     <div className="space-y-4">
                         <Link to={ROUTES.USER_GYM_DASHBOARD} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 hover:text-cyan-400 transition-all">
@@ -173,7 +151,7 @@ const WishlistPage: React.FC = () => {
                                                         "flex-1 h-14 rounded-2xl font-black uppercase italic tracking-widest text-[11px] transition-all",
                                                         item.isAvailable
                                                             ? "bg-cyan-500 text-black hover:bg-cyan-400 shadow-[0_10px_20px_rgba(6,182,212,0.2)]"
-                                                            : "bg-zinc-900 text-zinc-700 cursor-not-allowed border border-white/5"
+                                                             : "bg-zinc-900 text-zinc-700 cursor-not-allowed border border-white/5"
                                                     )}
                                                 >
                                                     {item.isAvailable ? <><ShoppingCart className="mr-3 h-4 w-4" /> Add to Cart</> : "Currently Unavailable"}
@@ -204,11 +182,7 @@ const WishlistPage: React.FC = () => {
                         </Link>
                     </motion.div>
                 )}
-            </main>
-        </div>
-
-            <SiteFooter />
-        </div>
+        </UserGymLayout>
     );
 };
 

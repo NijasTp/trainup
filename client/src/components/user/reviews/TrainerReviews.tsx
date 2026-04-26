@@ -54,16 +54,6 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
     const [filterRating, setFilterRating] = useState<number>(0);
     const { user } = useSelector((state: RootState) => state.userAuth);
 
-    // Check if user has already reviewed when reviews are loaded
-    useEffect(() => {
-        if (user && reviews.length > 0) {
-            const myReview = reviews.find(r => r.userId._id === user._id);
-            if (myReview) {
-                setUserReview(myReview);
-            }
-        }
-    }, [reviews, user]);
-
     const fetchReviews = async () => {
         setIsLoading(true);
         try {
@@ -74,15 +64,30 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
             setTotalReviews(response.data.total);
         } catch (error) {
             console.error("Failed to fetch reviews:", error);
-            // toast.error("Failed to load reviews");
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchMyReview = async () => {
+        try {
+            const response = await API.get(`/user/trainer/rating/me/${trainerId}`);
+            if (response.data.review) {
+                setUserReview(response.data.review);
+            } else {
+                setUserReview(null);
+            }
+        } catch (error) {
+            console.error("Failed to fetch my review:", error);
         }
     };
 
     useEffect(() => {
         if (trainerId) {
             fetchReviews();
+            if (canReview) {
+                fetchMyReview();
+            }
         }
     }, [trainerId, page, filterRating]);
 
@@ -101,11 +106,13 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
         try {
             if (editingReviewId) {
                 const response = await editReview(editingReviewId, rating, message);
+                setUserReview(response);
                 setReviews(prev => prev.map(r => r._id === editingReviewId ? response : r));
                 setEditingReviewId(null);
                 toast.success("Review updated successfully");
             } else {
                 const response = await addTrainerRating(trainerId, rating, message, currentUserPlan);
+                setUserReview(response);
                 if (onReviewAdded) onReviewAdded(response);
                 toast.success("Review added successfully");
                 setPage(1);
@@ -229,50 +236,89 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
                             </Button>
                         </form>
                     </div>
+                ) : userReview ? (
+                    <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 space-y-4">
+                        <div className="flex justify-between items-start">
+                            <h3 className="font-bold text-primary italic uppercase tracking-wider">Your Review</h3>
+                            <div className="flex gap-2">
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(userReview)}>
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Delete Review?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeleteClick(userReview._id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+                        </div>
+                        <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                    key={star}
+                                    className={`w-4 h-4 ${star <= userReview.rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`}
+                                />
+                            ))}
+                        </div>
+                        <p className="text-sm text-zinc-400">{userReview.comment}</p>
+                    </div>
                 ) : null}
 
-                {isLoading ? (
-                    <div className="flex justify-center py-8 col-span-2">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                ) : reviews.length === 0 ? (
-                    <div className="text-center text-muted-foreground py-8 col-span-2">
-                        No reviews yet. Be the first to review!
-                    </div>
-                ) : (
-                    <div className="space-y-4 md:col-span-2">
-                        {reviews.map((review) => (
-                            <div key={review._id} className={`p-4 rounded-lg bg-muted/50 space-y-3 ${editingReviewId === review._id ? 'opacity-50 pointer-events-none' : ''}`}>
-                                <div className="flex items-start gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center overflow-hidden">
-                                        {review.userId.profilePicture ? (
-                                            <img
-                                                src={review.userId.profilePicture}
-                                                alt={review.userId.name}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <User className="w-5 h-5 text-muted-foreground" />
-                                        )}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <h4 className="font-semibold">
-                                                    {review.userId.name} {user && user._id === review.userId._id && "(You)"}
-                                                </h4>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {new Date(review.createdAt).toLocaleDateString()}
-                                                    </span>
-                                                    {review.subscriptionPlan && (
-                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                                                            {review.subscriptionPlan} Plan
+                <div className="space-y-4 md:col-span-2">
+                    {isLoading ? (
+                        <div className="flex justify-center py-8">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                    ) : reviews.length === 0 ? (
+                        <div className="text-center text-muted-foreground py-8">
+                            No reviews yet. Be the first to review!
+                        </div>
+                    ) : (
+                        <>
+                            {reviews.filter(r => r._id !== userReview?._id).map((review) => (
+                                <div key={review._id} className="p-4 rounded-lg bg-muted/50 space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center overflow-hidden">
+                                            {review.userId.profilePicture ? (
+                                                <img
+                                                    src={review.userId.profilePicture}
+                                                    alt={review.userId.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <User className="w-5 h-5 text-muted-foreground" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <h4 className="font-semibold">
+                                                        {review.userId.name}
+                                                    </h4>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {new Date(review.createdAt).toLocaleDateString()}
                                                         </span>
-                                                    )}
+                                                        {review.subscriptionPlan && (
+                                                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                                                                {review.subscriptionPlan} Plan
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center gap-4">
                                                 <div className="flex gap-0.5">
                                                     {[1, 2, 3, 4, 5].map((star) => (
                                                         <Star
@@ -284,39 +330,12 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
                                                         />
                                                     ))}
                                                 </div>
-                                                {user && user._id === review.userId._id && (
-                                                    <div className="flex gap-2">
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleEditClick(review)}>
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>Delete Review?</AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        Are you sure you want to delete your review? This action cannot be undone.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                    <AlertDialogAction onClick={() => handleDeleteClick(review._id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    </div>
-                                                )}
                                             </div>
+                                            <p className="text-muted-foreground text-sm mt-2">{review.comment}</p>
                                         </div>
-                                        <p className="text-muted-foreground text-sm mt-2">{review.comment}</p>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
 
                         {totalPages > 1 && (
                             <div className="flex justify-center gap-2 mt-4">

@@ -16,6 +16,7 @@ import userAuthReducer from './slices/userAuthSlice';
 import adminAuthReducer from './slices/adminAuthSlice';
 import gymAuthReducer from './slices/gymAuthSlice';
 import trainerAuthReducer from './slices/trainerAuthSlice';
+import dashboardReducer from './slices/dashboardSlice';
 import { combineReducers } from 'redux';
 
 const persistConfig = {
@@ -28,7 +29,8 @@ const rootReducer = combineReducers({
   userAuth: userAuthReducer,
   adminAuth: adminAuthReducer,
   trainerAuth: trainerAuthReducer,
-  gymAuth: gymAuthReducer
+  gymAuth: gymAuthReducer,
+  dashboard: dashboardReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

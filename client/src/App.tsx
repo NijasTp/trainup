@@ -118,6 +118,7 @@ import AttendancePage from './pages/user/AttendancePage';
 import UserGymEquipment from './pages/user/UserGymEquipment';
 import WorkoutHistoryPage from './pages/user/WorkoutHistoryPage';
 import WorkoutPreviewPage from './pages/user/WorkoutPreviewPage';
+import UserGymAnnouncements from './pages/user/UserGymAnnouncements';
 
 
 import { useEffect, useCallback } from 'react';
@@ -202,6 +203,7 @@ function App() {
         <Route path={ROUTES.USER_SUBSCRIPTIONS} element={<ProtectedRoute><SubscriptionDetails /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WISHLIST} element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYM_SHOP} element={<ProtectedRoute><UserGymStore /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_GYM_ANNOUNCEMENTS} element={<ProtectedRoute><UserGymAnnouncements /></ProtectedRoute>} />
         <Route path={ROUTES.PAYMENT_TRAINER_SUCCESS} element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
         <Route path={ROUTES.PAYMENT_TRAINER_CANCEL} element={<ProtectedRoute><PaymentCancelPage /></ProtectedRoute>} />
         <Route path={ROUTES.PAYMENT_GYM_SUCCESS} element={<ProtectedRoute><GymPaymentSuccess /></ProtectedRoute>} />

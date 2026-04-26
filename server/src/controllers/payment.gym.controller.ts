@@ -14,6 +14,7 @@ import { IMailService } from '../core/interfaces/services/IMailService';
 import { IGymReminderService } from '../core/interfaces/services/IGymReminderService';
 import { INotificationService } from '../core/interfaces/services/INotificationService';
 import { IGymTransactionRepository } from '../core/interfaces/repositories/IGymTransactionRepository';
+import { ISubscriptionFulfillmentService } from '../core/interfaces/services/ISubscriptionFulfillmentService';
 
 @injectable()
 export class PaymentGymController {
@@ -24,7 +25,8 @@ export class PaymentGymController {
         @inject(TYPES.IMailService) private _emailService: IMailService,
         @inject(TYPES.IGymReminderService) private _gymReminderService: IGymReminderService,
         @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-        @inject(TYPES.IGymTransactionRepository) private _gymTransactionRepo: IGymTransactionRepository
+        @inject(TYPES.IGymTransactionRepository) private _gymTransactionRepo: IGymTransactionRepository,
+        @inject(TYPES.ISubscriptionFulfillmentService) private _fulfillmentService: ISubscriptionFulfillmentService
     ) { }
 
     async createGymCheckoutSession(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -75,99 +77,9 @@ export class PaymentGymController {
             const session = await this._paymentService.getCheckoutSession(sessionId);
 
             if (session.payment_status === 'paid') {
-                const metadata = session.metadata;
-                const userId = metadata.userId;
-                const gymId = metadata.gymId;
-                const subscriptionPlanId = metadata.subscriptionPlanId;
-                const preferredTime = metadata.preferredTime;
-                const amount = parseFloat(metadata.amount);
-
-                // Check fulfillment
-                const user = await this._userService.getUserById(userId);
-                const existingTransaction = await this._gymTransactionRepo.findOne({ stripeSessionId: sessionId });
-                
-                // If transaction is pending, fulfill it
-                if (user && existingTransaction && existingTransaction.status === 'pending') {
-                    const subscriptionPlan = await this._gymService.getSubscriptionPlan(subscriptionPlanId);
-                    if (subscriptionPlan) {
-                        const startDate = new Date();
-                        let endDate: Date;
-                        switch (subscriptionPlan.durationUnit) {
-                            case 'day': endDate = addDays(startDate, subscriptionPlan.duration); break;
-                            case 'month': endDate = addMonths(startDate, subscriptionPlan.duration); break;
-                            case 'year': endDate = addYears(startDate, subscriptionPlan.duration); break;
-                            default: endDate = addMonths(startDate, subscriptionPlan.duration);
-                        }
-
-                        // Update transaction record to completed
-                        await this._gymTransactionRepo.findOneAndUpdate(
-                            { stripeSessionId: sessionId },
-                            { 
-                                $set: { 
-                                    status: 'completed',
-                                    paymentIntentId: session.payment_intent as string,
-                                    amount: amount,
-                                    description: `Gym Membership - ${subscriptionPlan.name}`,
-                                    preferredTime
-                                } 
-                            }
-                        );
-
-                        await this._userService.updateUserGymMembership(
-                            userId, gymId, subscriptionPlanId, startDate, endDate, preferredTime
-                        );
-                        await this._gymService.addMemberToGym(gymId, userId);
-                        await this._gymReminderService.saveReminderPreference(userId, gymId, preferredTime);
-
-                        const gymDetails = await this._gymService.getGymById(gymId);
-                        if (gymDetails) {
-                            await this._notificationService.sendGymSubscribedNotification(
-                                userId, gymDetails.name || 'Gym', subscriptionPlan.name
-                            );
-                        }
-                        logger.info(`[PaymentGymController] Subscription fulfilled for user ${userId}, gym ${gymId}`);
-                    }
-                } else if (user && !existingTransaction) {
-                    // Fallback for cases where transaction wasn't created during checkout (shouldn't happen with current service)
-                    const subscriptionPlan = await this._gymService.getSubscriptionPlan(subscriptionPlanId);
-                    if (subscriptionPlan) {
-                        const startDate = new Date();
-                        let endDate: Date;
-                        switch (subscriptionPlan.durationUnit) {
-                            case 'day': endDate = addDays(startDate, subscriptionPlan.duration); break;
-                            case 'month': endDate = addMonths(startDate, subscriptionPlan.duration); break;
-                            case 'year': endDate = addYears(startDate, subscriptionPlan.duration); break;
-                            default: endDate = addMonths(startDate, subscriptionPlan.duration);
-                        }
-
-                        await this._paymentService.createGymTransaction({
-                            userId,
-                            gymId,
-                            subscriptionPlanId,
-                            stripeSessionId: sessionId,
-                            paymentIntentId: session.payment_intent as string,
-                            amount,
-                            status: 'completed',
-                            provider: 'stripe',
-                            transactionType: 'debit',
-                            description: `Gym Membership - ${subscriptionPlan.name}`,
-                            preferredTime
-                        });
-
-                        await this._userService.updateUserGymMembership(
-                            userId, gymId, subscriptionPlanId, startDate, endDate, preferredTime
-                        );
-                        await this._gymService.addMemberToGym(gymId, userId);
-                        await this._gymReminderService.saveReminderPreference(userId, gymId, preferredTime);
-
-                        const gymDetails = await this._gymService.getGymById(gymId);
-                        if (gymDetails) {
-                            await this._notificationService.sendGymSubscribedNotification(
-                                userId, gymDetails.name || 'Gym', subscriptionPlan.name
-                            );
-                        }
-                    }
-                }
+            if (session.payment_status === 'paid') {
+                await this._fulfillmentService.fulfillGymSubscription(sessionId, session.metadata);
+            }
             }
 
             res.status(STATUS_CODE.OK).json({ 

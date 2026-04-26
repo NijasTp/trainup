@@ -65,7 +65,9 @@ export class UserGymController {
         try {
             const userId = (req.user as JwtPayload).id
             const { membershipId } = req.body
-            if (!membershipId) throw new AppError('Membership ID is required', STATUS_CODE.BAD_REQUEST)
+            if (!membershipId || !Types.ObjectId.isValid(membershipId)) {
+                throw new AppError('Valid Membership ID is required', STATUS_CODE.BAD_REQUEST)
+            }
 
             const result = await this._refundService.applyGymRefund(membershipId, userId)
             res.status(STATUS_CODE.OK).json({
@@ -102,6 +104,9 @@ export class UserGymController {
     async getGymById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { id } = req.params
+            if (!Types.ObjectId.isValid(id)) {
+                throw new AppError(MESSAGES.INVALID_REQUEST, STATUS_CODE.BAD_REQUEST)
+            }
             const gym = await this._gymService.getGymForUser(id)
             if (!gym) throw new AppError(MESSAGES.GYM_NOT_FOUND, STATUS_CODE.NOT_FOUND)
             res.status(STATUS_CODE.OK).json({ gym })
@@ -114,6 +119,9 @@ export class UserGymController {
     async getGymSubscriptionPlans(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { gymId } = req.params
+            if (!Types.ObjectId.isValid(gymId)) {
+                throw new AppError(MESSAGES.INVALID_REQUEST, STATUS_CODE.BAD_REQUEST)
+            }
             const plans = await this._gymService.getActiveSubscriptionPlans(gymId)
             res.status(STATUS_CODE.OK).json({ plans })
         } catch (err) {

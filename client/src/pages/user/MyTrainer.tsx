@@ -137,15 +137,22 @@ export default function MyTrainerProfile() {
         fetchUserPlan();
     }, [fetchMyTrainer, fetchUser, fetchUserPlan]);
 
+    const [isCancelling, setIsCancelling] = useState(false);
+
     const handleCancelSubscription = async () => {
+        setIsCancelling(true);
         try {
             await API.post("/user/cancel-subscription");
             toast.success("Subscription cancelled successfully");
             
-            // Sync Redux state to avoid redirection loops or errors on /trainers
+            // Invalidate dashboard cache
+            dispatch({ type: 'dashboard/invalidateCache' });
+
+            // Sync Redux state
             dispatch(updateUser({ 
                 assignedTrainer: undefined, 
-                assignedTrainerDetails: null 
+                assignedTrainerDetails: null,
+                trainerPlan: null
             }));
             
             setTrainer(null);
@@ -154,6 +161,8 @@ export default function MyTrainerProfile() {
         } catch (_err: unknown) {
             console.error("Failed to cancel subscription:", _err);
             toast.error("Failed to cancel subscription");
+        } finally {
+            setIsCancelling(false);
         }
     };
 
@@ -325,9 +334,10 @@ export default function MyTrainerProfile() {
                                             <AlertDialogCancel className="bg-white/5 border-white/10 hover:bg-white/10 h-12 rounded-xl font-bold uppercase text-xs">Stay Active</AlertDialogCancel>
                                             <AlertDialogAction
                                                 onClick={handleCancelSubscription}
+                                                disabled={isCancelling}
                                                 className="bg-red-500 text-white hover:bg-red-600 h-12 rounded-xl font-bold uppercase text-xs"
                                             >
-                                                Confirm Termination
+                                                {isCancelling ? "Terminating..." : "Confirm Termination"}
                                             </AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>

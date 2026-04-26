@@ -1,8 +1,8 @@
 import { injectable, inject } from 'inversify';
 import TYPES from '../core/types/types';
-import { ReviewRepository } from '../repositories/review.repository';
-import { TrainerRepository } from '../repositories/trainer.repository';
-import { GymRepository } from '../repositories/gym.repository';
+import { IReviewRepository } from '../core/interfaces/repositories/IReviewRepository';
+import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepository';
+import { IGymRepository } from '../core/interfaces/repositories/IGymRepository';
 import { IReview } from '../models/review.model';
 import { IGym } from '../models/gym.model';
 import { AppError } from '../utils/appError.util';
@@ -14,9 +14,9 @@ import { IReviewService } from '../core/interfaces/services/IReviewService'
 @injectable()
 export class ReviewService implements IReviewService {
     constructor(
-        @inject(TYPES.IReviewRepository) private reviewRepository: ReviewRepository,
-        @inject(TYPES.ITrainerRepository) private trainerRepository: TrainerRepository,
-        @inject(TYPES.IGymRepository) private gymRepository: GymRepository
+        @inject(TYPES.IReviewRepository) private reviewRepository: IReviewRepository,
+        @inject(TYPES.ITrainerRepository) private trainerRepository: ITrainerRepository,
+        @inject(TYPES.IGymRepository) private gymRepository: IGymRepository
     ) { }
 
     async addReview(userId: string, targetId: string, targetModel: 'Trainer' | 'Gym', rating: number, comment: string, subscriptionPlan?: string): Promise<IReview> {

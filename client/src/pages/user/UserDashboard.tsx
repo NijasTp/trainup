@@ -20,6 +20,8 @@ import {
   Award,
   Droplets,
   Moon,
+  Footprints,
+  Brain,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
@@ -31,6 +33,11 @@ import { compareProgress } from "@/services/progressService";
 import { ROUTES } from "@/constants/routes";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+
+import { useSelector, useDispatch } from "react-redux";
+import { setDashboardData, setActivityData as setReduxActivityData, setLoading as setReduxLoading } from "@/redux/slices/dashboardSlice";
+import type { RootState } from "@/redux/store";
+import { updateDailyMetrics } from "@/services/userService";
 
 import type { WeightEntry, Workout, User, IBackendSession, IActivityData, TransformationData } from "@/interfaces/user/IUserDashboard";
 
@@ -85,11 +92,34 @@ const UserDashboard: React.FC = () => {
   // Local state for new tools
   const [waterGlasses, setWaterGlasses] = useState(0);
   const [sleepHours, setSleepHours] = useState(0);
+  const [steps, setSteps] = useState(0);
+  const [mindfulnessMinutes, setMindfulnessMinutes] = useState(0);
   
   // Removed unused dispatch, navigate, reduxUser
 
-  const fetchDashboardData = async () => {
+  const dispatch = useDispatch();
+  const { data: cachedData, activityData: cachedActivity, lastFetched, loading: reduxLoading } = useSelector((state: RootState) => state.dashboard);
+
+  const fetchDashboardData = async (force = false) => {
+    // If we have cached data and it's less than 5 minutes old, don't fetch unless forced
+    if (!force && cachedData && lastFetched && (Date.now() - lastFetched < 5 * 60 * 1000)) {
+      setUserData(cachedData.user);
+      setWeightData(cachedData.weightData);
+      setLastLoggedDate(cachedData.lastLoggedDate);
+      setIsWeightLoggedToday(cachedData.isWeightLoggedToday);
+      setRecentWorkouts(cachedData.recentWorkouts);
+      setActivityData(cachedActivity || {});
+      setTransformation(cachedData.transformation);
+      setWaterGlasses(cachedData.dailyMetrics?.water || 0);
+      setSleepHours(cachedData.dailyMetrics?.sleep || 0);
+      setSteps(cachedData.dailyMetrics?.steps || 0);
+      setMindfulnessMinutes(cachedData.dailyMetrics?.mindfulness || 0);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
+    dispatch(setReduxLoading(true));
     try {
       const [profileRes, weightRes, activityRes, workoutsRes, transformRes] = await Promise.all([
         getProfile(),
@@ -100,7 +130,9 @@ const UserDashboard: React.FC = () => {
       ]);
 
       const profile = profileRes.user;
-      setActivityData(activityRes.activityData || {});
+      const activity = activityRes.activityData || {};
+      setActivityData(activity);
+      dispatch(setReduxActivityData(activity));
       setTransformation(transformRes);
 
       // Handle Weight Data
@@ -111,22 +143,26 @@ const UserDashboard: React.FC = () => {
 
       const latestWeight = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1].weight : profile.currentWeight || 0;
       const latestDate = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1].date : null;
-      setLastLoggedDate(latestDate ? format(new Date(latestDate), "MMM dd, yyyy") : null);
+      const lastDateFormatted = latestDate ? format(new Date(latestDate), "MMM dd, yyyy") : null;
+      setLastLoggedDate(lastDateFormatted);
       
-      setWeightData(sortedHistory.slice(-7).map((e: WeightEntry) => ({
+      const chartData = sortedHistory.slice(-7).map((e: WeightEntry) => ({
         date: format(new Date(e.date), "yyyy-MM-dd"),
         weight: e.weight,
         goal: profile.goalWeight || 0
-      })));
+      }));
+      setWeightData(chartData);
 
-      setUserData({
+      const isLoggedToday = sortedHistory.some((e: WeightEntry) => isToday(new Date(e.date)));
+      setIsWeightLoggedToday(isLoggedToday);
+
+      const dashboardUser = {
         name: profile.name || "",
         currentWeight: latestWeight,
         goalWeight: profile.goalWeight || 0,
         height: profile.height,
-      });
-
-      setIsWeightLoggedToday(sortedHistory.some((e: WeightEntry) => isToday(new Date(e.date))));
+      };
+      setUserData(dashboardUser);
 
       // Handle Workouts
       const mappedWorkouts = (workoutsRes?.sessions || []).slice(0, 3).map((session: IBackendSession) => ({
@@ -138,11 +174,33 @@ const UserDashboard: React.FC = () => {
       }));
       setRecentWorkouts(mappedWorkouts);
 
+      // Daily Metrics
+      const water = profile.dailyMetrics?.water || 0;
+      const sleep = profile.dailyMetrics?.sleep || 0;
+      const stepCount = profile.dailyMetrics?.steps || 0;
+      const mindMinutes = profile.dailyMetrics?.mindfulness || 0;
+      setWaterGlasses(water);
+      setSleepHours(sleep);
+      setSteps(stepCount);
+      setMindfulnessMinutes(mindMinutes);
+
+      // Store in Redux
+      dispatch(setDashboardData({
+        user: dashboardUser,
+        weightData: chartData,
+        lastLoggedDate: lastDateFormatted,
+        isWeightLoggedToday: isLoggedToday,
+        recentWorkouts: mappedWorkouts,
+        transformation: transformRes,
+        dailyMetrics: profile.dailyMetrics
+      }));
+
     } catch (err: unknown) {
       console.error("Dashboard error:", err);
       toast.error("Failed to sync some dashboard data.");
     } finally {
       setIsLoading(false);
+      dispatch(setReduxLoading(false));
     }
   };
 
@@ -157,10 +215,48 @@ const UserDashboard: React.FC = () => {
     try {
       await addWeightService(weight);
       toast.success("Weight logged successfully!");
-      fetchDashboardData();
+      fetchDashboardData(true); // Force refresh cache
       setNewWeight("");
     } catch (_err: unknown) {
       toast.error("Failed to log weight");
+    }
+  };
+
+  const handleUpdateWater = async (newVal: number) => {
+    setWaterGlasses(newVal);
+    try {
+      await updateDailyMetrics({ water: newVal });
+      toast.success("Hydration updated");
+    } catch (err) {
+      toast.error("Failed to update hydration");
+    }
+  };
+
+  const handleUpdateSleep = async (newVal: number) => {
+    setSleepHours(newVal);
+    try {
+      await updateDailyMetrics({ sleep: newVal });
+      toast.success("Recovery updated");
+    } catch (err) {
+      toast.error("Failed to update recovery");
+    }
+  };
+
+  const handleUpdateSteps = async (newVal: number) => {
+    setSteps(newVal);
+    try {
+      await updateDailyMetrics({ steps: newVal });
+    } catch (err) {
+      toast.error("Failed to sync steps");
+    }
+  };
+
+  const handleUpdateMindfulness = async (newVal: number) => {
+    setMindfulnessMinutes(newVal);
+    try {
+      await updateDailyMetrics({ mindfulness: newVal });
+    } catch (err) {
+      toast.error("Failed to sync mindfulness");
     }
   };
 
@@ -351,8 +447,8 @@ const UserDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => { setWaterGlasses(Math.max(0, waterGlasses - 1)); toast.success("Hydration updated"); }}>-</Button>
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => { setWaterGlasses(waterGlasses + 1); toast.success("Hydration updated"); }}>+</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateWater(Math.max(0, waterGlasses - 1))}>-</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateWater(waterGlasses + 1)}>+</Button>
                   </div>
                 </div>
             </BentoTile>
@@ -369,8 +465,44 @@ const UserDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => { setSleepHours(Math.max(0, sleepHours - 1)); toast.success("Recovery updated"); }}>-</Button>
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => { setSleepHours(sleepHours + 1); toast.success("Recovery updated"); }}>+</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateSleep(Math.max(0, sleepHours - 1))}>-</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateSleep(sleepHours + 1)}>+</Button>
+                  </div>
+                </div>
+            </BentoTile>
+
+            <BentoTile title="Locomotion Tech" icon={Footprints} className="md:col-span-4 md:row-span-1">
+                <div className="flex flex-col h-full justify-between">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-4xl font-black italic text-white leading-none">{(steps/1000).toFixed(1)}k</div>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Steps Today</p>
+                    </div>
+                    <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-orange-500 flex items-center justify-center bg-orange-500/10 text-orange-500">
+                      <Footprints className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateSteps(Math.max(0, steps - 500))}>-500</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateSteps(steps + 500)}>+500</Button>
+                  </div>
+                </div>
+            </BentoTile>
+
+            <BentoTile title="Neural Calibration" icon={Brain} className="md:col-span-4 md:row-span-1">
+                <div className="flex flex-col h-full justify-between">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-4xl font-black italic text-white leading-none">{mindfulnessMinutes}</div>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Minutes</p>
+                    </div>
+                    <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-purple-500 flex items-center justify-center bg-purple-500/10 text-purple-500">
+                      <Brain className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateMindfulness(Math.max(0, mindfulnessMinutes - 5))}>-5m</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateMindfulness(mindfulnessMinutes + 5)}>+5m</Button>
                   </div>
                 </div>
             </BentoTile>

@@ -16,6 +16,9 @@ const PORT = process.env.PORT || 3000;
 connectDB().then(() => {
   // Initialize Cron Jobs
   container.get<NotificationCron>(TYPES.NotificationCron);
+  container.get(TYPES.GymAttendanceCron);
+  container.get(TYPES.SubscriptionExpiryCron);
+  
   const cronService = container.get<ICronService>(TYPES.ICronService);
   cronService.startJobs();
 

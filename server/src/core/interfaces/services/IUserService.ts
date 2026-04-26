@@ -57,6 +57,8 @@ export interface IUserService {
   ): Promise<void>
 
   cancelSubscription(userId: string, trainerId: string): Promise<void>
+  updateUser(userId: string, data: Partial<IUser>): Promise<IUser | null>
+  updateDailyMetrics(userId: string, metrics: { water?: number; sleep?: number }): Promise<IUser | null>
   addWeight(userId: string, weight: number): Promise<UserResponseDto>
   getWeightHistory(userId: string): Promise<GetWeightHistoryResponseDto>
   forgotPassword(email: string): Promise<void>

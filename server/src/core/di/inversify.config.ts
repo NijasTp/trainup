@@ -146,11 +146,14 @@ import { WalletRepository } from "../../repositories/wallet.repository";
 import { UserGymMembershipRepository } from "../../repositories/userGymMembership.repository";
 import { UserSubscriptionService } from "../../services/userSubscription.service";
 import { SubscriptionController } from "../../controllers/userSubscription.controller";
+import { ISubscriptionFulfillmentService } from "../interfaces/services/ISubscriptionFulfillmentService";
+import { SubscriptionFulfillmentService } from "../../services/subscriptionFulfillment.service";
 
 
 
 import { NotificationCron } from "../../cron/notification.cron";
 import { GymAttendanceCron } from "../../cron/gymAttendance.cron";
+import { SubscriptionExpiryCron } from "../../cron/subscriptionExpiry.cron";
 
 import { CronService } from '../../services/cron.service'
 import { ICronService } from '../interfaces/services/ICronService'
@@ -175,6 +178,7 @@ container.bind<INotificationService>(TYPES.INotificationService).to(Notification
 container.bind<NotificationController>(TYPES.NotificationController).to(NotificationController);
 container.bind<NotificationCron>(TYPES.NotificationCron).to(NotificationCron);
 container.bind<GymAttendanceCron>(TYPES.GymAttendanceCron).to(GymAttendanceCron).inSingletonScope();
+container.bind<SubscriptionExpiryCron>(TYPES.SubscriptionExpiryCron).to(SubscriptionExpiryCron).inSingletonScope();
 
 
 container.bind<IUserPlanRepository>(TYPES.IUserPlanRepository).to(UserPlanRepository);
@@ -306,6 +310,7 @@ container.bind<IWalletRepository>(TYPES.IWalletRepository).to(WalletRepository).
 container.bind<IUserGymMembershipRepository>(TYPES.IUserGymMembershipRepository).to(UserGymMembershipRepository);
 container.bind<IUserSubscriptionService>(TYPES.IUserSubscriptionService).to(UserSubscriptionService);
 container.bind<SubscriptionController>(TYPES.SubscriptionController).to(SubscriptionController);
+container.bind<ISubscriptionFulfillmentService>(TYPES.ISubscriptionFulfillmentService).to(SubscriptionFulfillmentService).inSingletonScope();
 
 
 export default container;

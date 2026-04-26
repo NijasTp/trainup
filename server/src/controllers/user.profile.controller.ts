@@ -203,4 +203,15 @@ export class UserProfileController {
             next(err);
         }
     }
+
+    async updateDailyMetrics(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = (req.user as JwtPayload).id;
+            const { water, sleep } = req.body;
+            const updatedUser = await this._userService.updateDailyMetrics(userId, { water, sleep });
+            res.status(STATUS_CODE.OK).json({ user: updatedUser });
+        } catch (err) {
+            next(err);
+        }
+    }
 }

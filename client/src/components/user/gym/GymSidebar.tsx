@@ -48,7 +48,7 @@ export function GymSidebar() {
   const location = useLocation();
 
   return (
-    <aside className="hidden lg:flex flex-col w-72 h-[calc(100vh-120px)] sticky top-24 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-6 shadow-2xl overflow-hidden transition-all duration-500">
+    <aside className="hidden lg:flex flex-col w-72 h-[calc(100vh-160px)] fixed top-28 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-6 shadow-2xl overflow-hidden transition-all duration-500 z-20">
       <div className="flex flex-col gap-2 relative z-10">
         <div className="px-4 py-4 mb-4">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">Tactical Navigation</p>

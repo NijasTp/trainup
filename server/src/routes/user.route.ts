@@ -9,10 +9,18 @@ import { UserReviewController } from '../controllers/user.review.controller'
 import { UserChatController } from '../controllers/user.chat.controller'
 import { AttendanceController } from '../controllers/gymAttendance.controller'
 import { authMiddleware, roleMiddleware } from '../middlewares/auth.middleware'
-import { checkSubscriptionExpiry } from '../middlewares/checkSubscription.middleware'
 import { upload } from '../utils/multer.util'
+import rateLimit from 'express-rate-limit'
 
 const router = express.Router()
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many requests, please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false
+})
 
 const userAuthController = container.get<UserAuthController>(TYPES.UserAuthController)
 const userProfileController = container.get<UserProfileController>(TYPES.UserProfileController)
@@ -27,15 +35,15 @@ router.post(
   userAuthController.refreshAccessToken.bind(userAuthController)
 )
 
-router.post('/login', userAuthController.login.bind(userAuthController))
-router.post('/request-otp', userAuthController.requestOtp.bind(userAuthController))
-router.post('/verify-otp', userAuthController.verifyOtp.bind(userAuthController))
+router.post('/login', authLimiter, userAuthController.login.bind(userAuthController))
+router.post('/request-otp', authLimiter, userAuthController.requestOtp.bind(userAuthController))
+router.post('/verify-otp', authLimiter, userAuthController.verifyOtp.bind(userAuthController))
 router.post(
   '/check-username',
   userAuthController.checkUsername.bind(userAuthController)
 )
 router.post('/google-login', userAuthController.googleLogin.bind(userAuthController))
-router.post('/resend-otp', userAuthController.resendOtp.bind(userAuthController))
+router.post('/resend-otp', authLimiter, userAuthController.resendOtp.bind(userAuthController))
 router.post(
   '/forgot-password',
   userAuthController.forgotPassword.bind(userAuthController)
@@ -50,7 +58,6 @@ router.post(
 )
 
 router.use(authMiddleware)
-router.use(checkSubscriptionExpiry)
 
 router.post(
   '/logout',
@@ -117,7 +124,6 @@ router.post('/cancel-session-booking', roleMiddleware(['user']), userTrainerCont
 router.get('/sessions', roleMiddleware(['user']), userTrainerController.getUserSessions.bind(userTrainerController))
 router.get('/plan', roleMiddleware(['user']), userTrainerController.getUserPlan.bind(userTrainerController))
 router.get('/trainer/:trainerId', roleMiddleware(['user']), userTrainerController.getTrainer.bind(userTrainerController))
-router.post('/chat/session-request', roleMiddleware(['user']), userTrainerController.sendSessionRequest.bind(userTrainerController))
 router.get('/chat/unread-counts', roleMiddleware(['user']), userChatController.getUnreadCounts.bind(userChatController))
 router.put('/chat/read/:senderId', roleMiddleware(['user']), userChatController.markMessagesAsRead.bind(userChatController))
 router.get('/chat/messages/:trainerId', roleMiddleware(['user']), userChatController.getChatMessages.bind(userChatController))
@@ -142,6 +148,7 @@ router.post('/gym/rating/:id', authMiddleware, userReviewController.addGymRating
 router.get('/trainer/ratings/:id', authMiddleware, userReviewController.getTrainerRatings.bind(userReviewController))
 router.get('/gym/ratings/:id', authMiddleware, userReviewController.getGymRatings.bind(userReviewController))
 router.get('/gym/rating/me/:id', authMiddleware, userReviewController.getMyGymRating.bind(userReviewController))
+router.get('/trainer/rating/me/:id', authMiddleware, userReviewController.getMyTrainerRating.bind(userReviewController))
 
 router.put('/review/:id', authMiddleware, userReviewController.editReview.bind(userReviewController))
 router.delete('/review/:id', authMiddleware, userReviewController.deleteReview.bind(userReviewController))
@@ -153,5 +160,6 @@ router.get('/progress', authMiddleware, userProfileController.getProgress.bind(u
 router.get('/progress/compare', authMiddleware, userProfileController.compareProgress.bind(userProfileController))
 router.get('/activity-data', authMiddleware, userProfileController.getActivityData.bind(userProfileController))
 router.get('/dashboard/activity', authMiddleware, userProfileController.getActivityData.bind(userProfileController))
+router.put('/daily-metrics', authMiddleware, userProfileController.updateDailyMetrics.bind(userProfileController))
 
 export default router

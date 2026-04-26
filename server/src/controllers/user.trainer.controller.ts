@@ -176,18 +176,6 @@ export class UserTrainerController {
         }
     }
 
-    async sendSessionRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
-        try {
-            const { slotId } = req.body
-            const userId = (req.user as JwtPayload).id
-            // This logic seems duplicate with bookSession in the original controller, 
-            // but I will keep it as it was in the original.
-            await this._slotService.bookSession(slotId, userId)
-            res.status(STATUS_CODE.OK).json({ message: MESSAGES.SUCCESS })
-        } catch (err) {
-            next(err)
-        }
-    }
 
     async cancelSessionBooking(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {

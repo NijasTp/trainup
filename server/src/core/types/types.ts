@@ -123,6 +123,8 @@ const TYPES = {
   IUserSubscriptionService: Symbol.for("IUserSubscriptionService"),
   SubscriptionController: Symbol.for("SubscriptionController"),
   GymAttendanceCron: Symbol.for("GymAttendanceCron"),
+  SubscriptionExpiryCron: Symbol.for("SubscriptionExpiryCron"),
+  ISubscriptionFulfillmentService: Symbol.for("ISubscriptionFulfillmentService"),
 };
 
 export default TYPES;
