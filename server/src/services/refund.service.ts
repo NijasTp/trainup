@@ -76,7 +76,7 @@ export class RefundService implements IRefundService {
         });
 
         // Clean up User and Gym models
-        await this._userRepo.updateUser(userId, { gymId: null as any });
+        await this._userRepo.updateUser(userId, { gymId: null as unknown as Types.ObjectId });
         await this._gymRepo.removeMemberFromGym(membership.gymId.toString(), userId);
 
         // Credit user wallet

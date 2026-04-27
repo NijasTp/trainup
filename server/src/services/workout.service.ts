@@ -12,6 +12,24 @@ import { STATUS_CODE } from '../constants/status'
 import { IUserRepository } from '../core/interfaces/repositories/IUserRepository';
 import { IWorkoutTemplateRepository } from '../core/interfaces/repositories/IWorkoutTemplateRepository';
 import { WorkoutSnapshotModel } from '../models/workoutSnapshot.model';
+
+interface WorkoutTemplateData {
+  _id: Types.ObjectId | string;
+  title: string;
+  repetitions: number;
+  goal?: string;
+  createdByType: string;
+  days: {
+    dayNumber: number;
+    exercises: {
+      exerciseId: string;
+      name: string;
+      sets: number;
+      reps: number;
+      time?: string;
+    }[];
+  }[];
+}
 import { MESSAGES } from '../constants/messages.constants'
 
 @injectable()
@@ -258,11 +276,11 @@ export class WorkoutService implements IWorkoutService {
     if (activeTemplates.length > 0) {
       for (const activeDetails of activeTemplates) {
         // Try to find as snapshot first
-        let templateData: any = await WorkoutSnapshotModel.findById(activeDetails.templateId.toString());
+        let templateData: WorkoutTemplateData | null = await (WorkoutSnapshotModel.findById(activeDetails.templateId.toString()) as any);
 
         // Fallback to template if snapshot not found (for legacy support)
         if (!templateData) {
-          templateData = await this._workoutTemplateRepo.findById(activeDetails.templateId.toString());
+          templateData = await (this._workoutTemplateRepo.findById(activeDetails.templateId.toString()) as any);
         }
 
         if (templateData) {
@@ -280,7 +298,7 @@ export class WorkoutService implements IWorkoutService {
 
           if (diffDays >= 0 && diffDays < totalDays) {
             const dayNumber = (diffDays % templateData.days.length) + 1;
-            const templateDay = templateData.days.find((d: any) => d.dayNumber === dayNumber);
+            const templateDay = templateData.days.find((d: { dayNumber: number }) => d.dayNumber === dayNumber);
 
             templateInfo = {
               templateDay: diffDays + 1, // Overall day of the program
@@ -289,35 +307,10 @@ export class WorkoutService implements IWorkoutService {
             };
 
             if (templateDay && templateDay.exercises.length > 0) {
-              // Check if there's already an admin session or template session for today FROM THIS TEMPLATE?
-              // The original logic checked if ANY admin session existed. 
-              // We should check if a session from THIS template exists. 
-              // However, sessions don't store templateId explicitely, just 'givenBy: admin' and maybe notes.
-              // To prevent duplicates, we can check if a session with same name exists? 
-              // Or maybe just let it be virtual until 'started'.
-              // Original logic: "if (!hasExistingAdminSession) { create virtual }"
-              // With multiple templates, this blocks the 2nd template if 1st created a session.
-              // We should probably rely on `_id` generation or check names. 
-              // Let's rely on checking if any session in `day.sessions` matches the virtual ID we are about to generate.
-
               const virtualId = `template-${templateData._id}-${dayNumber}-${date}`;
-              // Check for existing session from this template.
-              // We check populated sessions for matching notes/name.
-              // For unpopulated sessions (IDs), we must assume they might be duplicates but we can't be sure without fetching.
-              // However, getDay usually populates sessions in the repo. 
-              // If it failed to populate (e.g. session deleted but ID remains), `session` might be string.
-              // But mapToDayResponseDto handles strings by making light objects.
-              // The main issue is if `day.sessions` contains ObjectIds (if not populated) it won't have notes.
-              // But WorkouDayRepo uses `.populate('sessions')`. 
-              // So sessions should be objects.
-
               const alreadyExists = day?.sessions?.some(s => {
-                // If s is a string ID, we can't check content. But it should be populated.
-                // If s is an object, check notes.
                 const session = s as IWorkoutSession;
                 if (typeof s === 'string') return false;
-                // Also check if name matches "TEMPLATE_TITLE - Day X" pattern?
-                // Notes is safer as user might rename session.
                 return session.notes?.includes(`From active template: ${templateData.title}`) || session.name === `${templateData.title} - Day ${dayNumber}`;
               });
 
@@ -329,13 +322,18 @@ export class WorkoutService implements IWorkoutService {
                   givenBy: templateData.createdByType === 'Trainer' ? 'trainer' : 'admin',
                   date: date,
                   time: "08:00", // Default virtual time
-                  exercises: templateDay.exercises.map((ex: any) => ({
-                    ...ex,
-                    sessions: day ? day.sessions.filter((s: any) =>
-                      s.exercises.some((se: any) => se.exerciseId.toString() === ex.exerciseId.toString())
+                  exercises: templateDay.exercises.map((ex: { exerciseId: string, name: string, sets: number, reps: number, time?: string }) => ({
+                    id: ex.exerciseId,
+                    exerciseId: ex.exerciseId,
+                    name: ex.name,
+                    sets: ex.sets,
+                    reps: ex.reps,
+                    time: ex.time,
+                    sessions: day ? day.sessions.filter((s: unknown) =>
+                      (s as IWorkoutSession).exercises.some((se: { exerciseId: string }) => se.exerciseId.toString() === ex.exerciseId.toString())
                     ) : []
                   })),
-                  goal: templateData.goal,
+                  goal: templateData.goal || '',
                   notes: `From active template: ${templateData.title}`,
                   isDone: false,
                   createdAt: new Date(),
@@ -375,7 +373,7 @@ export class WorkoutService implements IWorkoutService {
     limit: number = 20,
     source?: string
   ): Promise<{ sessions: WorkoutSessionResponseDto[]; total: number; totalPages: number }> {
-    const query: any = { 
+    const query: Record<string, unknown> = { 
       userId, 
       $or: [
         { isDone: true }, 
@@ -389,7 +387,7 @@ export class WorkoutService implements IWorkoutService {
     console.log('DEBUG: Found sessions count:', sessions.length, 'Total:', total);
 
     return {
-      sessions: sessions.map((session: any) => this.mapToSessionResponseDto(session as IWorkoutSession)),
+      sessions: sessions.map((session: IWorkoutSession) => this.mapToSessionResponseDto(session)),
       total,
       totalPages: Math.ceil(total / limit)
     };
@@ -416,7 +414,7 @@ export class WorkoutService implements IWorkoutService {
       goal: session.goal,
       notes: session.notes,
       isDone: session.isDone,
-      source: (session.source as any) === 'direct' ? 'user' : session.source || 'user',
+      source: (session.source as unknown as string) === 'direct' ? 'user' : session.source || 'user',
       createdAt: session.createdAt!,
       updatedAt: session.updatedAt!
     };

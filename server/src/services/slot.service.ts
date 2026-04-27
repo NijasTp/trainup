@@ -154,7 +154,7 @@ export class SlotService implements ISlotService {
     await this._slotRepository.addBookingRequest(slotId, userId)
 
     const user = await this._userRepository.findById(userId)
-    const userName = (user as any)?.name || 'Someone'
+    const userName = (user as { name?: string })?.name || 'Someone'
 
     await this._notificationService.sendSessionRequestNotification(trainerId.toString(), userName)
   }

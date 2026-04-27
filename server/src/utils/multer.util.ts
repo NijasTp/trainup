@@ -1,4 +1,5 @@
 import multer from 'multer';
+import { Request } from 'express';
 import { AppError } from './appError.util';
 import { STATUS_CODE } from '../constants/status';
 import path from 'path';
@@ -20,8 +21,8 @@ const storage = multer.diskStorage({
     },
 });
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-    // Accept images and PDFs (for certifications)
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  
     if (
         file.mimetype.startsWith('image/') ||
         file.mimetype === 'application/pdf' ||
@@ -29,7 +30,8 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
     ) {
         cb(null, true);
     } else {
-        cb(new AppError('Not an image, PDF, or audio file! Please upload only supported formats.', STATUS_CODE.BAD_REQUEST) as any, false);
+        const error = new AppError('Not an image, PDF, or audio file! Please upload only supported formats.', STATUS_CODE.BAD_REQUEST);
+        (cb as (err: Error | null, success: boolean) => void)(error as unknown as Error, false);
     }
 };
 

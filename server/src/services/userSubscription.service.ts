@@ -4,6 +4,9 @@ import { IUserSubscriptionService } from '../core/interfaces/services/IUserSubsc
 import { IUserGymMembershipRepository } from '../core/interfaces/repositories/IUserGymMembershipRepository';
 import { IUserPlanRepository } from '../core/interfaces/repositories/IUserPlanRepository';
 
+import { IUserGymMembership } from '../models/userGymMembership.model';
+import { IUserPlan } from '../models/userPlan.model';
+
 @injectable()
 export class UserSubscriptionService implements IUserSubscriptionService {
     constructor(
@@ -11,7 +14,7 @@ export class UserSubscriptionService implements IUserSubscriptionService {
         @inject(TYPES.IUserPlanRepository) private userPlanRepo: IUserPlanRepository
     ) { }
 
-    async getUserSubscriptions(userId: string): Promise<any> {
+    async getUserSubscriptions(userId: string): Promise<{ gymSubscriptions: IUserGymMembership[], trainerSubscriptions: IUserPlan[] }> {
         const [gymMemberships, trainerPlans] = await Promise.all([
             this.gymMembershipRepo.findAllByUserId(userId),
             this.userPlanRepo.findAllByUserId(userId)

@@ -258,7 +258,7 @@ export default function ChatPage() {
         setIsSending(true);
         try {
             let fileUrl = '';
-            let messageType: 'text' | 'image' | 'audio' = 'text';
+            let messageType: 'text' | 'image' | 'audio' | 'file' = 'text';
 
             if (selectedFile) {
                 fileUrl = await uploadFile(selectedFile);
@@ -319,9 +319,6 @@ export default function ChatPage() {
         }
     }, 1000);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
 
     const formatTime = (dateString: string) => {
         return new Date(dateString).toLocaleTimeString('en-IN', {

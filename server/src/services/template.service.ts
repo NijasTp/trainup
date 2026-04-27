@@ -1,4 +1,5 @@
 import { inject, injectable } from "inversify";
+import { Types } from "mongoose";
 import TYPES from "../core/types/types";
 import { ITemplateService } from "../core/interfaces/services/ITemplateService";
 import { IWorkoutTemplateRepository } from "../core/interfaces/repositories/IWorkoutTemplateRepository";
@@ -7,6 +8,7 @@ import { IUserRepository } from "../core/interfaces/repositories/IUserRepository
 import {
     CreateWorkoutTemplateRequestDto,
     WorkoutTemplateResponseDto,
+    WorkoutTemplateDayDto,
     CreateDietTemplateRequestDto,
     DietTemplateResponseDto,
     TemplateQueryDto,
@@ -155,7 +157,7 @@ export class TemplateService implements ITemplateService {
         });
 
         await this._userRepo.updateUser(userId, {
-            activeWorkoutTemplate: snapshot._id as any,
+            activeWorkoutTemplate: snapshot._id as unknown as Types.ObjectId,
             workoutTemplateStartDate: new Date()
         });
 
@@ -174,7 +176,7 @@ export class TemplateService implements ITemplateService {
                 givenBy: 'admin',
                 date: new Date().toISOString().split('T')[0],
                 time: new Date().toTimeString().split(' ')[0].substring(0, 5),
-                exercises: templateDay.exercises.map((ex: any) => ({
+                exercises: templateDay.exercises.map((ex: { exerciseId?: string, name: string, sets: number, reps?: string, time?: string }) => ({
                     id: ex.exerciseId || Math.random().toString(36).substring(7),
                     name: ex.name,
                     sets: ex.sets,
@@ -219,7 +221,7 @@ export class TemplateService implements ITemplateService {
         });
 
         await this._userRepo.updateUser(userId, {
-            activeDietTemplate: snapshot._id as any,
+            activeDietTemplate: snapshot._id as unknown as Types.ObjectId,
             dietTemplateStartDate: new Date()
         });
 
@@ -249,7 +251,7 @@ export class TemplateService implements ITemplateService {
             requiredEquipment: t.requiredEquipment,
             isPublic: t.isPublic,
             popularityCount: t.popularityCount,
-            days: t.days as any,
+            days: t.days as unknown as WorkoutTemplateDayDto[],
             createdById: t.createdById.toString(),
             createdByType: t.createdByType,
             gymId: t.gymId?.toString(),

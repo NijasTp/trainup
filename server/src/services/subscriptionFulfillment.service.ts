@@ -27,7 +27,7 @@ export class SubscriptionFulfillmentService implements ISubscriptionFulfillmentS
         @inject(TYPES.IPaymentService) private _paymentService: IPaymentService
     ) { }
 
-    async fulfillTrainerSubscription(sessionId: string, metadata: any): Promise<void> {
+    async fulfillTrainerSubscription(sessionId: string, metadata: Record<string, string>): Promise<void> {
         const userId = metadata.userId;
         const trainerId = metadata.trainerId;
         const planType = metadata.planType as 'basic' | 'premium' | 'pro';
@@ -99,7 +99,7 @@ export class SubscriptionFulfillmentService implements ISubscriptionFulfillmentS
         logger.info(`[Fulfillment] Trainer subscription fulfilled for user ${userId}, trainer ${trainerId}`);
     }
 
-    async fulfillGymSubscription(sessionId: string, metadata: any): Promise<void> {
+    async fulfillGymSubscription(sessionId: string, metadata: Record<string, string>): Promise<void> {
         const userId = metadata.userId;
         const gymId = metadata.gymId;
         const subscriptionPlanId = metadata.subscriptionPlanId;

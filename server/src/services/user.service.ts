@@ -1,4 +1,5 @@
 import { injectable, inject } from 'inversify'
+import mongoose, { Types } from 'mongoose'
 import bcrypt from 'bcrypt'
 import { OAuth2Client } from 'google-auth-library'
 import { IUserService } from '../core/interfaces/services/IUserService'
@@ -216,7 +217,7 @@ export class UserService implements IUserService {
         const today = new Date().setHours(0, 0, 0, 0);
         const lastUpdate = user.dailyMetrics?.lastUpdated ? new Date(user.dailyMetrics.lastUpdated).setHours(0, 0, 0, 0) : 0;
 
-        let update: any = {};
+        let update: Record<string, unknown> = {};
         if (today !== lastUpdate) {
             update = {
                 'dailyMetrics.water': metrics.water ?? 0,
@@ -307,7 +308,7 @@ export class UserService implements IUserService {
         await this._userRepo.updateUser(userId, {
             assignedTrainer: null,
             subscriptionStartDate: null,
-            trainerPlan: null as any
+            trainerPlan: null as unknown as 'basic' | 'premium' | 'pro'
         })
     }
 
@@ -463,30 +464,30 @@ export class UserService implements IUserService {
             activityLevel: user.activityLevel,
             profileImage: user.profileImage || undefined,
             equipment: user.equipment,
-            assignedTrainer: (user.assignedTrainer as any)?._id?.toString() || user.assignedTrainer?.toString(),
-            assignedTrainerDetails: user.assignedTrainer && (user.assignedTrainer as any).name ? {
-                _id: (user.assignedTrainer as any)._id.toString(),
-                name: (user.assignedTrainer as any).name,
-                email: (user.assignedTrainer as any).email,
-                phone: (user.assignedTrainer as any).phone,
-                profileImage: (user.assignedTrainer as any).profileImage,
-                specialization: (user.assignedTrainer as any).specialization,
-                rating: (user.assignedTrainer as any).rating,
-                location: (user.assignedTrainer as any).location,
-                price: (user.assignedTrainer as any).price,
-                bio: (user.assignedTrainer as any).bio,
-                experience: (user.assignedTrainer as any).experience,
-                profileStatus: (user.assignedTrainer as any).profileStatus
+            assignedTrainer: (user.assignedTrainer as unknown as { _id?: mongoose.Types.ObjectId })?._id?.toString() || user.assignedTrainer?.toString(),
+            assignedTrainerDetails: user.assignedTrainer && (user.assignedTrainer as unknown as { name?: string }).name ? {
+                _id: (user.assignedTrainer as unknown as { _id: mongoose.Types.ObjectId })._id.toString(),
+                name: (user.assignedTrainer as unknown as { name: string }).name,
+                email: (user.assignedTrainer as unknown as { email: string }).email,
+                phone: (user.assignedTrainer as unknown as { phone: string }).phone,
+                profileImage: (user.assignedTrainer as unknown as { profileImage?: string }).profileImage,
+                specialization: (user.assignedTrainer as unknown as { specialization?: string }).specialization,
+                rating: (user.assignedTrainer as unknown as { rating?: number }).rating,
+                location: (user.assignedTrainer as unknown as { location?: string }).location,
+                price: (user.assignedTrainer as unknown as { price: { basic: number, premium: number, pro: number } }).price,
+                bio: (user.assignedTrainer as unknown as { bio?: string }).bio || '',
+                experience: (user.assignedTrainer as unknown as { experience?: string }).experience || '',
+                profileStatus: (user.assignedTrainer as unknown as { profileStatus?: string }).profileStatus || 'pending'
             } : undefined,
             subscriptionStartDate: user.subscriptionStartDate || undefined,
-            gymId: (user.gymId as any)?._id?.toString() || user.gymId?.toString(),
-            activeGymDetails: user.gymId && (user.gymId as any).name ? {
-                _id: (user.gymId as any)._id.toString(),
-                name: (user.gymId as any).name,
-                profileImage: (user.gymId as any).profileImage,
-                address: (user.gymId as any).address
+            gymId: (user.gymId as unknown as { _id?: mongoose.Types.ObjectId })?._id?.toString() || user.gymId?.toString(),
+            activeGymDetails: user.gymId && (user.gymId as unknown as { name?: string }).name ? {
+                _id: (user.gymId as unknown as { _id: mongoose.Types.ObjectId })._id.toString(),
+                name: (user.gymId as unknown as { name: string }).name,
+                profileImage: (user.gymId as unknown as { profileImage?: string }).profileImage,
+                address: (user.gymId as unknown as { address?: string }).address
             } : undefined,
-            gymName: (user.gymId as any)?.name,
+            gymName: (user.gymId as unknown as { name?: string })?.name,
             isPrivate: user.isPrivate,
             isBanned: user.isBanned,
             streak: user.streak,

@@ -27,8 +27,8 @@ export class NotificationWorker {
 
         // Override duplicate for BullMQ internal clones
         const originalDuplicate = this._redisConnection.duplicate.bind(this._redisConnection);
-        this._redisConnection.duplicate = (...args: any[]) => {
-            const duplicate = originalDuplicate(...args);
+        this._redisConnection.duplicate = (...args: Parameters<IORedis["duplicate"]>) => {
+            const duplicate = (originalDuplicate as (...a: unknown[]) => IORedis)(...args);
             duplicate.on("error", () => { });
             return duplicate;
         };

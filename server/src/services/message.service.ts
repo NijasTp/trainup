@@ -34,7 +34,7 @@ export class MessageService implements IMessageService {
     return await this._messageRepository.getUnreadCountsBySender(receiverId);
   }
 
-  async getConversations(userId: string): Promise<any[]> {
+  async getConversations(userId: string): Promise<unknown[]> {
     return await this._messageRepository.getConversations(userId);
   }
 

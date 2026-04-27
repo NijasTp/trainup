@@ -46,12 +46,14 @@ export class GymProductService implements IGymProductService {
     return await this._gymProductRepo.findByGymId(gymId);
   }
 
-  async updateProduct(id: string, data: any, files?: Express.Multer.File[]): Promise<IGymProduct> {
+  async updateProduct(id: string, data: Partial<IGymProduct> & { existingImages?: string | string[] }, files?: Express.Multer.File[]): Promise<IGymProduct> {
     const product = await this._gymProductRepo.findById(id);
     if (!product) throw new AppError(MESSAGES.PRODUCT_NOT_FOUND, STATUS_CODE.NOT_FOUND);
 
-    let images = data.existingImages || [];
-    if (typeof images === 'string') images = [images];
+    let images: string[] = (data as { existingImages?: string | string[] }).existingImages ? 
+      (Array.isArray((data as { existingImages?: string | string[] }).existingImages) ? 
+        (data as { existingImages?: string | string[] }).existingImages as string[] : 
+        [(data as { existingImages?: string | string[] }).existingImages as string]) : [];
 
     if (files && files.length > 0) {
       for (const file of files) {
@@ -62,7 +64,7 @@ export class GymProductService implements IGymProductService {
       }
     }
 
-    const updateData = {
+    const updateData: Partial<IGymProduct> & { existingImages?: string | string[] } = {
       ...data,
       images
     };
@@ -95,12 +97,12 @@ export class GymProductService implements IGymProductService {
     const user = await this._userRepo.findById(userId);
     if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
 
-    const wishlist = user.wishlist || [];
-    const index = wishlist.findIndex(id => id.toString() === productId);
+    const wishlist = (user.wishlist || []).map(id => id.toString());
+    const index = wishlist.indexOf(productId);
     let added = false;
 
     if (index === -1) {
-      wishlist.push(new Types.ObjectId(productId) as any);
+      wishlist.push(productId);
       added = true;
     } else {
       wishlist.splice(index, 1);

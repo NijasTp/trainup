@@ -22,10 +22,7 @@ import {
     Trash2,
     Paperclip,
     Mic,
-    Play,
-    StopCircle,
-    X,
-    CheckCircle2
+    Play
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -321,7 +318,7 @@ export default function TrainerChatPage() {
         setIsSending(true);
         try {
             let fileUrl = '';
-            let messageType: 'text' | 'image' | 'audio' = 'text';
+            let messageType: 'text' | 'image' | 'audio' | 'file' = 'text';
 
             if (selectedFile) {
                 fileUrl = await uploadFile(selectedFile);

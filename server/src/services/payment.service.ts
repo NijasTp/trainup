@@ -7,6 +7,7 @@ import { IGymTransactionRepository } from '../core/interfaces/repositories/IGymT
 import { AppError } from '../utils/appError.util';
 import { STATUS_CODE } from '../constants/status';
 import { logger } from '../utils/logger.util';
+import { IGymTransaction } from '../models/gymTransaction.model';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -146,7 +147,7 @@ export class PaymentService implements IPaymentService {
     }
   }
 
-  async handleWebhook(payload: string | Buffer, signature: string): Promise<any> {
+  async handleWebhook(payload: string | Buffer, signature: string): Promise<unknown> {
     let event: Stripe.Event;
     try {
       event = this.stripe.webhooks.constructEvent(
@@ -154,9 +155,10 @@ export class PaymentService implements IPaymentService {
         signature,
         process.env.STRIPE_WEBHOOK_SECRET!
       );
-    } catch (err: any) {
-      logger.error(`Webhook Signature Verification Failed: ${err.message}`);
-      throw new AppError(`Webhook Error: ${err.message}`, STATUS_CODE.BAD_REQUEST);
+    } catch (err: unknown) {
+      const error = err as Error;
+      logger.error(`Webhook Signature Verification Failed: ${error.message}`);
+      throw new AppError(`Webhook Error: ${error.message}`, STATUS_CODE.BAD_REQUEST);
     }
 
     if (event.type === 'checkout.session.completed') {
@@ -180,21 +182,21 @@ export class PaymentService implements IPaymentService {
     return result.modifiedCount;
   }
 
-  async getGymTransactions(gymId: string, page: number, limit: number): Promise<any> {
+  async getGymTransactions(gymId: string, page: number, limit: number): Promise<{ transactions: unknown[], totalPages: number }> {
     const { transactions, totalPages } = await this._gymTransactionRepo.find({ gymId }, page, limit);
     return { transactions, totalPages };
   }
 
-  async createGymTransaction(data: any): Promise<any> {
+  async createGymTransaction(data: Partial<IGymTransaction>): Promise<IGymTransaction> {
     return await this._gymTransactionRepo.create(data);
   }
 
-  async findPendingGymTransactionByUser(userId: string): Promise<any> {
+  async findPendingGymTransactionByUser(userId: string): Promise<unknown | null> {
     const transactions = await this._gymTransactionRepo.find({ userId, status: 'pending' }, 1, 1);
     return transactions.transactions[0] || null;
   }
 
-  async getCheckoutSession(sessionId: string): Promise<any> {
+  async getCheckoutSession(sessionId: string): Promise<Stripe.Checkout.Session> {
     try {
       return await this.stripe.checkout.sessions.retrieve(sessionId);
     } catch (error) {

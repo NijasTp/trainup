@@ -331,7 +331,7 @@ export class SocketHandler {
     const targetRoom = `user_${userId}`;
     logger.info(`[SOCKET_STREAK] Emitting streak_updated to ${targetRoom}. Value: ${streak}`);
 
-    // Check if there are any sockets in this room
+
     const room = this.io.sockets.adapter.rooms.get(targetRoom);
     const subscriberCount = room ? room.size : 0;
     logger.info(`[SOCKET_STREAK] Room ${targetRoom} has ${subscriberCount} active connections.`);
