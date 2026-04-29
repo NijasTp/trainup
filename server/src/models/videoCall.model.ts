@@ -18,6 +18,8 @@ export interface IVideoCall extends Document {
   scheduledEndTime: Date;
   actualStartTime?: Date;
   actualEndTime?: Date;
+  userPerformanceRating?: number;
+  userFeedback?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +43,8 @@ export const VideoCallSchema = new Schema<IVideoCall>({
   scheduledEndTime: { type: Date, required: true },
   actualStartTime: { type: Date },
   actualEndTime: { type: Date },
+  userPerformanceRating: { type: Number, min: 0, max: 10 },
+  userFeedback: { type: String }
 }, { timestamps: true });
 
 VideoCallSchema.index({ status: 1 });

@@ -15,10 +15,10 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
 
   const [revenueFilter, setRevenueFilter] = useState<'day' | 'week' | 'month' | 'year'>('month')
-  const [revenueData, setRevenueData] = useState<IGraphData[]>([])
+  const [revenueData, setRevenueData] = useState<any[]>([])
 
   const [userFilter, setUserFilter] = useState<'day' | 'week' | 'month' | 'year'>('day')
-  const [userData, setUserData] = useState<IGraphData[]>([])
+  const [userData, setUserData] = useState<any[]>([])
 
   const [trainers, setTrainers] = useState<ITrainer[]>([])
   const [selectedTrainer, setSelectedTrainer] = useState<ITrainer | null>(null)
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
     const fetchRevenue = async () => {
       try {
         const data = await getDashboardGraphData(revenueFilter, 'revenue')
-        setRevenueData(data)
+        setRevenueData(data.map((d: IGraphData) => ({ date: d.name, amount: d.value })))
       } catch (error: unknown) {
         console.error("Failed to fetch revenue data", error)
       }
@@ -75,7 +75,7 @@ const AdminDashboard = () => {
     const fetchUsers = async () => {
       try {
         const data = await getDashboardGraphData(userFilter, 'users')
-        setUserData(data)
+        setUserData(data.map((d: IGraphData) => ({ date: d.name, count: d.value })))
       } catch (error: unknown) {
         console.error("Failed to fetch user data", error)
       }
@@ -179,8 +179,8 @@ const AdminDashboard = () => {
           <div className="col-span-12 xl:col-span-4 lg:col-span-5">
             <TrainerInsights
               trainers={trainers}
-              selectedTrainer={selectedTrainer?._id}
-              setSelectedTrainer={(id) => setSelectedTrainer(trainers.find(t => t._id === id))}
+              selectedTrainer={selectedTrainer?._id || ""}
+              setSelectedTrainer={(id) => setSelectedTrainer(trainers.find(t => t._id === id) || null)}
               reviews={trainerReviews}
             />
           </div>

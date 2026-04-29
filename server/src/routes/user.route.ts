@@ -127,6 +127,7 @@ router.get('/trainer/:trainerId', roleMiddleware(['user']), userTrainerControlle
 router.get('/chat/unread-counts', roleMiddleware(['user']), userChatController.getUnreadCounts.bind(userChatController))
 router.put('/chat/read/:senderId', roleMiddleware(['user']), userChatController.markMessagesAsRead.bind(userChatController))
 router.get('/chat/messages/:trainerId', roleMiddleware(['user']), userChatController.getChatMessages.bind(userChatController))
+router.delete('/chat/message/:messageId', roleMiddleware(['user']), userChatController.deleteMessage.bind(userChatController))
 router.get('/me', roleMiddleware(['user']), userProfileController.getProfile.bind(userProfileController))
 
 router.get("/gyms", authMiddleware, userGymController.getGyms.bind(userGymController));

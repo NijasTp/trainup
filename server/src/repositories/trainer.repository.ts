@@ -285,7 +285,8 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
     trainerId: string,
     skip: number,
     limit: number,
-    search: string
+    search: string,
+    filter?: string
   ): Promise<{ clients: ClientDto[]; total: number }> {
     const trainer = await TrainerModel.findById(trainerId)
       .select('clients')
@@ -303,6 +304,10 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } }
       ]
+    }
+
+    if (filter && filter !== 'all') {
+      matchQuery.trainerPlan = filter
     }
 
     const clientsAgg = await UserModel.aggregate([

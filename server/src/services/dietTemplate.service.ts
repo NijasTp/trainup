@@ -13,7 +13,9 @@ export class DietTemplateService implements IDietTemplateService {
   async createTemplate(adminId: string, dto: CreateTemplateRequestDto): Promise<TemplateResponseDto> {
     const payload: Partial<IDietTemplate> = {
       ...dto,
-      createdBy: adminId,
+      createdById: adminId,
+      createdByType: 'Admin',
+      image: 'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg',
       days: dto.days.map(day => ({
         dayNumber: day.dayNumber,
         meals: day.meals.map(meal => ({
@@ -54,7 +56,7 @@ export class DietTemplateService implements IDietTemplateService {
       duration: template.duration,
       goal: template.goal,
       bodyType: template.bodyType,
-      createdBy: template.createdBy.toString(),
+      createdBy: template.createdById.toString(),
       days: template.days.map(day => ({
         dayNumber: day.dayNumber,
         meals: day.meals.map(meal => ({

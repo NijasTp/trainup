@@ -169,4 +169,13 @@ export class MessageRepository implements IMessageRepository {
       { $sort: { "lastMessage.createdAt": -1 } }
     ]);
   }
+
+  async deleteMessage(messageId: string): Promise<void> {
+    try {
+      await MessageModel.findByIdAndDelete(messageId);
+    } catch (err) {
+      logger.error('Error deleting message in repository:', err);
+      throw err;
+    }
+  }
 }

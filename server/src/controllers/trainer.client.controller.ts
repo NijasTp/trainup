@@ -34,12 +34,13 @@ export class TrainerClientController {
         try {
             const trainerId = (req.user as JwtPayload).id
             if (!trainerId) throw new AppError(MESSAGES.INVALID_TRAINER_ID, STATUS_CODE.BAD_REQUEST)
-            const dto: GetClientsQueryDto = req.query
+            const dto = req.query as unknown as GetClientsQueryDto
             const page = parseInt(String(dto.page)) || 1
             const limit = parseInt(String(dto.limit)) || 10
             const search = String(dto.search || '')
+            const filter = String(dto.filter || 'all')
 
-            const clients: GetClientsResponseDto = await this._trainerService.getTrainerClients(trainerId, page, limit, search)
+            const clients = await this._trainerService.getTrainerClients(trainerId, page, limit, search, filter) as GetClientsResponseDto
             res.status(STATUS_CODE.OK).json(clients)
         } catch (err) {
             next(err)
@@ -152,6 +153,17 @@ export class TrainerClientController {
             res.status(STATUS_CODE.OK).json({ conversations })
         } catch (err) {
             logger.error('Error fetching conversations:', err)
+            next(err)
+        }
+    }
+
+    async deleteMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { messageId } = req.params
+            await this._messageService.deleteMessage(messageId)
+            res.status(STATUS_CODE.OK).json({ message: 'Message deleted successfully' })
+        } catch (err) {
+            logger.error('Error deleting message:', err)
             next(err)
         }
     }

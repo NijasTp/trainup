@@ -47,8 +47,8 @@ export default function TrainerAssignWorkouts() {
 
   const fetchClientDetails = useCallback(async () => {
     try {
-      const response = await API.get(`/trainer/user/${userId}`)
-      setClient(response.data)
+      const response = await API.get(`/trainer/get-client/${userId}`)
+      setClient(response.data.user)
     } catch (err) {
       toast.error("Failed to load client details")
     }
@@ -63,7 +63,7 @@ export default function TrainerAssignWorkouts() {
     setIsAssigning(templateId)
     try {
       await API.post("/template/workout/assign", { userId, templateId })
-      toast.success("Blueprint assigned successfully!")
+      toast.success("Workout blueprint assigned successfully!")
       navigate("/trainer/clients")
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Assignment failed")
@@ -101,7 +101,7 @@ export default function TrainerAssignWorkouts() {
             </Button>
             <div className="space-y-2">
                 <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 px-3 py-1 font-black italic uppercase tracking-widest text-[10px]">
-                    Blueprint Deployment
+                    Training Deployment
                 </Badge>
                 <h1 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
                     Assign <span className="text-cyan-500">Workout</span>
@@ -111,14 +111,22 @@ export default function TrainerAssignWorkouts() {
                 </p>
             </div>
           </div>
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
-            <Input
-              placeholder="Filter blueprints..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-11 bg-white/[0.03] border-white/10 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 h-14 rounded-2xl text-sm font-bold placeholder:text-white/10 italic"
-            />
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+            <Button 
+                onClick={() => navigate("/trainer/templates/new/workout")}
+                className="w-full sm:w-auto h-14 px-8 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-black italic uppercase tracking-widest text-[10px] rounded-2xl"
+            >
+                Add New Template
+            </Button>
+            <div className="relative w-full md:w-80">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                <Input
+                placeholder="Filter workout plans..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-11 bg-white/[0.03] border-white/10 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 h-14 rounded-2xl text-sm font-bold placeholder:text-white/10 italic"
+                />
+            </div>
           </div>
         </div>
 

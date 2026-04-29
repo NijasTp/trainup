@@ -75,6 +75,7 @@ import TrainerEditProfile from './pages/trainer/TrainerEditProfile';
 import ProfileCompletion from './pages/user/ProfileCompletion';
 import TrainerAssignWorkouts from './pages/trainer/TrainerAssignWorkouts';
 import TrainerAssignDiets from './pages/trainer/TrainerAssignDiets';
+import TrainerClientProgress from './pages/trainer/TrainerClientProgress';
 
 import UserNotifications from './pages/user/UserNotifications';
 import SubscriptionDetails from './pages/user/SubscriptionDetails';
@@ -230,6 +231,7 @@ function App() {
         <Route path={ROUTES.TRAINER_WEEKLY_SCHEDULE} element={<TrainerProtectedRoute><WeeklySchedule /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_SESSION_REQUESTS} element={<TrainerProtectedRoute><TrainerSessionRequests /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_INDIVIDUAL_CLIENT} element={<TrainerProtectedRoute><TrainerUserDetails /></TrainerProtectedRoute>} />
+        <Route path={ROUTES.TRAINER_CLIENT_PROGRESS} element={<TrainerProtectedRoute><TrainerClientProgress /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_CHAT} element={<TrainerProtectedRoute><TrainerChatPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_VIDEO_CALL} element={<TrainerProtectedRoute><VideoCallPage /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_CLIENT_WORKOUT} element={<TrainerProtectedRoute><TrainerAddWorkoutPage /></TrainerProtectedRoute>} />

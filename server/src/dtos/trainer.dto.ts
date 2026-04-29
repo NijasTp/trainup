@@ -33,9 +33,11 @@ export class TrainerDto {
     return {
       _id: client._id.toString(),
       name: client.name,
+      profileImage: client.profileImage,
       email: client.email,
       phone: client.phone,
-      subscriptionStartDate: client.subscriptionStartDate
+      subscriptionStartDate: client.subscriptionStartDate,
+      trainerPlan:client.trainerPlan
     };
   }
 }
@@ -136,6 +138,7 @@ export class GetClientsQueryDto {
   page?: number;
   limit?: number;
   search?: string;
+  filter:string;
 }
 
 export class GetClientsResponseDto {
@@ -148,9 +151,11 @@ export class GetClientsResponseDto {
 export class ClientDto {
   _id: string;
   name: string;
+  profileImage?:string;
   email: string;
   phone?: string;
   subscriptionStartDate?: Date | null;
+  trainerPlan?:string
 }
 
 export class GetClientParamsDto {

@@ -69,5 +69,6 @@ router.put('/chat/read/:clientId', authMiddleware, roleMiddleware(['trainer']), 
 router.get('/user-plan/:id', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getUserPlan.bind(trainerClientController));
 router.post('/chat/upload', authMiddleware, roleMiddleware(['trainer']), upload.single('file'), trainerClientController.uploadChatFile.bind(trainerClientController));
 router.get('/chats', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getConversations.bind(trainerClientController));
+router.delete('/chat/message/:messageId', authMiddleware, roleMiddleware(['trainer']), trainerClientController.deleteMessage.bind(trainerClientController));
 
 export default router;

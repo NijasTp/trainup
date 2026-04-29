@@ -97,7 +97,8 @@ export interface ITrainerService {
     trainerId: string,
     page: number,
     limit: number,
-    search: string
+    search: string,
+    filter?: string
   ): Promise<GetClientsResponseDto>
   getDashboardStats(trainerId: string): Promise<DashboardStats>
   updateAvailability(

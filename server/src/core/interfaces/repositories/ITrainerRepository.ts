@@ -39,7 +39,8 @@ export interface ITrainerRepository {
     trainerId: string,
     skip: number,
     limit: number,
-    search: string
+    search: string,
+    filter?: string
   ): Promise<{ clients: ClientDto[]; total: number }>;
   countNewClients(trainerId: string, startDate: Date, endDate: Date): Promise<number>;
   countCompletedSessions(trainerId: string): Promise<number>;

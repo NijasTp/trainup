@@ -19,4 +19,6 @@ router.post('/room/:roomId/end', roleMiddleware(['trainer']), videoCallControlle
 
 router.get('/slot/:slotId', roleMiddleware(['user', 'trainer']), videoCallController.getCallBySlot.bind(videoCallController));
 
+router.post('/room/:roomId/feedback', roleMiddleware(['trainer']), videoCallController.submitFeedback.bind(videoCallController));
+
 export default router;

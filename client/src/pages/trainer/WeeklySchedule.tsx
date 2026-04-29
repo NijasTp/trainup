@@ -1,806 +1,477 @@
-import { useEffect, useState, useCallback } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useState, useEffect, useRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-    Calendar,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+    DialogDescription
+} from "@/components/ui/dialog";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger
+} from "@/components/ui/popover";
+import { ModernCalendar } from "@/components/ui/ModernCalendar";
+import {
     Clock,
     Plus,
     Trash2,
-    Save,
-    RefreshCw,
-    AlertCircle,
-    CheckCircle,
-    XCircle,
+    Calendar as CalendarIcon,
     Video,
-    Users,
+    User,
+    AlertCircle,
+    CheckCircle2,
+    Loader2,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    CalendarDays,
+    Navigation2,
 } from "lucide-react";
+import { 
+    format, 
+    isSameDay, 
+    isBefore, 
+    startOfToday, 
+    addDays, 
+    eachDayOfInterval,
+} from "date-fns";
 import API from "@/lib/axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { useNavigate } from "react-router-dom";
-import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
-import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import { format, addDays } from "date-fns";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-
-import type { TimeSlot, WeeklyScheduleData, SlotItem } from "@/interfaces/trainer/IWeeklySchedule";
-
-const getNext7Days = () => {
-    const today = new Date();
-    const days = [];
-    for (let i = 0; i < 7; i++) {
-        days.push(format(addDays(today, i), 'EEEE')); 
-    }
-    return days;
-};
-
-const DYNAMIC_DAYS = getNext7Days();
-
-const ITEMS_PER_PAGE = 5;
+interface Slot {
+    _id: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    isBooked: boolean;
+    bookedBy?: {
+        name: string;
+        profileImage: string;
+    };
+    requestedBy?: any[];
+}
 
 export default function WeeklySchedule() {
-    const navigate = useNavigate();
-
-    const [schedule, setSchedule] = useState<WeeklyScheduleData>({
-        trainerId: '',
-        weekStart: '',
-        schedule: DYNAMIC_DAYS.map(day => ({ day, isActive: false, slots: [] }))
-    });
-    const [isSavingSchedule, setIsSavingSchedule] = useState(false);
-    const [isScheduleSaved, setIsScheduleSaved] = useState(false);
-
-    const [slots, setSlots] = useState<SlotItem[]>([]);
-
-    const [upcomingPage, setUpcomingPage] = useState(1);
-    const [requestsPage, setRequestsPage] = useState(1);
-
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    const [slots, setSlots] = useState<Slot[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [processingId, setProcessingId] = useState<string | null>(null);
+    const [isAddingSlot, setIsAddingSlot] = useState(false);
+    const [newSlot, setNewSlot] = useState({
+        startTime: "09:00",
+        endTime: "10:00"
+    });
 
-    const [showRejectModal, setShowRejectModal] = useState(false);
-    const [rejectionReason, setRejectionReason] = useState('');
-    const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
-    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    const fetchAllData = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
+    // Generate 60 days starting from today
+    const dates = eachDayOfInterval({
+        start: startOfToday(),
+        end: addDays(startOfToday(), 60)
+    });
 
+    useEffect(() => {
+        fetchSlots();
+    }, []);
+
+    const fetchSlots = async () => {
         try {
-            try {
-
-                const scheduleRes = await API.get("/trainer/weekly-schedule");
-                if (scheduleRes.data.schedule) {
-                    const storedSchedule = scheduleRes.data.schedule;
-                    const mappedSchedule = DYNAMIC_DAYS.map(dayName => {
-                        const storedDay = storedSchedule.schedule.find((s: { day: string; isActive: boolean; slots: TimeSlot[] }) => s.day === dayName);
-                        return storedDay ? { ...storedDay, day: dayName } : { day: dayName, isActive: false, slots: [] };
-                    });
-
-                    setSchedule({
-                        ...storedSchedule,
-                        weekStart: getTodayDate(),
-                        schedule: mappedSchedule
-                    });
-                    setIsScheduleSaved(true);
-                } else {
-                    setSchedule({
-                        trainerId: '',
-                        weekStart: getTodayDate(),
-                        schedule: DYNAMIC_DAYS.map(day => ({ day, isActive: false, slots: [] }))
-                    });
-                    setIsScheduleSaved(false);
-                }
-            } catch (_err) {
-                console.error("Schedule fetch error:", _err);
-                setSchedule({
-                    trainerId: '',
-                    weekStart: getTodayDate(),
-                    schedule: DYNAMIC_DAYS.map(day => ({ day, isActive: false, slots: [] }))
-                });
-            }
-
-
-            try {
-                const slotsRes = await API.get("/trainer/slots");
-                setSlots(slotsRes.data.slots || []);
-            } catch (_err) {
-                console.error("Slots fetch error:", _err);
-            }
-            try {
-                // Fetching session requests (result could be used to update UI if needed)
-                await API.get("/trainer/session-requests");
-            } catch (_err) {
-                console.error("Session requests fetch error:", _err);
-            }
-
-        } catch (_err) {
-            console.error("General fetch error:", _err);
-            setError("Failed to load some data. Please reload.");
+            setIsLoading(true);
+            const response = await API.get("/trainer/slots");
+            setSlots(response.data.slots);
+        } catch (error) {
+            console.error("Error fetching slots:", error);
+            toast.error("Failed to load slots");
         } finally {
             setIsLoading(false);
         }
-    }, []); // getTodayDate removed as a dependency if we want to follow best practices or use a ref for it.
-
-    useEffect(() => {
-        document.title = "TrainUp - Schedule & Requests";
-        fetchAllData();
-    }, [fetchAllData]);
-
-
-    const isDayInPast = () => {
-
-        return false;
     };
 
-    const isTimeInPast = (dayName: string, time: string) => {
-        const todayName = format(new Date(), 'EEEE');
-        if (dayName !== todayName) return false;
-
-        const now = new Date();
-        const [hours, minutes] = time.split(':').map(Number);
-        const slotTime = new Date();
-        slotTime.setHours(hours, minutes, 0, 0);
-        return slotTime < now;
-    };
-
-
-    const generateTimeSlotId = () => Math.random().toString(36).substr(2, 9);
-
-    const addTimeSlot = (dayIndex: number) => {
-        const dayName = DYNAMIC_DAYS[dayIndex];
-
-        if (isDayInPast(dayName)) {
-            toast.error(`Cannot edit schedule for past days (${dayName})`);
-            return;
-        }
-
-        const daySchedule = schedule.schedule[dayIndex];
-        if (daySchedule.slots.length >= 5) {
-            toast.error("Maximum 5 sessions per day allowed");
-            return;
-        }
-
-        let startHour = 9;
-        const todayName = format(new Date(), 'EEEE');
-
-        if (dayName === todayName) {
-            const now = new Date();
-            startHour = now.getHours() + 1;
-        }
-
-        if (startHour > 23) {
-            toast.error("It is too late to add a session for today.");
-            return;
-        }
-
-        const formatTime = (h: number) => `${h.toString().padStart(2, '0')}:00`;
-        const defaultStart = formatTime(startHour);
-        if (startHour === 23) {
-            toast.error("Cannot add session starting at 23:00 (crosses midnight).");
-            return;
-        }
-
-        const safeEnd = formatTime(startHour + 1);
-
-        const hasOverlap = daySchedule.slots.some(slot => {
-            return (slot.startTime < safeEnd && slot.endTime > defaultStart);
-        });
-
-        if (hasOverlap) {
-            toast.error(`Default slot (${defaultStart}-${safeEnd}) overlaps. Please adjust existing slots or try another time.`);
-            return;
-        }
-
-        if (isTimeInPast(dayName, defaultStart)) {
-            toast.error(`Cannot add slots in the past (${defaultStart}).`);
-            return;
-        }
-
-        const newSlot: TimeSlot = { id: generateTimeSlotId(), startTime: defaultStart, endTime: safeEnd };
-        setSchedule(prev => ({
-            ...prev,
-            schedule: prev.schedule.map((day, idx) => idx === dayIndex ? { ...day, slots: [...day.slots, newSlot] } : day)
-        }));
-        setIsScheduleSaved(false);
-    };
-
-    const removeTimeSlot = (dayIndex: number, slotId: string) => {
-        const dayName = DYNAMIC_DAYS[dayIndex];
-        if (isDayInPast(dayName)) {
-            toast.error(`Cannot edit schedule for past days (${dayName})`);
-            return;
-        }
-
-        setSchedule(prev => ({
-            ...prev,
-            schedule: prev.schedule.map((day, idx) => idx === dayIndex ? { ...day, slots: day.slots.filter(s => s.id !== slotId) } : day)
-        }));
-        setIsScheduleSaved(false);
-    };
-
-    const updateTimeSlot = (dayIndex: number, slotId: string, field: 'startTime' | 'endTime', value: string) => {
-        const dayName = DYNAMIC_DAYS[dayIndex];
-        if (isDayInPast(dayName)) {
-            toast.error(`Cannot edit schedule for past days (${dayName})`);
-            return;
-        }
-
-        const daySchedule = schedule.schedule[dayIndex];
-        const newStartTime = field === 'startTime' ? value : daySchedule.slots.find(s => s.id === slotId)?.startTime || "";
-        const newEndTime = field === 'endTime' ? value : daySchedule.slots.find(s => s.id === slotId)?.endTime || "";
-
-        if (newStartTime && newEndTime) {
-            const startStr = `2000-01-01T${newStartTime}`;
-            const endStr = `2000-01-01T${newEndTime}`;
-            const start = new Date(startStr);
-            const end = new Date(endStr);
-
-            if (end <= start) {
-                toast.error("End time must be after start time");
-                return;
-            }
-
-            for (const other of daySchedule.slots) {
-                if (other.id === slotId) continue;
-                const oStart = new Date(`2000-01-01T${other.startTime}`);
-                const oEnd = new Date(`2000-01-01T${other.endTime}`);
-
-                if (start < oEnd && end > oStart) {
-                    toast.error(`Conflict detected with slot ${other.startTime} - ${other.endTime}`);
-                    return; // Prevent update
-                }
-            }
-        }
-
-        setSchedule(prev => ({
-            ...prev,
-            schedule: prev.schedule.map((day, idx) => idx === dayIndex ? {
-                ...day,
-                slots: day.slots.map(s => s.id === slotId ? { ...s, [field]: value } : s)
-            } : day)
-        }));
-        setIsScheduleSaved(false);
-    };
-
-    const toggleDay = (dayIndex: number, isActive: boolean) => {
-        const dayName = DYNAMIC_DAYS[dayIndex];
-        if (isDayInPast(dayName)) {
-            toast.error(`Cannot edit schedule for past days (${dayName})`);
-            return;
-        }
-        setSchedule(prev => ({
-            ...prev,
-            schedule: prev.schedule.map((day, idx) => idx === dayIndex ? { ...day, isActive, slots: isActive ? day.slots : [] } : day)
-        }));
-        setIsScheduleSaved(false);
-    };
-
-    const validateSchedule = (): boolean => {
-        for (const day of schedule.schedule) {
-            if (!day.isActive) continue;
-
-            for (const slot of day.slots) {
-                if (!slot.startTime || !slot.endTime) {
-                    toast.error(`Set both times for all slots on ${day.day}`);
-                    return false;
-                }
-                const start = new Date(`2000-01-01T${slot.startTime}`);
-                const end = new Date(`2000-01-01T${slot.endTime}`);
-                if ((end.getTime() - start.getTime()) <= 0) {
-                    toast.error(`End time must be after start time (${day.day})`);
-                    return false;
-                }
-
-                // Overlap Check
-                for (const other of day.slots) {
-                    if (other.id === slot.id) continue;
-                    const oStart = new Date(`2000-01-01T${other.startTime}`).getTime();
-                    const oEnd = new Date(`2000-01-01T${other.endTime}`).getTime();
-                    if (start.getTime() < oEnd && end.getTime() > oStart) {
-                        toast.error(`Overlapping slots detected on ${day.day} (${slot.startTime} overlaps with ${other.startTime})`);
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    };
-
-    const saveSchedule = async () => {
-        if (!validateSchedule()) return;
-        setIsSavingSchedule(true);
+    const handleAddSlot = async () => {
         try {
-            const dataToSave = { ...schedule, weekStart: getTodayDate() };
-            const res = await API.post("/trainer/weekly-schedule", dataToSave);
-            setSchedule(res.data.schedule);
-            setIsScheduleSaved(true);
-            toast.success("Schedule saved!");
-
-            try {
-                const slotsRes = await API.get("/trainer/slots");
-                setSlots(slotsRes.data.slots || []);
-            } catch (error) {
-                console.error("Failed to refresh slots:", error);
-            }
-
-        } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to save schedule";
-            toast.error(errorMessage);
-        } finally {
-            setIsSavingSchedule(false);
-        }
-    };
-
-
-    const joinVideoCall = async (slotId: string) => {
-        try {
-            const response = await API.get(`/video-call/slot/${slotId}`);
-            navigate(`/trainer/video-call/${response.data.videoCall.roomId}`);
-        } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to join video call";
-            toast.error(errorMessage);
-        }
-    };
-
-
-    const canJoinSession = (slot: SlotItem) => {
-        if (!slot.isBooked) return false;
-
-        const slotDate = new Date(slot.date);
-        const year = slotDate.getFullYear();
-        const month = slotDate.getMonth();
-        const day = slotDate.getDate();
-
-        const [hours, minutes] = slot.startTime.split(':').map(Number);
-        const [endHours, endMinutes] = slot.endTime.split(':').map(Number);
-
-        const start = new Date(year, month, day, hours, minutes);
-        const end = new Date(year, month, day, endHours, endMinutes);
-
-        const now = new Date();
-        const tenMinutesBefore = new Date(start.getTime() - 10 * 60000);
-
-        return now >= tenMinutesBefore && now <= end;
-    };
-
-    const upcomingSlots = slots.filter(slot => {
-        const slotDate = new Date(slot.date);
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        slotDate.setHours(0, 0, 0, 0);
-        return slotDate >= now;
-    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    const totalUpcomingItems = upcomingSlots.length;
-    const totalUpcomingPages = Math.ceil(totalUpcomingItems / ITEMS_PER_PAGE);
-    const visibleUpcomingSlots = upcomingSlots.slice((upcomingPage - 1) * ITEMS_PER_PAGE, upcomingPage * ITEMS_PER_PAGE);
-
-
-    // --- Session Requests Logic ---
-
-    const approveRequest = async (requestId: string, userId: string) => {
-        setProcessingId(requestId);
-        try {
-            await API.post(`/trainer/session-requests/${requestId}/approve/${userId}`);
-            toast.success("Approved!");
-            fetchAllData();
-        } catch (_err: unknown) {
-            toast.error("Failed to approve");
-        } finally {
-            setProcessingId(null);
-        }
-    };
-
-    const rejectRequest = async () => {
-        if (!selectedRequestId || !selectedUserId || !rejectionReason.trim()) return;
-        setProcessingId(selectedRequestId);
-        try {
-            await API.post(`/trainer/session-requests/${selectedRequestId}/reject/${selectedUserId}`, {
-                rejectionReason: rejectionReason.trim()
+            const dateStr = format(selectedDate, "yyyy-MM-dd");
+            const response = await API.post("/trainer/slots", {
+                date: dateStr,
+                startTime: newSlot.startTime,
+                endTime: newSlot.endTime
             });
-            toast.success("Rejected");
-            setShowRejectModal(false);
-            setRejectionReason('');
-            fetchAllData();
-        } catch (_err: unknown) {
-            toast.error("Failed to reject");
-        } finally {
-            setProcessingId(null);
+            setSlots([...slots, response.data.slot]);
+            setIsAddingSlot(false);
+            toast.success("Slot added successfully");
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to add slot");
         }
     };
 
-    const openRejectModal = (requestId: string, userId: string) => {
-        setSelectedRequestId(requestId);
-        setSelectedUserId(userId);
-        setRejectionReason('');
-        setShowRejectModal(true);
+    const handleDeleteSlot = async (slotId: string) => {
+        try {
+            await API.delete(`/trainer/slots/${slotId}`);
+            setSlots(slots.filter(s => s._id !== slotId));
+            toast.success("Slot deleted");
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to delete slot");
+        }
     };
 
-    // --- Helpers ---
+    const selectedDateSlots = slots.filter(slot => 
+        isSameDay(new Date(slot.date), selectedDate)
+    ).sort((a, b) => a.startTime.localeCompare(b.startTime));
 
-    const formatTimeDisplay = (time: string) => {
-        if (!time) return '';
-        return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    const formatTime = (time: string) => {
+        const [hours, minutes] = time.split(':');
+        const h = parseInt(hours);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        return `${h12}:${minutes} ${ampm}`;
     };
 
-    const formatDateDisplay = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    const scroll = (direction: 'left' | 'right') => {
+        if (scrollContainerRef.current) {
+            const scrollAmount = 400;
+            scrollContainerRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
+            });
+        }
     };
 
-    // --- Filter Requests (Pending Only for Requests Section) ---
-    // Slots contain a requestedBy array. We extract all pending requests from all slots.
-    // Sort: RequestedAt Descending (Newest first)
-    const pendingRequests = slots.flatMap(r => r.requestedBy.filter(req => req.status === 'pending').map(req => ({ ...req, slot: r })))
-        .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
+    const goToToday = () => {
+        setSelectedDate(new Date());
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        }
+    };
 
-    const totalRequestItems = pendingRequests.length;
-    const totalRequestPages = Math.ceil(totalRequestItems / ITEMS_PER_PAGE);
-    const visibleRequests = pendingRequests.slice((requestsPage - 1) * ITEMS_PER_PAGE, requestsPage * ITEMS_PER_PAGE);
-
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20 flex flex-col items-center justify-center space-y-4">
-                <TrainerSiteHeader />
-                <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                <p className="text-muted-foreground">Loading specific trainer data...</p>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-                <TrainerSiteHeader />
-                <div className="container mx-auto px-4 py-16 text-center">
-                    <h3 className="text-2xl font-bold mb-4">Error</h3>
-                    <p className="text-muted-foreground mb-4">{error}</p>
-                    <Button onClick={fetchAllData}>Retry</Button>
-                </div>
-            </div>
-        );
-    }
+    const handleCalendarSelect = (date: Date) => {
+        setSelectedDate(date);
+        const index = dates.findIndex(d => isSameDay(d, date));
+        if (index !== -1 && scrollContainerRef.current) {
+            const itemWidth = 112 + 20; // w-28 (112px) + gap-5 (20px)
+            scrollContainerRef.current.scrollTo({
+                left: index * itemWidth,
+                behavior: 'smooth'
+            });
+        }
+    };
 
     return (
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background/95 to-secondary/20 pb-12">
-            <TrainerSiteHeader />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent pointer-events-none"></div>
+        <div className="min-h-screen bg-[#030303] text-white p-4 md:p-10 font-outfit selection:bg-white/10 selection:text-white">
+            <div className="max-w-6xl mx-auto space-y-12">
+                
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-10">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-4"
+                    >
+                        <div className="flex items-center gap-3 text-neutral-500 uppercase tracking-[0.2em] text-[10px] font-bold">
+                            <Navigation2 className="w-3.5 h-3.5 fill-current" />
+                            <span>Schedule Optimization</span>
+                        </div>
+                        <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-none">
+                            Weekly <span className="text-neutral-500 italic">Pulse.</span>
+                        </h1>
+                    </motion.div>
 
-            <main className="relative container mx-auto px-4 py-8 space-y-10 flex-1">
-
-                {/* 1. WEEKLY SCHEDULE SECTION */}
-                <section className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-bold flex items-center gap-2">
-                            <Calendar className="h-6 w-6 text-primary" />
-                            Weekly Schedule
-                        </h2>
-                        <div className="flex items-center gap-4">
-                            {!isScheduleSaved ? (
-                                <Button onClick={saveSchedule} disabled={isSavingSchedule} className="bg-primary text-primary-foreground">
-                                    {isSavingSchedule ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                                    Save Schedule
+                    <div className="flex items-center gap-4">
+                        <Button 
+                            variant="ghost" 
+                            onClick={goToToday}
+                            className="h-14 px-6 rounded-2xl text-neutral-400 hover:text-white hover:bg-white/5 font-bold"
+                        >
+                            Today
+                        </Button>
+                        <Dialog open={isAddingSlot} onOpenChange={setIsAddingSlot}>
+                            <DialogTrigger asChild>
+                                <Button 
+                                    className="bg-white text-black hover:bg-neutral-200 h-14 px-10 rounded-2xl font-black transition-all shadow-[0_20px_50px_rgba(255,255,255,0.15)] hover:-translate-y-1 active:translate-y-0"
+                                >
+                                    <Plus className="w-5 h-5 mr-3" />
+                                    Create Slot
                                 </Button>
-                            ) : (
-                                <div className="flex items-center text-green-600 gap-1 text-sm font-medium">
-                                    <CheckCircle className="h-4 w-4" /> Saved
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg">
-                        <CardHeader className="pb-2 border-b border-border/40 mb-4">
-                            <div className="flex flex-col md:flex-row md:justify-between md:items-center text-sm text-muted-foreground gap-2">
-                                <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-xs font-normal">
-                                        Starting From: {schedule.weekStart ? format(new Date(schedule.weekStart), 'dd/MM/yyyy') : format(new Date(), 'dd/MM/yyyy')}
-                                    </Badge>
-                                </div>
-                                <span>Define your availability by adding slots for each day.</span>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {schedule.schedule.map((day, dIdx) => (
-                                <Card key={day.day} className={`bg-background/40 border-border/40 transition-all ${day.isActive ? 'border-primary/20 shadow-sm' : 'opacity-80'}`}>
-                                    <div className="p-4 flex flex-col md:flex-row md:items-center gap-4">
-                                        <div className="w-40 flex items-center gap-3">
-                                            <Checkbox checked={day.isActive} onCheckedChange={(c) => toggleDay(dIdx, !!c)} />
-                                            <span className={`font-semibold ${day.isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                                {day.day} {dIdx === 0 && <span className="ml-2 text-xs text-primary">(Today)</span>}
-                                            </span>
+                            </DialogTrigger>
+                            <DialogContent className="bg-[#0A0A0A] border-white/10 text-white max-w-md rounded-[2.5rem] p-10 shadow-[0_30px_100px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+                                <DialogHeader>
+                                    <DialogTitle className="text-4xl font-black tracking-tighter">New Slot.</DialogTitle>
+                                    <DialogDescription className="text-neutral-500 mt-3 text-lg leading-relaxed">
+                                        Defining availability for <span className="text-white font-bold">{format(selectedDate, "MMMM do")}</span>.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-10 py-12">
+                                    <div className="grid grid-cols-2 gap-8">
+                                        <div className="space-y-4">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">Start Time</label>
+                                            <div className="relative group">
+                                                <Clock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-700 group-focus-within:text-white transition-colors" />
+                                                <Input 
+                                                    type="time" 
+                                                    className="bg-white/[0.03] border-white/5 pl-14 h-16 rounded-2xl focus:ring-1 focus:ring-white/20 transition-all text-lg font-bold"
+                                                    value={newSlot.startTime}
+                                                    onChange={(e) => setNewSlot({...newSlot, startTime: e.target.value})}
+                                                />
+                                            </div>
                                         </div>
-
-                                        {day.isActive && (
-                                            <div className="flex-1 space-y-3">
-                                                {day.slots.length === 0 ? (
-                                                    <div className="text-sm text-muted-foreground italic pl-2">No slots added yet</div>
-                                                ) : (
-                                                    <div className="flex flex-wrap gap-3">
-                                                        {day.slots.map((slot) => (
-                                                            <div key={slot.id} className="flex items-center gap-2 bg-background border rounded-md p-1.5 shadow-sm group hover:border-primary/30 transition-colors">
-                                                                <Input
-                                                                    type="time"
-                                                                    className="w-[5.5rem] h-7 text-xs border-0 bg-transparent focus-visible:ring-0 px-1"
-                                                                    value={slot.startTime}
-                                                                    onChange={(e) => updateTimeSlot(dIdx, slot.id, 'startTime', e.target.value)}
-                                                                />
-                                                                <span className="text-muted-foreground text-xs">-</span>
-                                                                <Input
-                                                                    type="time"
-                                                                    className="w-[5.5rem] h-7 text-xs border-0 bg-transparent focus-visible:ring-0 px-1"
-                                                                    value={slot.endTime}
-                                                                    onChange={(e) => updateTimeSlot(dIdx, slot.id, 'endTime', e.target.value)}
-                                                                />
-                                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors" onClick={() => removeTimeSlot(dIdx, slot.id)}>
-                                                                    <Trash2 className="h-3 w-3" />
-                                                                </Button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-
-                                                {day.slots.length < 5 && (
-                                                    <Button variant="ghost" size="sm" onClick={() => addTimeSlot(dIdx)} className="h-7 text-xs text-primary hover:text-primary hover:bg-primary/10 -ml-2">
-                                                        <Plus className="h-3 w-3 mr-1" /> Add Slot
-                                                    </Button>
-                                                )}
+                                        <div className="space-y-4">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">End Time</label>
+                                            <div className="relative group">
+                                                <Clock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-700 group-focus-within:text-white transition-colors" />
+                                                <Input 
+                                                    type="time" 
+                                                    className="bg-white/[0.03] border-white/5 pl-14 h-16 rounded-2xl focus:ring-1 focus:ring-white/20 transition-all text-lg font-bold"
+                                                    value={newSlot.endTime}
+                                                    onChange={(e) => setNewSlot({...newSlot, endTime: e.target.value})}
+                                                />
                                             </div>
-                                        )}
-                                    </div>
-                                </Card>
-                            ))}
-                        </CardContent>
-                    </Card>
-                </section>
-
-                <div className="grid lg:grid-cols-2 gap-8">
-                    {/* 2. UPCOMING SESSIONS (SLOTS) SECTION */}
-                    <section className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-2xl font-bold flex items-center gap-2">
-                                <Users className="h-6 w-6 text-primary" />
-                                Upcoming Sessions
-                            </h2>
-                        </div>
-
-                        <Card className="bg-card/40 backdrop-blur-sm border-border/50 h-[600px] flex flex-col">
-                            <CardContent className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-                                {visibleUpcomingSlots.length === 0 ? (
-                                    <div className="text-center py-12 text-muted-foreground flex flex-col items-center">
-                                        <Calendar className="h-12 w-12 opacity-20 mb-3" />
-                                        <p>No upcoming sessions.</p>
-                                        <p className="text-xs mt-1">Bookings will appear here.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {visibleUpcomingSlots.map(slot => {
-                                            const approvedReq = slot.requestedBy.find(r => r.status === 'approved');
-                                            const bookedBy = slot.bookedBy || (approvedReq ? approvedReq.userId : null);
-
-                                            return (
-                                                <div key={slot._id} className="p-4 bg-background/60 border rounded-lg hover:shadow-md transition-all border-l-4 border-l-primary/50 relative overflow-hidden group">
-
-                                                    {/* Header: Date & Time */}
-                                                    <div className="flex justify-between items-start mb-3">
-                                                        <div>
-                                                            <div className="flex items-center gap-2 font-semibold">
-                                                                {formatDateDisplay(slot.date)}
-                                                            </div>
-                                                            <div className="block text-xs text-muted-foreground mt-0.5">
-                                                                {formatTimeDisplay(slot.startTime)} - {formatTimeDisplay(slot.endTime)}
-                                                            </div>
-                                                        </div>
-                                                        {slot.isBooked && bookedBy ? (
-                                                            <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">Booked</Badge>
-                                                        ) : (
-                                                            <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-100">Open</Badge>
-                                                        )}
-                                                    </div>
-
-                                                    {/* User Info or Empty State */}
-                                                    {slot.isBooked && bookedBy ? (
-                                                        <div className="flex items-center gap-3 p-3 bg-secondary/10 rounded-md mb-3">
-                                                            <Avatar className="h-10 w-10 border border-background">
-                                                                <AvatarImage src={bookedBy.profileImage} />
-                                                                <AvatarFallback>{bookedBy.name[0]}</AvatarFallback>
-                                                            </Avatar>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium truncate">{bookedBy.name}</p>
-                                                                <p className="text-xs text-muted-foreground">Client</p>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="p-3 bg-secondary/5 rounded-md mb-3 flex items-center justify-center text-xs text-muted-foreground bg-stripes">
-                                                            Waiting for booking...
-                                                        </div>
-                                                    )}
-
-                                                    {/* Actions */}
-                                                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/50">
-                                                        {slot.isBooked ? (
-                                                            canJoinSession(slot) ? (
-                                                                <Button size="sm" onClick={() => joinVideoCall(slot._id)} className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm">
-                                                                    <Video className="h-3.5 w-3.5 mr-2 animate-pulse" /> Join Now
-                                                                </Button>
-                                                            ) : (
-                                                                <div className="w-full text-center py-1.5">
-                                                                    <Badge variant="outline" className="text-xs font-normal text-muted-foreground border-dashed">
-                                                                        <Clock className="h-3 w-3 mr-1" /> Join 10m before start
-                                                                    </Badge>
-                                                                </div>
-                                                            )
-                                                        ) : (
-                                                            /* Delete button removed as per request to avoid auth errors and rely on Schedule Grid for management */
-                                                            <div className="w-full text-center py-1.5">
-                                                                <span className="text-xs text-muted-foreground italic">Manage in Schedule Grid</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </CardContent>
-
-                            {/* UPCOMING PAGINATION CONTROLS */}
-                            {totalUpcomingItems > 0 && (
-                                <div className="p-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
-                                    <span>Page {upcomingPage} of {totalUpcomingPages}</span>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 w-8 p-0"
-                                            onClick={() => setUpcomingPage(p => Math.max(1, p - 1))}
-                                            disabled={upcomingPage === 1}
-                                        >
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 w-8 p-0"
-                                            onClick={() => setUpcomingPage(p => Math.min(totalUpcomingPages, p + 1))}
-                                            disabled={upcomingPage === totalUpcomingPages}
-                                        >
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
+                                        </div>
                                     </div>
                                 </div>
-                            )}
-                        </Card>
-                    </section>
-
-                    {/* 3. REQUESTS SECTION */}
-                    <section className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-2xl font-bold flex items-center gap-2">
-                                <AlertCircle className="h-6 w-6 text-orange-500" />
-                                Pending Requests
-                            </h2>
-                            {pendingRequests.length > 0 && (
-                                <Badge className="bg-orange-500">{pendingRequests.length}</Badge>
-                            )}
-                        </div>
-
-                        <Card className="bg-card/40 backdrop-blur-sm border-border/50 h-[600px] flex flex-col">
-                            <CardContent className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-                                {visibleRequests.length === 0 ? (
-                                    <div className="text-center py-12 text-muted-foreground flex flex-col items-center">
-                                        <CheckCircle className="h-12 w-12 text-green-500/20 mb-3" />
-                                        <p>All caught up!</p>
-                                        <p className="text-xs mt-1">No pending requests.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {visibleRequests.map(req => (
-                                            <div key={req._id} className="flex flex-col p-4 bg-background/60 border border-orange-200/40 rounded-lg shadow-sm">
-                                                <div className="flex items-start gap-4 mb-3">
-                                                    <Avatar className="h-10 w-10 border border-orange-100">
-                                                        <AvatarImage src={req.userId.profileImage} />
-                                                        <AvatarFallback>{req.userId.name[0]}</AvatarFallback>
-                                                    </Avatar>
-                                                    <div>
-                                                        <h3 className="font-semibold text-sm flex items-center gap-2">
-                                                            {req.userId.name}
-                                                        </h3>
-                                                        <p className="text-xs text-muted-foreground">Requested on {new Date(req.requestedAt).toLocaleDateString()}</p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="bg-orange-50/50 p-2 rounded text-xs mb-3 space-y-1 border border-orange-100/50">
-                                                    <div className="flex justify-between">
-                                                        <span className="text-muted-foreground">Date:</span>
-                                                        <span className="font-medium">{formatDateDisplay(req.slot.date)}</span>
-                                                    </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="text-muted-foreground">Time:</span>
-                                                        <span className="font-medium">{formatTimeDisplay(req.slot.startTime)} - {formatTimeDisplay(req.slot.endTime)}</span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-2 mt-auto">
-                                                    <Button size="sm" onClick={() => approveRequest(req.slot._id, req.userId._id)} disabled={!!processingId} className="bg-green-600 hover:bg-green-700 text-white h-8 text-xs">
-                                                        {processingId === req.slot._id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-3 w-3 mr-1.5" />}
-                                                        Approve
-                                                    </Button>
-                                                    <Button size="sm" variant="outline" onClick={() => openRejectModal(req.slot._id, req.userId._id)} disabled={!!processingId} className="text-red-600 border-red-200 hover:bg-red-50 h-8 text-xs">
-                                                        <XCircle className="h-3 w-3 mr-1.5" />
-                                                        Reject
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </CardContent>
-                            {/* REQUEST PAGINATION CONTROLS */}
-                            {totalRequestItems > 0 && (
-                                <div className="p-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
-                                    <span>Page {requestsPage} of {totalRequestPages}</span>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 w-8 p-0"
-                                            onClick={() => setRequestsPage(p => Math.max(1, p - 1))}
-                                            disabled={requestsPage === 1}
-                                        >
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 w-8 p-0"
-                                            onClick={() => setRequestsPage(p => Math.min(totalRequestPages, p + 1))}
-                                            disabled={requestsPage === totalRequestPages}
-                                        >
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            )}
-                        </Card>
-                    </section>
+                                <DialogFooter className="gap-4">
+                                    <Button 
+                                        variant="ghost" 
+                                        onClick={() => setIsAddingSlot(false)}
+                                        className="h-16 rounded-2xl px-8 text-neutral-500 hover:bg-white/5 font-bold"
+                                    >
+                                        Dismiss
+                                    </Button>
+                                    <Button 
+                                        onClick={handleAddSlot}
+                                        className="bg-white text-black hover:bg-neutral-200 h-16 px-12 rounded-2xl font-black flex-1 text-lg transition-transform hover:scale-[1.02]"
+                                    >
+                                        Set Active
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </div>
 
-            </main>
+                {/* Date Strip Scroller */}
+                <div className="space-y-8">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <h2 className="text-2xl font-black tracking-tighter uppercase italic text-neutral-200">
+                                {format(selectedDate, "MMMM yyyy")}
+                            </h2>
+                            
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-10 w-10 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-neutral-500"
+                                    >
+                                        <CalendarIcon className="w-4 h-4" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 bg-transparent border-none shadow-none" align="start" sideOffset={12}>
+                                    <ModernCalendar
+                                        selected={selectedDate}
+                                        onSelect={handleCalendarSelect}
+                                    />
+                                </PopoverContent>
+                            </Popover>
 
-            {/* Reject Modal */}
-            <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Reject Request</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 pt-4">
-                        <p className="text-sm text-muted-foreground">Please provide a reason for rejecting this session.</p>
-                        <Textarea
-                            value={rejectionReason}
-                            onChange={e => setRejectionReason(e.target.value)}
-                            placeholder="Reason for rejection..."
-                            className="min-h-[100px]"
-                        />
-                        <div className="flex justify-end gap-2">
-                            <Button variant="ghost" onClick={() => setShowRejectModal(false)}>Cancel</Button>
-                            <Button variant="destructive" onClick={rejectRequest} disabled={!rejectionReason.trim()}>Reject Request</Button>
+                            <div className="h-[2px] w-16 bg-white/5" />
+                        </div>
+                        <div className="flex gap-3">
+                            <Button 
+                                variant="outline" 
+                                size="icon" 
+                                onClick={() => scroll('left')}
+                                className="h-12 w-12 rounded-full border-white/5 bg-white/5 hover:bg-white/10 text-neutral-500 transition-all hover:scale-110"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                size="icon" 
+                                onClick={() => scroll('right')}
+                                className="h-12 w-12 rounded-full border-white/5 bg-white/5 hover:bg-white/10 text-neutral-500 transition-all hover:scale-110"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </Button>
                         </div>
                     </div>
-                </DialogContent>
-            </Dialog>
-            <SiteFooter />
-            <ToastContainer position="top-right" autoClose={3000} />
-        </div >
+
+                    <div 
+                        ref={scrollContainerRef}
+                        className="flex gap-5 overflow-x-auto pb-6 no-scrollbar scroll-smooth"
+                    >
+                        {dates.map((date) => {
+                            const isSelected = isSameDay(date, selectedDate);
+                            const isToday = isSameDay(date, new Date());
+                            
+                            return (
+                                <button
+                                    key={date.toString()}
+                                    onClick={() => setSelectedDate(date)}
+                                    className={cn(
+                                        "flex-shrink-0 w-28 h-36 rounded-[2.8rem] flex flex-col items-center justify-center gap-2 transition-all duration-500 border",
+                                        isSelected 
+                                            ? "bg-white text-black border-white shadow-[0_25px_60px_rgba(255,255,255,0.15)] -translate-y-3" 
+                                            : "bg-white/[0.02] border-white/5 text-neutral-600 hover:border-white/20 hover:bg-white/[0.05]"
+                                    )}
+                                >
+                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] opacity-40">
+                                        {format(date, "EEE")}
+                                    </span>
+                                    <span className="text-4xl font-black tracking-tighter">
+                                        {format(date, "d")}
+                                    </span>
+                                    {isToday && !isSelected && (
+                                        <div className="w-1.5 h-1.5 rounded-full bg-white/30 mt-1 animate-pulse" />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Dashboard Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    {[
+                        { label: "Planned", val: slots.length },
+                        { label: "Filled", val: slots.filter(s => s.isBooked).length },
+                        { label: "Open", val: slots.filter(s => !s.isBooked).length },
+                        { label: "Book Rate", val: `${slots.length > 0 ? Math.round((slots.filter(s => s.isBooked).length / slots.length) * 100) : 0}%` }
+                    ].map((stat, i) => (
+                        <Card key={i} className="bg-white/[0.01] border-white/5 rounded-[2rem] overflow-hidden group hover:bg-white/[0.03] transition-colors">
+                            <CardContent className="p-8">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-700 mb-3 group-hover:text-neutral-500 transition-colors">{stat.label}</p>
+                                <p className="text-4xl font-black tracking-tighter">{stat.val}</p>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+
+                {/* Slots Pipeline */}
+                <div className="space-y-10">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-10">
+                        <h3 className="text-3xl font-black tracking-tighter flex items-center gap-6">
+                            Daily Flow.
+                            <Badge variant="outline" className="border-white/10 text-neutral-600 rounded-full font-mono text-sm px-4 py-1">
+                                {selectedDateSlots.length} Total
+                            </Badge>
+                        </h3>
+                    </div>
+
+                    <AnimatePresence mode="popLayout">
+                        {isLoading ? (
+                            <div className="py-32 flex flex-col items-center gap-6">
+                                <Loader2 className="w-10 h-10 animate-spin text-white/10" />
+                                <span className="text-neutral-700 font-bold tracking-widest uppercase text-xs">Synchronizing Pipeline</span>
+                            </div>
+                        ) : selectedDateSlots.length === 0 ? (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="flex flex-col items-center justify-center py-40 bg-white/[0.01] border border-dashed border-white/5 rounded-[4rem] text-center px-10"
+                            >
+                                <div className="w-24 h-24 rounded-[2rem] bg-white/[0.02] flex items-center justify-center mb-8 border border-white/5">
+                                    <CalendarIcon className="w-10 h-10 text-neutral-800" />
+                                </div>
+                                <h3 className="text-2xl font-black mb-3 tracking-tighter">No Active Slots.</h3>
+                                <p className="text-neutral-600 text-lg max-w-sm mx-auto leading-relaxed italic">
+                                    Your availability pipeline for this day is currently empty.
+                                </p>
+                            </motion.div>
+                        ) : (
+                            <div className="grid gap-6">
+                                {selectedDateSlots.map((slot, index) => (
+                                    <motion.div
+                                        key={slot._id}
+                                        initial={{ opacity: 0, y: 30 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.08 }}
+                                    >
+                                        <Card className={cn(
+                                            "relative overflow-hidden bg-white/[0.01] border-white/5 hover:border-white/10 transition-all duration-500 group rounded-[3.5rem]",
+                                            slot.isBooked && "bg-white text-black border-white shadow-[0_30px_70px_rgba(255,255,255,0.1)]"
+                                        )}>
+                                            <CardContent className="p-10 md:p-12">
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-12">
+                                                    <div className="flex items-center gap-10">
+                                                        <div className={cn(
+                                                            "w-24 h-24 rounded-[2.2rem] flex flex-col items-center justify-center border transition-colors duration-500",
+                                                            slot.isBooked ? "bg-black text-white border-black" : "bg-white/[0.03] border-white/5 text-neutral-600"
+                                                        )}>
+                                                            <Clock className="w-8 h-8 mb-2" />
+                                                            <span className="text-[10px] font-black uppercase tracking-tighter">Session</span>
+                                                        </div>
+                                                        <div className="space-y-4">
+                                                            <div className="flex flex-wrap items-center gap-6">
+                                                                <p className="text-4xl md:text-5xl font-black tracking-tighter leading-none">
+                                                                    {formatTime(slot.startTime)} — {formatTime(slot.endTime)}
+                                                                </p>
+                                                                {slot.isBooked ? (
+                                                                    <Badge className="bg-black text-white border-none px-6 py-2 rounded-full text-[10px] font-black uppercase italic tracking-[0.2em]">
+                                                                        Confirmed
+                                                                    </Badge>
+                                                                ) : (
+                                                                    <Badge variant="outline" className="border-white/10 text-neutral-600 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+                                                                        Open Slot
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-8 text-sm md:text-base">
+                                                                <div className={cn("flex items-center gap-3", slot.isBooked ? "text-black/50" : "text-neutral-500")}>
+                                                                    <Video className="w-5 h-5 opacity-30" />
+                                                                    <span className="font-bold tracking-tight">Interactive Consultation</span>
+                                                                </div>
+                                                                {slot.isBooked && (
+                                                                    <div className="flex items-center gap-3 pl-8 border-l border-black/10">
+                                                                        <User className="w-5 h-5 text-black/30" />
+                                                                        <span className="font-black text-lg tracking-tighter">{slot.bookedBy?.name}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-4">
+                                                        {slot.isBooked ? (
+                                                            <Button className="rounded-full bg-black text-white hover:bg-neutral-900 px-10 h-16 font-black uppercase tracking-widest text-xs transition-transform hover:scale-105 active:scale-95 shadow-2xl">
+                                                                Manage Call
+                                                            </Button>
+                                                        ) : (
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon"
+                                                                onClick={() => handleDeleteSlot(slot._id)}
+                                                                className="h-16 w-16 rounded-full text-red-500/20 hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+                                                            >
+                                                                <Trash2 className="w-6 h-6" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </div>
+
+            <style dangerouslySetInnerHTML={{ __html: `
+                .no-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+                .no-scrollbar {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+            `}} />
+        </div>
     );
 }

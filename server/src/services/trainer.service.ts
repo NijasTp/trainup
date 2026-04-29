@@ -344,14 +344,16 @@ export class TrainerService implements ITrainerService {
     trainerId: string,
     page: number,
     limit: number,
-    search: string
+    search: string,
+    filter?: string
   ): Promise<GetClientsResponseDto> {
     const skip = (page - 1) * limit
     const { clients, total } = await this._trainerRepo.findClients(
       trainerId,
       skip,
       limit,
-      search
+      search,
+      filter
     )
 
     return {
@@ -433,14 +435,13 @@ export class TrainerService implements ITrainerService {
     const updateFields: Partial<ITrainer> = {
       name: updateData.name,
       phone: updateData.phone,
-      bio: updateData.bio,
+      bio: updateData.bio,  
       price: updateData.price,
       location: updateData.location,
       experience: updateData.experience,
       specialization: updateData.specialization
     }
 
-    // Filter undefined values
     Object.keys(updateFields).forEach(
       key =>
         updateFields[key as keyof ITrainer] === undefined &&

@@ -60,4 +60,15 @@ export class UserChatController {
             next(err)
         }
     }
+
+    async deleteMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { messageId } = req.params
+            await this._messageService.deleteMessage(messageId)
+            res.status(STATUS_CODE.OK).json({ message: 'Message deleted successfully' })
+        } catch (err) {
+            logger.error('Error deleting message:', err)
+            next(err)
+        }
+    }
 }

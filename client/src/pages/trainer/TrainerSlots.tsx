@@ -67,10 +67,6 @@ export default function TrainerSlots() {
         const end = new Date(`${newSlot.date}T${newSlot.endTime}`);
         const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
 
-        if (diffHours !== 1) {
-            toast.error("Session must be exactly 1 hour long");
-            return;
-        }
 
         setIsCreating(true);
         try {
@@ -255,9 +251,6 @@ export default function TrainerSlots() {
                                                 onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
                                             />
                                         </div>
-                                        <p className="text-sm text-muted-foreground">
-                                            Note: Sessions must be exactly 1 hour long
-                                        </p>
                                         <Button
                                             onClick={createSlot}
                                             disabled={isCreating}
@@ -386,10 +379,6 @@ export default function TrainerSlots() {
                             <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/10">
                                 <h4 className="font-medium text-foreground mb-2">Slot Management Tips:</h4>
                                 <ul className="text-sm text-muted-foreground space-y-1">
-                                    <li>• Only Pro plan clients can book your video call sessions</li>
-                                    <li>• Each session is exactly 1 hour long</li>
-                                    <li>• You can join sessions 10 minutes before the scheduled time</li>
-                                    <li>• You can only delete slots that haven't been booked</li>
                                     <li>• Clients will see your available slots and can request bookings</li>
                                 </ul>
                             </div>

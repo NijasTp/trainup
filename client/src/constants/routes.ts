@@ -78,6 +78,7 @@ export const ROUTES = {
   TRAINER_SLOTS: "/trainer/slots",
   TRAINER_WEEKLY_SCHEDULE: "/trainer/weekly-schedule",
   TRAINER_INDIVIDUAL_CLIENT: "/trainer/user/:id",
+  TRAINER_CLIENT_PROGRESS: "/trainer/client/:id/progress",
   TRAINER_CLIENT_CHAT: "/trainer/chat/:clientId",
   TRAINER_CLIENT_VIDEO_CALL: "/trainer/video-call/:roomId",
   TRAINER_SESSION_REQUESTS: "/trainer/session-requests",

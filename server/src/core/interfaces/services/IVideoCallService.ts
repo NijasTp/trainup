@@ -9,4 +9,5 @@ export interface IVideoCallService {
   canJoinCall(roomId: string, userId: string): Promise<boolean>;
   endVideoCall(roomId: string): Promise<void>;
   getActiveParticipants(roomId: string): Promise<number>;
+  submitFeedback(roomId: string, rating: number, feedback: string): Promise<void>;
 }

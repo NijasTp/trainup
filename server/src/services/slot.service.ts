@@ -41,6 +41,14 @@ export class SlotService implements ISlotService {
       )
     }
 
+    const now = new Date()
+    if (start < now) {
+      throw new AppError(
+        'Cannot create slots in the past',
+        STATUS_CODE.BAD_REQUEST
+      )
+    }
+
     const hasOverlap = await this._slotRepository.checkSlotOverlap(
       trainerId,
       date,

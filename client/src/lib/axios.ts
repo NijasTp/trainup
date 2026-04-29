@@ -114,9 +114,36 @@ const handleForcedLogout = (force: boolean = false) => {
   }
 };
 
-// Helper for 401 Unauthorized (Token Refresh)
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 const handleTokenRefresh = async (originalRequest: any) => {
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      failedQueue.push({ resolve, reject });
+    })
+      .then(() => {
+        return api(originalRequest);
+      })
+      .catch((err) => {
+        return Promise.reject(err);
+      });
+  }
+
   originalRequest._retry = true;
+  isRefreshing = true;
+
   const state = store.getState();
   let refreshUrl: string | null = null;
   let logoutAction: any = null;
@@ -143,14 +170,19 @@ const handleTokenRefresh = async (originalRequest: any) => {
   if (refreshUrl) {
     try {
       await axios.post(refreshUrl, {}, { withCredentials: true });
+      processQueue(null);
+      isRefreshing = false;
       return api(originalRequest);
     } catch (refreshError) {
+      processQueue(refreshError);
+      isRefreshing = false;
       if (logoutAction) store.dispatch(logoutAction());
       window.location.href = loginPath;
       return Promise.reject(refreshError);
     }
   }
 
+  isRefreshing = false;
   window.location.href = loginPath;
   return Promise.reject(new Error("Unauthorized"));
 };

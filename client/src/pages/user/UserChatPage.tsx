@@ -24,7 +24,8 @@ import {
     X,
     Play,
     StopCircle,
-    CheckCircle2
+    CheckCircle2,
+    Mic2
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -501,20 +502,7 @@ export default function ChatPage() {
                                                     {message.messageType === 'audio' && message.fileUrl && (
                                                         <div className={`mb-3 p-4 rounded-2xl flex items-center gap-4 min-w-[240px] ${isUser ? 'bg-black/10' : 'bg-white/5'}`}>
                                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isUser ? 'bg-black/20' : 'bg-primary/20'}`}>
-                                                                <Play className={`h-4 w-4 ${isUser ? 'fill-black' : 'fill-primary'}`} />
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <div className={`h-1.5 w-full rounded-full ${isUser ? 'bg-black/10' : 'bg-white/10'}`}>
-                                                                    <div className={`h-full w-1/3 rounded-full ${isUser ? 'bg-black/40' : 'bg-primary'}`} />
-                                                                </div>
-                                                                <p className={`text-[10px] mt-2 font-black uppercase tracking-widest ${isUser ? 'text-black/60' : 'text-gray-400'}`}>Audio memo</p>
-                                                            </div>
-                                                            <audio controls preload="auto" className="hidden" src={message.fileUrl} onPlay={(e) => {
-                                                                const audio = e.currentTarget;
-                                                                const others = document.querySelectorAll('audio');
-                                                                others.forEach(a => { if (a !== audio) a.pause(); });
-                                                            }} />
-                                                            <Button 
+                                                                 <Button 
                                                                 variant="ghost" 
                                                                 size="icon" 
                                                                 className="rounded-full"
@@ -528,6 +516,19 @@ export default function ChatPage() {
                                                             >
                                                                 <Play className="h-4 w-4" />
                                                             </Button>
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <div className={`h-1.5 w-full rounded-full ${isUser ? 'bg-black/10' : 'bg-white/10'}`}>
+                                                                    <div className={`h-full w-1/3 rounded-full ${isUser ? 'bg-black/40' : 'bg-primary'}`} />
+                                                                </div>
+                                                                <p className={`text-[10px] mt-2 font-black uppercase tracking-widest ${isUser ? 'text-black/60' : 'text-gray-400'}`}>Audio memo</p>
+                                                            </div>
+                                                            <audio controls preload="auto" className="hidden" src={message.fileUrl} onPlay={(e) => {
+                                                                const audio = e.currentTarget;
+                                                                const others = document.querySelectorAll('audio');
+                                                                others.forEach(a => { if (a !== audio) a.pause(); });
+                                                            }} />
+                                                           
                                                         </div>
                                                     )}
 
@@ -763,7 +764,7 @@ export default function ChatPage() {
             {isCropping && imageToCrop && (
                 <ImageCropper
                     image={imageToCrop}
-                    aspectRatio={4 / 3}
+                    aspectRatio={4 / 4}
                     onCropComplete={(croppedBlob) => {
                         const croppedFile = new File([croppedBlob], selectedFile?.name || 'cropped.jpg', { type: 'image/jpeg' });
                         setSelectedFile(croppedFile);

@@ -98,11 +98,8 @@ export class VideoCallController {
       const userId = (req.user as JwtPayload).id;
 
       const videoCall = await this._videoCallService.getVideoCallBySlotId(slotId);
-      logger.info(`Fetched video call by slot: ${videoCall?._id}`);
       if (!videoCall) {
-        // Create video call if it doesn't exist
         const newVideoCall = await this._videoCallService.createVideoCallSession(slotId);
-        logger.info(`Created new video call: ${newVideoCall._id}`);
         res.status(STATUS_CODE.CREATED).json({
           videoCall: newVideoCall,
           message: MESSAGES.VIDEO_CALL_CREATED
@@ -111,7 +108,6 @@ export class VideoCallController {
       }
 
       const canJoin = await this._videoCallService.canJoinCall(videoCall.roomId, userId);
-      logger.info(`Can user join the call? ${canJoin}`);
       if (!canJoin) {
         throw new AppError(MESSAGES.VIDEO_CALL_ACCESS_DENIED, STATUS_CODE.FORBIDDEN);
       }
@@ -119,6 +115,26 @@ export class VideoCallController {
       res.status(STATUS_CODE.OK).json({ videoCall });
     } catch (err) {
       logger.error('Error getting call by slot:', err);
+      next(err);
+    }
+  }
+
+  async submitFeedback(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { roomId } = req.params;
+      const { rating, feedback } = req.body;
+
+      if (rating === undefined || rating < 0 || rating > 10) {
+        throw new AppError('Rating must be between 0 and 10', STATUS_CODE.BAD_REQUEST);
+      }
+
+      await this._videoCallService.submitFeedback(roomId, rating, feedback);
+
+      res.status(STATUS_CODE.OK).json({
+        message: 'Feedback submitted successfully'
+      });
+    } catch (err) {
+      logger.error('Error submitting feedback:', err);
       next(err);
     }
   }

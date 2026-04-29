@@ -99,7 +99,6 @@ export default function TrainerChatPage() {
         try {
             const clientResponse = await API.get(`/trainer/client/${clientId}`);
             const clientData = clientResponse.data.client;
-            console.log('Client Data:', clientData);
 
             if (!clientData?.trainerPlan || clientData.trainerPlan === 'basic') {
                 setError("This client doesn't have chat access. They need Premium or Pro plan.");
@@ -109,7 +108,6 @@ export default function TrainerChatPage() {
 
             setClient(clientData);
 
-            // Fetch plan to check expiry FIRST
             try {
                 const planResponse = await API.get(`/trainer/user-plan/${clientId}`);
                 setUserPlan(planResponse.data.plan);

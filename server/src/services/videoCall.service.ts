@@ -73,18 +73,6 @@ export class VideoCallService implements IVideoCallService {
       throw new AppError(MESSAGES.VIDEO_CALL_NOT_FOUND, STATUS_CODE.NOT_FOUND)
     }
 
-    // Allow rejoining ended calls if within scheduled time
-    // Allow rejoining ended calls if within scheduled time (Relaxed for debugging)
-    /* if (videoCall.status === 'ended') {
-      const now = new Date()
-      if (now > videoCall.scheduledEndTime) {
-        throw new AppError(
-          MESSAGES.VIDEO_CALL_SESSION_ENDED,
-          STATUS_CODE.BAD_REQUEST
-        )
-      }
-    } */
-
     // Check active participants (not total participants)
     const activeParticipants = videoCall.participants.filter(
       p => p.isActive
@@ -93,7 +81,6 @@ export class VideoCallService implements IVideoCallService {
       p => p.userId.toString() === userId && p.isActive
     )
 
-    // Relaxed participant limit for debugging/stability
     if (activeParticipants >= 10 && !isUserAlreadyActive) {
       throw new AppError(MESSAGES.VIDEO_CALL_ROOM_FULL, STATUS_CODE.BAD_REQUEST)
     }
@@ -145,7 +132,6 @@ export class VideoCallService implements IVideoCallService {
       )
     }
 
-    // Handle populated slotId object
     const slotId =
       typeof videoCall.slotId === 'object' && videoCall.slotId._id
         ? videoCall.slotId._id.toString()
@@ -182,5 +168,18 @@ export class VideoCallService implements IVideoCallService {
 
   async getActiveParticipants(roomId: string): Promise<number> {
     return await this._videoCallRepository.getActiveParticipants(roomId)
+  }
+
+  async submitFeedback(roomId: string, rating: number, feedback: string): Promise<void> {
+    const videoCall = await this._videoCallRepository.findByRoomId(roomId)
+    if (!videoCall) {
+      throw new AppError(MESSAGES.VIDEO_CALL_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+    }
+
+    await this._videoCallRepository.updateVideoCall(videoCall._id.toString(), {
+      userPerformanceRating: rating,
+      userFeedback: feedback,
+      status: 'ended'
+    })
   }
 }

@@ -4,13 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Dumbbell, Apple, MessageSquare, Video, Calendar as CalendarIcon, Star, Crown, Camera, ChevronRight, AlertCircle, User as UserIcon, Activity, Scale, Ruler } from "lucide-react";
+import { ArrowLeft, Dumbbell, Apple, MessageSquare,Camera, ChevronRight, AlertCircle, User as UserIcon, Activity, Scale, Ruler } from "lucide-react";
 import API from "@/lib/axios";
 import { toast } from "sonner";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 import type { User, UserPlan, Progress } from "@/interfaces/trainer/ITrainerUserDetails";
@@ -70,7 +68,7 @@ export default function TrainerUserDetails() {
     }, [id]);
 
     useEffect(() => {
-        document.title = "TrainUp - Client Dossier";
+        document.title = "TrainUp - Client Profile";
         if (id) {
             fetchUser();
             fetchUserPlan();
@@ -109,7 +107,7 @@ export default function TrainerUserDetails() {
                 <TrainerSiteHeader />
                 <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-6">
                     <div className="w-16 h-16 border-4 border-white/5 border-t-cyan-500 rounded-full animate-spin"></div>
-                    <p className="text-white/40 font-black uppercase italic tracking-widest text-sm">Accessing Neural Dossier...</p>
+                    <p className="text-white/40 font-black uppercase italic tracking-widest text-sm">Loading client data...</p>
                 </div>
             </div>
         );
@@ -120,15 +118,15 @@ export default function TrainerUserDetails() {
             <div className="min-h-screen bg-[#050505] text-white">
                 <TrainerSiteHeader />
                 <div className="container mx-auto px-6 py-24 text-center space-y-8">
-                    <h1 className="text-5xl font-black italic uppercase tracking-tighter">Unit Not Found</h1>
-                    <p className="text-white/40 font-medium max-w-md mx-auto">{error || "The requested client could not be located in the network."}</p>
+                    <h1 className="text-5xl font-black italic uppercase tracking-tighter text-white">Client Not Found</h1>
+                    <p className="text-white/40 font-medium max-w-md mx-auto">{error || "The requested client could not be found."}</p>
                     <Button 
                         variant="outline"
-                        className="border-white/10"
+                        className="border-white/10 text-white"
                         onClick={() => navigate("/trainer/clients")}
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back to Directory
+                        Back to Clients
                     </Button>
                 </div>
             </div>
@@ -156,7 +154,7 @@ export default function TrainerUserDetails() {
                         onClick={() => navigate("/trainer/clients")}
                     >
                         <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                        <span className="text-[10px] font-black uppercase italic tracking-widest">Return to Network</span>
+                        <span className="text-[10px] font-black uppercase italic tracking-widest">Back to Directory</span>
                     </Button>
                 </div>
 
@@ -180,21 +178,21 @@ export default function TrainerUserDetails() {
                                 <div className="space-y-4 text-center md:text-left">
                                     <div className="space-y-1">
                                         <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 px-3 py-1 font-black italic uppercase tracking-widest text-[10px]">
-                                            Unit Protocol: {user.activityStatus === 'active' ? 'Operational' : 'Idle'}
+                                            Status: {user.activityStatus === 'active' ? 'Active' : 'Inactive'}
                                         </Badge>
-                                        <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none">
+                                        <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none text-white">
                                             {user.name}
                                         </h1>
                                     </div>
                                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                                         {user.trainerPlan && (
                                             <Badge className={cn("px-4 py-1.5 font-black italic uppercase tracking-widest text-[10px] border shadow-lg", getPlanStyle(user.trainerPlan))}>
-                                                {user.trainerPlan} Activation
+                                                {user.trainerPlan} Plan
                                             </Badge>
                                         )}
                                         {isExpired && (
                                             <Badge className="bg-red-500/20 text-red-400 border-red-500/30 px-4 py-1.5 font-black italic uppercase tracking-widest text-[10px] animate-pulse">
-                                                Link Severed / Expired
+                                                Subscription Expired
                                             </Badge>
                                         )}
                                     </div>
@@ -206,19 +204,19 @@ export default function TrainerUserDetails() {
                                     <Button
                                         size="lg"
                                         className="h-16 px-10 bg-white text-black hover:bg-cyan-500 hover:text-white font-black italic uppercase tracking-widest text-xs rounded-3xl shadow-2xl transition-all duration-500"
-                                        onClick={() => setIsProgressOpen(true)}
+                                        onClick={() => navigate(`/trainer/client/${id}/progress`)}
                                     >
                                         <Camera className="h-5 w-5 mr-3" />
-                                        Visual Analytics
+                                        Progress Photos
                                     </Button>
                                 )}
                                 <Button
                                     variant="outline"
-                                    className="h-16 px-10 border-white/10 bg-white/5 hover:bg-white/10 font-black italic uppercase tracking-widest text-xs rounded-3xl"
+                                    className="h-16 px-10 border-white/10 bg-white/5 hover:bg-white/10 text-white font-black italic uppercase tracking-widest text-xs rounded-3xl"
                                     onClick={handleStartChat}
                                 >
                                     <MessageSquare className="h-5 w-5 mr-3 text-cyan-400" />
-                                    Open Comm Link
+                                    Message Client
                                 </Button>
                             </div>
                         </div>
@@ -227,9 +225,9 @@ export default function TrainerUserDetails() {
                         {!isExpired && (
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-14 pt-14 border-t border-white/5">
                                 {[
-                                    { label: 'Intelligence Factor', value: bmi || '-', icon: Activity, color: 'text-cyan-400' },
-                                    { label: 'Mass Index', value: user.weight ? `${user.weight} KG` : '-', icon: Scale, color: 'text-blue-400' },
-                                    { label: 'Verticality', value: user.height ? `${user.height} CM` : '-', icon: Ruler, color: 'text-purple-400' },
+                                    { label: 'BMI', value: bmi || '-', icon: Activity, color: 'text-cyan-400' },
+                                    { label: 'Weight', value: user.weight ? `${user.weight} KG` : '-', icon: Scale, color: 'text-blue-400' },
+                                    { label: 'Height', value: user.height ? `${user.height} CM` : '-', icon: Ruler, color: 'text-purple-400' },
                                     { label: 'Status', value: user.activityStatus?.toUpperCase() || 'IDLE', icon: UserIcon, color: 'text-amber-400' },
                                 ].map((stat, i) => (
                                     <div key={i} className="bg-white/5 rounded-[2rem] p-6 space-y-2 group hover:bg-white/[0.08] transition-colors border border-white/5">
@@ -238,7 +236,7 @@ export default function TrainerUserDetails() {
                                             <span className="text-[9px] font-black uppercase italic tracking-widest text-white/20">Metric {i + 1}</span>
                                         </div>
                                         <div>
-                                            <p className="text-2xl font-black italic tracking-tighter uppercase">{stat.value}</p>
+                                            <p className="text-2xl font-black italic tracking-tighter uppercase text-white">{stat.value}</p>
                                             <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{stat.label}</p>
                                         </div>
                                     </div>
@@ -258,24 +256,24 @@ export default function TrainerUserDetails() {
                                         <AlertCircle className="h-10 w-10 text-red-500" />
                                     </div>
                                     <div className="space-y-4">
-                                        <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter">Information Blocked</h2>
+                                        <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white">Access Denied</h2>
                                         <p className="text-white/40 font-medium text-lg leading-relaxed max-w-xl mx-auto">
-                                            Subscription link for this unit has expired. All biometric and protocol data has been encrypted until renewal.
+                                            Subscription for this client has expired. You cannot view their progress data until they renew.
                                         </p>
                                     </div>
                                     <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                                         <Button
                                             variant="outline"
-                                            className="h-14 px-8 border-white/10 bg-white/5 hover:bg-white/10 font-black italic uppercase tracking-widest text-xs rounded-2xl"
+                                            className="h-14 px-8 border-white/10 bg-white/5 hover:bg-white/10 text-white font-black italic uppercase tracking-widest text-xs rounded-2xl"
                                             onClick={() => navigate("/trainer/clients")}
                                         >
-                                            Network Directory
+                                            Back to Directory
                                         </Button>
                                         <Button
                                             className="h-14 px-8 bg-red-500 text-white hover:bg-red-600 font-black italic uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-red-500/20"
                                             onClick={handleStartChat}
                                         >
-                                            Broadcast Warning
+                                            Send Reminder
                                         </Button>
                                     </div>
                                 </CardContent>
@@ -288,8 +286,8 @@ export default function TrainerUserDetails() {
                         <div className="lg:col-span-2 space-y-8">
                             <Card className="bg-white/[0.03] backdrop-blur-3xl border-white/10 rounded-[2.5rem] overflow-hidden">
                                 <div className="p-8 border-b border-white/5 flex items-center justify-between">
-                                    <h3 className="text-xl font-black italic uppercase tracking-tighter text-cyan-400">Tactical Modules</h3>
-                                    <Badge className="bg-white/5 text-white/40 border-white/10 font-black italic tracking-widest uppercase text-[9px]">Authorization: Level 4</Badge>
+                                    <h3 className="text-xl font-black italic uppercase tracking-tighter text-cyan-400">Training & Diet</h3>
+                                    <Badge className="bg-white/5 text-white/40 border-white/10 font-black italic tracking-widest uppercase text-[9px]">Management</Badge>
                                 </div>
                                 <CardContent className="p-8 grid gap-4">
                                     <Link to={`/trainer/assign-workout/${id}`} className="group relative bg-white/[0.04] border border-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/30 p-8 rounded-[2rem] transition-all duration-500 flex items-center justify-between overflow-hidden">
@@ -299,8 +297,8 @@ export default function TrainerUserDetails() {
                                                 <Dumbbell className="h-8 w-8" />
                                             </div>
                                             <div className="space-y-1">
-                                                <h4 className="text-2xl font-black italic uppercase tracking-tight group-hover:text-cyan-400 transition-colors">Physical Protocols</h4>
-                                                <p className="text-white/30 text-xs font-bold tracking-widest uppercase">Assign Training Blueprints</p>
+                                                <h4 className="text-2xl font-black italic uppercase tracking-tight group-hover:text-cyan-400 transition-colors text-white">Workouts</h4>
+                                                <p className="text-white/30 text-xs font-bold tracking-widest uppercase">Assign Training Plans</p>
                                             </div>
                                         </div>
                                         <ChevronRight className="h-6 w-6 text-white/10 group-hover:text-cyan-400 transition-all group-hover:translate-x-1" />
@@ -313,8 +311,8 @@ export default function TrainerUserDetails() {
                                                 <Activity className="h-8 w-8" />
                                             </div>
                                             <div className="space-y-1">
-                                                <h4 className="text-2xl font-black italic uppercase tracking-tight group-hover:text-blue-400 transition-colors">Active Workouts</h4>
-                                                <p className="text-white/30 text-xs font-bold tracking-widest uppercase">Monitor Operational Status</p>
+                                                <h4 className="text-2xl font-black italic uppercase tracking-tight group-hover:text-blue-400 transition-colors text-white">Workout History</h4>
+                                                <p className="text-white/30 text-xs font-bold tracking-widest uppercase">Monitor Progress</p>
                                             </div>
                                         </div>
                                         <ChevronRight className="h-6 w-6 text-white/10 group-hover:text-blue-400 transition-all group-hover:translate-x-1" />
@@ -327,8 +325,8 @@ export default function TrainerUserDetails() {
                                                 <Apple className="h-8 w-8" />
                                             </div>
                                             <div className="space-y-1">
-                                                <h4 className="text-2xl font-black italic uppercase tracking-tight group-hover:text-green-400 transition-colors">Nutritional Matrix</h4>
-                                                <p className="text-white/30 text-xs font-bold tracking-widest uppercase">Bio-Fuel Optimization</p>
+                                                <h4 className="text-2xl font-black italic uppercase tracking-tight group-hover:text-green-400 transition-colors text-white">Diet Plan</h4>
+                                                <p className="text-white/30 text-xs font-bold tracking-widest uppercase">Nutrition Management</p>
                                             </div>
                                         </div>
                                         <ChevronRight className="h-6 w-6 text-white/10 group-hover:text-green-400 transition-all group-hover:translate-x-1" />
@@ -337,33 +335,33 @@ export default function TrainerUserDetails() {
                             </Card>
                         </div>
 
-                        {/* Intelligence Column */}
+                        {/* Contact Column */}
                         <div className="space-y-8">
                             <Card className="bg-white/[0.03] backdrop-blur-3xl border-white/10 rounded-[2.5rem] overflow-hidden">
                                 <div className="p-8 border-b border-white/5">
-                                    <h3 className="text-xl font-black italic uppercase tracking-tighter text-amber-400">Neural Connect</h3>
+                                    <h3 className="text-xl font-black italic uppercase tracking-tighter text-amber-400">Contact Details</h3>
                                 </div>
                                 <CardContent className="p-8 space-y-6">
                                     <div className="space-y-4">
                                         <div className="bg-white/5 rounded-2xl p-4 flex items-center transition-colors hover:bg-white/[0.08]">
-                                            <Badge className="bg-cyan-500/10 text-cyan-400 border-none h-10 w-10 p-0 flex items-center justify-center rounded-xl mr-4 uppercase font-black italic text-xs">ID</Badge>
-                                            <div className="min-w-0">
-                                                <p className="text-[10px] font-black uppercase italic text-white/20 tracking-widest font-sans">Unit Identifier</p>
+                                            <Badge className="bg-cyan-500/10 text-cyan-400 border-none h-10 w-10 p-0 flex items-center justify-center rounded-xl mr-4 uppercase font-black italic text-xs">@</Badge>
+                                            <div className="min-w-0 text-white">
+                                                <p className="text-[10px] font-black uppercase italic text-white/20 tracking-widest font-sans">Email Address</p>
                                                 <p className="font-bold truncate text-sm">{user.email}</p>
                                             </div>
                                         </div>
                                         <div className="bg-white/5 rounded-2xl p-4 flex items-center transition-colors hover:bg-white/[0.08]">
-                                            <Badge className="bg-blue-500/10 text-blue-400 border-none h-10 w-10 p-0 flex items-center justify-center rounded-xl mr-4 uppercase font-black italic text-xs">TEL</Badge>
-                                            <div className="min-w-0">
-                                                <p className="text-[10px] font-black uppercase italic text-white/20 tracking-widest">Comm Channel</p>
+                                            <Badge className="bg-blue-500/10 text-blue-400 border-none h-10 w-10 p-0 flex items-center justify-center rounded-xl mr-4 uppercase font-black italic text-xs">PH</Badge>
+                                            <div className="min-w-0 text-white">
+                                                <p className="text-[10px] font-black uppercase italic text-white/20 tracking-widest">Phone Number</p>
                                                 <p className="font-bold truncate text-sm">{user.phone}</p>
                                             </div>
                                         </div>
                                         <div className="bg-white/5 rounded-2xl p-4 flex items-center transition-colors hover:bg-white/[0.08]">
-                                            <Badge className="bg-purple-500/10 text-purple-400 border-none h-10 w-10 p-0 flex items-center justify-center rounded-xl mr-4 uppercase font-black italic text-xs">DT</Badge>
-                                            <div className="min-w-0">
-                                                <p className="text-[10px] font-black uppercase italic text-white/20 tracking-widest">Entry Date</p>
-                                                <p className="font-bold truncate text-sm">{user.subscriptionStartDate ? new Date(user.subscriptionStartDate).toLocaleDateString() : 'INITIALIZING'}</p>
+                                            <Badge className="bg-purple-500/10 text-purple-400 border-none h-10 w-10 p-0 flex items-center justify-center rounded-xl mr-4 uppercase font-black italic text-xs">IN</Badge>
+                                            <div className="min-w-0 text-white">
+                                                <p className="text-[10px] font-black uppercase italic text-white/20 tracking-widest">Joined On</p>
+                                                <p className="font-bold truncate text-sm">{user.subscriptionStartDate ? new Date(user.subscriptionStartDate).toLocaleDateString() : 'Loading...'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -375,20 +373,20 @@ export default function TrainerUserDetails() {
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-[50px] animate-pulse" />
                                     <CardContent className="p-8 space-y-8">
                                         <div className="space-y-1">
-                                            <h3 className="text-xl font-black italic uppercase tracking-tighter text-cyan-400">Current Deployment</h3>
-                                            <p className="text-[10px] font-black text-white/40 tracking-widest uppercase italic">{userPlan.planType} Tier Activated</p>
+                                            <h3 className="text-xl font-black italic uppercase tracking-tighter text-cyan-400">Subscription Plan</h3>
+                                            <p className="text-[10px] font-black text-white/40 tracking-widest uppercase italic">{userPlan.planType} Active</p>
                                         </div>
                                         
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between py-3 border-b border-white/5">
-                                                <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Deadline</span>
+                                                <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Expiry Date</span>
                                                 <span className={cn("text-sm font-black italic uppercase tracking-tight", isExpired ? "text-red-400" : "text-white")}>
                                                     {new Date(userPlan.expiryDate).toLocaleDateString()}
                                                 </span>
                                             </div>
                                             {userPlan.planType !== 'basic' && (
                                                 <div className="flex items-center justify-between py-3 border-b border-white/5">
-                                                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Neural Quota</span>
+                                                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Messages Left</span>
                                                     <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 font-black italic text-[9px]">
                                                         {userPlan.planType === 'premium' ? `${userPlan.messagesLeft} REMAINING` : 'UNLIMITED'}
                                                     </Badge>
@@ -396,9 +394,9 @@ export default function TrainerUserDetails() {
                                             )}
                                             {userPlan.planType === 'pro' && (
                                                 <div className="flex items-center justify-between py-3">
-                                                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Sync Quota</span>
+                                                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Video Calls</span>
                                                     <Badge variant="outline" className="border-purple-500/30 text-purple-400 font-black italic text-[9px]">
-                                                        {userPlan.videoCallsLeft} CRYSTAL SYNC
+                                                        {userPlan.videoCallsLeft} SESSIONS
                                                     </Badge>
                                                 </div>
                                             )}
@@ -411,111 +409,8 @@ export default function TrainerUserDetails() {
                 )}
             </main>
 
-            {/* Visual Analytics Modal */}
-            <Dialog open={isProgressOpen} onOpenChange={setIsProgressOpen}>
-                <DialogContent className="max-w-6xl h-[85vh] bg-[#050505]/95 backdrop-blur-3xl border-white/10 p-0 gap-0 overflow-hidden text-white rounded-[3rem]">
-                    <div className="p-8 md:p-12 border-b border-white/5 bg-white/[0.02]">
-                        <DialogHeader>
-                            <DialogTitle className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4">
-                                <Activity className="h-8 w-8 text-cyan-400" />
-                                Growth Analytics
-                                <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 font-black italic uppercase text-[10px] ml-4">Authorized Access</Badge>
-                            </DialogTitle>
-                        </DialogHeader>
-                    </div>
-
-                    <div className="flex-1 flex overflow-hidden">
-                        {/* Dossier Timeline */}
-                        <div className="w-80 border-r border-white/5 bg-black/40 flex flex-col">
-                            <div className="p-6 border-b border-white/5 bg-white/[0.02]">
-                                <h4 className="text-[10px] font-black uppercase italic tracking-widest text-cyan-400">Captured States</h4>
-                            </div>
-                            <ScrollArea className="flex-1">
-                                <div className="p-4 space-y-2">
-                                    {progressList.map((p) => (
-                                        <Button
-                                            key={p._id}
-                                            variant="ghost"
-                                            className={cn(
-                                                "w-full h-14 justify-start font-black italic uppercase tracking-widest text-[10px] rounded-2xl transition-all duration-300",
-                                                selectedProgress?._id === p._id 
-                                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30" 
-                                                    : "text-white/20 hover:text-white hover:bg-white/5"
-                                            )}
-                                            onClick={() => setSelectedProgress(p)}
-                                        >
-                                            <CalendarIcon className="h-4 w-4 mr-3 opacity-50" />
-                                            {new Date(p.date).toLocaleDateString(undefined, {
-                                                month: 'short', day: 'numeric', year: 'numeric'
-                                            })}
-                                        </Button>
-                                    ))}
-                                    {progressList.length === 0 && (
-                                        <div className="p-12 text-center text-white/20 font-black italic uppercase tracking-widest text-[10px]">
-                                            No Data Logs
-                                        </div>
-                                    )}
-                                </div>
-                            </ScrollArea>
-                        </div>
-
-                        {/* Visual Projection */}
-                        <div className="flex-1 overflow-y-auto bg-black/60 custom-scrollbar">
-                            {selectedProgress ? (
-                                <div className="p-10 md:p-16 space-y-12">
-                                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-10 border-b border-white/5">
-                                        <div className="space-y-4">
-                                            <Badge className="bg-white/5 text-white/40 border-white/10 font-black italic uppercase tracking-widest text-[9px]">Log #{selectedProgress._id?.slice(-6)}</Badge>
-                                            <h3 className="text-4xl font-black italic uppercase tracking-tighter">
-                                                {new Date(selectedProgress.date).toLocaleDateString(undefined, {
-                                                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                                                })}
-                                            </h3>
-                                            {selectedProgress.notes && (
-                                                <p className="text-white/40 text-sm font-medium italic border-l-2 border-cyan-500/20 pl-6 max-w-2xl">
-                                                    "{selectedProgress.notes}"
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Intelligence Projection */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                        {selectedProgress.photos.map((photo, index) => (
-                                            <div key={index} className="group relative aspect-[3/4] rounded-[2.5rem] overflow-hidden border border-white/5 bg-white/5 shadow-2xl transition-all duration-700 hover:border-cyan-500/40">
-                                                <img
-                                                    src={photo}
-                                                    alt={`Capture ${index + 1}`}
-                                                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110"
-                                                />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent opacity-0 group-hover:opacity-100 transition-all duration-700 flex flex-col justify-end p-8">
-                                                    <p className="text-[10px] font-black italic uppercase tracking-widest text-cyan-400">Tactical Capture {index + 1}</p>
-                                                    <h5 className="text-xl font-black italic uppercase tracking-tight">Anatomy {index + 1}</h5>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {selectedProgress.photos.length === 0 && (
-                                        <div className="py-24 text-center text-white/10 border-4 border-dashed border-white/5 rounded-[3rem] space-y-4">
-                                            <Camera className="h-12 w-12 mx-auto" />
-                                            <p className="font-black italic uppercase tracking-widest text-xs">Visual Sensors Offline</p>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-white/20 p-12 space-y-6">
-                                    <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center animate-pulse">
-                                        <Activity className="h-10 w-10 opacity-30" />
-                                    </div>
-                                    <p className="font-black italic uppercase tracking-widest text-xs">Awaiting Dossier Selection...</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
             <SiteFooter />
         </div>
     );
-}
+}
+

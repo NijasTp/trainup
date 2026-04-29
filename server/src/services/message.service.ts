@@ -41,4 +41,8 @@ export class MessageService implements IMessageService {
   async getRecipientsWithUnreadMessages(): Promise<{ recipientId: string; recipientRole: 'user' | 'trainer' }[]> {
     return await this._messageRepository.getRecipientsWithUnreadMessages();
   }
+
+  async deleteMessage(messageId: string): Promise<void> {
+    await this._messageRepository.deleteMessage(messageId);
+  }
 }
