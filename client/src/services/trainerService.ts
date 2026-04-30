@@ -29,3 +29,8 @@ export const changeTrainerPassword = async (data: ITrainerPasswordData) => {
   const res = await API.post(API_ROUTES.TRAINER.CHANGE_PASSWORD, data);
   return res.data;
 };
+
+export const getVideoCallBySlotId = async (slotId: string) => {
+  const res = await API.get(API_ROUTES.VIDEO_CALL.DETAIL_BY_SLOT(slotId));
+  return res.data;
+};

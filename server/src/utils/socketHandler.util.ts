@@ -282,6 +282,12 @@ export class SocketHandler {
         .to(videoRoomName)
         .emit('user_joined', { userId: socket.userId })
 
+      // Broadcast updated participant count
+      const updatedRoom = this.io.sockets.adapter.rooms.get(videoRoomName)
+      this.io.to(videoRoomName).emit('participant_count_update', { 
+        count: updatedRoom ? updatedRoom.size : 0 
+      })
+
       logger.info(`User ${socket.userId} joined video room: ${roomId} (Initiator: ${isInitiator})`)
     })
 
@@ -317,8 +323,16 @@ export class SocketHandler {
 
     socket.on('leave_video_room', ({ roomId }) => {
       if (!roomId) return
-      socket.leave(`video_${roomId}`)
-      socket.to(`video_${roomId}`).emit('user_left', { userId: socket.userId })
+      const videoRoomName = `video_${roomId}`
+      socket.leave(videoRoomName)
+      socket.to(videoRoomName).emit('user_left', { userId: socket.userId })
+      
+      // Broadcast updated participant count
+      const updatedRoom = this.io.sockets.adapter.rooms.get(videoRoomName)
+      this.io.to(videoRoomName).emit('participant_count_update', { 
+        count: updatedRoom ? updatedRoom.size : 0 
+      })
+      
       logger.info(`User ${socket.userId} left video room: ${roomId}`)
     })
 

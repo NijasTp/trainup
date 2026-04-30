@@ -233,4 +233,7 @@ export const API_ROUTES = {
     },
     DETAILS: (id: string) => `/template/details/${id}`,
   },
+  VIDEO_CALL: {
+    DETAIL_BY_SLOT: (slotId: string) => `/video-call/slot/${slotId}`,
+  },
 };

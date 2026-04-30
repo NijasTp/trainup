@@ -33,7 +33,7 @@ export class VideoCallService implements IVideoCallService {
       return existingCall
     }
 
-    const roomId = `session_${slotId}_${uuidv4()}`
+    const roomId = Math.random().toString(36).substring(2, 7) + Math.random().toString(36).substring(2, 7);
     // Fix timezone issue: Use local date parts from the server's perspective
     const year = slot.date.getFullYear();
     const month = String(slot.date.getMonth() + 1).padStart(2, '0');

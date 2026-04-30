@@ -100,7 +100,12 @@ export class SlotService implements ISlotService {
       throw new AppError('Slot not found', STATUS_CODE.NOT_FOUND)
     }
 
-    if (slot.trainerId.toString() !== trainerId) {
+    const slotTrainerId = 
+      typeof slot.trainerId === 'object' && '_id' in slot.trainerId
+        ? slot.trainerId._id.toString()
+        : slot.trainerId.toString()
+
+    if (slotTrainerId !== trainerId) {
       throw new AppError('Unauthorized', STATUS_CODE.FORBIDDEN)
     }
 

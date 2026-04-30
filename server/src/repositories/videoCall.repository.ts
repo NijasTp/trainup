@@ -73,11 +73,13 @@ export class VideoCallRepository implements IVideoCallRepository {
     // Update status to active if this is the first active participant
     const activeCount = videoCall.participants.filter(p => p.isActive).length
     if (
-      videoCall.status === 'scheduled' ||
-      (videoCall.status === 'ended' && activeCount > 0)
+      (videoCall.status === 'scheduled' || videoCall.status === 'ended') &&
+      activeCount > 0
     ) {
       videoCall.status = 'active'
-      videoCall.actualStartTime = new Date()
+      if (!videoCall.actualStartTime) {
+        videoCall.actualStartTime = new Date()
+      }
     }
 
     await videoCall.save()

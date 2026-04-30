@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
-    Calendar,
+    Calendar as CalendarIcon,
     Clock,
     Video,
     CheckCircle,
@@ -156,25 +155,33 @@ export default function UserSessions() {
                             <p className="text-gray-400 font-medium max-w-lg text-sm md:text-base leading-relaxed">Manage your scheduled high-performance training sessions and connect with your professional coach.</p>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-2xl">
-                            <button 
-                                onClick={() => { setActiveTab('upcoming'); setPage(1); }}
-                                className={`px-8 py-3 rounded-xl font-black italic uppercase tracking-widest text-xs transition-all ${activeTab === 'upcoming' ? 'bg-primary text-black shadow-xl ring-4 ring-primary/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <Button 
+                                onClick={() => navigate('/my-trainer/availability')}
+                                className="bg-white text-black hover:bg-neutral-200 px-8 h-14 rounded-2xl font-black italic uppercase tracking-widest text-xs shadow-[0_20px_50px_rgba(255,255,255,0.1)] transition-all hover:-translate-y-1 active:translate-y-0"
                             >
-                                Upcoming
-                            </button>
-                            <button 
-                                onClick={() => { setActiveTab('past'); setPage(1); }}
-                                className={`px-8 py-3 rounded-xl font-black italic uppercase tracking-widest text-xs transition-all ${activeTab === 'past' ? 'bg-primary text-black shadow-xl ring-4 ring-primary/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                            >
-                                Past Performance
-                            </button>
+                                <CalendarIcon className="mr-3 h-4 w-4" /> Check Availability
+                            </Button>
+                            <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-2xl">
+                                <button 
+                                    onClick={() => { setActiveTab('upcoming'); setPage(1); }}
+                                    className={`px-8 py-3 rounded-xl font-black italic uppercase tracking-widest text-xs transition-all ${activeTab === 'upcoming' ? 'bg-primary text-black shadow-xl ring-4 ring-primary/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    Upcoming
+                                </button>
+                                <button 
+                                    onClick={() => { setActiveTab('past'); setPage(1); }}
+                                    className={`px-8 py-3 rounded-xl font-black italic uppercase tracking-widest text-xs transition-all ${activeTab === 'past' ? 'bg-primary text-black shadow-xl ring-4 ring-primary/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    Past Performance
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-4 max-w-xl">
                         <div className="relative flex-1 group">
-                            <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-primary transition-colors" />
+                            <CalendarIcon className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-primary transition-colors" />
                             <Input 
                                 type="date"
                                 value={selectedDate}
@@ -257,7 +264,7 @@ export default function UserSessions() {
                                             {/* Timing Details */}
                                             <div className="space-y-4 mb-8 flex-1">
                                                 <div className="flex items-center gap-4 bg-black/20 p-4 rounded-2xl border border-white/5">
-                                                    <Calendar className="h-5 w-5 text-primary" />
+                                                    <CalendarIcon className="h-5 w-5 text-primary" />
                                                     <div>
                                                         <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Training Date</p>
                                                         <p className="text-sm font-bold">{formatDate(session.date)}</p>
