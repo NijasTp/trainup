@@ -94,6 +94,7 @@ export default function AdminTransactions() {
 
                     <div className="relative z-10 w-full xl:w-auto">
                         <Button
+                            type="button"
                             onClick={handleDownloadReport}
                             className="w-full xl:w-auto bg-primary hover:bg-primary/90 text-black font-black italic rounded-2xl h-14 px-10 shadow-[0_10px_30px_rgba(var(--primary),0.3)] transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
                         >
@@ -215,7 +216,7 @@ export default function AdminTransactions() {
                                                             </span>
                                                         </div>
                                                         <Badge className="w-fit bg-primary/5 text-primary border-primary/10 text-[8px] font-black h-4 mt-1 uppercase">
-                                                            {t.planType || "PLAN"}
+                                                            {t.metadata?.type === 'bundle_purchase' ? 'SESSION_BUNDLE' : (t.planType || "PLAN")}
                                                         </Badge>
                                                     </div>
                                                 </div>

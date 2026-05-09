@@ -34,6 +34,7 @@ export interface Trainer {
         premium: number;
         pro: number;
     };
+    sessionBundles?: Array<{ sessions: number; price: number }>;
 }
 
 export interface UserPlan {

@@ -58,6 +58,8 @@ export const ROUTES = {
   PAYMENT_TRAINER_CANCEL: '/payment/trainer/cancel',
   PAYMENT_GYM_SUCCESS: '/payment/gym/success',
   PAYMENT_GYM_CANCEL: '/payment/gym/cancel',
+  PAYMENT_BUNDLE_SUCCESS: '/payment/bundle/success',
+  PAYMENT_BUNDLE_CANCEL: '/payment/bundle/cancel',
 
 
   // Trainer Routes

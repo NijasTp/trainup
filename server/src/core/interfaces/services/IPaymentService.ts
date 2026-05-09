@@ -33,4 +33,15 @@ export interface IPaymentService {
   getCheckoutSession(sessionId: string): Promise<any>;
 
   markUserPendingGymTransactionsAsFailed(userId: string): Promise<number>;
+
+  createBundleCheckoutSession(params: {
+    userId: string;
+    trainerId: string;
+    sessions: number;
+    amount: number;
+    userName: string;
+    trainerName: string;
+  }): Promise<{ sessionId: string; url: string | null }>;
+
+  handleWebhook(payload: any, signature: string): Promise<any>;
 }

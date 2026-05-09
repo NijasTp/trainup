@@ -24,6 +24,7 @@ export class TrainerDto {
       profileImage: trainer.profileImage,
       profileStatus: trainer.profileStatus,
       rejectReason: trainer.rejectReason,
+      sessionBundles: trainer.sessionBundles,
       createdAt: trainer.createdAt,
       updatedAt: trainer.updatedAt
     };
@@ -76,6 +77,7 @@ export class TrainerResponseDto {
   profileImage: string;
   profileStatus: string;
   rejectReason?: string;
+  sessionBundles?: { sessions: number; price: number }[];
   createdAt: Date;
   updatedAt: Date;
 }

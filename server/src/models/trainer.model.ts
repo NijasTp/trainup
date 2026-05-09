@@ -25,6 +25,10 @@ export interface ITrainer extends Document {
   isAvailable?: boolean
   profileImage: string
   profileStatus: 'pending' | 'approved' | 'rejected' | 'suspended'
+  sessionBundles?: {
+    sessions: number
+    price: number
+  }[]
   rejectReason: string
   unavailableReason?: string
   reviews: { rating: number; message: string; userId: mongoose.Types.ObjectId; subscriptionPlan?: string; createdAt: Date }[]
@@ -70,6 +74,12 @@ const TrainerSchema: Schema<ITrainer> = new Schema(
       enum: ['pending', 'approved', 'rejected', 'active', 'suspended'],
       default: 'pending'
     },
+    sessionBundles: [
+      {
+        sessions: { type: Number, required: true },
+        price: { type: Number, required: true }
+      }
+    ],
     rejectReason: { type: String },
     unavailableReason: { type: String },
   },

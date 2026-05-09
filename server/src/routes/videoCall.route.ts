@@ -21,4 +21,6 @@ router.get('/slot/:slotId', roleMiddleware(['user', 'trainer']), videoCallContro
 
 router.post('/room/:roomId/feedback', roleMiddleware(['trainer']), videoCallController.submitFeedback.bind(videoCallController));
 
+router.get('/token/:roomId', roleMiddleware(['user', 'trainer']), videoCallController.getLiveKitToken.bind(videoCallController));
+
 export default router;

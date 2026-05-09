@@ -49,6 +49,7 @@ export interface DashboardStats {
     date: string
   }>
   unassignedClientsCount: number
+  hasSessionBundles: boolean
 }
 
 export interface ITrainerService {
@@ -116,5 +117,10 @@ export interface ITrainerService {
     trainerId: string,
     currentPass: string,
     newPass: string
+  ): Promise<void>
+
+  updateSessionBundles(
+    trainerId: string,
+    bundles: { sessions: number; price: number }[]
   ): Promise<void>
 }

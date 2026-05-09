@@ -9,7 +9,7 @@ export interface ITransaction extends Document {
   amount: number
   platformFee: number
   trainerEarnings: number
-  planType: 'basic' | 'premium' | 'pro'
+  planType: 'basic' | 'premium' | 'pro' | 'session_bundle'
   razorpayOrderId?: string
   duration?: number
   razorpayPaymentId?: string
@@ -41,7 +41,7 @@ export const TransactionSchema = new Schema<ITransaction>(
     planType: {
       type: String,
       required: true,
-      enum: ['basic', 'premium', 'pro']
+      enum: ['basic', 'premium', 'pro', 'session_bundle']
     },
     razorpayOrderId: { type: String },
     duration: { type: Number },

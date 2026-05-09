@@ -150,9 +150,9 @@ export class SlotService implements ISlotService {
       userId,
       trainerId.toString()
     )
-    if (!userPlan || userPlan.planType !== 'pro') {
+    if (!userPlan || (userPlan.planType !== 'pro' && userPlan.videoCallsLeft <= 0)) {
       throw new AppError(
-        'Video calls are only available for Pro plan users',
+        'Video calls are only available for Pro plan users or via session bundles',
         STATUS_CODE.FORBIDDEN
       )
     }

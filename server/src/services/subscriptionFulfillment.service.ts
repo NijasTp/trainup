@@ -174,4 +174,61 @@ export class SubscriptionFulfillmentService implements ISubscriptionFulfillmentS
         }
         logger.info(`[Fulfillment] Gym membership fulfilled for user ${userId}, gym ${gymId}`);
     }
+
+    async fulfillBundlePurchase(sessionId: string, metadata: Record<string, string>): Promise<void> {
+        const { userId, trainerId, sessions, amount } = metadata;
+        const sessionCount = parseInt(sessions, 10);
+        const amountNum = parseFloat(amount);
+
+        // Idempotency check
+        const existingTransaction = await this._transactionService.findBySessionId(sessionId);
+        if (existingTransaction && existingTransaction.status === 'completed') {
+            logger.info(`[Fulfillment] Bundle purchase ${sessionId} already fulfilled.`);
+            return;
+        }
+
+        const session = await this._paymentService.getCheckoutSession(sessionId);
+        const paymentIntentId = session.payment_intent as string;
+
+        if (existingTransaction && existingTransaction.status === 'pending') {
+            await this._transactionService.updateTransactionStatusBySessionId(sessionId, 'completed', paymentIntentId);
+        } else if (!existingTransaction) {
+            await this._transactionService.createTransaction({
+                userId,
+                trainerId,
+                amount: amountNum,
+                platformFee: Math.floor(amountNum * 0.10),
+                trainerEarnings: amountNum - Math.floor(amountNum * 0.10),
+                planType: 'session_bundle',
+                stripeSessionId: sessionId,
+                paymentIntentId,
+                status: 'completed',
+                provider: 'stripe',
+                transactionType: 'debit',
+                description: `${sessionCount} Session Top-up`,
+                createdAt: new Date(),
+            });
+        }
+
+        // Increment videoCallsLeft in user plan
+        const userPlan = await this._userPlanService.getUserPlan(userId, trainerId);
+        if (userPlan) {
+            await this._userPlanService.updateUserPlan(userId, trainerId, {
+                videoCallsLeft: userPlan.videoCallsLeft + sessionCount
+            });
+        }
+
+        // Notifications
+        await this._notificationService.createNotification({
+            recipientId: userId,
+            recipientRole: 'user',
+            type: 'payment_success',
+            title: 'Top-up Successful!',
+            message: `You have successfully added ${sessionCount} video call sessions.`,
+            priority: 'high',
+            category: 'success'
+        });
+
+        logger.info(`[Fulfillment] Bundle purchase fulfilled for user ${userId}: +${sessionCount} sessions`);
+    }
 }

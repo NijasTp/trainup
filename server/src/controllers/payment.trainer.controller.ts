@@ -37,13 +37,13 @@ export class PaymentTrainerController {
                 sort?: string;
             };
 
-            const transactions = await this._transactionService.getUserTransactions(
+            const transactions = await this._transactionService.getTrainerTransactions(
                 userId,
                 parseInt(page, 10),
                 parseInt(limit, 10),
                 search,
                 status,
-                sort
+                'all' // planType filter
             );
 
             res.status(STATUS_CODE.OK).json(transactions);
@@ -136,7 +136,11 @@ export class PaymentTrainerController {
             const session = await this._paymentService.getCheckoutSession(sessionId);
 
             if (session.payment_status === 'paid') {
-                await this._fulfillmentService.fulfillTrainerSubscription(sessionId, session.metadata);
+                if (session.metadata.type === 'trainer_subscription') {
+                    await this._fulfillmentService.fulfillTrainerSubscription(sessionId, session.metadata);
+                } else if (session.metadata.type === 'bundle_purchase') {
+                    await this._fulfillmentService.fulfillBundlePurchase(sessionId, session.metadata);
+                }
             }
 
             res.status(STATUS_CODE.OK).json({ 
@@ -145,6 +149,36 @@ export class PaymentTrainerController {
             });
         } catch (err) {
             logger.error('Get Session Status Error', err);
+            next(err);
+        }
+    }
+    async createBundleCheckoutSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { trainerId, sessions, amount } = req.body;
+            const userId = (req.user as JwtPayload).id;
+
+            if (!trainerId || !sessions || !amount) {
+                throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
+            }
+
+            const user = await this._userService.getUserById(userId);
+            if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+
+            const trainer = await this._trainerService.getTrainerById(trainerId);
+            if (!trainer) throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+
+            const session = await this._paymentService.createBundleCheckoutSession({
+                userId,
+                trainerId,
+                sessions: parseInt(sessions, 10),
+                amount: parseFloat(amount),
+                userName: user.name,
+                trainerName: trainer.name,
+            });
+
+            res.status(STATUS_CODE.OK).json(session);
+        } catch (err) {
+            logger.error('Create Bundle Checkout Session Error', err);
             next(err);
         }
     }

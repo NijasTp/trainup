@@ -4,6 +4,7 @@ export interface WeeklySlot {
         _id: string;
         name: string;
         profileImage?: string;
+        sessionBundles?: Array<{ sessions: number; price: number }>;
     };
     day: string;
     date: string;

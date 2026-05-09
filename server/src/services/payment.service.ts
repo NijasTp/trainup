@@ -204,4 +204,61 @@ export class PaymentService implements IPaymentService {
       throw new AppError('Failed to retrieve checkout session', STATUS_CODE.INTERNAL_SERVER_ERROR);
     }
   }
+
+  async createBundleCheckoutSession(params: {
+    userId: string;
+    trainerId: string;
+    sessions: number;
+    amount: number;
+    userName: string;
+    trainerName: string;
+  }): Promise<{ sessionId: string; url: string | null }> {
+    try {
+      const session = await this.stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'inr',
+              product_data: {
+                name: `TrainUp: ${params.sessions} Session Pack with ${params.trainerName}`,
+                description: `Top-up for video call sessions.`,
+              },
+              unit_amount: Math.round(params.amount * 100),
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${process.env.CLIENT_URL}/payment/bundle/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.CLIENT_URL}/payment/bundle/cancel?session_id={CHECKOUT_SESSION_ID}`,
+        client_reference_id: params.userId,
+        metadata: {
+          type: 'bundle_purchase',
+          userId: params.userId,
+          trainerId: params.trainerId,
+          sessions: params.sessions.toString(),
+          amount: params.amount.toString(),
+          planType: 'session_bundle'
+        },
+      });
+
+      // Create pending transaction record
+      await this._transactionService.createTransaction({
+        userId: params.userId,
+        trainerId: params.trainerId,
+        amount: params.amount,
+        planType: 'session_bundle',
+        stripeSessionId: session.id,
+        status: 'pending',
+        provider: 'stripe',
+        createdAt: new Date(),
+      });
+
+      return { sessionId: session.id, url: session.url };
+    } catch (error) {
+      logger.error('Stripe Bundle Checkout Error:', error);
+      throw new AppError('Failed to create bundle checkout session', STATUS_CODE.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

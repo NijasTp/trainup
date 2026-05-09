@@ -54,8 +54,8 @@ export class UserPlanService implements IUserPlanService {
       throw new AppError('User plan not found', STATUS_CODE.NOT_FOUND);
     }
 
-    if (plan.planType !== 'pro') {
-      throw new AppError('Video calls not available with this plan', STATUS_CODE.FORBIDDEN);
+    if (plan.planType !== 'pro' && plan.videoCallsLeft <= 0) {
+      throw new AppError('Video calls not available with this plan. Please upgrade or purchase a bundle.', STATUS_CODE.FORBIDDEN);
     }
 
     if (plan.videoCallsLeft <= 0) {

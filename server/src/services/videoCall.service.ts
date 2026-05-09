@@ -2,6 +2,8 @@ import { injectable, inject } from 'inversify'
 import { IVideoCallService } from '../core/interfaces/services/IVideoCallService'
 import { IVideoCallRepository } from '../core/interfaces/repositories/IVideoCallRepository'
 import { ISlotRepository } from '../core/interfaces/repositories/ISlotRepository'
+import { IUserRepository } from '../core/interfaces/repositories/IUserRepository'
+import { ITrainerRepository } from '../core/interfaces/repositories/ITrainerRepository'
 import { IVideoCall } from '../models/videoCall.model'
 import TYPES from '../core/types/types'
 import { AppError } from '../utils/appError.util'
@@ -14,7 +16,9 @@ export class VideoCallService implements IVideoCallService {
   constructor(
     @inject(TYPES.IVideoCallRepository)
     private _videoCallRepository: IVideoCallRepository,
-    @inject(TYPES.ISlotRepository) private _slotRepository: ISlotRepository
+    @inject(TYPES.ISlotRepository) private _slotRepository: ISlotRepository,
+    @inject(TYPES.IUserRepository) private _userRepository: IUserRepository,
+    @inject(TYPES.ITrainerRepository) private _trainerRepository: ITrainerRepository
   ) { }
 
   async createVideoCallSession(slotId: string): Promise<IVideoCall> {
@@ -27,14 +31,12 @@ export class VideoCallService implements IVideoCallService {
       throw new AppError('Slot is not booked', STATUS_CODE.BAD_REQUEST)
     }
 
-    // Check if video call already exists for this slot
     const existingCall = await this._videoCallRepository.findBySlotId(slotId)
     if (existingCall) {
       return existingCall
     }
 
     const roomId = Math.random().toString(36).substring(2, 7) + Math.random().toString(36).substring(2, 7);
-    // Fix timezone issue: Use local date parts from the server's perspective
     const year = slot.date.getFullYear();
     const month = String(slot.date.getMonth() + 1).padStart(2, '0');
     const day = String(slot.date.getDate()).padStart(2, '0');
@@ -181,5 +183,39 @@ export class VideoCallService implements IVideoCallService {
       userFeedback: feedback,
       status: 'ended'
     })
+  }
+
+  async generateLiveKitToken(roomId: string, userId: string, userName: string): Promise<string> {
+    const { AccessToken } = await import('livekit-server-sdk');
+    
+    let displayName = userName;
+    
+
+    if (userName === 'User' || !userName) {
+      const user = await this._userRepository.findById(userId);
+      if (user) displayName = user.name;
+      else {
+        const trainer = await this._trainerRepository.findById(userId);
+        if (trainer) displayName = trainer.name;
+      }
+    }
+
+    const at = new AccessToken(
+      process.env.LIVEKIT_API_KEY,
+      process.env.LIVEKIT_API_SECRET,
+      {
+        identity: userId,
+        name: displayName,
+      }
+    );
+    
+    at.addGrant({ 
+      roomJoin: true, 
+      room: roomId,
+      canPublish: true,
+      canSubscribe: true 
+    });
+
+    return await at.toJwt();
   }
 }

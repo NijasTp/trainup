@@ -284,5 +284,16 @@ export class TrainerAuthController {
             next(err)
         }
     }
+
+    async updateSessionBundles(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const trainerId = (req.user as JwtPayload).id
+            const { bundles } = req.body
+            await this._trainerService.updateSessionBundles(trainerId, bundles)
+            res.status(STATUS_CODE.OK).json({ message: 'Session bundles updated successfully' })
+        } catch (err) {
+            next(err)
+        }
+    }
 }
 

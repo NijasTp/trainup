@@ -138,4 +138,19 @@ export class VideoCallController {
       next(err);
     }
   }
+
+  async getLiveKitToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { roomId } = req.params;
+      const userId = (req.user as JwtPayload).id;
+      const userName = ''; 
+
+      const token = await this._videoCallService.generateLiveKitToken(roomId, userId, userName);
+
+      res.status(STATUS_CODE.OK).json({ token });
+    } catch (err) {
+      logger.error('Error getting LiveKit token:', err);
+      next(err);
+    }
+  }
 }

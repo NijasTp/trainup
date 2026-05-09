@@ -18,6 +18,7 @@ router.post("/cleanup-pending", authMiddleware, paymentTrainerController.cleanup
 // Stripe Trainer Routes
 router.post("/create-checkout-session", authMiddleware, paymentTrainerController.createCheckoutSession.bind(paymentTrainerController));
 router.get("/session-status/:sessionId", authMiddleware, paymentTrainerController.getSessionStatus.bind(paymentTrainerController));
+router.post("/create-bundle-checkout-session", authMiddleware, paymentTrainerController.createBundleCheckoutSession.bind(paymentTrainerController));
 
 // Gym Routes
 router.post("/create-gym-checkout-session", authMiddleware, paymentGymController.createGymCheckoutSession.bind(paymentGymController));

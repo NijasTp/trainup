@@ -46,6 +46,10 @@ router.post('/change-password', authMiddleware, (req, res, next) =>
     trainerAuthController.changePassword(req, res, next)
 )
 
+router.post('/session-bundles', authMiddleware, roleMiddleware(['trainer']), (req, res, next) =>
+    trainerAuthController.updateSessionBundles(req, res, next)
+)
+
 router.get('/dashboard', authMiddleware, roleMiddleware(['trainer']), trainerDashboardController.getDashboard.bind(trainerDashboardController));
 router.get('/transactions', authMiddleware, roleMiddleware(['trainer']), trainerDashboardController.getTransactions.bind(trainerDashboardController));
 

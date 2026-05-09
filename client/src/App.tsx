@@ -120,6 +120,8 @@ import UserGymEquipment from './pages/user/UserGymEquipment';
 import WorkoutHistoryPage from './pages/user/WorkoutHistoryPage';
 import WorkoutPreviewPage from './pages/user/WorkoutPreviewPage';
 import UserGymAnnouncements from './pages/user/UserGymAnnouncements';
+import BundlePaymentSuccess from './pages/user/BundlePaymentSuccess';
+import BundlePaymentCancel from './pages/user/BundlePaymentCancel';
 
 
 import { useEffect, useCallback } from 'react';
@@ -209,6 +211,8 @@ function App() {
         <Route path={ROUTES.PAYMENT_TRAINER_CANCEL} element={<ProtectedRoute><PaymentCancelPage /></ProtectedRoute>} />
         <Route path={ROUTES.PAYMENT_GYM_SUCCESS} element={<ProtectedRoute><GymPaymentSuccess /></ProtectedRoute>} />
         <Route path={ROUTES.PAYMENT_GYM_CANCEL} element={<ProtectedRoute><GymPaymentCancel /></ProtectedRoute>} />
+        <Route path={ROUTES.PAYMENT_BUNDLE_SUCCESS} element={<ProtectedRoute><BundlePaymentSuccess /></ProtectedRoute>} />
+        <Route path={ROUTES.PAYMENT_BUNDLE_CANCEL} element={<ProtectedRoute><BundlePaymentCancel /></ProtectedRoute>} />
 
 
 

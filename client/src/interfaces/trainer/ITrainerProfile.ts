@@ -17,5 +17,6 @@ export interface TrainerProfile {
     certificate: string;
     profileStatus: string;
     clients: string[];
+    sessionBundles?: Array<{ sessions: number; price: number }>;
     createdAt: string;
 }

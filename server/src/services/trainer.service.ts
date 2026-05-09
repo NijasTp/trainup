@@ -418,7 +418,8 @@ export class TrainerService implements ITrainerService {
       monthlyEarnings,
       planDistribution,
       recentActivity,
-      unassignedClientsCount
+      unassignedClientsCount,
+      hasSessionBundles: (trainer.sessionBundles?.length ?? 0) > 0
     }
   }
 
@@ -497,6 +498,13 @@ export class TrainerService implements ITrainerService {
     await this._trainerRepo.updateStatus(trainerId, { password: hashed })
   }
 
+  async updateSessionBundles(trainerId: string, bundles: { sessions: number; price: number }[]): Promise<void> {
+    const trainer = await this._trainerRepo.findById(trainerId)
+    if (!trainer) throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND)
+
+    await this._trainerRepo.updateStatus(trainerId, { sessionBundles: bundles })
+  }
+
   async updateAvailability(
     trainerId: string,
     isAvailable: boolean,
@@ -535,6 +543,7 @@ export class TrainerService implements ITrainerService {
       profileImage: trainer.profileImage,
       profileStatus: trainer.profileStatus,
       rejectReason: trainer.rejectReason,
+      sessionBundles: trainer.sessionBundles,
       createdAt: trainer.createdAt,
       updatedAt: trainer.updatedAt
     }

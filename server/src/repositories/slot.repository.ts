@@ -134,7 +134,16 @@ export class SlotRepository implements ISlotRepository {
           as: 'trainer'
         }
       },
-      { $unwind: '$trainer' }
+      { $unwind: '$trainer' },
+      {
+        $lookup: {
+          from: 'videocalls',
+          localField: '_id',
+          foreignField: 'slotId',
+          as: 'videoCall'
+        }
+      },
+      { $addFields: { videoCall: { $arrayElemAt: ['$videoCall', 0] } } }
     ];
 
     const totalPipeline = [...pipeline, { $count: 'total' }];
@@ -159,7 +168,8 @@ export class SlotRepository implements ISlotRepository {
           bookedBy: 1,
           requestedBy: 1,
           videoCallLink: 1,
-          createdAt: 1
+          createdAt: 1,
+          videoCall: 1
         }
       }
     );

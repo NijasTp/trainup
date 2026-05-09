@@ -29,6 +29,7 @@ import Cropper from "react-easy-crop";
 import getCroppedImg from "@/lib/cropImage";
 import { getTrainerDetails, updateTrainerProfile, changeTrainerPassword } from "@/services/trainerService";
 import { TrainerLayout } from "@/components/trainer/TrainerLayout";
+import { SessionMonetization } from "@/components/trainer/SessionMonetization";
 
 // Schema for Profile Update
 const profileSchema = z.object({
@@ -292,6 +293,15 @@ export default function TrainerEditProfile() {
                             </div>
                         </div>
                     </Card>
+
+                    {/* Session Monetization */}
+                    <div className="space-y-6">
+                        <div className="px-4">
+                            <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Monetization Stacks</h3>
+                            <p className="text-gray-500 font-bold uppercase tracking-[0.2em] text-[9px] italic">Configure add-on session pricing</p>
+                        </div>
+                        <SessionMonetization />
+                    </div>
 
                     {/* Meta Data Form */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

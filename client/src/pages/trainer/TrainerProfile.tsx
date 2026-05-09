@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -36,17 +36,6 @@ export default function TrainerProfile() {
   const [activeTab, setActiveTab] = useState("overview");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    document.title = "TrainUp - My Hub";
-    fetchProfile();
-  }, [fetchProfile]);
-
-  useEffect(() => {
-    if (activeTab === "transactions" && !transactions) {
-      fetchTransactions();
-    }
-  }, [activeTab, transactions, fetchTransactions]);
-
   const fetchProfile = useCallback(async () => {
     try {
       const response = await API.get("/trainer/get-details");
@@ -66,6 +55,17 @@ export default function TrainerProfile() {
       toast.error("Failed to load records");
     }
   }, []);
+
+  useEffect(() => {
+    document.title = "TrainUp - My Hub";
+    fetchProfile();
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    if (activeTab === "transactions" && !transactions) {
+      fetchTransactions();
+    }
+  }, [activeTab, transactions, fetchTransactions]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -116,19 +116,28 @@ export default function TrainerProfile() {
                     onClick={() => navigate("/trainer/edit-profile")}
                     className="absolute bottom-4 right-4 h-12 w-12 rounded-2xl bg-white text-black hover:bg-cyan-500 hover:text-white transition-all shadow-xl"
                   >
-                    <Star className="h-5 w-5" />
+                    <SettingsIcon className="h-5 w-5" />
                   </Button>
                 </div>
 
                 <div className="flex-1 space-y-8">
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
-                      <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase">{profile.name}</h1>
-                      <Badge className={cn("px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest italic border shadow-lg", getStatusColor(profile.profileStatus))}>
-                        {profile.profileStatus}
-                      </Badge>
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+                        <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase">{profile.name}</h1>
+                        <Badge className={cn("px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest italic border shadow-lg", getStatusColor(profile.profileStatus))}>
+                          {profile.profileStatus}
+                        </Badge>
+                      </div>
+                      <p className="text-gray-400 text-xl font-bold italic uppercase tracking-tight">{profile.specialization}</p>
                     </div>
-                    <p className="text-gray-400 text-xl font-bold italic uppercase tracking-tight">{profile.specialization}</p>
+                    
+                    <Button
+                      onClick={() => navigate("/trainer/edit-profile")}
+                      className="bg-white text-black hover:bg-cyan-500 hover:text-white font-black uppercase italic tracking-widest px-8 h-14 rounded-2xl transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)] active:scale-95"
+                    >
+                      <SettingsIcon className="mr-2 h-4 w-4" /> Edit Profile Configuration
+                    </Button>
                   </div>
 
                   <div className="flex flex-wrap justify-center lg:justify-start gap-12">
@@ -179,6 +188,53 @@ export default function TrainerProfile() {
                 exit={{ opacity: 0, y: -20 }}
                 className="grid lg:grid-cols-2 gap-10"
               >
+                <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden lg:col-span-2">
+                  <CardContent className="p-10 space-y-8">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-black text-white italic uppercase tracking-tighter border-l-4 border-cyan-500 pl-4">Session Stacks (Offers)</h3>
+                      <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 font-black uppercase italic tracking-widest text-[10px] px-3 py-1">Monetization Active</Badge>
+                    </div>
+                    
+                    {!profile.sessionBundles || profile.sessionBundles.length === 0 ? (
+                      <div className="p-12 rounded-[2rem] bg-white/[0.02] border border-dashed border-white/10 flex flex-col items-center justify-center text-center space-y-4">
+                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-neutral-600">
+                          <CreditCard size={24} />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-black uppercase italic text-neutral-400">No Active Stacks</p>
+                          <p className="text-xs text-neutral-600 font-bold uppercase tracking-wider">Configure session bundles in your profile settings to enable client top-ups.</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => navigate("/trainer/edit-profile")}
+                          className="border-white/10 text-white/40 font-black uppercase italic tracking-widest text-[10px] hover:bg-white/5"
+                        >
+                          Add Bundles Now
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {profile.sessionBundles.map((bundle: { sessions: number; price: number }, idx: number) => (
+                          <div key={idx} className="relative group">
+                            <div className="absolute -inset-0.5 bg-gradient-to-tr from-cyan-500 to-purple-500 rounded-[2rem] opacity-0 group-hover:opacity-20 transition-opacity blur" />
+                            <div className="relative p-6 rounded-[2rem] bg-black/40 border border-white/5 flex flex-col items-center text-center space-y-3">
+                              <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                                <Wallet size={20} />
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">Stack Tier</p>
+                                <h4 className="text-xl font-black text-white italic">{bundle.sessions} Sessions</h4>
+                              </div>
+                              <div className="w-full h-[1px] bg-white/5" />
+                              <p className="text-lg font-black text-cyan-500 tracking-tighter">₹{bundle.price}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
                 <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden">
                   <CardContent className="p-10 space-y-10">
                     <h3 className="text-xl font-black text-white italic uppercase tracking-tighter border-l-4 border-cyan-500 pl-4">Connection Nodes</h3>

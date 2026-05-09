@@ -9,7 +9,6 @@ import {
   Target,
   Activity,
   ArrowUpRight,
-  Plus,
   ShieldAlert
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -18,8 +17,6 @@ import { toast } from "sonner";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -56,6 +53,7 @@ interface DashboardStats {
     date: string;
   }>;
   unassignedClientsCount: number;
+  hasSessionBundles: boolean;
 }
 
 export default function TrainerDashboard() {
@@ -189,6 +187,29 @@ export default function TrainerDashboard() {
             </div>
             <div className="flex items-center gap-2 text-amber-400 font-black uppercase italic tracking-widest text-xs">
               Action Required <ArrowUpRight className="h-4 w-4" />
+            </div>
+          </motion.div>
+        )}
+        
+        {/* Monetization Pending Notification */}
+        {!stats.hasSessionBundles && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-between p-6 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl group cursor-pointer hover:bg-cyan-500/20 transition-all shadow-[0_0_20px_rgba(6,182,212,0.1)]"
+            onClick={() => navigate("/trainer/edit-profile")}
+          >
+            <div className="flex items-center gap-6">
+              <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
+                <DollarSign className="h-7 w-7 text-cyan-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-black uppercase italic tracking-widest text-cyan-400">Monetization Stack Offline</h3>
+                <p className="text-xs text-cyan-400/60 font-bold uppercase tracking-wider mt-1">Configure your session bundles to allow clients to purchase video call top-ups.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 px-6 py-3 bg-cyan-500 text-black rounded-xl font-black uppercase italic tracking-widest text-[10px] group-hover:scale-105 transition-transform">
+              Configure Now <ArrowUpRight className="h-4 w-4" />
             </div>
           </motion.div>
         )}
@@ -479,4 +500,4 @@ export default function TrainerDashboard() {
       <SiteFooter />
     </div>
   );
-}
+}

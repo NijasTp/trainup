@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import TrainerReviews from "@/components/user/reviews/TrainerReviews";
 import Aurora from "@/components/ui/Aurora";
 import { motion } from "framer-motion";
+import { BundlePurchaseModal } from "@/components/user/BundlePurchaseModal";
 
 import type { User, Trainer, UserPlan } from "@/interfaces/user/IMyTrainer";
 
@@ -94,6 +95,7 @@ export default function MyTrainerProfile() {
     const [imageLoaded, setImageLoaded] = useState(false);
     const [userPlan, setUserPlan] = useState<UserPlan | null>(null);
     const [isCertOpen, setIsCertOpen] = useState(false);
+    const [isBundleModalOpen, setIsBundleModalOpen] = useState(false);
 
 
 
@@ -376,7 +378,7 @@ export default function MyTrainerProfile() {
                                     </div>
                                 </SpotlightCard>
 
-                                <SpotlightCard className="p-6 flex flex-col items-center justify-center text-center gap-2 group">
+                                <SpotlightCard className="p-6 flex flex-col items-center justify-center text-center gap-2 group relative overflow-hidden">
                                     <div className="p-3 bg-purple-500/20 rounded-2xl group-hover:scale-110 transition-transform">
                                         <Video className="h-6 w-6 text-purple-500" />
                                     </div>
@@ -386,6 +388,16 @@ export default function MyTrainerProfile() {
                                             {user.trainerPlan === 'pro' ? (userPlan?.videoCallsLeft ?? 0) : '0'}
                                         </p>
                                     </div>
+                                    
+                                    {(userPlan?.videoCallsLeft ?? 0) === 0 && (
+                                        <Button
+                                            onClick={() => setIsBundleModalOpen(true)}
+                                            size="sm"
+                                            className="h-8 mt-2 bg-purple-500 hover:bg-purple-600 text-white font-black italic uppercase text-[9px] tracking-widest rounded-xl transition-all active:scale-95"
+                                        >
+                                            <Zap size={10} className="mr-1.5 fill-white" /> Top-up Sessions
+                                        </Button>
+                                    )}
                                 </SpotlightCard>
                             </div>
                         )}
@@ -513,6 +525,14 @@ export default function MyTrainerProfile() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <BundlePurchaseModal
+                isOpen={isBundleModalOpen}
+                onClose={() => setIsBundleModalOpen(false)}
+                trainerId={trainer._id}
+                trainerName={trainer.name}
+                bundles={trainer.sessionBundles || []}
+            />
 
             <SiteFooter />
         </div>

@@ -18,9 +18,9 @@ import {
     CheckCircle,
     Calendar as CalendarIcon,
     Loader2,
-    Lock,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Zap
 } from "lucide-react";
 import API from "@/lib/axios";
 import { toast } from "sonner";
@@ -30,6 +30,7 @@ import Aurora from "@/components/ui/Aurora";
 import { format, isSameDay, eachDayOfInterval, startOfToday, addDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { BundlePurchaseModal } from "@/components/user/BundlePurchaseModal";
 
 import type { WeeklySlot } from "@/interfaces/user/ITrainerAvailability";
 
@@ -39,6 +40,8 @@ export default function TrainerAvailability() {
     const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [userPlan, setUserPlan] = useState<any | null>(null);
+    const [isBundleModalOpen, setIsBundleModalOpen] = useState(false);
+    const [activeTrainer, setActiveTrainer] = useState<{ id: string; name: string; bundles: any[] } | null>(null);
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -343,8 +346,18 @@ export default function TrainerAvailability() {
                                                                     Expired
                                                                 </Badge>
                                                             ) : (userPlan && userPlan.videoCallsLeft <= 0) ? (
-                                                                <Button disabled className="w-full h-14 rounded-full bg-white/5 text-neutral-600 border border-white/5 font-bold uppercase tracking-widest text-[10px]">
-                                                                    <Lock className="h-4 w-4 mr-2" /> Upgrade Plan
+                                                                <Button 
+                                                                    onClick={() => {
+                                                                        setActiveTrainer({
+                                                                            id: slot.trainerId._id,
+                                                                            name: slot.trainerId.name,
+                                                                            bundles: slot.trainerId.sessionBundles || []
+                                                                        });
+                                                                        setIsBundleModalOpen(true);
+                                                                    }}
+                                                                    className="w-full h-14 rounded-full bg-cyan-500 text-black hover:bg-cyan-400 font-black uppercase tracking-widest text-[10px] shadow-[0_10px_30px_rgba(6,182,212,0.3)] transition-all hover:-translate-y-1"
+                                                                >
+                                                                    <Zap className="h-4 w-4 mr-2" /> Top-up Sessions
                                                                 </Button>
                                                             ) : (
                                                                 <Button
@@ -381,6 +394,16 @@ export default function TrainerAvailability() {
                     scrollbar-width: none;
                 }
             `}} />
+
+            {activeTrainer && (
+                <BundlePurchaseModal
+                    isOpen={isBundleModalOpen}
+                    onClose={() => setIsBundleModalOpen(false)}
+                    trainerId={activeTrainer.id}
+                    trainerName={activeTrainer.name}
+                    bundles={activeTrainer.bundles}
+                />
+            )}
         </div>
     );
 }

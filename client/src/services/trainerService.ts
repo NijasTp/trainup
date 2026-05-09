@@ -34,3 +34,8 @@ export const getVideoCallBySlotId = async (slotId: string) => {
   const res = await API.get(API_ROUTES.VIDEO_CALL.DETAIL_BY_SLOT(slotId));
   return res.data;
 };
+
+export const updateSessionBundles = async (bundles: { sessions: number; price: number }[]) => {
+  const res = await API.post(API_ROUTES.TRAINER.SESSION_BUNDLES, { bundles });
+  return res.data;
+};

@@ -273,48 +273,35 @@ export class SocketHandler {
       const isInitiator = !room || room.size === 0
 
       socket.join(videoRoomName)
+      logger.info(`[SIGNAL] User ${socket.userId} (${socket.userRole}) joined room: ${roomId}. Total: ${this.io.sockets.adapter.rooms.get(videoRoomName)?.size}`)
 
-      // Tell the user if they are the initiator
       socket.emit('room_joined', { isInitiator })
+      socket.to(videoRoomName).emit('user_joined', { userId: socket.userId })
 
-      // Notify other users in the room that someone joined
-      socket
-        .to(videoRoomName)
-        .emit('user_joined', { userId: socket.userId })
-
-      // Broadcast updated participant count
       const updatedRoom = this.io.sockets.adapter.rooms.get(videoRoomName)
       this.io.to(videoRoomName).emit('participant_count_update', { 
         count: updatedRoom ? updatedRoom.size : 0 
       })
-
-      logger.info(`User ${socket.userId} joined video room: ${roomId} (Initiator: ${isInitiator})`)
     })
 
-    socket.on('webrtc_offer', ({ roomId, offer, targetUserId }) => {
-      logger.info(
-        `WebRTC offer from ${socket.userId} to ${targetUserId} in room ${roomId}`
-      )
+    socket.on('webrtc_offer', ({ roomId, offer }) => {
+      logger.info(`[RTC_LOG] Offer from ${socket.userId} in room ${roomId}`)
       socket.to(`video_${roomId}`).emit('webrtc_offer', {
         offer,
         fromUserId: socket.userId
       })
     })
 
-    socket.on('webrtc_answer', ({ roomId, answer, targetUserId }) => {
-      logger.info(
-        `WebRTC answer from ${socket.userId} to ${targetUserId} in room ${roomId}`
-      )
+    socket.on('webrtc_answer', ({ roomId, answer }) => {
+      logger.info(`[RTC_LOG] Answer from ${socket.userId} in room ${roomId}`)
       socket.to(`video_${roomId}`).emit('webrtc_answer', {
         answer,
         fromUserId: socket.userId
       })
     })
 
-    socket.on('webrtc_ice_candidate', ({ roomId, candidate, targetUserId }) => {
-      logger.info(
-        `ICE candidate from ${socket.userId} to ${targetUserId} in room ${roomId}`
-      )
+    socket.on('webrtc_ice_candidate', ({ roomId, candidate }) => {
+      logger.info(`[RTC_LOG] ICE Candidate from ${socket.userId} in room ${roomId}`)
       socket.to(`video_${roomId}`).emit('webrtc_ice_candidate', {
         candidate,
         fromUserId: socket.userId
@@ -327,17 +314,28 @@ export class SocketHandler {
       socket.leave(videoRoomName)
       socket.to(videoRoomName).emit('user_left', { userId: socket.userId })
       
-      // Broadcast updated participant count
       const updatedRoom = this.io.sockets.adapter.rooms.get(videoRoomName)
       this.io.to(videoRoomName).emit('participant_count_update', { 
         count: updatedRoom ? updatedRoom.size : 0 
       })
       
-      logger.info(`User ${socket.userId} left video room: ${roomId}`)
+      logger.info(`[SIGNAL] User ${socket.userId} left room: ${roomId}`)
     })
 
     socket.on('disconnect', () => {
       logger.info(`User disconnected: ${socket.userId}`)
+      // Broadcast to all rooms the user was in
+      socket.rooms.forEach(room => {
+        if (room.startsWith('video_')) {
+          const roomId = room.replace('video_', '')
+          socket.to(room).emit('user_left', { userId: socket.userId })
+          
+          const updatedRoom = this.io.sockets.adapter.rooms.get(room)
+          this.io.to(room).emit('participant_count_update', { 
+            count: updatedRoom ? updatedRoom.size : 0 
+          })
+        }
+      })
     })
   }
 

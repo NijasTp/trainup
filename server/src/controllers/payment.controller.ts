@@ -145,11 +145,14 @@ export class PaymentController {
           await this._finalizeTrainerSubscription(metadata, paymentIntentId, sessionId);
         } else if (metadata.type === 'gym_subscription') {
           await this._finalizeGymSubscription(metadata, paymentIntentId, sessionId);
+        } else if (metadata.type === 'bundle_purchase') {
+          await this._finalizeBundlePurchase(metadata, paymentIntentId, sessionId);
         }
       }
       
       res.status(STATUS_CODE.OK).send({ received: true });
-    } catch (err) {
+    } catch (error) {
+      let err = error as Error
       logger.error('Stripe Webhook Error', err);
       res.status(STATUS_CODE.BAD_REQUEST).send(`Webhook Error: ${err.message}`);
     }
@@ -201,6 +204,77 @@ export class PaymentController {
 
   private async _finalizeGymSubscription(metadata: any, paymentId: string, sessionId: string) {
       // similar logic for gym
+  }
+
+  private async _finalizeBundlePurchase(metadata: any, paymentId: string, sessionId: string) {
+    const { userId, trainerId, sessions, amount } = metadata;
+    const sessionCount = parseInt(sessions);
+    const amountNum = parseInt(amount);
+
+    await this._transactionService.updateTransactionStatusBySessionId(sessionId, 'completed', paymentId);
+    
+    // Increment videoCallsLeft in user plan
+    const userPlan = await this._userPlanService.getUserPlan(userId, trainerId);
+    if (userPlan) {
+      await this._userPlanService.updateUserPlan(userId, trainerId, {
+        videoCallsLeft: userPlan.videoCallsLeft + sessionCount
+      });
+    }
+
+    // Notifications
+    const trainer = await this._trainerService.getTrainerById(trainerId);
+    await this._notificationService.createNotification({
+        recipientId: userId,
+        recipientRole: 'user',
+        type: 'payment_success',
+        title: 'Top-up Successful!',
+        message: `You have successfully added ${sessionCount} video call sessions.`,
+        priority: 'high',
+        category: 'success'
+    });
+
+    if (trainer) {
+        await this._notificationService.createNotification({
+            recipientId: trainerId,
+            recipientRole: 'trainer',
+            type: 'trainer_new_subscriber',
+            title: 'Session Bundle Purchased!',
+            message: `A user has purchased a ${sessionCount} session pack from you.`,
+            priority: 'medium',
+            category: 'success'
+          });
+    }
+  }
+
+  async createBundleCheckoutSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { trainerId, sessions, amount } = req.body;
+      const userId = (req.user as JwtPayload).id;
+
+      if (!trainerId || !sessions || !amount) {
+        throw new AppError(MESSAGES.MISSING_REQUIRED_FIELDS, STATUS_CODE.BAD_REQUEST);
+      }
+
+      const user = await this._userService.getUserById(userId);
+      if (!user) throw new AppError(MESSAGES.USER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+
+      const trainer = await this._trainerService.getTrainerById(trainerId);
+      if (!trainer) throw new AppError(MESSAGES.TRAINER_NOT_FOUND, STATUS_CODE.NOT_FOUND);
+
+      const session = await this._paymentService.createBundleCheckoutSession({
+        userId,
+        trainerId,
+        sessions: parseInt(sessions),
+        amount: parseInt(amount),
+        userName: user.name,
+        trainerName: trainer.name,
+      });
+
+      res.status(STATUS_CODE.OK).json(session);
+    } catch (err) {
+      logger.error('Create Bundle Checkout Session Error', err);
+      next(err);
+    }
   }
 
   // Legacy/Compatibility methods (can be cleaned up after full migration)

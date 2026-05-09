@@ -119,6 +119,7 @@ export const API_ROUTES = {
     TRANSACTIONS: '/trainer/transactions',
     SCHEDULE: '/trainer/weekly-schedule',
     CHANGE_PASSWORD: '/trainer/change-password',
+    SESSION_BUNDLES: '/trainer/session-bundles',
   },
   GYM: {
     GET_DETAILS: '/gym/get-details',
@@ -190,6 +191,7 @@ export const API_ROUTES = {
   PAYMENT: {
     TRAINER_CHECKOUT: '/payment/create-checkout-session',
     GYM_CHECKOUT: '/payment/create-gym-checkout-session',
+    BUNDLE_CHECKOUT: '/payment/create-bundle-checkout-session',
     TRANSACTIONS: '/payment/transactions',
   },
   WORKOUT: {

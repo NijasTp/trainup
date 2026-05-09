@@ -10,4 +10,5 @@ export interface IVideoCallService {
   endVideoCall(roomId: string): Promise<void>;
   getActiveParticipants(roomId: string): Promise<number>;
   submitFeedback(roomId: string, rating: number, feedback: string): Promise<void>;
+  generateLiveKitToken(roomId: string, userId: string, userName: string): Promise<string>;
 }

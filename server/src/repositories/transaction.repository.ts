@@ -305,9 +305,10 @@ export class TransactionRepository implements ITransactionRepository {
       .lean();
 
     return transactions.map(t => ({
-      type: 'subscription',
-      message: `New ${t.planType} subscription from ${t.userId?.name ?? 'Unknown User'
-        }`,
+      type: t.metadata?.type === 'bundle_purchase' ? 'bundle' : 'subscription',
+      message: t.metadata?.type === 'bundle_purchase' 
+        ? `Session stack purchase (${t.planType}) from ${t.userId?.name ?? 'Unknown User'}`
+        : `New ${t.planType} subscription from ${t.userId?.name ?? 'Unknown User'}`,
       date: t.createdAt.toISOString(),
     }));
   }
