@@ -210,6 +210,14 @@ export class SlotService implements ISlotService {
     }
 
 
+    // Find other pending users to notify them of rejection
+    const otherPendingUsers = slot.requestedBy.filter(
+      req => 
+        (typeof req.userId === 'object' && req.userId._id
+          ? req.userId._id.toString()
+          : req.userId.toString()) !== userId && req.status === 'pending'
+    );
+
     const success = await this._userPlanService.decrementVideoCalls(
       userId,
       trainerId
@@ -244,7 +252,22 @@ export class SlotService implements ISlotService {
 
     const trainer = await this._trainerRepository.findById(trainerId);
     if (trainer) {
+      // Notify the approved user
       await this._notificationService.sendSessionResponseNotification(userId, trainer.name, true);
+
+      // Notify other pending users about rejection
+      for (const otherReq of otherPendingUsers) {
+        const otherUserId = typeof otherReq.userId === 'object' && otherReq.userId._id
+          ? otherReq.userId._id.toString()
+          : otherReq.userId.toString();
+        
+        await this._notificationService.sendSessionResponseNotification(
+          otherUserId, 
+          trainer.name, 
+          false, 
+          'Slot approved for another user'
+        );
+      }
     }
   }
 

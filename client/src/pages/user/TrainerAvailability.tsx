@@ -339,7 +339,7 @@ export default function TrainerAvailability() {
                                                                 </Badge>
                                                             ) : slot.isRequested ? (
                                                                 <Badge className="py-3 px-6 justify-center bg-white/10 text-white/60 border-white/10 rounded-full text-xs font-black uppercase tracking-[0.1em] italic">
-                                                                    In Review
+                                                                    Session Requested
                                                                 </Badge>
                                                             ) : isPast ? (
                                                                 <Badge className="py-3 px-6 justify-center bg-white/5 text-neutral-600 border-white/5 rounded-full text-xs font-black uppercase tracking-[0.1em]">

@@ -77,6 +77,8 @@ interface Slot {
         status: 'pending' | 'approved' | 'rejected';
         _id: string;
     }[];
+    createdAt: string;
+    updatedAt: string;
 }
 
 export default function WeeklySchedule() {
@@ -145,7 +147,7 @@ export default function WeeklySchedule() {
                 startTime: newSlot.startTime,
                 endTime: newSlot.endTime
             });
-            setSlots([...slots, response.data.slot]);
+            setSlots([response.data.slot, ...slots]);
             setIsAddingSlot(false);
             toast.success("Slot added successfully");
         } catch (error: any) {
@@ -202,9 +204,18 @@ export default function WeeklySchedule() {
         }
     };
 
-    const selectedDateSlots = slots.filter(slot => 
-        isSameDay(new Date(slot.date), selectedDate)
-    ).sort((a, b) => a.startTime.localeCompare(b.startTime));
+    const selectedDateSlots = useMemo(() => {
+        return slots
+            .filter(slot => isSameDay(new Date(slot.date), selectedDate))
+            .sort((a, b) => {
+                // If both are booked, sort by updatedAt (newly approved first)
+                if (a.isBooked && b.isBooked) {
+                    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+                }
+                // Otherwise sort by createdAt (newly added first)
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+    }, [slots, selectedDate]);
 
     // Filtered Requests Logic
     const filteredRequests = useMemo(() => {
@@ -484,7 +495,8 @@ export default function WeeklySchedule() {
                                 ) : (
                                     <div className="grid gap-6">
                                         {selectedDateSlots.map((slot, index) => {
-                                            const pendingReq = slot.requestedBy?.find(r => r.status === 'pending');
+                                            const pendingRequests = slot.requestedBy?.filter(r => r.status === 'pending') || [];
+                                            const isPending = pendingRequests.length > 0;
                                             
                                             return (
                                                 <motion.div
@@ -516,9 +528,9 @@ export default function WeeklySchedule() {
                                                                                 <Badge className="bg-black text-white border-none px-6 py-2 rounded-full text-[10px] font-black uppercase italic tracking-[0.2em]">
                                                                                     Confirmed
                                                                                 </Badge>
-                                                                            ) : pendingReq ? (
+                                                                            ) : isPending ? (
                                                                                 <Badge className="bg-white/10 text-white border-none px-6 py-2 rounded-full text-[10px] font-black uppercase italic tracking-[0.2em] animate-pulse">
-                                                                                    Pending Review
+                                                                                    {pendingRequests.length} Pending {pendingRequests.length === 1 ? 'Request' : 'Requests'}
                                                                                 </Badge>
                                                                             ) : (
                                                                                 <Badge variant="outline" className="border-white/10 text-neutral-600 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
@@ -537,10 +549,27 @@ export default function WeeklySchedule() {
                                                                                     <span className="font-black text-lg tracking-tighter">{slot.bookedBy?.name}</span>
                                                                                 </div>
                                                                             )}
-                                                                            {!slot.isBooked && pendingReq && (
-                                                                                <div className="flex items-center gap-3 pl-8 border-l border-white/10">
-                                                                                    <User className="w-5 h-5 text-white/30" />
-                                                                                    <span className="font-bold text-white/60">Requested by: {pendingReq.userId.name}</span>
+                                                                            {!slot.isBooked && isPending && (
+                                                                                <div className="flex flex-col gap-2 pl-8 border-l border-white/10">
+                                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Requested by:</span>
+                                                                                    <div className="flex items-center gap-3">
+                                                                                        <div className="flex -space-x-3 overflow-hidden">
+                                                                                            {pendingRequests.slice(0, 3).map((req) => (
+                                                                                                <Avatar key={req._id} className="h-8 w-8 border-2 border-black ring-0">
+                                                                                                    <AvatarImage src={req.userId.profileImage} />
+                                                                                                    <AvatarFallback className="bg-white/10 text-[10px] font-black">{req.userId.name[0]}</AvatarFallback>
+                                                                                                </Avatar>
+                                                                                            ))}
+                                                                                            {pendingRequests.length > 3 && (
+                                                                                                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-white/5 border-2 border-black text-[10px] font-black text-neutral-500">
+                                                                                                    +{pendingRequests.length - 3}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <span className="font-bold text-white/60 text-sm">
+                                                                                            {pendingRequests[0].userId.name} {pendingRequests.length > 1 ? `and ${pendingRequests.length - 1} others` : ''}
+                                                                                        </span>
+                                                                                    </div>
                                                                                 </div>
                                                                             )}
                                                                         </div>
@@ -555,21 +584,51 @@ export default function WeeklySchedule() {
                                                                         >
                                                                             Manage Call
                                                                         </Button>
-                                                                    ) : pendingReq ? (
-                                                                        <div className="flex gap-2">
-                                                                            <Button 
-                                                                                onClick={() => handleApprove(slot._id, pendingReq.userId._id)}
-                                                                                className="h-16 px-8 rounded-3xl bg-white text-black hover:bg-neutral-200 font-bold"
-                                                                            >
-                                                                                <Check className="w-5 h-5 mr-2" /> Approve
-                                                                            </Button>
-                                                                            <Button 
-                                                                                variant="outline"
-                                                                                onClick={() => handleReject(slot._id, pendingReq.userId._id)}
-                                                                                className="h-16 px-8 rounded-3xl border-white/10 text-white hover:bg-white/5"
-                                                                            >
-                                                                                <X className="w-5 h-5" />
-                                                                            </Button>
+                                                                    ) : isPending ? (
+                                                                        <div className="flex flex-col gap-3 min-w-[200px]">
+                                                                            <Dialog>
+                                                                                <DialogTrigger asChild>
+                                                                                    <Button className="h-14 px-8 rounded-2xl bg-white text-black hover:bg-neutral-200 font-bold w-full shadow-2xl">
+                                                                                        Review Requests
+                                                                                    </Button>
+                                                                                </DialogTrigger>
+                                                                                <DialogContent className="bg-[#0A0A0A] border-white/10 text-white max-w-lg rounded-[3rem] p-10 backdrop-blur-2xl">
+                                                                                    <DialogHeader>
+                                                                                        <DialogTitle className="text-3xl font-black tracking-tighter">Pending Clients.</DialogTitle>
+                                                                                        <DialogDescription className="text-neutral-500">Choose a client to approve for this slot.</DialogDescription>
+                                                                                    </DialogHeader>
+                                                                                    <div className="space-y-4 mt-6 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+                                                                                        {pendingRequests.map((req) => (
+                                                                                            <div key={req._id} className="flex items-center justify-between p-6 bg-white/[0.03] rounded-3xl border border-white/5 group hover:border-white/10 transition-all">
+                                                                                                <div className="flex items-center gap-4">
+                                                                                                    <Avatar className="h-12 w-12 rounded-2xl">
+                                                                                                        <AvatarImage src={req.userId.profileImage} />
+                                                                                                        <AvatarFallback className="bg-white/10">{req.userId.name[0]}</AvatarFallback>
+                                                                                                    </Avatar>
+                                                                                                    <span className="font-bold text-lg">{req.userId.name}</span>
+                                                                                                </div>
+                                                                                                <div className="flex gap-2">
+                                                                                                    <Button 
+                                                                                                        onClick={() => handleApprove(slot._id, req.userId._id)}
+                                                                                                        size="sm"
+                                                                                                        className="h-10 px-4 rounded-xl bg-white text-black font-bold"
+                                                                                                    >
+                                                                                                        Approve
+                                                                                                    </Button>
+                                                                                                    <Button 
+                                                                                                        onClick={() => handleReject(slot._id, req.userId._id)}
+                                                                                                        size="sm"
+                                                                                                        variant="ghost"
+                                                                                                        className="h-10 w-10 rounded-xl bg-red-500/10 text-red-500 p-0"
+                                                                                                    >
+                                                                                                        <X className="w-4 h-4" />
+                                                                                                    </Button>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </DialogContent>
+                                                                            </Dialog>
                                                                         </div>
                                                                     ) : (
                                                                         <Button 

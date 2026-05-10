@@ -3,11 +3,11 @@ import {
     LiveKitRoom,
     useTracks,
     type TrackReference,
-    ParticipantTile,
     RoomAudioRenderer,
     useRoomContext,
     useLocalParticipant,
     useRemoteParticipants,
+    VideoTrack,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import { Button } from "@/components/ui/button";
@@ -212,18 +212,34 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
             </div>
 
             {/* Main Stage */}
-            <div className="flex-1 relative bg-black flex items-center justify-center p-4">
+            <div className="flex-1 relative bg-black flex items-center justify-center">
                 {remoteTracks.length > 0 ? (
                     <div className={cn(
-                        "w-full h-full rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl relative bg-[#050505]",
-                        remoteTracks.length > 1 ? "grid grid-cols-2 gap-4 max-w-7xl" : "flex items-center justify-center"
+                        "w-full h-full relative bg-[#050505]",
+                        remoteTracks.length > 1 ? "grid grid-cols-2 gap-px" : "flex items-center justify-center"
                     )}>
                         {remoteTracks.map((track) => (
-                            <ParticipantTile 
-                                key={track.participant.sid} 
-                                trackRef={track} 
-                                className="w-full h-full"
-                            />
+                            <div key={track.participant.sid} className="relative w-full h-full overflow-hidden">
+                                <VideoTrack 
+                                    trackRef={track} 
+                                    className="w-full h-full object-cover" 
+                                />
+                                <div className="absolute bottom-10 left-10 z-10">
+                                    <div className="px-4 py-2 bg-black/40 backdrop-blur-xl rounded-full border border-white/10">
+                                        <span className="text-xs font-black uppercase tracking-widest text-white/90">
+                                            {track.participant.identity || track.participant.name}
+                                        </span>
+                                    </div>
+                                </div>
+                                {!track.participant.isCameraEnabled && (
+                                    <div className="absolute inset-0 bg-[#080808] flex flex-col items-center justify-center space-y-6">
+                                        <div className="w-32 h-32 rounded-[3.5rem] bg-white/[0.02] border border-white/5 flex items-center justify-center">
+                                            <UserIcon className="w-12 h-12 text-white/5" />
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/10">Signal Lost</span>
+                                    </div>
+                                )}
+                            </div>
                         ))}
                     </div>
                 ) : (
@@ -257,7 +273,7 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
                 className="absolute right-10 bottom-36 w-56 md:w-80 aspect-video bg-[#0a0a0a] rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 z-50 cursor-move"
             >
                 {localParticipant.isCameraEnabled ? (
-                    localTrack && <ParticipantTile trackRef={localTrack} className="w-full h-full" />
+                    localTrack && <VideoTrack trackRef={localTrack} className="w-full h-full object-cover" />
                 ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center bg-[#050505] space-y-3">
                         <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
