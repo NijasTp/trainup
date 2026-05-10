@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
 import { ROUTES } from './constants/routes';
 import { Role } from './constants/role';
 import Login from './pages/user/Login';
@@ -152,12 +153,20 @@ function App() {
   }, [isAuthenticated, refreshProfile]);
 
   return (
-    <>
+    <ThemeProvider>
       <ToastContainer />
       <Toaster position='bottom-right' theme='dark' richColors duration={6000}/>
       <Routes>
         <Route path={ROUTES.CHOOSE_LOGIN} element={<RoleSelectionPage />} />
         <Route path={ROUTES.GLOBAL_LOGIN} element={<RoleSelectionPage />} />
+
+        {/* Payment Success/Cancel Routes moved up */}
+        <Route path={ROUTES.PAYMENT_TRAINER_SUCCESS} element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
+        <Route path={ROUTES.PAYMENT_TRAINER_CANCEL} element={<ProtectedRoute><PaymentCancelPage /></ProtectedRoute>} />
+        <Route path={ROUTES.PAYMENT_GYM_SUCCESS} element={<ProtectedRoute><GymPaymentSuccess /></ProtectedRoute>} />
+        <Route path={ROUTES.PAYMENT_GYM_CANCEL} element={<ProtectedRoute><GymPaymentCancel /></ProtectedRoute>} />
+        <Route path={ROUTES.PAYMENT_BUNDLE_SUCCESS} element={<ProtectedRoute><BundlePaymentSuccess /></ProtectedRoute>} />
+        <Route path={ROUTES.PAYMENT_BUNDLE_CANCEL} element={<ProtectedRoute><BundlePaymentCancel /></ProtectedRoute>} />
         <Route path={ROUTES.USER_LOGIN} element={<Login initialRole={Role.USER} />} />
         <Route path="/user/login" element={<Login initialRole={Role.USER} />} />
         <Route path={ROUTES.USER_FORGOT_PASSWORD} element={<PreventLoggedIn><ForgotPasswordPage /></PreventLoggedIn>} />
@@ -207,12 +216,6 @@ function App() {
         <Route path={ROUTES.USER_WISHLIST} element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYM_SHOP} element={<ProtectedRoute><UserGymStore /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYM_ANNOUNCEMENTS} element={<ProtectedRoute><UserGymAnnouncements /></ProtectedRoute>} />
-        <Route path={ROUTES.PAYMENT_TRAINER_SUCCESS} element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
-        <Route path={ROUTES.PAYMENT_TRAINER_CANCEL} element={<ProtectedRoute><PaymentCancelPage /></ProtectedRoute>} />
-        <Route path={ROUTES.PAYMENT_GYM_SUCCESS} element={<ProtectedRoute><GymPaymentSuccess /></ProtectedRoute>} />
-        <Route path={ROUTES.PAYMENT_GYM_CANCEL} element={<ProtectedRoute><GymPaymentCancel /></ProtectedRoute>} />
-        <Route path={ROUTES.PAYMENT_BUNDLE_SUCCESS} element={<ProtectedRoute><BundlePaymentSuccess /></ProtectedRoute>} />
-        <Route path={ROUTES.PAYMENT_BUNDLE_CANCEL} element={<ProtectedRoute><BundlePaymentCancel /></ProtectedRoute>} />
 
 
 
@@ -299,7 +302,7 @@ function App() {
 
         <Route path={ROUTES.USER_NOT_FOUND} element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
       </Routes>
-    </>
+    </ThemeProvider>
   );
 }
 

@@ -79,7 +79,7 @@ export const SessionMonetization: React.FC = () => {
     setIsSaving(true);
     try {
       await updateSessionBundles(bundles);
-      toast.success('Monetization strategy synchronized');
+      toast.success('Price packages updated');
     } catch (error) {
       toast.error('Sync failed. Check connection.');
     } finally {
@@ -131,7 +131,7 @@ export const SessionMonetization: React.FC = () => {
               onClick={addBundle} 
               className="bg-white/5 hover:bg-white/10 text-white rounded-xl h-10 px-6 font-black italic uppercase text-[10px]"
             >
-              Initialize Stacks
+              Add Packages
             </Button>
           </div>
         ) : (
@@ -197,7 +197,7 @@ export const SessionMonetization: React.FC = () => {
               <Info size={16} />
             </div>
             <div className="space-y-1">
-              <h4 className="text-white font-black italic uppercase text-[10px] tracking-wider">Protocol Info</h4>
+              <h4 className="text-white font-black italic uppercase text-[10px] tracking-wider">Important Info</h4>
               <p className="text-gray-500 text-[9px] font-medium leading-relaxed">
                 Bundles allow users to purchase additional video call credits when their plan limit is reached. 
                 A platform fee of 10% applies to all bundle transactions.
@@ -217,7 +217,7 @@ export const SessionMonetization: React.FC = () => {
               </motion.div>
             ) : (
               <>
-                <Save size={18} className="mr-2" /> Commit Strategy
+                <Save size={18} className="mr-2" /> Save Changes
               </>
             )}
           </Button>

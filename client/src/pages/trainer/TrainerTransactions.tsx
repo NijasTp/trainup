@@ -60,7 +60,7 @@ export default function TrainerTransactions() {
   }, [page, search, statusFilter, planFilter]);
 
   useEffect(() => {
-    document.title = "TrainUp - Synergy Ledgers";
+    document.title = "TrainUp - Earnings History";
     fetchTransactions();
   }, [fetchTransactions]);
 
@@ -102,15 +102,15 @@ export default function TrainerTransactions() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4">
           <div className="space-y-2">
             <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase flex items-center gap-4">
-              <CreditCard className="w-10 h-10 text-cyan-500" /> Synergy <span className="text-cyan-400">Ledger</span>
+              <CreditCard className="w-10 h-10 text-cyan-500" /> My <span className="text-cyan-400">Earnings</span>
             </h1>
             <p className="text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px] italic">
-              Financial Architecture & Protocol Archives
+              Detailed Transaction History
             </p>
           </div>
           <div className="flex gap-4">
             <Button variant="outline" className="bg-white/5 border-white/10 text-gray-400 hover:text-white rounded-2xl h-14 px-8 font-black italic uppercase text-xs">
-              <Download size={16} className="mr-2" /> Export Protocol
+              <Download size={16} className="mr-2" /> Export History
             </Button>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function TrainerTransactions() {
               <h2 className="text-4xl font-black text-white italic tracking-tighter">
                 {formatAmount(transactions.totalRevenue)}
               </h2>
-              <p className="text-[9px] text-gray-500 font-black uppercase italic tracking-widest">* Includes Automated Payout Nodes</p>
+              <p className="text-[9px] text-gray-500 font-black uppercase italic tracking-widest">* Includes all completed payments</p>
             </div>
           </Card>
 
@@ -138,7 +138,7 @@ export default function TrainerTransactions() {
             </div>
             <div>
               <p className="text-4xl font-black text-white italic tracking-tighter">{transactions.total}</p>
-              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Subscription Cycles</p>
+              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Total Sales</p>
             </div>
           </Card>
 
@@ -147,8 +147,8 @@ export default function TrainerTransactions() {
               <Calendar size={32} />
             </div>
             <div>
-              <p className="text-lg font-black text-white italic uppercase tracking-tighter">Active Matrix</p>
-              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic tracking-widest">Temporal Sync Enabled</p>
+              <p className="text-lg font-black text-white italic uppercase tracking-tighter">Active Accounts</p>
+              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic tracking-widest">Real-time Data</p>
             </div>
           </Card>
         </div>
@@ -159,7 +159,7 @@ export default function TrainerTransactions() {
             <div className="relative flex-1 group">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
               <Input
-                placeholder="PROBE USER IDENTITY..."
+                placeholder="SEARCH CLIENT NAME..."
                 value={search}
                 onChange={handleSearchChange}
                 className="bg-black/40 border-white/10 h-16 pl-16 rounded-2xl text-white font-black italic uppercase text-xs focus:ring-1 focus:ring-cyan-500/50"
@@ -172,7 +172,7 @@ export default function TrainerTransactions() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent className="bg-black border-white/10">
-                  <SelectItem value="all">ALL DEPLOYMENTS</SelectItem>
+                  <SelectItem value="all">ALL TRANSACTIONS</SelectItem>
                   <SelectItem value="completed">SUCCESS</SelectItem>
                   <SelectItem value="failed">FAILED</SelectItem>
                   <SelectItem value="pending">PENDING</SelectItem>
@@ -180,10 +180,10 @@ export default function TrainerTransactions() {
               </Select>
               <Select value={planFilter} onValueChange={(v) => { setPlanFilter(v); setPage(1); }}>
                 <SelectTrigger className="w-48 bg-black/40 border-white/10 h-16 rounded-2xl text-white font-black italic uppercase text-[10px] focus:ring-1 focus:ring-cyan-500/50">
-                  <SelectValue placeholder="Protocol" />
+                  <SelectValue placeholder="Plan Type" />
                 </SelectTrigger>
                 <SelectContent className="bg-black border-white/10">
-                  <SelectItem value="all">ALL PROTOCOLS</SelectItem>
+                  <SelectItem value="all">ALL PLANS</SelectItem>
                   <SelectItem value="basic">BASIC</SelectItem>
                   <SelectItem value="premium">PREMIUM</SelectItem>
                   <SelectItem value="pro">PRO</SelectItem>
@@ -199,12 +199,12 @@ export default function TrainerTransactions() {
             {isLoading ? (
               <div className="p-40 flex flex-col items-center justify-center gap-4">
                 <div className="w-12 h-12 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 italic">Syncing Ledger Nodes...</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 italic">Syncing Transactions...</p>
               </div>
             ) : transactions.transactions.length === 0 ? (
               <div className="p-40 text-center space-y-4">
                 <CreditCard className="mx-auto h-16 w-16 text-gray-800" />
-                <p className="text-gray-500 font-black italic uppercase tracking-widest text-xs">No Synergy Records Initialized</p>
+                <p className="text-gray-500 font-black italic uppercase tracking-widest text-xs">No Transactions Found</p>
               </div>
             ) : (
               <div className="divide-y divide-white/5">
@@ -223,7 +223,7 @@ export default function TrainerTransactions() {
                         </h3>
                         <div className="flex flex-wrap items-center gap-4">
                           <Badge className={cn("px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest italic border", getPlanColor(tx.planType))}>
-                            {tx.planType} Protocol
+                            {tx.planType} Plan
                           </Badge>
                           <span className="text-[10px] text-gray-600 font-black italic uppercase tracking-wider flex items-center gap-2">
                             <Calendar size={12} className="text-gray-700" /> {formatDate(tx.createdAt)}
@@ -265,7 +265,7 @@ export default function TrainerTransactions() {
                 onClick={() => setPage(page - 1)}
                 className="h-14 px-8 bg-white/5 border border-white/5 text-gray-400 hover:text-white rounded-2xl font-black italic uppercase text-xs disabled:opacity-20"
               >
-                <ChevronLeft size={16} className="mr-2" /> Previous Shift
+                <ChevronLeft size={16} className="mr-2" /> Previous
               </Button>
 
               <div className="flex items-center gap-3">
@@ -289,7 +289,7 @@ export default function TrainerTransactions() {
                 onClick={() => setPage(page + 1)}
                 className="h-14 px-8 bg-white/5 border border-white/5 text-gray-400 hover:text-white rounded-2xl font-black italic uppercase text-xs disabled:opacity-20"
               >
-                Next Shift <ChevronRight size={16} className="ml-2" />
+                Next <ChevronRight size={16} className="ml-2" />
               </Button>
             </div>
           )}

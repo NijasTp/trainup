@@ -134,40 +134,40 @@ export default function TrainerAvailability() {
 
     if (isLoading && slots.length === 0) {
         return (
-            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+            <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground overflow-hidden font-outfit">
                 <div className="absolute inset-0 z-0">
-                    <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+                    <Aurora colorStops={["var(--background)", "var(--site-bg)", "var(--background)"]} amplitude={1.1} blend={0.6} />
                 </div>
                 <SiteHeader />
                 <div className="relative flex-1 flex flex-col items-center justify-center space-y-6">
                     <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                    <p className="text-muted-foreground font-medium text-lg">Synchronizing availability...</p>
+                    <p className="text-muted-foreground font-medium text-lg">Loading availability...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit selection:bg-white/10">
+        <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground overflow-hidden font-outfit selection:bg-primary/10">
             <div className="absolute inset-0 z-0">
-                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+                <Aurora colorStops={["var(--background)", "var(--site-bg)", "var(--background)"]} amplitude={1.1} blend={0.6} />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--primary),0.02)_0%,transparent_70%)] pointer-events-none" />
             </div>
             <SiteHeader />
 
-            <div className="relative border-b border-white/5 bg-black/40 backdrop-blur-xl">
+            <div className="relative border-b border-glass-border bg-glass-bg backdrop-blur-xl">
                 <div className="container mx-auto px-6 py-4 flex items-center justify-between">
                     <Link to="/my-trainer/profile">
-                        <Button variant="ghost" className="group text-neutral-400 hover:text-white transition-all">
+                        <Button variant="ghost" className="group text-muted-foreground hover:text-foreground transition-all">
                             <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                            Back to Trainer
+                            Back to Coach
                         </Button>
                     </Link>
                     {userPlan && (
-                        <div className="flex items-center gap-4 px-6 py-2 bg-white/5 rounded-full border border-white/5">
-                            <Video className="w-4 h-4 text-white/40" />
+                        <div className="flex items-center gap-4 px-6 py-2 bg-glass-bg rounded-full border border-glass-border">
+                            <Video className="w-4 h-4 text-muted-foreground" />
                             <span className="text-sm font-bold tracking-tight">
-                                {userPlan.videoCallsLeft} Sessions <span className="text-neutral-500 font-medium">Remaining</span>
+                                {userPlan.videoCallsLeft} Sessions <span className="text-muted-foreground font-medium">Remaining</span>
                             </span>
                         </div>
                     )}
@@ -180,15 +180,15 @@ export default function TrainerAvailability() {
                 <div className="space-y-10">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div className="space-y-4">
-                            <h1 className="text-5xl font-black tracking-tighter">Choose a <span className="text-neutral-500 italic">Date.</span></h1>
+                            <h1 className="text-5xl font-black tracking-tighter text-foreground">Select a <span className="text-muted-foreground italic">Date.</span></h1>
                             <div className="flex items-center gap-4">
-                                <p className="text-neutral-400 text-lg max-w-md">Book your next session from your trainer's available slots below.</p>
+                                <p className="text-muted-foreground text-lg max-w-md">Book your next session from the available slots below.</p>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button 
                                             variant="ghost" 
                                             size="icon" 
-                                            className="h-10 w-10 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-neutral-500"
+                                            className="h-10 w-10 rounded-xl bg-glass-bg border border-glass-border hover:bg-glass-hover text-muted-foreground"
                                         >
                                             <CalendarIcon className="w-4 h-4" />
                                         </Button>
@@ -207,7 +207,7 @@ export default function TrainerAvailability() {
                                 variant="outline" 
                                 size="icon" 
                                 onClick={() => scroll('left')}
-                                className="h-12 w-12 rounded-full border-white/5 bg-white/5 hover:bg-white/10 text-neutral-400"
+                                className="h-12 w-12 rounded-full border-glass-border bg-glass-bg hover:bg-glass-hover text-muted-foreground"
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </Button>
@@ -215,7 +215,7 @@ export default function TrainerAvailability() {
                                 variant="outline" 
                                 size="icon" 
                                 onClick={() => scroll('right')}
-                                className="h-12 w-12 rounded-full border-white/5 bg-white/5 hover:bg-white/10 text-neutral-400"
+                                className="h-12 w-12 rounded-full border-glass-border bg-glass-bg hover:bg-glass-hover text-muted-foreground"
                             >
                                 <ChevronRight className="w-5 h-5" />
                             </Button>
@@ -237,8 +237,8 @@ export default function TrainerAvailability() {
                                     className={cn(
                                         "flex-shrink-0 w-28 h-36 rounded-[2.5rem] flex flex-col items-center justify-center gap-2 transition-all duration-300 border",
                                         isSelected 
-                                            ? "bg-white text-black border-white shadow-[0_20px_50px_rgba(255,255,255,0.15)] -translate-y-2" 
-                                            : "bg-white/[0.02] border-white/5 text-neutral-500 hover:border-white/20 hover:bg-white/[0.05]"
+                                            ? "bg-primary text-primary-foreground border-primary shadow-[0_20px_50px_rgba(var(--primary),0.15)] -translate-y-2" 
+                                            : "bg-glass-bg border-glass-border text-muted-foreground hover:border-foreground/20 hover:bg-glass-hover"
                                     )}
                                 >
                                     <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
@@ -258,14 +258,14 @@ export default function TrainerAvailability() {
 
                 {/* Slots Grid */}
                 <div className="space-y-8">
-                    <div className="flex items-center justify-between border-b border-white/5 pb-8">
-                        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-4">
+                    <div className="flex items-center justify-between border-b border-glass-border pb-8">
+                        <h2 className="text-3xl font-black italic uppercase tracking-tighter flex items-center gap-4 text-foreground">
                             {format(selectedDate, "EEEE, MMMM do")}
-                            <Badge className="bg-white/5 text-neutral-400 border-white/10 px-4 py-1.5 rounded-full font-mono">
+                            <Badge className="bg-glass-bg text-muted-foreground border-glass-border px-4 py-1.5 rounded-full font-mono">
                                 {selectedDateSlots.length} Slots
                             </Badge>
                         </h2>
-                        <Button variant="ghost" onClick={fetchAvailability} className="text-neutral-500 hover:text-white">
+                        <Button variant="ghost" onClick={fetchAvailability} className="text-muted-foreground hover:text-foreground">
                             <RefreshCw className="h-4 w-4 mr-2" /> Sync
                         </Button>
                     </div>
@@ -276,12 +276,12 @@ export default function TrainerAvailability() {
                                 <motion.div 
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    className="flex flex-col items-center justify-center py-40 bg-white/[0.01] border border-dashed border-white/10 rounded-[3rem] text-center px-10"
+                                    className="flex flex-col items-center justify-center py-40 bg-glass-bg border border-dashed border-glass-border rounded-[3rem] text-center px-10"
                                 >
-                                    <CalendarIcon className="h-20 w-20 text-neutral-800 mb-8" />
-                                    <h3 className="text-2xl font-bold mb-3 tracking-tight">Fully Booked or Resting</h3>
-                                    <p className="text-neutral-500 max-w-sm mx-auto text-lg leading-relaxed">
-                                        Your trainer hasn't scheduled any sessions for this date yet. Try checking the surrounding dates!
+                                    <CalendarIcon className="h-20 w-20 text-muted-foreground opacity-20 mb-8" />
+                                    <h3 className="text-2xl font-black italic uppercase mb-3 tracking-tight">No Sessions Available</h3>
+                                    <p className="text-muted-foreground max-w-sm mx-auto text-lg leading-relaxed italic">
+                                        No coaching sessions have been scheduled for this date yet.
                                     </p>
                                 </motion.div>
                             ) : (
@@ -297,8 +297,8 @@ export default function TrainerAvailability() {
                                             transition={{ delay: index * 0.1 }}
                                         >
                                             <Card className={cn(
-                                                "group relative bg-white/[0.02] border-white/5 hover:border-white/20 transition-all duration-500 rounded-[3rem] overflow-hidden",
-                                                isDisabled ? 'opacity-40' : 'hover:bg-white/[0.05] hover:scale-[1.01]'
+                                                "group relative bg-glass-bg border-glass-border hover:border-primary/20 transition-all duration-500 rounded-[3rem] overflow-hidden",
+                                                isDisabled && !slot.isBooked && !slot.isRequested ? 'opacity-40' : 'hover:bg-glass-hover hover:scale-[1.01]'
                                             )}>
                                                 <CardContent className="p-10">
                                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
@@ -315,18 +315,18 @@ export default function TrainerAvailability() {
                                                                 </div>
                                                             </div>
                                                             <div className="space-y-3">
-                                                                <h3 className="text-3xl font-black tracking-tighter group-hover:text-primary transition-colors">{slot.trainerId.name}</h3>
-                                                                <div className="flex flex-wrap items-center gap-6 text-neutral-400">
+                                                                <h3 className="text-3xl font-black tracking-tighter group-hover:text-primary transition-colors text-foreground">{slot.trainerId.name}</h3>
+                                                                <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
                                                                     <div className="flex items-center gap-2.5">
-                                                                        <Clock className="h-5 w-5 text-white/20" />
-                                                                        <span className="font-mono text-lg font-bold tracking-tight">
+                                                                        <Clock className="h-5 w-5 text-muted-foreground/40" />
+                                                                        <span className="font-mono text-lg font-bold tracking-tight text-foreground">
                                                                             {formatTime(slot.startTime)} — {formatTime(slot.endTime)}
                                                                         </span>
                                                                     </div>
-                                                                    <div className="h-1.5 w-1.5 rounded-full bg-white/10" />
+                                                                    <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/20" />
                                                                     <div className="flex items-center gap-2.5">
-                                                                        <Video className="h-5 w-5 text-white/20" />
-                                                                        <span className="font-medium">Private Coaching Session</span>
+                                                                        <Video className="h-5 w-5 text-muted-foreground/40" />
+                                                                        <span className="font-medium italic">Private Coaching Session</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -363,7 +363,7 @@ export default function TrainerAvailability() {
                                                                 <Button
                                                                     onClick={() => handleBookSlot(slot._id)}
                                                                     disabled={bookingSlotId === slot._id}
-                                                                    className="w-full h-16 rounded-full bg-white text-black hover:bg-neutral-200 font-black uppercase tracking-[0.1em] text-xs shadow-2xl transition-all hover:-translate-y-1 active:translate-y-0"
+                                                                    className="w-full h-16 rounded-full bg-primary text-primary-foreground hover:opacity-90 font-black uppercase tracking-[0.1em] text-xs shadow-2xl transition-all hover:-translate-y-1 active:translate-y-0"
                                                                 >
                                                                     {bookingSlotId === slot._id ? (
                                                                         <RefreshCw className="h-5 w-5 animate-spin" />

@@ -57,7 +57,7 @@ export default function TrainerProfile() {
   }, []);
 
   useEffect(() => {
-    document.title = "TrainUp - My Hub";
+    document.title = "TrainUp - My Profile";
     fetchProfile();
   }, [fetchProfile]);
 
@@ -88,7 +88,7 @@ export default function TrainerProfile() {
       <TrainerLayout>
         <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
           <div className="w-12 h-12 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-black uppercase tracking-tighter text-gray-500 italic">Accessing Profile Data...</p>
+          <p className="text-xs font-black uppercase tracking-tighter text-gray-500 italic">Loading Profile...</p>
         </div>
       </TrainerLayout>
     );
@@ -136,30 +136,30 @@ export default function TrainerProfile() {
                       onClick={() => navigate("/trainer/edit-profile")}
                       className="bg-white text-black hover:bg-cyan-500 hover:text-white font-black uppercase italic tracking-widest px-8 h-14 rounded-2xl transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)] active:scale-95"
                     >
-                      <SettingsIcon className="mr-2 h-4 w-4" /> Edit Profile Configuration
+                      <SettingsIcon className="mr-2 h-4 w-4" /> Edit Profile
                     </Button>
                   </div>
 
                   <div className="flex flex-wrap justify-center lg:justify-start gap-12">
                     <div className="space-y-1 text-center lg:text-left">
-                      <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] italic">Rating Index</p>
+                      <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] italic">Rating</p>
                       <div className="flex items-center gap-2">
                         <Star className="h-5 w-5 text-cyan-400 fill-current" />
                         <span className="text-2xl font-black text-white italic">{profile.rating.toFixed(1)}</span>
                       </div>
                     </div>
                     <div className="space-y-1 text-center lg:text-left">
-                      <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] italic">Personnel Pool</p>
+                      <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] italic">Total Clients</p>
                       <div className="flex items-center gap-2">
                         <Users className="h-5 w-5 text-cyan-400" />
                         <span className="text-2xl font-black text-white italic">{profile.clients.length} Clients</span>
                       </div>
                     </div>
                     <div className="space-y-1 text-center lg:text-left">
-                      <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] italic">Experience Core</p>
+                      <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] italic">Experience</p>
                       <div className="flex items-center gap-2">
                         <Award className="h-5 w-5 text-cyan-400" />
-                        <span className="text-2xl font-black text-white italic">{profile.experience}</span>
+                        <span className="text-2xl font-black text-white italic">{profile.experience} Years</span>
                       </div>
                     </div>
                   </div>
@@ -173,10 +173,10 @@ export default function TrainerProfile() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-10">
           <TabsList className="bg-white/5 border border-white/10 p-2 h-16 rounded-3xl gap-2 w-full lg:w-auto">
             <TabsTrigger value="overview" className="flex-1 lg:flex-none px-10 rounded-2xl font-black italic uppercase text-xs">
-              <User className="h-4 w-4 mr-2" /> Identity
+              <User className="h-4 w-4 mr-2" /> Overview
             </TabsTrigger>
             <TabsTrigger value="transactions" className="flex-1 lg:flex-none px-10 rounded-2xl font-black italic uppercase text-xs">
-              <Wallet className="h-4 w-4 mr-2" /> Ledgers
+              <Wallet className="h-4 w-4 mr-2" /> Transactions
             </TabsTrigger>
           </TabsList>
 
@@ -191,8 +191,8 @@ export default function TrainerProfile() {
                 <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden lg:col-span-2">
                   <CardContent className="p-10 space-y-8">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-black text-white italic uppercase tracking-tighter border-l-4 border-cyan-500 pl-4">Session Stacks (Offers)</h3>
-                      <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 font-black uppercase italic tracking-widest text-[10px] px-3 py-1">Monetization Active</Badge>
+                      <h3 className="text-xl font-black text-white italic uppercase tracking-tighter border-l-4 border-cyan-500 pl-4">Session Bundles</h3>
+                      <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 font-black uppercase italic tracking-widest text-[10px] px-3 py-1">Pricing Active</Badge>
                     </div>
                     
                     {!profile.sessionBundles || profile.sessionBundles.length === 0 ? (
@@ -201,7 +201,7 @@ export default function TrainerProfile() {
                           <CreditCard size={24} />
                         </div>
                         <div className="space-y-1">
-                          <p className="text-sm font-black uppercase italic text-neutral-400">No Active Stacks</p>
+                          <p className="text-sm font-black uppercase italic text-neutral-400">No Active Bundles</p>
                           <p className="text-xs text-neutral-600 font-bold uppercase tracking-wider">Configure session bundles in your profile settings to enable client top-ups.</p>
                         </div>
                         <Button 
@@ -222,7 +222,7 @@ export default function TrainerProfile() {
                                 <Wallet size={20} />
                               </div>
                               <div>
-                                <p className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">Stack Tier</p>
+                                <p className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">Bundle Tier</p>
                                 <h4 className="text-xl font-black text-white italic">{bundle.sessions} Sessions</h4>
                               </div>
                               <div className="w-full h-[1px] bg-white/5" />
@@ -237,14 +237,14 @@ export default function TrainerProfile() {
 
                 <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden">
                   <CardContent className="p-10 space-y-10">
-                    <h3 className="text-xl font-black text-white italic uppercase tracking-tighter border-l-4 border-cyan-500 pl-4">Connection Nodes</h3>
+                    <h3 className="text-xl font-black text-white italic uppercase tracking-tighter border-l-4 border-cyan-500 pl-4">Contact Information</h3>
                     <div className="space-y-6">
                       <div className="flex items-center gap-6 p-6 rounded-3xl bg-white/5 border border-white/5 group hover:bg-white/[0.08] transition-all">
                         <div className="h-14 w-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
                           <Mail className="h-6 w-6" />
                         </div>
                         <div>
-                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Satellite Link</p>
+                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Email</p>
                           <p className="text-white font-black italic">{profile.email}</p>
                         </div>
                       </div>
@@ -253,7 +253,7 @@ export default function TrainerProfile() {
                           <Phone className="h-6 w-6" />
                         </div>
                         <div>
-                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Voice Protocol</p>
+                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Phone Number</p>
                           <p className="text-white font-black italic">{profile.phone}</p>
                         </div>
                       </div>
@@ -262,8 +262,8 @@ export default function TrainerProfile() {
                           <MapPin className="h-6 w-6" />
                         </div>
                         <div>
-                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Coordinates</p>
-                          <p className="text-white font-black italic">{profile.location || "UNTRACKED"}</p>
+                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Location</p>
+                          <p className="text-white font-black italic">{profile.location || "NOT SET"}</p>
                         </div>
                       </div>
                     </div>
@@ -272,10 +272,10 @@ export default function TrainerProfile() {
 
                 <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden">
                   <CardContent className="p-10 space-y-10">
-                    <h3 className="text-xl font-black text-white italic uppercase tracking-tighter border-l-4 border-cyan-500 pl-4">Directive Bio</h3>
+                    <h3 className="text-xl font-black text-white italic uppercase tracking-tighter border-l-4 border-cyan-500 pl-4">About Me</h3>
                     <div className="p-8 rounded-[2.5rem] bg-black/40 border border-white/5 min-h-[280px]">
                       <p className="text-gray-400 font-bold italic leading-relaxed text-sm">
-                        {profile.bio || "INITIALIZING BIOGRAPHIC DATA..."}
+                        {profile.bio || "BIO NOT SET"}
                       </p>
                     </div>
                   </CardContent>
@@ -299,12 +299,12 @@ export default function TrainerProfile() {
                     <div className="relative z-10 space-y-4">
                       <div className="flex items-center gap-3 bg-cyan-500/10 w-fit px-4 py-1 rounded-full text-cyan-400 shadow-xl border border-cyan-500/20">
                         <TrendingUp size={14} />
-                        <span className="text-[10px] font-black uppercase tracking-widest italic">Gross Synergy</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest italic">Total Revenue</span>
                       </div>
                       <h4 className="text-5xl font-black text-white italic tracking-tighter">
                         {transactions ? formatAmount(transactions.totalRevenue) : "₹0.00"}
                       </h4>
-                      <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest italic">* Includes 10% Protocol Fee</p>
+                      <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest italic">* Includes 10% Service Fee</p>
                     </div>
                   </Card>
                   <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-10 flex flex-col justify-center gap-6">
@@ -314,7 +314,7 @@ export default function TrainerProfile() {
                       </div>
                       <div>
                         <h5 className="text-3xl font-black text-white italic tracking-tighter">{transactions?.total || 0}</h5>
-                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Subscription Nodes Activated</p>
+                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Total Subscriptions</p>
                       </div>
                     </div>
                   </Card>
@@ -324,14 +324,14 @@ export default function TrainerProfile() {
                 <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[3rem] overflow-hidden">
                   <div className="p-10 border-b border-white/5 flex items-center justify-between">
                     <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
-                      <CreditCard className="text-cyan-400" /> Recent Synergies
+                      <CreditCard className="text-cyan-400" /> Recent Transactions
                     </h3>
                     <Button
                       variant="outline"
                       onClick={() => navigate("/trainer/transactions")}
                       className="border-white/5 text-gray-500 font-black italic uppercase text-[10px] hover:bg-white/5 px-6 rounded-xl"
                     >
-                      Audit Full Ledger <ChevronRight size={14} className="ml-2" />
+                      View All Transactions <ChevronRight size={14} className="ml-2" />
                     </Button>
                   </div>
                   <CardContent className="p-0">
@@ -352,11 +352,11 @@ export default function TrainerProfile() {
                               </Avatar>
                               <div>
                                 <h6 className="text-white font-black italic uppercase tracking-tight group-hover:text-cyan-400 transition-colors">
-                                  {tx.userId?.name || "Anonymous Operative"}
+                                  {tx.userId?.name || "Anonymous User"}
                                 </h6>
                                 <div className="flex items-center gap-3 mt-1">
                                   <Badge className="bg-white/5 text-gray-500 border-white/10 text-[8px] font-black uppercase italic tracking-widest">
-                                    {tx.planType} PROTOCOL
+                                    {tx.planType} PLAN
                                   </Badge>
                                   <span className="text-[9px] text-gray-600 font-black uppercase italic">
                                     {new Date(tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -397,8 +397,8 @@ export default function TrainerProfile() {
                       <SettingsIcon className="h-8 w-8" />
                     </div>
                     <div>
-                      <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter">System Parameters</h4>
-                      <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest italic mt-2">Adjust core account settings & preferences</p>
+                      <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter">Settings</h4>
+                      <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest italic mt-2">Manage your account settings & preferences</p>
                     </div>
                   </div>
                 </Card>
@@ -408,8 +408,8 @@ export default function TrainerProfile() {
                       <CreditCard className="h-8 w-8" />
                     </div>
                     <div>
-                      <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter">Withdrawal Matrix</h4>
-                      <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest italic mt-2">Manage payout nodes & financial architecture</p>
+                      <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter">Payouts</h4>
+                      <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest italic mt-2">Manage your earnings and payouts</p>
                     </div>
                   </div>
                 </Card>

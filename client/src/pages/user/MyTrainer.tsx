@@ -71,7 +71,7 @@ const SpotlightCard = ({
             onBlur={handleBlur}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            className={`relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden transition-all duration-500 hover:bg-white/10 ${className}`}
+            className={`relative rounded-3xl border border-glass-border bg-glass-bg backdrop-blur-xl overflow-hidden transition-all duration-500 hover:bg-glass-hover ${className}`}
         >
             <div
                 className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out"
@@ -199,13 +199,13 @@ export default function MyTrainerProfile() {
 
     if (isLoading) {
         return (
-            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+            <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground overflow-hidden font-outfit">
                 <div className="absolute inset-0 z-0">
-                    <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+                    <Aurora colorStops={["var(--background)", "var(--site-bg)", "var(--background)"]} amplitude={1.1} blend={0.6} />
                 </div>
                 <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6 flex-1">
                     <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                    <p className="text-gray-400 font-bold uppercase tracking-widest animate-pulse">Syncing Trainer Data...</p>
+                    <p className="text-muted-foreground font-bold uppercase tracking-widest animate-pulse">Syncing Trainer Data...</p>
                 </div>
             </div>
         );
@@ -213,19 +213,19 @@ export default function MyTrainerProfile() {
 
     if (error || !trainer) {
         return (
-            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+            <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground overflow-hidden font-outfit">
                 <div className="absolute inset-0 z-0">
-                    <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+                    <Aurora colorStops={["var(--background)", "var(--site-bg)", "var(--background)"]} amplitude={1.1} blend={0.6} />
                 </div>
                 <div className="relative container mx-auto px-4 py-16 text-center space-y-8 flex-1 flex flex-col items-center justify-center">
-                    <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10 ring-4 ring-primary/5">
-                        <Users className="h-10 w-10 text-gray-500" />
+                    <div className="w-24 h-24 bg-glass-bg rounded-full flex items-center justify-center mb-6 border border-glass-border ring-4 ring-primary/5">
+                        <Users className="h-10 w-10 text-muted-foreground" />
                     </div>
                     <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter">No Active Trainer</h1>
-                    <p className="text-gray-400 text-lg font-medium max-w-md mx-auto">{error || "You haven't assigned a personal trainer to your profile yet. Ready to start your journey?"}</p>
+                    <p className="text-muted-foreground text-lg font-medium max-w-md mx-auto">{error || "You haven't assigned a personal trainer to your profile yet. Ready to start your journey?"}</p>
                     <Link to="/trainers">
-                        <Button className="bg-white text-black hover:bg-gray-200 px-10 h-14 rounded-2xl font-black italic uppercase tracking-widest shadow-2xl">
-                            Find a Trainer <Zap className="ml-2 h-4 w-4 fill-black" />
+                        <Button className="bg-primary text-primary-foreground hover:opacity-90 px-10 h-14 rounded-2xl font-black italic uppercase tracking-widest shadow-2xl">
+                            Find a Trainer <Zap className="ml-2 h-4 w-4 fill-current" />
                         </Button>
                     </Link>
                 </div>
@@ -237,9 +237,9 @@ export default function MyTrainerProfile() {
     const PlanIcon = planInfo.icon;
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+        <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground overflow-hidden font-outfit">
             <div className="absolute inset-0 z-0">
-                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+                <Aurora colorStops={["var(--background)", "var(--site-bg)", "var(--background)"]} amplitude={1.1} blend={0.6} />
             </div>
 
             <SiteHeader />
@@ -256,7 +256,7 @@ export default function MyTrainerProfile() {
                                     className={`w-full h-full object-cover transition-transform duration-700 hover:scale-110 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                                     onLoad={() => setImageLoaded(true)}
                                 />
-                                {!imageLoaded && <div className="absolute inset-0 bg-white/5 animate-pulse" />}
+                                {!imageLoaded && <div className="absolute inset-0 bg-muted animate-pulse" />}
                             </div>
                             {trainer.isVerified && (
                                 <div className="absolute -top-3 -right-3 bg-green-500 text-black p-3 rounded-2xl shadow-xl border-4 border-[#030303]">
@@ -278,21 +278,21 @@ export default function MyTrainerProfile() {
                             </div>
 
                             <div className="space-y-4">
-                                <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none">
+                                <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none text-foreground">
                                     {trainer.name}
                                 </h1>
-                                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-gray-400 font-bold uppercase tracking-widest text-xs">
+                                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-muted-foreground font-bold uppercase tracking-widest text-xs">
                                     <div className="flex items-center gap-2">
                                         <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                                        <span className="text-white">{trainer.rating} RATING</span>
+                                        <span className="text-foreground">{trainer.rating} RATING</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Clock className="h-4 w-4 text-primary" />
-                                        <span className="text-white">{trainer.experience} YRS EXP</span>
+                                        <span className="text-foreground">{trainer.experience} YRS EXP</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <MapPin className="h-4 w-4 text-accent" />
-                                        <span className="text-white truncate max-w-[150px]">{trainer.location}</span>
+                                        <span className="text-foreground truncate max-w-[150px]">{trainer.location}</span>
                                     </div>
                                 </div>
                             </div>
@@ -302,17 +302,17 @@ export default function MyTrainerProfile() {
                                 {user?.trainerPlan !== 'basic' && (
                                     <Button
                                         onClick={() => navigate(`/my-trainer/chat/${trainer._id}`)}
-                                        className="h-14 px-8 bg-white text-black hover:bg-gray-200 rounded-2xl font-black italic uppercase tracking-widest text-sm shadow-xl"
+                                        className="h-14 px-8 bg-primary text-primary-foreground hover:opacity-90 rounded-2xl font-black italic uppercase tracking-widest text-sm shadow-xl"
                                     >
-                                        <MessageSquare className="mr-2 h-5 w-5 fill-black" /> Chat Coach
+                                        <MessageSquare className="mr-2 h-5 w-5 fill-current" /> Chat Support
                                     </Button>
                                 )}
                                 <Button
                                     variant="outline"
                                     onClick={() => navigate('/my-trainer/sessions')}
-                                    className="h-14 px-8 bg-white/5 border-white/10 hover:bg-white/10 rounded-2xl font-black italic uppercase tracking-widest text-sm"
+                                    className="h-14 px-8 bg-glass-bg border-glass-border hover:bg-glass-hover rounded-2xl font-black italic uppercase tracking-widest text-sm text-foreground"
                                 >
-                                    <Calendar className="mr-2 h-5 w-5" /> Training Schedule
+                                    <Calendar className="mr-2 h-5 w-5" /> Schedule
                                 </Button>
                                 
                                 <AlertDialog>
@@ -321,15 +321,15 @@ export default function MyTrainerProfile() {
                                             variant="ghost"
                                             className="h-14 px-8 text-red-500 hover:text-red-400 hover:bg-red-500/5 rounded-2xl font-black italic uppercase tracking-widest text-sm"
                                         >
-                                            <AlertTriangle className="mr-2 h-5 w-5" /> Terminate Contract
+                                            <AlertTriangle className="mr-2 h-5 w-5" /> End Coaching
                                         </Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent className="bg-white/5 border border-white/10 backdrop-blur-2xl rounded-3xl p-8">
                                         <AlertDialogHeader>
-                                            <AlertDialogTitle className="text-2xl font-black italic uppercase">Terminate Subscription?</AlertDialogTitle>
-                                            <AlertDialogDescription className="text-gray-400 font-medium py-4">
+                                            <AlertDialogTitle className="text-2xl font-black italic uppercase">End Coaching?</AlertDialogTitle>
+                                            <AlertDialogDescription className="text-muted-foreground font-medium py-4">
                                                 Your current plan with {trainer.name} expires {getRemainingTime()}. 
-                                                Terminating your contract now will end your access immediately. This action cannot be undone.
+                                                Ending your coaching now will end your access immediately. This action cannot be undone.
                                             </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter className="gap-4">
@@ -339,7 +339,7 @@ export default function MyTrainerProfile() {
                                                 disabled={isCancelling}
                                                 className="bg-red-500 text-white hover:bg-red-600 h-12 rounded-xl font-bold uppercase text-xs"
                                             >
-                                                {isCancelling ? "Terminating..." : "Confirm Termination"}
+                                                {isCancelling ? "Ending..." : "Confirm"}
                                             </AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
@@ -403,10 +403,10 @@ export default function MyTrainerProfile() {
                         )}
 
                         <SpotlightCard className="p-8 md:p-10 space-y-8">
-                            <h2 className="text-3xl font-black italic uppercase tracking-tighter flex items-center gap-4">
+                            <h2 className="text-3xl font-black italic uppercase tracking-tighter flex items-center gap-4 text-foreground">
                                 <Award className="h-8 w-8 text-primary" /> The Coach's Philosophy
                             </h2>
-                            <p className="text-xl font-medium text-gray-300 leading-relaxed italic">
+                            <p className="text-xl font-medium text-muted-foreground leading-relaxed italic">
                                 "{trainer.bio}"
                             </p>
                             
@@ -427,7 +427,7 @@ export default function MyTrainerProfile() {
                                         onClick={() => setIsCertOpen(true)}
                                         className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm font-bold uppercase tracking-widest group"
                                     >
-                                        View Professional Certificate <ArrowLeft className="h-4 w-4 rotate-180 group-hover:translate-x-1 transition-transform" />
+                                        View Certificate <ArrowLeft className="h-4 w-4 rotate-180 group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 </div>
                             </div>
@@ -446,17 +446,17 @@ export default function MyTrainerProfile() {
                     {/* Sidebar */}
                     <div className="space-y-8">
                         {/* Plan Details Sidebar */}
-                        <SpotlightCard className="p-8 space-y-8 border-primary/20 bg-primary/5">
+                        <SpotlightCard className="p-8 space-y-8 border-glass-border">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-xl font-black italic uppercase">Contract Specs</h3>
+                                <h3 className="text-xl font-black italic uppercase text-foreground">Subscription Details</h3>
                                 <Badge className="bg-green-500/20 text-green-400 border-green-500/20 font-black italic uppercase text-[10px]">Active</Badge>
                             </div>
                             
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-500">
-                                        <span>Contract Expiry</span>
-                                        <span className="text-white">{getRemainingTime()}</span>
+                                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                        <span>Expiry Date</span>
+                                        <span className="text-foreground">{getRemainingTime()}</span>
                                     </div>
                                     <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                                         <motion.div 
@@ -465,19 +465,19 @@ export default function MyTrainerProfile() {
                                             className="h-full bg-primary"
                                         />
                                     </div>
-                                    <p className="text-[10px] text-gray-500 italic font-medium">Synced with Stripe Billing Cycle</p>
+                                    <p className="text-[10px] text-muted-foreground italic font-medium">Synced with Stripe Billing</p>
                                 </div>
 
-                                <div className="space-y-4 pt-4 border-t border-white/10">
-                                    <h4 className="text-xs font-black italic uppercase tracking-widest">Coach Privileges</h4>
+                                <div className="space-y-4 pt-4 border-t border-glass-border">
+                                    <h4 className="text-xs font-black italic uppercase tracking-widest text-foreground">What's Included</h4>
                                     <div className="space-y-3">
                                         {[
-                                            "Personalized Training Portals",
-                                            "Nutritional Architecture",
-                                            user?.trainerPlan !== 'basic' ? "Direct Secure Messsaging" : null,
-                                            user?.trainerPlan === 'pro' ? "1-on-1 Strategic Consultations" : null
+                                            "Custom Workouts",
+                                            "Meal Plans",
+                                            user?.trainerPlan !== 'basic' ? "Direct Chat Support" : null,
+                                            user?.trainerPlan === 'pro' ? "1-on-1 Video Sessions" : null
                                         ].filter(Boolean).map((perk, i) => (
-                                            <div key={i} className="flex items-center gap-3 text-xs font-bold text-gray-300">
+                                            <div key={i} className="flex items-center gap-3 text-xs font-bold text-muted-foreground">
                                                 <CheckCircle2 className="h-4 w-4 text-primary" />
                                                 <span>{perk}</span>
                                             </div>
@@ -489,20 +489,20 @@ export default function MyTrainerProfile() {
 
                         {/* Contact Sidebar */}
                         <SpotlightCard className="p-8 space-y-6">
-                            <h3 className="text-xl font-black italic uppercase">Digital Comms</h3>
+                            <h3 className="text-xl font-black italic uppercase text-foreground">Contact Information</h3>
                             <div className="space-y-4">
-                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                <div className="flex items-center gap-4 bg-muted p-4 rounded-2xl border border-border">
                                     <Phone className="h-5 w-5 text-primary" />
                                     <div className="overflow-hidden">
-                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Mobile Direct</p>
-                                        <p className="font-bold truncate">{trainer.phone}</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Mobile</p>
+                                        <p className="font-bold truncate text-foreground">{trainer.phone}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                <div className="flex items-center gap-4 bg-muted p-4 rounded-2xl border border-border">
                                     <Mail className="h-5 w-5 text-primary" />
                                     <div className="overflow-hidden">
-                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Coach Email</p>
-                                        <p className="font-bold truncate">{trainer.email}</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Email</p>
+                                        <p className="font-bold truncate text-foreground">{trainer.email}</p>
                                     </div>
                                 </div>
                             </div>
@@ -512,15 +512,15 @@ export default function MyTrainerProfile() {
             </main>
 
             <Dialog open={isCertOpen} onOpenChange={setIsCertOpen}>
-                <DialogContent className="max-w-4xl bg-[#030303] border-white/10 p-2 overflow-hidden rounded-[2rem]">
+                <DialogContent className="max-w-4xl bg-background border-border p-2 overflow-hidden rounded-[2rem]">
                     <DialogHeader className="p-6">
-                        <DialogTitle className="text-2xl font-black italic uppercase">Professional Credentials</DialogTitle>
+                        <DialogTitle className="text-2xl font-black italic uppercase text-foreground">Credentials</DialogTitle>
                     </DialogHeader>
-                    <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden border border-white/10">
+                    <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden border border-border">
                         <img 
                             src={trainer.certificate} 
                             alt="Credentials" 
-                            className="w-full h-full object-contain bg-white/5" 
+                            className="w-full h-full object-contain bg-muted" 
                         />
                     </div>
                 </DialogContent>

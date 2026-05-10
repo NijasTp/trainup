@@ -97,14 +97,14 @@ export default function TrainerDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white">
+      <div className="min-h-screen bg-site-bg text-foreground">
         <TrainerSiteHeader />
         <div className="relative container mx-auto px-6 py-16 flex flex-col items-center justify-center space-y-6">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-white/5 border-t-cyan-500 rounded-full animate-spin"></div>
             <div className="absolute inset-0 w-16 h-16 border-2 border-transparent border-t-cyan-400/30 rounded-full animate-pulse"></div>
           </div>
-          <p className="text-white/40 font-black uppercase italic tracking-widest text-sm">Synchronizing Intelligence...</p>
+          <p className="text-white/40 font-black uppercase italic tracking-widest text-sm">Loading Dashboard...</p>
         </div>
       </div>
     );
@@ -112,17 +112,17 @@ export default function TrainerDashboard() {
 
   if (error || !stats) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white">
+      <div className="min-h-screen bg-site-bg text-foreground">
         <TrainerSiteHeader />
         <div className="relative container mx-auto px-6 py-16 text-center space-y-6">
-          <h3 className="text-4xl font-black italic uppercase tracking-tighter">System Error</h3>
+          <h3 className="text-4xl font-black italic uppercase tracking-tighter">Oops!</h3>
           <p className="text-white/40 font-medium max-w-md mx-auto">{error}</p>
           <Button
             variant="outline"
             className="border-white/10 bg-white/5 hover:bg-white/10 uppercase font-black italic tracking-widest"
             onClick={fetchDashboardStats}
           >
-            Reboot Interface
+            Retry
           </Button>
         </div>
       </div>
@@ -135,7 +135,7 @@ export default function TrainerDashboard() {
   const totalPlanCount = stats.planDistribution.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-site-bg text-foreground selection:bg-cyan-500/30">
       <TrainerSiteHeader />
       
       {/* Aurora Background Effects */}
@@ -149,13 +149,13 @@ export default function TrainerDashboard() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
              <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 px-3 py-1 font-black italic uppercase tracking-widest text-[10px]">
-              Business Core
+              Overview
             </Badge>
             <h1 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
-              Control <span className="text-cyan-500">Center</span>
+              My <span className="text-cyan-500">Dashboard</span>
             </h1>
             <p className="text-white/40 font-medium text-lg max-w-xl">
-              Real-time analytics and performance metrics for your training empire.
+              Real-time analytics and performance metrics for your training dashboard.
             </p>
           </div>
           <div className="flex gap-4">
@@ -204,8 +204,8 @@ export default function TrainerDashboard() {
                 <DollarSign className="h-7 w-7 text-cyan-400" />
               </div>
               <div>
-                <h3 className="text-base font-black uppercase italic tracking-widest text-cyan-400">Monetization Stack Offline</h3>
-                <p className="text-xs text-cyan-400/60 font-bold uppercase tracking-wider mt-1">Configure your session bundles to allow clients to purchase video call top-ups.</p>
+                <h3 className="text-base font-black uppercase italic tracking-widest text-cyan-400">Payment Setup Needed</h3>
+                <p className="text-xs text-cyan-400/60 font-bold uppercase tracking-wider mt-1">Configure your session prices to allow clients to purchase call packages.</p>
               </div>
             </div>
             <div className="flex items-center gap-3 px-6 py-3 bg-cyan-500 text-black rounded-xl font-black uppercase italic tracking-widest text-[10px] group-hover:scale-105 transition-transform">
@@ -271,7 +271,7 @@ export default function TrainerDashboard() {
                   <Star className="h-5 w-5 text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase italic tracking-widest text-white/40 mb-1">Impact Score</p>
+                  <p className="text-[10px] font-black uppercase italic tracking-widest text-white/40 mb-1">Average Rating</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black italic">{stats.averageRating.toFixed(1)}</span>
                     <span className="text-white/20 font-black italic">/ 5.0</span>
@@ -296,7 +296,7 @@ export default function TrainerDashboard() {
                   <Activity className="h-5 w-5 text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase italic tracking-widest text-white/40 mb-1">Total Executions</p>
+                  <p className="text-[10px] font-black uppercase italic tracking-widest text-white/40 mb-1">Total Sessions</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black italic">{stats.totalSessions}</span>
                   </div>
@@ -313,7 +313,7 @@ export default function TrainerDashboard() {
             <CardHeader className="p-8 pb-0">
               <CardTitle className="text-sm font-black uppercase italic tracking-widest flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-cyan-400" />
-                Revenue Trajectory
+                Earnings Growth
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
@@ -341,7 +341,7 @@ export default function TrainerDashboard() {
                       tickFormatter={(val) => `₹${val/1000}k`}
                     />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                      contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
                       itemStyle={{ color: '#06b6d4', fontWeight: 900, fontSize: '12px', textTransform: 'uppercase' }}
                       labelStyle={{ color: 'white', fontWeight: 700, marginBottom: '4px' }}
                     />
@@ -363,7 +363,7 @@ export default function TrainerDashboard() {
             <CardHeader className="p-8 pb-0">
               <CardTitle className="text-sm font-black uppercase italic tracking-widest flex items-center gap-2">
                 <Users className="h-4 w-4 text-cyan-400" />
-                Network Expansion
+                Client Growth
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
@@ -385,7 +385,7 @@ export default function TrainerDashboard() {
                     />
                     <Tooltip 
                       cursor={{fill: 'rgba(255,255,255,0.05)'}}
-                      contentStyle={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                      contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
                       itemStyle={{ color: '#06b6d4', fontWeight: 900, fontSize: '12px', textTransform: 'uppercase' }}
                       labelStyle={{ color: 'white', fontWeight: 700, marginBottom: '4px' }}
                     />
@@ -408,7 +408,7 @@ export default function TrainerDashboard() {
             <CardHeader className="p-8">
               <CardTitle className="text-sm font-black uppercase italic tracking-widest flex items-center gap-2">
                 <Target className="h-4 w-4 text-cyan-400" />
-                Plan Matrix
+                Plan Distribution
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 pt-0">
@@ -428,8 +428,8 @@ export default function TrainerDashboard() {
                     <div key={plan.plan} className="space-y-3">
                       <div className="flex justify-between items-end">
                         <div className="space-y-1">
-                          <p className="text-xs font-black uppercase italic tracking-widest text-white">{plan.plan} Tier</p>
-                          <p className="text-[10px] text-white/40 font-bold">{plan.count} Deployment Units</p>
+                          <p className="text-xs font-black uppercase italic tracking-widest text-white">{plan.plan} Plan</p>
+                          <p className="text-[10px] text-white/40 font-bold">{plan.count} clients</p>
                         </div>
                         <span className="text-2xl font-black italic tracking-tighter">{percentage}%</span>
                       </div>
@@ -450,7 +450,7 @@ export default function TrainerDashboard() {
             <CardHeader className="p-8">
               <CardTitle className="text-sm font-black uppercase italic tracking-widest flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-cyan-400" />
-                Real-time Logs
+                Recent Activity
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 pt-0">
@@ -488,7 +488,7 @@ export default function TrainerDashboard() {
                 {stats.recentActivity.length === 0 && (
                   <div className="text-center py-12 space-y-4 opacity-20">
                     <Activity className="h-12 w-12 mx-auto" />
-                    <p className="text-xs font-black uppercase italic tracking-widest">No spectral activity detected</p>
+                    <p className="text-xs font-black uppercase italic tracking-widest">No recent activity</p>
                   </div>
                 )}
               </div>

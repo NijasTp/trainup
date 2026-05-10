@@ -74,7 +74,7 @@ export default function UserSessions() {
             setTotal(response.data.total || 0);
         } catch (err: any) {
             console.error("Failed to fetch sessions:", err);
-            toast.error("Network connection error. Failed to sync sessions.");
+            toast.error("Could not load sessions. Check your connection.");
         } finally {
             setIsLoading(false);
         }
@@ -119,7 +119,7 @@ export default function UserSessions() {
             const roomId = response.data.videoCall.roomId;
             navigate(`/video-call/${roomId}`);
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Uplink failed. Please try again.');
+            toast.error(error.response?.data?.message || 'Connection failed. Please try again.');
         }
     };
 
@@ -161,7 +161,7 @@ export default function UserSessions() {
     const totalPages = Math.ceil(total / limit);
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+        <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground overflow-hidden font-outfit">
             <div className="absolute inset-0 z-0">
                 <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
             </div>
@@ -177,9 +177,9 @@ export default function UserSessions() {
                                 <ArrowLeft className="h-3 w-3 mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Coach Profile
                             </Link>
                             <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
-                                Strategic <span className="text-primary">Sessions</span>
+                                Your <span className="text-primary">Sessions</span>
                             </h1>
-                            <p className="text-gray-400 font-medium max-w-lg text-sm md:text-base leading-relaxed">Manage your scheduled high-performance training sessions and connect with your professional coach.</p>
+                            <p className="text-gray-400 font-medium max-w-lg text-sm md:text-base leading-relaxed">Manage your scheduled training sessions and connect with your coach.</p>
                         </div>
 
                         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -200,7 +200,7 @@ export default function UserSessions() {
                                     onClick={() => { setActiveTab('past'); setPage(1); }}
                                     className={`px-8 py-3 rounded-xl font-black italic uppercase tracking-widest text-xs transition-all ${activeTab === 'past' ? 'bg-primary text-black shadow-xl ring-4 ring-primary/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                                 >
-                                    Past Performance
+                                    Past Sessions
                                 </button>
                             </div>
                         </div>
@@ -243,8 +243,8 @@ export default function UserSessions() {
                             <h3 className="text-2xl font-black italic uppercase">No Sessions Found</h3>
                             <p className="text-gray-400 font-medium mt-2 max-w-sm mx-auto">
                                 {selectedDate 
-                                    ? `Zero coordinates found for ${formatDate(selectedDate)}. Try another date?` 
-                                    : "Direct training dialogue has not been initialized. Ready to begin?"
+                                    ? `No sessions found for ${formatDate(selectedDate)}.` 
+                                    : "You haven't booked any sessions yet."
                                 }
                             </p>
                         </div>
@@ -273,13 +273,13 @@ export default function UserSessions() {
                                             {/* Top Section */}
                                             <div className="flex items-start justify-between mb-6">
                                                 <div className="flex items-center gap-4">
-                                                    <Avatar className="h-14 w-14 ring-2 ring-primary/20 border-4 border-[#030303]">
+                                                    <Avatar className="h-14 w-14 ring-2 ring-primary/20 border-4 border-background">
                                                         <AvatarImage src={session.trainerId?.profileImage} />
                                                         <AvatarFallback className="bg-primary/20 text-primary font-black italic">{session.trainerId?.name?.charAt(0)}</AvatarFallback>
                                                     </Avatar>
                                                     <div>
                                                         <h3 className="text-lg font-black italic uppercase tracking-tight group-hover:text-primary transition-colors">{session.trainerId?.name}</h3>
-                                                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">Personal Coach</p>
+                                                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">Coach</p>
                                                     </div>
                                                 </div>
                                                 <Badge className={`${statusInfo.color} font-black italic uppercase text-[8px] px-3 py-1 rounded-full border shadow-lg`}>
@@ -293,14 +293,14 @@ export default function UserSessions() {
                                                 <div className="flex items-center gap-4 bg-black/20 p-4 rounded-2xl border border-white/5">
                                                     <CalendarIcon className="h-5 w-5 text-primary" />
                                                     <div>
-                                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Training Date</p>
+                                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Date</p>
                                                         <p className="text-sm font-bold">{formatDate(session.date)}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-4 bg-black/20 p-4 rounded-2xl border border-white/5">
                                                     <Clock className="h-5 w-5 text-accent" />
                                                     <div>
-                                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Time Window</p>
+                                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Time</p>
                                                         <p className="text-sm font-bold">{formatTime(session.startTime)} - {formatTime(session.endTime)}</p>
                                                     </div>
                                                 </div>
@@ -314,7 +314,7 @@ export default function UserSessions() {
                                                              onClick={() => setSelectedFeedback(session)}
                                                              className="w-full h-14 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded-2xl font-black italic uppercase tracking-widest text-[10px]"
                                                          >
-                                                             <MessageSquare className="mr-2 h-4 w-4 text-primary" /> View Performance Evaluation
+                                                             <MessageSquare className="mr-2 h-4 w-4 text-primary" /> View Feedback
                                                          </Button>
                                                      </div>
                                                  ) : status === 'approved' ? (
@@ -325,7 +325,7 @@ export default function UserSessions() {
                                                                     onClick={() => joinVideoCall(session._id)}
                                                                     className="w-full h-14 bg-green-500 text-black hover:bg-green-600 rounded-2xl font-black italic uppercase tracking-widest shadow-[0_0_20px_rgba(34,197,94,0.3)] animate-pulse"
                                                                 >
-                                                                    <Video className="mr-2 h-5 w-5 fill-black" /> Join Active Stream
+                                                                    <Video className="mr-2 h-5 w-5 fill-black" /> Join Call
                                                                 </Button>
                                                               ) : (
                                                                 <Button
@@ -344,7 +344,7 @@ export default function UserSessions() {
                                                               )
                                                          ) : (
                                                              <div className="flex items-center justify-center p-4 bg-green-500/5 border border-green-500/10 rounded-2xl text-[10px] font-black uppercase text-green-500 tracking-widest text-center">
-                                                                 Uplink active 10min prior to start
+                                                                 Link opens 10 mins before start
                                                              </div>
                                                          )}
                                                      </div>
@@ -355,7 +355,7 @@ export default function UserSessions() {
                                                  ) : (
                                                      <div className="space-y-4">
                                                          <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl text-[10px] font-black uppercase text-amber-500 tracking-widest text-center">
-                                                             Awaiting coach authentication...
+                                                             Waiting for coach approval...
                                                          </div>
                                                          <Button
                                                              variant="outline"
@@ -411,22 +411,22 @@ export default function UserSessions() {
  
              {/* Feedback Dialog */}
              <Dialog open={!!selectedFeedback} onOpenChange={(open) => !open && setSelectedFeedback(null)}>
-                 <DialogContent className="bg-[#0A0A0A] border-white/10 text-white max-w-xl rounded-[3rem] p-12 font-outfit shadow-[0_50px_100px_rgba(0,0,0,1)]">
+                 <DialogContent className="bg-card border-white/10 text-foreground max-w-xl rounded-[3rem] p-12 font-outfit shadow-[0_50px_100px_rgba(0,0,0,0.5)]">
                      <DialogHeader className="space-y-6">
                          <div className="flex items-center gap-4">
                              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
                                  <Star className="h-8 w-8 text-primary" />
                              </div>
                              <div>
-                                 <DialogTitle className="text-3xl font-black tracking-tighter uppercase italic">Session Evaluation.</DialogTitle>
-                                 <DialogDescription className="text-gray-500 font-medium italic">Coach feedback and performance metrics.</DialogDescription>
+                                 <DialogTitle className="text-3xl font-black tracking-tighter uppercase italic">Session Feedback.</DialogTitle>
+                                 <DialogDescription className="text-gray-500 font-medium italic">Coach feedback and performance rating.</DialogDescription>
                              </div>
                          </div>
                      </DialogHeader>
  
                      <div className="space-y-10 py-10">
                          <div className="space-y-4">
-                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">Performance Index</label>
+                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">Performance Rating</label>
                              <div className="flex items-center gap-4 bg-white/[0.03] p-6 rounded-[2rem] border border-white/5">
                                  <div className="text-5xl font-black text-primary italic leading-none">{selectedFeedback?.videoCall?.userPerformanceRating}</div>
                                  <div className="h-10 w-[1px] bg-white/10" />
@@ -435,9 +435,9 @@ export default function UserSessions() {
                          </div>
  
                          <div className="space-y-4">
-                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">Strategic Feedback</label>
+                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">Coach Feedback</label>
                              <div className="bg-white/[0.03] p-8 rounded-[2rem] border border-white/5 text-lg font-medium leading-relaxed italic text-gray-300">
-                                 "{selectedFeedback?.videoCall?.userFeedback || "No detailed observations recorded for this session."}"
+                                 "{selectedFeedback?.videoCall?.userFeedback || "No notes recorded for this session."}"
                              </div>
                          </div>
                      </div>
@@ -447,7 +447,7 @@ export default function UserSessions() {
                              onClick={() => setSelectedFeedback(null)}
                              className="w-full h-16 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all"
                          >
-                             Dismiss Evaluation
+                             Close
                          </Button>
                      </DialogFooter>
                  </DialogContent>

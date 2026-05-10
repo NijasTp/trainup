@@ -198,13 +198,13 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
             {/* Header */}
             <div className="absolute top-0 left-0 right-0 z-50 p-8 flex items-center justify-between pointer-events-none">
                 <div className="flex items-center gap-4 pointer-events-auto">
-                    <div className="flex items-center gap-3 px-6 py-3 bg-white/5 backdrop-blur-3xl rounded-2xl border border-white/10">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-black/40 backdrop-blur-3xl rounded-2xl border border-white/10">
                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
                         <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Live</span>
                         <div className="h-4 w-[1px] bg-white/10 mx-2" />
                         <span className="text-sm font-bold font-mono text-white/90">{formatDuration(callDuration)}</span>
                     </div>
-                    <div className="flex items-center gap-3 px-6 py-3 bg-white/5 backdrop-blur-3xl rounded-2xl border border-white/10">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-black/40 backdrop-blur-3xl rounded-2xl border border-white/10">
                         <Users className="w-4 h-4 text-white/40" />
                         <span className="text-sm font-black text-white/90">{remoteParticipants.length + 1}</span>
                     </div>
@@ -212,14 +212,14 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
             </div>
 
             {/* Main Stage */}
-            <div className="flex-1 relative bg-black flex items-center justify-center">
+            <div className="flex-1 relative bg-black">
                 {remoteTracks.length > 0 ? (
                     <div className={cn(
-                        "w-full h-full relative bg-[#050505]",
+                        "absolute inset-0 bg-[#050505]",
                         remoteTracks.length > 1 ? "grid grid-cols-2 gap-px" : "flex items-center justify-center"
                     )}>
                         {remoteTracks.map((track) => (
-                            <div key={track.participant.sid} className="relative w-full h-full overflow-hidden">
+                            <div key={track.participant.sid} className="relative w-full h-full overflow-hidden flex items-center justify-center">
                                 <VideoTrack 
                                     trackRef={track} 
                                     className="w-full h-full object-cover" 
@@ -236,18 +236,18 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
                                         <div className="w-32 h-32 rounded-[3.5rem] bg-white/[0.02] border border-white/5 flex items-center justify-center">
                                             <UserIcon className="w-12 h-12 text-white/5" />
                                         </div>
-                                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/10">Signal Lost</span>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/10">Camera Off</span>
                                     </div>
                                 )}
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center text-center">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                         <div className="w-40 h-40 rounded-[4rem] bg-white/[0.02] flex items-center justify-center mb-10 border border-white/5 animate-pulse">
                             <UserIcon className="w-16 h-16 text-white/5" />
                         </div>
-                        <h3 className="text-3xl font-black text-white/10 uppercase tracking-[0.5em] italic">Waiting for connection</h3>
+                        <h3 className="text-3xl font-black text-white/10 uppercase tracking-[0.5em] italic">Connecting...</h3>
                     </div>
                 )}
                 
@@ -269,19 +269,35 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
 
             {/* PIP (Self View) */}
             <motion.div 
-                drag dragConstraints={{ left: -1000, right: 0, top: -500, bottom: 500 }}
-                className="absolute right-10 bottom-36 w-56 md:w-80 aspect-video bg-[#0a0a0a] rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 z-50 cursor-move"
+                drag 
+                dragConstraints={{ left: -1000, right: 0, top: -800, bottom: 200 }}
+                dragElastic={0.1}
+                dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+                whileHover={{ scale: 1.02 }}
+                className="absolute right-10 bottom-40 w-56 md:w-80 aspect-video bg-[#0a0a0a] rounded-[2.5rem] overflow-hidden shadow-2xl border-2 border-white/10 z-50 cursor-move group"
+                style={{ clipPath: "inset(0 round 2.5rem)" }}
             >
                 {localParticipant.isCameraEnabled ? (
-                    localTrack && <VideoTrack trackRef={localTrack} className="w-full h-full object-cover" />
+                    localTrack && (
+                        <div className="w-full h-full relative">
+                            <VideoTrack trackRef={localTrack} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-[2.5rem] pointer-events-none" />
+                        </div>
+                    )
                 ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center bg-[#050505] space-y-3">
                         <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
                             <VideoOff className="w-5 h-5 text-white/20" />
                         </div>
-                        <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Camera Offline</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Camera Off</span>
                     </div>
                 )}
+                {/* Visual Resize Indicator (Decorative since we don't have a library for it) */}
+                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-6 h-6 rounded-lg bg-black/40 backdrop-blur-xl flex items-center justify-center">
+                        <Users className="w-3 h-3 text-white/40" />
+                    </div>
+                </div>
             </motion.div>
 
             {/* Controls */}
@@ -333,13 +349,13 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
                         <div className="w-24 h-24 rounded-full bg-red-500/10 flex items-center justify-center mb-8 border border-red-500/20">
                             <AlertCircle className="w-10 h-10 text-red-500" />
                         </div>
-                        <h2 className="text-5xl font-black italic uppercase tracking-tighter mb-4">Session Terminated.</h2>
-                        <p className="text-neutral-500 text-lg max-w-md mb-12">The scheduled training window has concluded. Please finalize the session documentation.</p>
+                        <h2 className="text-5xl font-black italic uppercase tracking-tighter mb-4 text-white">Session Ended.</h2>
+                        <p className="text-neutral-500 text-lg max-w-md mb-12">The scheduled training window has concluded.</p>
                         <Button 
                             onClick={handleEndCall}
                             className="h-20 px-16 rounded-3xl bg-white text-black font-black uppercase tracking-widest text-sm hover:bg-neutral-200 transition-all shadow-[0_20px_50px_rgba(255,255,255,0.1)]"
                         >
-                            {isTrainer ? "Complete Evaluation" : "Exit Session"}
+                            {isTrainer ? "Complete Summary" : "Exit Session"}
                         </Button>
                     </motion.div>
                 )}
@@ -350,8 +366,8 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
                 <DialogPortal>
                     <DialogContent className="z-[1000] bg-[#080808] border-white/10 text-white max-w-xl rounded-[3rem] p-12 shadow-[0_50px_100px_rgba(0,0,0,1)]">
                         <DialogHeader className="space-y-4">
-                            <DialogTitle className="text-4xl font-black tracking-tighter">Session Debrief.</DialogTitle>
-                            <DialogDescription className="text-neutral-500 text-lg italic">Evaluate the client's progress.</DialogDescription>
+                            <DialogTitle className="text-4xl font-black tracking-tighter italic uppercase">Session Summary.</DialogTitle>
+                            <DialogDescription className="text-neutral-500 text-lg italic">Provide feedback for your client.</DialogDescription>
                         </DialogHeader>
 
                         <div className="space-y-12 py-10">
@@ -386,7 +402,7 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
                                     setIsSubmittingFeedback(true);
                                     try {
                                         await API.post(`/video-call/room/${roomId}/feedback`, { rating, feedback });
-                                        toast.success("Session Concluded.");
+                                        toast.success("Session Completed.");
                                         await room.disconnect();
                                         onLeave();
                                     } catch (e) { toast.error("Submission failed"); }
@@ -395,7 +411,7 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
                                 disabled={isSubmittingFeedback || rating === 0}
                                 className="h-16 px-12 rounded-2xl bg-white text-black font-black uppercase flex-1"
                             >
-                                {isSubmittingFeedback ? <Loader2 className="animate-spin" /> : "Commit Session"}
+                                {isSubmittingFeedback ? <Loader2 className="animate-spin" /> : "Finish Session"}
                             </Button>
                         </DialogFooter>
                     </DialogContent>

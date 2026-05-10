@@ -57,7 +57,7 @@ const BentoTile = ({ children, className, title, icon: Icon, delay = 0 }: BentoT
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, delay }}
     className={cn(
-      "relative overflow-hidden bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 hover:border-primary/30 transition-all group shadow-2xl",
+      "relative overflow-hidden bg-glass-bg backdrop-blur-2xl border border-glass-border rounded-[2.5rem] p-8 hover:border-primary/30 transition-all group shadow-2xl",
       className
     )}
   >
@@ -282,20 +282,20 @@ const UserDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white">
+      <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground">
         <SiteHeader />
         <div className="flex-1 flex flex-col items-center justify-center space-y-6">
           <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          <p className="text-slate-500 font-black italic tracking-widest uppercase animate-pulse">Syncing Metrics...</p>
+          <p className="text-slate-500 font-black italic tracking-widest uppercase animate-pulse">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+    <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground overflow-hidden font-outfit">
       <div className="absolute inset-0 z-0">
-        <Aurora colorStops={["#020617", "#0d1117", "#020617"]} amplitude={1.1} blend={0.6} />
+        <Aurora colorStops={["var(--background)", "var(--site-bg)", "var(--background)"]} amplitude={1.1} blend={0.6} />
       </div>
 
       <SiteHeader />
@@ -307,20 +307,20 @@ const UserDashboard: React.FC = () => {
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                Operational Status: Peak
+                You're doing great!
               </div>
-              <h1 className="text-5xl md:text-8xl font-black italic tracking-tight uppercase leading-[0.8] text-white">
-                Systems <span className="text-primary not-italic">Go,</span><br />
+              <h1 className="text-5xl md:text-8xl font-black italic tracking-tight uppercase leading-[0.8] text-foreground">
+                Welcome <span className="text-primary not-italic">back,</span><br />
                 {userData.name.split(' ')[0]}
               </h1>
             </div>
             
-            <div className="flex items-center gap-6 bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-[2.5rem] shadow-2xl">
+            <div className="flex items-center gap-6 bg-glass-bg backdrop-blur-xl border border-glass-border p-6 rounded-[2.5rem] shadow-2xl">
               <div className="text-center">
                 <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1 italic">Current Streak</p>
                 <div className="flex items-center gap-2">
                   <Flame className="h-6 w-6 text-orange-500 fill-orange-500" />
-                  <span className="text-3xl font-black italic">{streak} DAYS</span>
+                  <span className="text-3xl font-black italic text-foreground">{streak} DAYS</span>
                 </div>
               </div>
               <div className="w-px h-12 bg-white/10" />
@@ -328,7 +328,7 @@ const UserDashboard: React.FC = () => {
                 <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1 italic">Global Rank</p>
                 <div className="flex items-center gap-2">
                   <Award className="h-6 w-6 text-primary" />
-                  <span className="text-3xl font-black italic">ELITE</span>
+                  <span className="text-3xl font-black italic text-foreground">ELITE</span>
                 </div>
               </div>
             </div>
@@ -338,12 +338,12 @@ const UserDashboard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[250px]">
             
             {/* Weight Summary (Span 4x2) */}
-            <BentoTile title="Weight Dynamics" icon={Scale} className="md:col-span-8 md:row-span-2">
+            <BentoTile title="Weight Progress" icon={Scale} className="md:col-span-8 md:row-span-2">
               <div className="flex flex-col md:flex-row gap-8 h-full">
                 <div className="w-full md:w-1/3 flex flex-col justify-center space-y-6">
                   <div className="space-y-1">
-                    <p className="text-sm font-bold text-slate-500">Current Payload</p>
-                    <div className="text-6xl font-black text-white italic tracking-tighter">{userData.currentWeight}<span className="text-2xl not-italic ml-1 opacity-40">KG</span></div>
+                    <p className="text-sm font-bold text-slate-500">Current Weight</p>
+                    <div className="text-6xl font-black text-foreground italic tracking-tighter">{userData.currentWeight}<span className="text-2xl not-italic ml-1 opacity-40 text-foreground">KG</span></div>
                     {lastLoggedDate && (
                       <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2">
                         Last Logged: {lastLoggedDate}
@@ -364,21 +364,21 @@ const UserDashboard: React.FC = () => {
                   </div>
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button className="w-full h-14 rounded-2xl bg-white text-black hover:bg-slate-200 font-black italic uppercase tracking-widest" disabled={isWeightLoggedToday}>
-                        {isWeightLoggedToday ? "SYNCED FOR TODAY" : "LOG NEW WEIGHT"}
+                      <Button className="w-full h-14 rounded-2xl bg-primary text-primary-foreground hover:opacity-90 font-black italic uppercase tracking-widest" disabled={isWeightLoggedToday}>
+                        {isWeightLoggedToday ? "LOGGED TODAY" : "LOG WEIGHT"}
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-slate-950 border-white/10 text-white rounded-3xl">
-                      <DialogHeader><DialogTitle className="text-2xl font-black italic uppercase">Sync Weight</DialogTitle></DialogHeader>
+                    <DialogContent className="bg-background border-border text-foreground rounded-3xl">
+                      <DialogHeader><DialogTitle className="text-2xl font-black italic uppercase">Log Weight</DialogTitle></DialogHeader>
                       <div className="space-y-6 pt-4">
                         <Input 
                           type="number" 
                           placeholder="00.0" 
-                          className="h-16 text-3xl font-black bg-white/5 border-white/10 rounded-2xl focus:border-primary/50" 
+                          className="h-16 text-3xl font-black bg-muted border-border rounded-2xl focus:border-primary/50 text-foreground" 
                           value={newWeight}
                           onChange={(e) => setNewWeight(e.target.value)}
                         />
-                        <Button onClick={() => handleAddWeight(newWeight)} className="w-full h-14 bg-primary text-white font-black italic uppercase tracking-widest">Confirm Sync</Button>
+                        <Button onClick={() => handleAddWeight(newWeight)} className="w-full h-14 bg-primary text-white font-black italic uppercase tracking-widest">Save Weight</Button>
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -403,14 +403,14 @@ const UserDashboard: React.FC = () => {
             </BentoTile>
 
             {/* BMI Tile (Span 4x1) */}
-            <BentoTile title="Mass Index" icon={Zap} className="md:col-span-4 md:row-span-1">
+            <BentoTile title="BMI" icon={Zap} className="md:col-span-4 md:row-span-1">
               <div className="flex items-center justify-between h-full">
                 <div>
-                  <div className="text-5xl font-black italic text-white leading-none">
+                  <div className="text-5xl font-black italic text-foreground leading-none">
                     {userData.height ? (userData.currentWeight / Math.pow(userData.height / 100, 2)).toFixed(1) : "---"}
                   </div>
                   <Badge variant="outline" className="mt-4 border-emerald-500/20 bg-emerald-500/10 text-emerald-400 font-black uppercase italic text-[10px] tracking-widest">
-                    OPTIMAL ZONE
+                    HEALTHY
                   </Badge>
                 </div>
                 <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-emerald-500 flex items-center justify-center">
@@ -420,7 +420,7 @@ const UserDashboard: React.FC = () => {
             </BentoTile>
 
             {/* Transformation (Span 4x1) */}
-            <BentoTile title="Visual Progress" icon={ImageIcon} className="md:col-span-4 md:row-span-1">
+            <BentoTile title="Before & After" icon={ImageIcon} className="md:col-span-4 md:row-span-1">
                <div className="flex items-center gap-4 h-full">
                   <div className="flex-1 h-full rounded-2xl overflow-hidden bg-white/5 border border-white/5">
                     {transformation?.first?.photos?.[0] ? <img src={transformation.first.photos[0]} className="w-full h-full object-cover grayscale" /> : <div className="w-full h-full flex items-center justify-center opacity-20"><ImageIcon /></div>}
@@ -435,11 +435,11 @@ const UserDashboard: React.FC = () => {
             </BentoTile>
 
             {/* Health Tools - Water & Sleep (Span 8x1) */}
-            <BentoTile title="Hydration Protocol" icon={Droplets} className="md:col-span-4 md:row-span-1">
+            <BentoTile title="Water Intake" icon={Droplets} className="md:col-span-4 md:row-span-1">
                 <div className="flex flex-col h-full justify-between">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-4xl font-black italic text-white leading-none">{waterGlasses}</div>
+                      <div className="text-4xl font-black italic text-foreground leading-none">{waterGlasses}</div>
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Glasses</p>
                     </div>
                     <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-cyan-500 flex items-center justify-center bg-cyan-500/10 text-cyan-500">
@@ -447,17 +447,17 @@ const UserDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateWater(Math.max(0, waterGlasses - 1))}>-</Button>
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateWater(waterGlasses + 1)}>+</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateWater(Math.max(0, waterGlasses - 1))}>-</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateWater(waterGlasses + 1)}>+</Button>
                   </div>
                 </div>
             </BentoTile>
 
-            <BentoTile title="Recovery Protocol" icon={Moon} className="md:col-span-4 md:row-span-1">
+            <BentoTile title="Sleep" icon={Moon} className="md:col-span-4 md:row-span-1">
                 <div className="flex flex-col h-full justify-between">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-4xl font-black italic text-white leading-none">{sleepHours}</div>
+                      <div className="text-4xl font-black italic text-foreground leading-none">{sleepHours}</div>
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Hours Logged</p>
                     </div>
                     <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-indigo-500 flex items-center justify-center bg-indigo-500/10 text-indigo-500">
@@ -465,17 +465,17 @@ const UserDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateSleep(Math.max(0, sleepHours - 1))}>-</Button>
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateSleep(sleepHours + 1)}>+</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateSleep(Math.max(0, sleepHours - 1))}>-</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateSleep(sleepHours + 1)}>+</Button>
                   </div>
                 </div>
             </BentoTile>
 
-            <BentoTile title="Locomotion Tech" icon={Footprints} className="md:col-span-4 md:row-span-1">
+            <BentoTile title="Steps" icon={Footprints} className="md:col-span-4 md:row-span-1">
                 <div className="flex flex-col h-full justify-between">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-4xl font-black italic text-white leading-none">{(steps/1000).toFixed(1)}k</div>
+                      <div className="text-4xl font-black italic text-foreground leading-none">{(steps/1000).toFixed(1)}k</div>
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Steps Today</p>
                     </div>
                     <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-orange-500 flex items-center justify-center bg-orange-500/10 text-orange-500">
@@ -483,17 +483,17 @@ const UserDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateSteps(Math.max(0, steps - 500))}>-500</Button>
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateSteps(steps + 500)}>+500</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateSteps(Math.max(0, steps - 500))}>-500</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateSteps(steps + 500)}>+500</Button>
                   </div>
                 </div>
             </BentoTile>
 
-            <BentoTile title="Neural Calibration" icon={Brain} className="md:col-span-4 md:row-span-1">
+            <BentoTile title="Mindfulness" icon={Brain} className="md:col-span-4 md:row-span-1">
                 <div className="flex flex-col h-full justify-between">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-4xl font-black italic text-white leading-none">{mindfulnessMinutes}</div>
+                      <div className="text-4xl font-black italic text-foreground leading-none">{mindfulnessMinutes}</div>
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Minutes</p>
                     </div>
                     <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-purple-500 flex items-center justify-center bg-purple-500/10 text-purple-500">
@@ -501,29 +501,29 @@ const UserDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateMindfulness(Math.max(0, mindfulnessMinutes - 5))}>-5m</Button>
-                    <Button variant="outline" className="flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => handleUpdateMindfulness(mindfulnessMinutes + 5)}>+5m</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateMindfulness(Math.max(0, mindfulnessMinutes - 5))}>-5m</Button>
+                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateMindfulness(mindfulnessMinutes + 5)}>+5m</Button>
                   </div>
                 </div>
             </BentoTile>
 
             {/* Activity Matrix (Span 12x1) */}
-            <BentoTile title="Engagement Matrix" icon={Calendar} className="md:col-span-12 md:row-span-1 pb-4">
+            <BentoTile title="Activity" icon={Calendar} className="md:col-span-12 md:row-span-1 pb-4">
               <ActivityMatrix activityData={activityData} />
             </BentoTile>
 
             {/* Recent Sessions (Span 6x1) */}
-            <BentoTile title="Tactical History" icon={Dumbbell} className="md:col-span-6 md:row-span-1">
+            <BentoTile title="Recent Workouts" icon={Dumbbell} className="md:col-span-6 md:row-span-1">
               <div className="space-y-4">
                 {recentWorkouts.length > 0 ? (
                   recentWorkouts.map((w, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 group-hover:border-white/10 transition-all">
+                    <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-glass-bg border border-glass-border group-hover:border-primary/20 transition-all">
                       <div className="flex items-center gap-4">
                         <div className="p-2 bg-primary/10 rounded-lg text-primary">
                           <Play className="h-4 w-4 fill-current" />
                         </div>
                         <div>
-                          <p className="text-sm font-black italic uppercase text-white truncate w-32 md:w-auto">{w.name}</p>
+                          <p className="text-sm font-black italic uppercase text-foreground truncate w-32 md:w-auto">{w.name}</p>
                           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">{format(new Date(w.date), "MMM dd")}</p>
                         </div>
                       </div>
@@ -533,24 +533,24 @@ const UserDashboard: React.FC = () => {
                     </div>
                   ))
                 ) : (
-                  <p className="text-slate-500 text-sm italic py-4">No data streams detected.</p>
+                  <p className="text-slate-500 text-sm italic py-4">No workouts logged yet.</p>
                 )}
               </div>
             </BentoTile>
 
              {/* Quick Actions (Span 6x1) */}
-             <BentoTile title="Direct Protocols" icon={Zap} className="md:col-span-6 md:row-span-1">
+             <BentoTile title="Quick Actions" icon={Zap} className="md:col-span-6 md:row-span-1">
                 <div className="grid grid-cols-2 gap-4 h-full">
                   <Link to="/workouts/browse" className="h-full">
-                    <Button variant="outline" className="w-full h-full rounded-3xl border-white/10 bg-white/5 flex flex-col items-center justify-center gap-3 group/btn">
+                    <Button variant="outline" className="w-full h-full rounded-3xl border-glass-border bg-glass-bg flex flex-col items-center justify-center gap-3 group/btn text-foreground hover:bg-glass-hover">
                       <Dumbbell className="h-8 w-8 text-primary group-hover/btn:scale-110 transition-transform" />
-                      <span className="text-[10px] font-black uppercase tracking-widest italic">New Drill</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest italic">New Workout</span>
                     </Button>
                   </Link>
                   <Link to={ROUTES.USER_DIET} className="h-full">
-                    <Button variant="outline" className="w-full h-full rounded-3xl border-white/10 bg-white/5 flex flex-col items-center justify-center gap-3 group/btn">
+                    <Button variant="outline" className="w-full h-full rounded-3xl border-glass-border bg-glass-bg flex flex-col items-center justify-center gap-3 group/btn text-foreground hover:bg-glass-hover">
                       <Target className="h-8 w-8 text-primary group-hover/btn:scale-110 transition-transform" />
-                      <span className="text-[10px] font-black uppercase tracking-widest italic">Diet Intel</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest italic">Diet Plan</span>
                     </Button>
                   </Link>
                 </div>

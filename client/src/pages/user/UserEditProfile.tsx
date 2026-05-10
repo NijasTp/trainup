@@ -359,13 +359,13 @@ export default function EditProfile() {
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
             {/* Profile Image Upload */}
-            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+            <Card className="bg-glass-bg backdrop-blur-2xl border-glass-border rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
               <CardHeader className="p-8 border-b border-white/5">
                 <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
                   <div className="p-2 bg-primary/20 rounded-xl">
                     <Camera className="h-6 w-6 text-primary" />
                   </div>
-                  Identity Image
+                  Profile Picture
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8 flex flex-col items-center space-y-6">
@@ -403,13 +403,13 @@ export default function EditProfile() {
             </Card>
 
             {/* Personal Information */}
-            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+            <Card className="bg-glass-bg backdrop-blur-2xl border-glass-border rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
               <CardHeader className="p-8 border-b border-white/5">
                 <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
                   <div className="p-2 bg-primary/20 rounded-xl">
                     <User className="h-6 w-6 text-primary" />
                   </div>
-                  Personal Profile
+                  Basic Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-8">
@@ -420,7 +420,7 @@ export default function EditProfile() {
                       id="name"
                       value={formData.name}
                       onChange={(e) => handleInputChange("name", e.target.value)}
-                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-700 ${errors.name ? 'border-red-500' : ''}`}
+                      className={`h-14 bg-muted border-border rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-400 text-foreground ${errors.name ? 'border-red-500' : ''}`}
                       placeholder="Enter your full name"
                     />
                     <AnimatePresence>
@@ -430,12 +430,12 @@ export default function EditProfile() {
                     </AnimatePresence>
                   </div>
                   <div className="space-y-3">
-                    <Label htmlFor="phone" className="text-xs font-bold text-gray-400 uppercase tracking-widest">Phone Network</Label>
+                    <Label htmlFor="phone" className="text-xs font-bold text-gray-400 uppercase tracking-widest">Phone Number</Label>
                     <Input
                       id="phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
-                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-700 ${errors.phone ? 'border-red-500' : ''}`}
+                      className={`h-14 bg-muted border-border rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-400 text-foreground ${errors.phone ? 'border-red-500' : ''}`}
                       placeholder="+91 9876543210"
                     />
                     <AnimatePresence>
@@ -445,13 +445,13 @@ export default function EditProfile() {
                     </AnimatePresence>
                   </div>
                   <div className="space-y-3">
-                    <Label htmlFor="age" className="text-xs font-bold text-gray-400 uppercase tracking-widest">Biological Age</Label>
+                    <Label htmlFor="age" className="text-xs font-bold text-gray-400 uppercase tracking-widest">Age</Label>
                     <Input
                       id="age"
                       type="number"
                       value={formData.age}
                       onChange={(e) => handleInputChange("age", e.target.value)}
-                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-700 ${errors.age ? 'border-red-500' : ''}`}
+                      className={`h-14 bg-muted border-border rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-400 text-foreground ${errors.age ? 'border-red-500' : ''}`}
                       placeholder="25"
                     />
                     <AnimatePresence>
@@ -461,12 +461,12 @@ export default function EditProfile() {
                     </AnimatePresence>
                   </div>
                   <div className="space-y-3">
-                    <Label htmlFor="gender" className="text-xs font-bold text-gray-400 uppercase tracking-widest">Gender Identity</Label>
+                    <Label htmlFor="gender" className="text-xs font-bold text-gray-400 uppercase tracking-widest">Gender</Label>
                     <Select value={formData.gender || undefined} onValueChange={(value) => handleInputChange("gender", value)}>
-                      <SelectTrigger className="h-14 bg-white/5 border-white/10 rounded-2xl text-lg font-bold focus:ring-primary focus:border-primary shadow-none">
+                      <SelectTrigger className="h-14 bg-muted border-border rounded-2xl text-lg font-bold focus:ring-primary focus:border-primary shadow-none text-foreground">
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#0f172a] border-white/10 text-white rounded-2xl p-2 font-bold">
+                      <SelectContent className="bg-popover border-border text-popover-foreground rounded-2xl p-2 font-bold">
                         <SelectItem value="male" className="rounded-xl hover:bg-primary/20">Male</SelectItem>
                         <SelectItem value="female" className="rounded-xl hover:bg-primary/20">Female</SelectItem>
                         <SelectItem value="other" className="rounded-xl hover:bg-primary/20">Other</SelectItem>
@@ -482,13 +482,13 @@ export default function EditProfile() {
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             {/* Physical Information */}
-            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+            <Card className="bg-glass-bg backdrop-blur-2xl border-glass-border rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
               <CardHeader className="p-8 border-b border-white/5">
                 <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
                   <div className="p-2 bg-primary/20 rounded-xl">
                     <Weight className="h-6 w-6 text-primary" />
                   </div>
-                  Physical Dimensions
+                  Body Details
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-8">
@@ -503,7 +503,7 @@ export default function EditProfile() {
                       type="number"
                       value={formData.height}
                       onChange={(e) => handleInputChange("height", e.target.value)}
-                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold ${errors.height ? 'border-red-500' : ''}`}
+                      className={`h-14 bg-muted border-border rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold text-foreground ${errors.height ? 'border-red-500' : ''}`}
                       placeholder="170"
                     />
                     <AnimatePresence>
@@ -523,7 +523,7 @@ export default function EditProfile() {
                       step="0.1"
                       value={formData.todaysWeight}
                       onChange={(e) => handleInputChange("todaysWeight", e.target.value)}
-                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold ${errors.todaysWeight ? 'border-red-500' : ''}`}
+                      className={`h-14 bg-muted border-border rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold text-foreground ${errors.todaysWeight ? 'border-red-500' : ''}`}
                       placeholder="70.5"
                     />
                     <AnimatePresence>
@@ -543,7 +543,7 @@ export default function EditProfile() {
                       step="0.1"
                       value={formData.goalWeight}
                       onChange={(e) => handleInputChange("goalWeight", e.target.value)}
-                      className={`h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold ${errors.goalWeight ? 'border-red-500' : ''}`}
+                      className={`h-14 bg-muted border-border rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold text-foreground ${errors.goalWeight ? 'border-red-500' : ''}`}
                       placeholder="65.0"
                     />
                     <AnimatePresence>
@@ -563,7 +563,7 @@ export default function EditProfile() {
                     id="medicalConditions"
                     value={formData.medicalConditions}
                     onChange={(e) => handleInputChange("medicalConditions", e.target.value)}
-                    className="w-full min-h-[120px] p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent text-gray-200 font-medium placeholder:text-gray-600 transition-all resize-none"
+                    className="w-full min-h-[120px] p-4 bg-muted border border-border rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent text-foreground font-medium placeholder:text-gray-400 transition-all resize-none"
                     placeholder="List any injuries, chronic conditions, or medications your trainer should know about... (e.g., Lower back pain, Asthma)"
                   />
                   <div className="flex items-start gap-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest bg-white/5 p-3 rounded-xl border border-white/5">
@@ -578,19 +578,19 @@ export default function EditProfile() {
       case 3:
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+            <Card className="bg-glass-bg backdrop-blur-2xl border-glass-border rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
               <CardHeader className="p-8 border-b border-white/5">
                 <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
                   <div className="p-2 bg-primary/20 rounded-xl">
                     <Activity className="h-6 w-6 text-primary" />
                   </div>
-                  Optimization Goals
+                  Your Goals
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-10">
                 <div className="space-y-6">
                   <Label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <HeartPulse className="h-4 w-4 text-primary" /> Selective Objectives
+                    <HeartPulse className="h-4 w-4 text-primary" /> Your Goals
                   </Label>
                   <div className="flex flex-wrap gap-3">
                     <AnimatePresence>
@@ -622,8 +622,8 @@ export default function EditProfile() {
                     <Input
                       value={newGoal}
                       onChange={(e) => setNewGoal(e.target.value)}
-                      placeholder="Define custom objective..."
-                      className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-700"
+                      placeholder="Enter a goal..."
+                      className="h-14 bg-muted border-border rounded-2xl focus:ring-primary focus:border-primary text-lg font-bold placeholder:text-gray-400 text-foreground"
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addGoal())}
                     />
                     <Button type="button" onClick={addGoal} className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-2xl flex items-center justify-center shrink-0">
@@ -632,7 +632,7 @@ export default function EditProfile() {
                   </div>
 
                   <div className="space-y-4">
-                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none">Standard Protocols:</p>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none">Recommended Goals:</p>
                     <div className="flex flex-wrap gap-2">
                       {goalOptions.filter(goal => !formData.goals!.includes(goal)).map((goal) => (
                         <Button
@@ -654,13 +654,13 @@ export default function EditProfile() {
                 <div className="space-y-6 pt-6 border-t border-white/5">
                   <div className="space-y-3">
                     <Label htmlFor="activityLevel" className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                      <Flame className="h-4 w-4 text-primary" /> Metabolic Activity
+                      <Flame className="h-4 w-4 text-primary" /> Activity Level
                     </Label>
                     <Select value={formData.activityLevel} onValueChange={(value) => handleInputChange("activityLevel", value)}>
-                      <SelectTrigger className="h-14 bg-white/5 border-white/10 rounded-2xl text-lg font-bold focus:ring-primary focus:border-primary shadow-none">
+                      <SelectTrigger className="h-14 bg-muted border-border rounded-2xl text-lg font-bold focus:ring-primary focus:border-primary shadow-none text-foreground">
                         <SelectValue placeholder="Select activity intensity" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#0f172a] border-white/10 text-white rounded-2xl p-2 font-bold max-w-[400px]">
+                      <SelectContent className="bg-popover border-border text-popover-foreground rounded-2xl p-2 font-bold max-w-[400px]">
                         {activityLevels.map((level) => (
                           <SelectItem key={level.value} value={level.value} className="rounded-xl hover:bg-primary/20 whitespace-normal p-3">
                             {level.label}
@@ -679,12 +679,12 @@ export default function EditProfile() {
                       id="dietaryPreferences"
                       value={formData.dietaryPreferences}
                       onChange={(e) => handleInputChange("dietaryPreferences", e.target.value)}
-                      className="w-full min-h-[120px] p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent text-gray-200 font-medium placeholder:text-gray-600 transition-all resize-none"
+                      className="w-full min-h-[120px] p-4 bg-muted border border-border rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent text-foreground font-medium placeholder:text-gray-400 transition-all resize-none"
                       placeholder="List any preferences (Vegan, Keto, etc.) or allergies (Nuts, Shellfish)..."
                     />
                   </div>
 
-                  <div className="flex items-center space-x-4 bg-white/5 p-6 rounded-3xl border border-white/10 group/check hover:border-primary/50 transition-all">
+                  <div className="flex items-center space-x-4 bg-glass-bg p-6 rounded-3xl border border-glass-border group/check hover:border-primary/50 transition-all">
                     <Checkbox
                       id="equipment"
                       checked={formData.equipment}
@@ -692,7 +692,7 @@ export default function EditProfile() {
                       className="h-6 w-6 rounded-lg border-2 border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
                     <Label htmlFor="equipment" className="text-sm font-bold uppercase tracking-widest cursor-pointer group-hover/check:text-primary transition-colors">
-                      Full Hardware Access (Gym Equipment)
+                      I have gym equipment
                     </Label>
                   </div>
                 </div>
@@ -704,17 +704,17 @@ export default function EditProfile() {
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
             {/* Privacy Settings */}
-            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+            <Card className="bg-glass-bg backdrop-blur-2xl border-glass-border rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
               <CardHeader className="p-8 border-b border-white/5">
                 <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
                   <div className="p-2 bg-primary/20 rounded-xl">
                     {formData.isPrivate ? <EyeOff className="h-6 w-6 text-primary" /> : <Eye className="h-6 w-6 text-primary" />}
                   </div>
-                  System Privacy
+                  Privacy
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
-                <div className="flex items-center space-x-4 bg-white/5 p-6 rounded-3xl border border-white/10 group/priv hover:border-primary/50 transition-all">
+                <div className="flex items-center space-x-4 bg-glass-bg p-6 rounded-3xl border border-glass-border group/priv hover:border-primary/50 transition-all">
                   <Checkbox
                     id="isPrivate"
                     checked={formData.isPrivate}
@@ -722,24 +722,24 @@ export default function EditProfile() {
                     className="h-6 w-6 rounded-lg border-2 border-white/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
                   <Label htmlFor="isPrivate" className="text-sm font-bold uppercase tracking-widest cursor-pointer group-hover/priv:text-primary transition-colors">
-                    stealth mode (Private Profile)
+                    Private Profile
                   </Label>
                 </div>
                 <div className="flex items-start gap-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest bg-white/5 p-4 rounded-2xl border border-white/5">
                   <Info className="h-3 w-3 text-primary shrink-0 mt-0.5" />
-                  Visibility Restricted: When enabled, your profile metrics and history will only be accessible to your assigned coach and system administrators.
+                  When private, only you and your trainer can see your profile details and history.
                 </div>
               </CardContent>
             </Card>
 
             {/* Security */}
-            <Card className="bg-white/5 backdrop-blur-2xl border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
+            <Card className="bg-glass-bg backdrop-blur-2xl border-glass-border rounded-[2.5rem] shadow-2xl overflow-hidden group hover:border-primary/30 transition-all duration-500">
               <CardHeader className="p-8 border-b border-white/5">
                 <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3">
                   <div className="p-2 bg-primary/20 rounded-xl">
                     <Key className="h-6 w-6 text-primary" />
                   </div>
-                  Cyber Security
+                  Account Security
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-4">
@@ -747,13 +747,13 @@ export default function EditProfile() {
                   variant="outline"
                   onClick={() => setOpen(true)}
                   type="button"
-                  className="h-14 w-full md:w-auto px-8 border-white/10 rounded-2xl font-black italic uppercase tracking-widest hover:bg-white hover:text-black transition-all"
+                  className="h-14 w-full md:w-auto px-8 border-border rounded-2xl font-black italic uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all text-foreground"
                 >
                   <Key className="h-4 w-4 mr-2" />
-                  Rotate Password
-                </Button>
+                  Change Password
+                </CardButton>
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                  Recommendation: Update credentials bi-monthly for maximum network security.
+                  Keep your account secure by changing your password regularly.
                 </p>
               </CardContent>
             </Card>
@@ -766,23 +766,23 @@ export default function EditProfile() {
 
   if (isLoading) {
     return (
-      <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+      <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground overflow-hidden font-outfit">
         <div className="absolute inset-0 z-0">
-          <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+          <Aurora colorStops={["var(--background)", "var(--site-bg)", "var(--background)"]} amplitude={1.1} blend={0.6} />
         </div>
         <SiteHeader />
         <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6 z-10">
           <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-          <p className="text-gray-400 font-black italic uppercase tracking-widest animate-pulse">Retrieving Profile Matrix...</p>
+          <p className="text-gray-400 font-black italic uppercase tracking-widest animate-pulse">Loading your profile...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+    <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground overflow-hidden font-outfit">
       <div className="absolute inset-0 z-0 text-white shadow-inner">
-        <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+        <Aurora colorStops={["var(--background)", "var(--site-bg)", "var(--background)"]} amplitude={1.1} blend={0.6} />
       </div>
 
       <SiteHeader />
@@ -794,26 +794,25 @@ export default function EditProfile() {
             animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 px-6 py-2 bg-primary/10 rounded-full border border-primary/20 text-primary uppercase font-black italic tracking-widest text-[10px]"
           >
-            <User className="h-3 w-3" /> Profile Synchronization
+            <User className="h-3 w-3" /> Edit Profile
           </motion.div>
 
-          <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">
-            Refine Your <span className="text-primary">Identity</span>
+            Update Your <span className="text-primary">Profile</span>
           </h1>
 
-          <p className="text-lg text-gray-400 font-medium italic max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground font-medium italic max-w-2xl mx-auto">
             Step {currentStep} of {totalSteps}: {
-              currentStep === 1 ? "Personal Profile" :
-                currentStep === 2 ? "Body Dimensions" :
-                  currentStep === 3 ? "Fitness Protocol" :
-                    "System Security"
+              currentStep === 1 ? "Basic Information" :
+                currentStep === 2 ? "Body Details" :
+                  currentStep === 3 ? "Fitness Goals" :
+                    "Account Security"
             }
           </p>
         </div>
 
         {/* Dynamic Stepper */}
         <div className="max-w-3xl mx-auto relative px-8 py-4">
-          <div className="absolute top-1/2 left-8 right-8 h-1 bg-white/5 -translate-y-1/2 rounded-full" />
+          <div className="absolute top-1/2 left-8 right-8 h-1 bg-border -translate-y-1/2 rounded-full" />
           <div
             className="absolute top-1/2 left-8 h-1 bg-primary -translate-y-1/2 rounded-full transition-all duration-500 shadow-[0_0_15px_rgba(var(--primary),0.5)]"
             style={{ width: `calc(${((currentStep - 1) / (totalSteps - 1)) * 100}% - 4px)` }}
@@ -823,8 +822,8 @@ export default function EditProfile() {
               <div
                 key={step}
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center border-4 transition-all duration-500 ${step <= currentStep
-                  ? "bg-primary border-primary text-black scale-110 shadow-2xl"
-                  : "bg-[#111] border-white/5 text-gray-600"
+                  ? "bg-primary border-primary text-primary-foreground scale-110 shadow-2xl"
+                  : "bg-muted border-white/5 text-gray-600"
                   }`}
               >
                 {step < currentStep ? <Check className="h-6 w-6 stroke-[4]" /> : <span className="font-black italic text-lg">{step}</span>}
@@ -851,15 +850,15 @@ export default function EditProfile() {
               <Button
                 type="button"
                 onClick={nextStep}
-                className="h-16 px-12 rounded-2xl bg-white text-black hover:bg-gray-200 transition-all font-black italic uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.2)] flex items-center gap-3"
+                className="h-16 px-12 rounded-2xl bg-primary text-primary-foreground hover:opacity-90 transition-all font-black italic uppercase tracking-widest shadow-[0_0_20px_rgba(var(--primary),0.2)] flex items-center gap-3"
               >
-                Next Protocol <ArrowRight className="h-5 w-5" />
+                Next Step <ArrowRight className="h-5 w-5" />
               </Button>
             ) : (
               <Button
                 type="submit"
                 disabled={isSaving}
-                className="h-16 px-16 rounded-2xl bg-primary text-black hover:bg-white transition-all font-black italic uppercase tracking-widest shadow-[0_0_30px_rgba(var(--primary),0.3)] disabled:opacity-50 flex items-center gap-3"
+                className="h-16 px-16 rounded-2xl bg-primary text-primary-foreground hover:opacity-90 transition-all font-black italic uppercase tracking-widest shadow-[0_0_30px_rgba(var(--primary),0.3)] disabled:opacity-50 flex items-center gap-3"
               >
                 {isSaving ? (
                   <>
@@ -868,7 +867,7 @@ export default function EditProfile() {
                   </>
                 ) : (
                   <>
-                    Commit Changes <Check className="h-5 w-5" />
+                    Save Changes <Check className="h-5 w-5" />
                   </>
                 )}
               </Button>

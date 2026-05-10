@@ -532,7 +532,6 @@ export class UserService implements IUserService {
     async getActivityData(userId: string): Promise<IActivityData> {
         const activityData: IActivityData = {};
 
-        // Run all 4 DB queries in parallel instead of sequentially
         const [workouts, dietDays, user, attendance] = await Promise.all([
             WorkoutSessionModel.find({ userId, isDone: true })
                 .select('completedAt updatedAt').lean(),

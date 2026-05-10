@@ -30,6 +30,8 @@ import { cn } from "@/lib/utils"
 import { io } from "socket.io-client"
 import { StreakPopup } from "@/components/ui/StreakPopup"
 import { StreakModal } from "@/components/ui/StreakModal"
+import { ThemeToggle } from "@/components/ui/ThemeToggle"
+import { useTheme } from "@/context/ThemeContext"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +61,7 @@ export const SiteHeader: React.FC = () => {
   const location = useLocation()
   const dispatch = useDispatch()
   const user = useSelector((state: RootState) => state.userAuth.user)
+  const { theme } = useTheme()
 
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -206,13 +209,13 @@ export const SiteHeader: React.FC = () => {
       {/* Ghost spacer to prevent content occlusion */}
       <div className="h-28 w-full pointer-events-none" />
 
-      <header className="fixed top-0 left-0 right-0 z-50 px-6 py-8 pointer-events-none">
-        <nav className="container mx-auto max-w-7xl flex items-center justify-between backdrop-blur-xl bg-black/40 px-8 py-4 rounded-full border border-white/10 shadow-2xl transition-all hover:bg-black/50 pointer-events-auto">
+      <header className="fixed top-0 left-0 right-0 z-50 px-6 py-8 pointer-events-auto">
+        <nav className="container mx-auto max-w-7xl flex items-center justify-between backdrop-blur-xl bg-glass-bg px-8 py-4 rounded-full border border-glass-border shadow-2xl transition-all hover:bg-glass-hover">
           <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate("/home")}>
             <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform">
               <Activity className="w-6 h-6 text-cyan-400" />
             </div>
-            <span className="text-2xl font-black tracking-tighter italic text-white group-hover:text-cyan-400 transition-colors uppercase">TRAINUP</span>
+            <span className={cn("text-2xl font-black tracking-tighter italic group-hover:text-cyan-400 transition-colors uppercase", theme === 'dark' ? "text-white" : "text-black")}>TRAINUP</span>
           </div>
 
           {/* Desktop Navigation */}
@@ -240,6 +243,7 @@ export const SiteHeader: React.FC = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 cursor-pointer hover:bg-orange-500/20 transition-colors group relative" onClick={() => setShowStreakModal(true)}>
               <Flame className={cn("h-4 w-4", currentStreak ? "text-orange-500" : "text-muted-foreground")} />
               <span className="text-sm font-black text-orange-500 italic tracking-tighter">{currentStreak}</span>
@@ -251,7 +255,7 @@ export const SiteHeader: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative text-gray-400 hover:text-white transition-colors group"
+                  className="relative text-muted-foreground hover:text-foreground transition-colors group"
                 >
                   <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-cyan-500/50 group-hover:bg-cyan-500/10 transition-all">
                     <Bell className="h-5 w-5" />
