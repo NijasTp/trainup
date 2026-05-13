@@ -32,7 +32,7 @@ import {
     DialogDescription,
     DialogFooter
 } from "@/components/ui/dialog";
-import { MessageSquare, Star, Zap } from "lucide-react";
+import { MessageSquare, Star, Zap, FileText, User as UserIcon } from "lucide-react";
 import { BundlePurchaseModal } from "@/components/user/BundlePurchaseModal";
 
 import type { Session } from "@/interfaces/user/IUserSessions";
@@ -73,7 +73,7 @@ export default function UserSessions() {
             setSessions(response.data.sessions || []);
             setTotal(response.data.total || 0);
         } catch (err: any) {
-            console.error("Failed to fetch sessions:", err);
+            // Error handled by UI toast
             toast.error("Could not load sessions. Check your connection.");
         } finally {
             setIsLoading(false);
@@ -85,7 +85,7 @@ export default function UserSessions() {
             const response = await API.get("/user/plan");
             setUserPlan(response.data.plan);
         } catch (err) {
-            console.error("Failed to fetch user plan:", err);
+            // Error handled silently
         }
     };
 
@@ -308,13 +308,13 @@ export default function UserSessions() {
 
                                              {/* Action Section */}
                                              <div className="pt-6 border-t border-white/10">
-                                                 {activeTab === 'past' && session.videoCall?.userPerformanceRating ? (
+                                                 {activeTab === 'past' ? (
                                                      <div className="space-y-4">
                                                          <Button
                                                              onClick={() => setSelectedFeedback(session)}
                                                              className="w-full h-14 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded-2xl font-black italic uppercase tracking-widest text-[10px]"
                                                          >
-                                                             <MessageSquare className="mr-2 h-4 w-4 text-primary" /> View Feedback
+                                                             <MessageSquare className="mr-2 h-4 w-4 text-primary" /> View Report
                                                          </Button>
                                                      </div>
                                                  ) : status === 'approved' ? (
@@ -367,91 +367,101 @@ export default function UserSessions() {
                                                      </div>
                                                  )}
                                              </div>
-                                         </div>
-                                     </motion.div>
-                                 );
-                             })}
-                         </AnimatePresence>
-                     </div>
-                 )}
- 
-                 {/* Pagination */}
-                 {totalPages > 1 && (
-                     <div className="flex items-center justify-center gap-4 pt-8">
-                         <Button 
-                             variant="ghost" 
-                             disabled={page === 1} 
-                             onClick={() => setPage(page - 1)}
-                             className="w-12 h-12 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-20"
-                         >
-                             <ChevronLeft className="h-5 w-5" />
-                         </Button>
-                         <div className="flex items-center gap-2">
-                             {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                                 <button
-                                     key={p}
-                                     onClick={() => setPage(p)}
-                                     className={`w-12 h-12 rounded-full font-black italic text-xs transition-all ${page === p ? 'bg-primary text-black shadow-lg scale-110' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
-                                 >
-                                     {p}
-                                 </button>
-                             ))}
-                         </div>
-                         <Button 
-                             variant="ghost" 
-                             disabled={page === totalPages} 
-                             onClick={() => setPage(page + 1)}
-                             className="w-12 h-12 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-20"
-                         >
-                             <ChevronRight className="h-5 w-5" />
-                         </Button>
-                     </div>
-                 )}
-             </main>
- 
-             {/* Feedback Dialog */}
-             <Dialog open={!!selectedFeedback} onOpenChange={(open) => !open && setSelectedFeedback(null)}>
-                 <DialogContent className="bg-card border-white/10 text-foreground max-w-xl rounded-[3rem] p-12 font-outfit shadow-[0_50px_100px_rgba(0,0,0,0.5)]">
-                     <DialogHeader className="space-y-6">
-                         <div className="flex items-center gap-4">
-                             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                                 <Star className="h-8 w-8 text-primary" />
-                             </div>
-                             <div>
-                                 <DialogTitle className="text-3xl font-black tracking-tighter uppercase italic">Session Feedback.</DialogTitle>
-                                 <DialogDescription className="text-gray-500 font-medium italic">Coach feedback and performance rating.</DialogDescription>
-                             </div>
-                         </div>
-                     </DialogHeader>
- 
-                     <div className="space-y-10 py-10">
-                         <div className="space-y-4">
-                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">Performance Rating</label>
-                             <div className="flex items-center gap-4 bg-white/[0.03] p-6 rounded-[2rem] border border-white/5">
-                                 <div className="text-5xl font-black text-primary italic leading-none">{selectedFeedback?.videoCall?.userPerformanceRating}</div>
-                                 <div className="h-10 w-[1px] bg-white/10" />
-                                 <div className="text-xs font-black uppercase tracking-widest text-neutral-500">Scale of 1-10</div>
-                             </div>
-                         </div>
- 
-                         <div className="space-y-4">
-                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">Coach Feedback</label>
-                             <div className="bg-white/[0.03] p-8 rounded-[2rem] border border-white/5 text-lg font-medium leading-relaxed italic text-gray-300">
-                                 "{selectedFeedback?.videoCall?.userFeedback || "No notes recorded for this session."}"
-                             </div>
-                         </div>
-                     </div>
- 
-                     <DialogFooter>
-                         <Button 
-                             onClick={() => setSelectedFeedback(null)}
-                             className="w-full h-16 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all"
-                         >
-                             Close
-                         </Button>
-                     </DialogFooter>
-                 </DialogContent>
-             </Dialog>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </AnimatePresence>
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-4 pt-8">
+                        <Button 
+                            variant="ghost" 
+                            disabled={page === 1} 
+                            onClick={() => setPage(page - 1)}
+                            className="w-12 h-12 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-20"
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                        </Button>
+                        <div className="flex items-center gap-2">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                                <button
+                                    key={p}
+                                    onClick={() => setPage(p)}
+                                    className={`w-12 h-12 rounded-full font-black italic text-xs transition-all ${page === p ? 'bg-primary text-black shadow-lg scale-110' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    {p}
+                                </button>
+                            ))}
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            disabled={page === totalPages} 
+                            onClick={() => setPage(page + 1)}
+                            className="w-12 h-12 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-20"
+                        >
+                            <ChevronRight className="h-5 w-5" />
+                        </Button>
+                    </div>
+                )}
+            </main>
+
+            {/* Feedback Dialog */}
+            <Dialog open={!!selectedFeedback} onOpenChange={(open) => !open && setSelectedFeedback(null)}>
+                <DialogContent className="bg-[#0a0a0a] border-white/10 text-white max-w-xl rounded-[3rem] p-12 font-outfit shadow-[0_50px_100px_rgba(0,0,0,0.5)] backdrop-blur-3xl">
+                    <DialogHeader className="space-y-6">
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                                <FileText className="h-8 w-8 text-primary" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-3xl font-black tracking-tighter uppercase italic">Session Report.</DialogTitle>
+                                <DialogDescription className="text-gray-500 font-medium italic">Detailed evaluation from your coach.</DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    {selectedFeedback && (
+                        <div className="space-y-10 py-10">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-3 p-6 bg-white/5 rounded-3xl border border-white/5">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600 flex items-center gap-2"><Star className="h-3 w-3" /> Performance</span>
+                                    <div className="flex items-baseline gap-2">
+                                        <div className="text-5xl font-black text-primary italic leading-none">{selectedFeedback.videoCall?.userPerformanceRating || "N/A"}</div>
+                                        <div className="text-xs font-black uppercase tracking-widest text-neutral-500">/ 5</div>
+                                    </div>
+                                </div>
+                                <div className="space-y-3 p-6 bg-white/5 rounded-3xl border border-white/5">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600 flex items-center gap-2"><UserIcon className="h-3 w-3" /> Coach Rating</span>
+                                    <div className="flex items-baseline gap-2">
+                                        <div className="text-5xl font-black text-amber-500 italic leading-none">{selectedFeedback.videoCall?.trainerRating || "N/A"}</div>
+                                        <div className="text-xs font-black uppercase tracking-widest text-neutral-500">/ 5</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600 flex items-center gap-2"><MessageSquare className="h-3 w-3" /> Coach's Feedback</label>
+                                <div className="bg-white/[0.03] p-8 rounded-[2rem] border border-white/5 text-lg font-medium leading-relaxed italic text-gray-300 min-h-[120px]">
+                                    {selectedFeedback.videoCall?.userFeedback || "No performance notes recorded for this session."}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button 
+                            onClick={() => setSelectedFeedback(null)}
+                            className="w-full h-16 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all"
+                        >
+                            Close Report
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {activeTrainer && (
                 <BundlePurchaseModal
@@ -463,7 +473,7 @@ export default function UserSessions() {
                 />
             )}
 
-             <SiteFooter />
+            <SiteFooter />
         </div>
     );
 }

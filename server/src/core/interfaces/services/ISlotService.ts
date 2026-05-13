@@ -6,6 +6,7 @@ export interface ISlotService {
   getAvailableSlots(userId: string): Promise<ISlot[]>;
   getUserSessions(userId: string): Promise<ISlot[]>;
   getUserSessionsPaginated(userId: string, type: 'upcoming' | 'past', page: number, limit: number, date?: string): Promise<{ sessions: ISlot[], total: number }>;
+  getTrainerSessionsPaginated(trainerId: string, type: 'upcoming' | 'past', page: number, limit: number, date?: string, userId?: string): Promise<{ sessions: ISlot[], total: number }>;
   getTrainerSessionRequests(trainerId: string): Promise<ISlot[]>;
   deleteSlot(slotId: string, trainerId: string): Promise<void>;
   bookSession(slotId: string, userId: string): Promise<void>;

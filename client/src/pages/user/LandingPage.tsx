@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import ColorBends from '@/components/ui/ColorBends'
+import SoftAurora from '@/components/ui/SoftAurora'
 
 import HeroSection from './HeroSection'
 import FeatureSection from './FeatureSection'
@@ -22,24 +22,23 @@ export default function LandingPage() {
   }, [user, trainer, navigate])
 
   return (
-    <div className="relative bg-black text-white selection:bg-cyan-500/30 font-sans overflow-x-hidden">
+    <div className="relative bg-black text-white selection:bg-cyan-500/30 font-inter overflow-x-hidden">
 
       {/* Premium Background Layer */}
-      <div className="fixed inset-0 z-0 opacity-40">
-        <ColorBends
-          colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
-          rotation={0}
-          speed={0.2}
-          scale={1}
-          frequency={1}
-          warpStrength={1}
-          mouseInfluence={1}
-          parallax={0.5}
-          noise={0.1}
-          transparent
-          autoRotate={0}
+      <div className="fixed inset-0 z-0 opacity-60">
+        <SoftAurora
+          speed={0.4}
+          scale={1.2}
+          brightness={1.2}
+          color1="#00e5ff"
+          color2="#7000ff"
+          noiseFrequency={2}
+          noiseAmplitude={1.2}
+          bandHeight={0.4}
+          bandSpread={1.5}
+          enableMouseInteraction
+          mouseInfluence={0.3}
           className="pointer-events-none"
-          style={{ pointerEvents: 'none' }}
         />
       </div>
 
@@ -58,7 +57,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Track Your Food Records"
               description="Easily log your meals and track calories, macros, and hydration. Our intuitive interface makes nutrition management effortless."
-              imagePath="/src/assets/diet-image.jpg"
+              imagePath="/src/assets/landing/diet_tracking.png"
               bullets={[
                 "Real-time calorie tracking",
                 "Detailed macro breakdown",
@@ -71,7 +70,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Get Personalized Trainer"
               description="Connect with certified fitness professionals who craft custom programs tailored to your specific biomechanics and lifestyle."
-              imagePath="/src/assets/trainer-image.jpg"
+              imagePath="/src/assets/landing/trainer_coaching.png"
               bullets={[
                 "Direct 1-on-1 video coaching sessions",
                 "Daily chat support with your coach",
@@ -84,7 +83,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Track Your Progress"
               description="Visualize your journey with interactive charts and deep-dive metrics. Data-driven insights to optimize your training."
-              imagePath="/src/assets/progress.avif"
+              imagePath="/src/assets/landing/fitness_analytics.png"
               bullets={[
                 "Interactive performance trend charts",
                 "Body composition and photo logging",
@@ -97,7 +96,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Daily Streak Motivation"
               description="Consistency is the key to transformation. Our streak system gamifies your hard work and keeps you motivated every single day."
-              imagePath="/src/assets/streak-image.jpg"
+              imagePath="/src/assets/landing/workout_streak.png"
               bullets={[
                 "Visual streak tracking & milestones",
                 "Community leaderboard participation",
@@ -110,7 +109,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Workout Scheduling"
               description="Never guess what to do next. A seamless visual calendar that syncs directly with your trainer's assignments."
-              imagePath="/src/assets/schedule-image.jpg"
+              imagePath="/src/assets/landing/workout_calendar.png"
               bullets={[
                 "Intuitive drag-and-drop planning",
                 "Syncs with your mobile calendar",
@@ -125,7 +124,7 @@ export default function LandingPage() {
         </main>
 
         {/* Footer */}
-        <footer className="py-32 px-6 border-t border-white/5 bg-[#030303] relative overflow-hidden">
+        <footer className="py-32 px-6 border-t border-white/5 bg-[#030303] relative overflow-hidden font-inter">
           {/* Subtle footer glow */}
           <div className="absolute top-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
 
@@ -134,9 +133,9 @@ export default function LandingPage() {
               <div className="col-span-2 space-y-8">
                 <div className="flex items-center gap-2 group cursor-pointer">
                   <Activity className="w-8 h-8 text-cyan-500" />
-                  <span className="text-3xl font-black tracking-tighter italic text-white">TRAINUP</span>
+                  <span className="text-3xl font-black tracking-tighter italic text-white font-bebas">TRAINUP</span>
                 </div>
-                <p className="text-gray-500 max-w-sm font-light leading-relaxed text-lg">
+                <p className="text-gray-500 max-w-sm font-medium leading-relaxed text-lg font-outfit">
                   Revolutionizing personal training through high-end modern technology and community-driven success. Built for those who demand excellence.
                 </p>
                 <div className="flex gap-4">

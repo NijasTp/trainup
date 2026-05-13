@@ -7,6 +7,7 @@ import { IMessageService } from '../core/interfaces/services/IMessageService'
 import { IUserPlanService } from '../core/interfaces/services/IUserPlanService'
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService'
 import { IProgressService } from '../core/interfaces/services/IProgressService'
+import { ISlotService } from '../core/interfaces/services/ISlotService'
 import { STATUS_CODE } from '../constants/status'
 import { logger } from '../utils/logger.util'
 import { AppError } from '../utils/appError.util'
@@ -27,7 +28,8 @@ export class TrainerClientController {
         @inject(TYPES.IMessageService) private _messageService: IMessageService,
         @inject(TYPES.IUserPlanService) private _userPlanService: IUserPlanService,
         @inject(TYPES.IJwtService) private _JwtService: IJwtService,
-        @inject(TYPES.IProgressService) private _progressService: IProgressService
+        @inject(TYPES.IProgressService) private _progressService: IProgressService,
+        @inject(TYPES.ISlotService) private _slotService: ISlotService
     ) { }
 
     async getClients(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -78,6 +80,20 @@ export class TrainerClientController {
             res.status(STATUS_CODE.OK).json({ progress });
         } catch (err) {
             next(err);
+        }
+    }
+
+    async getClientSessions(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const trainerId = (req.user as JwtPayload).id
+            const { clientId } = req.params
+            const page = parseInt(req.query.page as string) || 1
+            const limit = parseInt(req.query.limit as string) || 10
+            const result = await this._slotService.getTrainerSessionsPaginated(trainerId, 'past', page, limit, undefined, clientId)
+            res.status(STATUS_CODE.OK).json(result)
+        } catch (err) {
+            logger.error('Error fetching client sessions:', err)
+            next(err)
         }
     }
 

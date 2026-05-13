@@ -9,10 +9,11 @@ import {
   ArrowUpRight,
   AlertCircle,
   Shield,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useDispatch, useSelector } from "react-redux";
-import { updateUser, type UserType } from "@/redux/slices/userAuthSlice";
+import { useDispatch } from "react-redux";
+import { updateUser } from "@/redux/slices/userAuthSlice";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,8 +25,28 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle } from "lucide-react";
 import UserGymLayout from "@/layouts/UserGymLayout";
+import type { IGym, IGymAnnouncement, IGymAttendance, IGymProduct } from "@/services/gymService";
+import {
+  getUserGymAnnouncements,
+  getUserGymEquipment,
+  getUserGymProducts,
+  getUserGymWorkoutTemplates,
+  getUserWishlist,
+  getAttendanceHistoryForUser,
+  markAttendance,
+} from "@/services/gymService";
+import type { IActivityData } from "@/interfaces/user/IUserDashboard";
+import { useNavigate, Link } from "react-router-dom";
+import { format } from "date-fns";
+import API from "@/lib/axios";
+import { ROUTES } from "@/constants/routes";
+import Aurora from "@/components/ui/Aurora";
+import { SiteHeader } from "@/components/user/home/UserSiteHeader";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import ActivityMatrix from "@/components/user/dashboard/ActivityMatrix";
+import GymReviews from "@/components/user/reviews/GymReviews";
 
 const safeFormatDate = (date: string | Date | undefined | null, formatStr: string = 'MMM dd, yyyy') => {
   if (!date) return 'N/A';
@@ -40,7 +61,6 @@ export default function MyGym() {
   const [equipment, setEquipment] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<IGymAttendance[]>([]);
   const [products, setProducts] = useState<IGymProduct[]>([]);
-  const [templates, setTemplates] = useState<IGymWorkoutTemplate[]>([]);
   const [wishlist, setWishlist] = useState<IGymProduct[]>([]);
   const [activityData, setActivityData] = useState<IActivityData>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -52,12 +72,11 @@ export default function MyGym() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [gymRes, annRes, eqRes, prodRes, tempRes, wishlistRes, activityRes] = await Promise.all([
+      const [gymRes, annRes, eqRes, prodRes, wishlistRes, activityRes] = await Promise.all([
         API.get("/user/my-gym"),
         getUserGymAnnouncements(1, 4),
         getUserGymEquipment(),
         getUserGymProducts(1, 4),
-        getUserGymWorkoutTemplates(1, 3),
         getUserWishlist(),
         API.get("/user/dashboard/activity")
       ]);
@@ -76,7 +95,6 @@ export default function MyGym() {
       setAnnouncements(annRes.announcements || []);
       setEquipment(eqRes.equipment || []);
       setProducts(prodRes.products || []);
-      setTemplates(tempRes.templates || []);
       setAttendance(history.attendance || []);
       setWishlist(wishlistRes.products || []);
 
@@ -176,9 +194,9 @@ export default function MyGym() {
 
   const handleCancelMembership = async () => {
     try {
-      if (!userSubscription?._id) return;
+      if (!gymData?.userSubscription?._id) return;
       await API.post("/user/gyms/cancel-membership", {
-        membershipId: userSubscription._id
+        membershipId: gymData.userSubscription._id
       });
       toast.success("Membership cancelled successfully");
 

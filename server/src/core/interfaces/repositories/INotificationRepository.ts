@@ -10,6 +10,7 @@ export interface INotificationRepository {
   }>;
   markAsRead(id: string, recipientId: string): Promise<INotification | null>;
   markAllAsRead(recipientId: string, recipientRole: string): Promise<void>;
+  markNotificationsByTypeAsRead(recipientId: string, recipientRole: string, type: string): Promise<void>;
   delete(id: string, recipientId: string): Promise<void>;
   findScheduledNotifications(): Promise<INotification[]>;
   findExpiredNotifications(): Promise<INotification[]>;

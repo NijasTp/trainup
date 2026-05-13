@@ -69,6 +69,18 @@ export class NotificationRepository implements INotificationRepository {
     );
   }
 
+  async markNotificationsByTypeAsRead(recipientId: string, recipientRole: string, type: string): Promise<void> {
+    await NotificationModel.updateMany(
+      {
+        recipientId: new Types.ObjectId(recipientId),
+        recipientRole,
+        type,
+        isRead: false
+      },
+      { isRead: true }
+    );
+  }
+
   async delete(id: string, recipientId: string): Promise<void> {
     await NotificationModel.findOneAndDelete({
       _id: id,

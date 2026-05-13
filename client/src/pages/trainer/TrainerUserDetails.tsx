@@ -4,14 +4,58 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Dumbbell, Apple, MessageSquare,Camera, ChevronRight, AlertCircle, User as UserIcon, Activity, Scale, Ruler } from "lucide-react";
+import { 
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+    DialogDescription
+} from "@/components/ui/dialog";
+import { 
+    ArrowLeft, 
+    Dumbbell, 
+    Apple, 
+    MessageSquare, 
+    Camera, 
+    ChevronRight, 
+    AlertCircle, 
+    User as UserIcon, 
+    Activity, 
+    Scale, 
+    Ruler,
+    Video,
+    Star,
+    FileText,
+    History,
+    ChevronLeft,
+    Loader2
+} from "lucide-react";
+import { format } from "date-fns";
 import API from "@/lib/axios";
 import { toast } from "sonner";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 import type { User, UserPlan, Progress } from "@/interfaces/trainer/ITrainerUserDetails";
+
+interface Slot {
+    _id: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    videoCall?: {
+        _id: string;
+        trainerRating?: number;
+        trainerFeedback?: string;
+        userPerformanceRating?: number;
+        userFeedback?: string;
+        status: string;
+    };
+}
 
 export default function TrainerUserDetails() {
     const { id } = useParams<{ id: string }>();
@@ -22,9 +66,13 @@ export default function TrainerUserDetails() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Modal State
-    const [isProgressOpen, setIsProgressOpen] = useState(false);
-    const [selectedProgress, setSelectedProgress] = useState<Progress | null>(null);
+    // Sessions State
+    const [sessions, setSessions] = useState<Slot[]>([]);
+    const [isSessionsLoading, setIsSessionsLoading] = useState(false);
+    const [sessionTotal, setSessionTotal] = useState(0);
+    const [sessionPage, setSessionPage] = useState(1);
+    const sessionLimit = 5;
+    const [selectedSession, setSelectedSession] = useState<Slot | null>(null);
 
     const isExpired = userPlan ? new Date(userPlan.expiryDate) < new Date() : false;
 
@@ -36,7 +84,6 @@ export default function TrainerUserDetails() {
             setUser(response.data.user);
             setIsLoading(false);
         } catch (_err: unknown) {
-            console.error("Failed to fetch user:", _err);
             setError("Failed to load user details");
             toast.error("Failed to load user details");
             setIsLoading(false);
@@ -48,7 +95,7 @@ export default function TrainerUserDetails() {
             const response = await API.get(`/trainer/user-plan/${id}`);
             setUserPlan(response.data.plan);
         } catch (_err: unknown) {
-            console.error("Failed to fetch user plan:", _err);
+            // Silently handle
         }
     }, [id]);
 
@@ -59,13 +106,23 @@ export default function TrainerUserDetails() {
                 new Date(b.date).getTime() - new Date(a.date).getTime()
             );
             setProgressList(sorted);
-            if (sorted.length > 0) {
-                setSelectedProgress(sorted[0]);
-            }
         } catch (_err: unknown) {
-            console.error("Failed to fetch progress:", _err);
+            // Silently handle
         }
     }, [id]);
+
+    const fetchSessions = useCallback(async () => {
+        try {
+            setIsSessionsLoading(true);
+            const response = await API.get(`/trainer/client/${id}/sessions?page=${sessionPage}&limit=${sessionLimit}`);
+            setSessions(response.data.sessions);
+            setSessionTotal(response.data.total);
+        } catch (error) {
+            console.error("Failed to fetch sessions:", error);
+        } finally {
+            setIsSessionsLoading(false);
+        }
+    }, [id, sessionPage]);
 
     useEffect(() => {
         document.title = "TrainUp - Client Profile";
@@ -73,8 +130,9 @@ export default function TrainerUserDetails() {
             fetchUser();
             fetchUserPlan();
             fetchProgress();
+            fetchSessions();
         }
-    }, [id, fetchUser, fetchUserPlan, fetchProgress]);
+    }, [id, fetchUser, fetchUserPlan, fetchProgress, fetchSessions]);
 
     const handleStartChat = () => {
         if (!user?.trainerPlan || user.trainerPlan === 'basic') {
@@ -99,6 +157,14 @@ export default function TrainerUserDetails() {
             default:
                 return 'bg-white/5 text-white/40 border-white/10';
         }
+    };
+
+    const formatTime = (time: string) => {
+        const [hours, minutes] = time.split(':');
+        const h = parseInt(hours);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        return `${h12}:${minutes} ${ampm}`;
     };
 
     if (isLoading) {
@@ -333,6 +399,137 @@ export default function TrainerUserDetails() {
                                     </Link>
                                 </CardContent>
                             </Card>
+
+                            {/* Video Call Sessions */}
+                            <Card className="bg-white/[0.03] backdrop-blur-3xl border-white/10 rounded-[2.5rem] overflow-hidden">
+                                <div className="p-8 border-b border-white/5 flex items-center justify-between">
+                                    <h3 className="text-xl font-black italic uppercase tracking-tighter text-purple-400">Video Call Sessions</h3>
+                                    <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/20 font-black italic tracking-widest uppercase text-[9px]">{sessionTotal} Records</Badge>
+                                </div>
+                                <CardContent className="p-8 space-y-6">
+                                    {isSessionsLoading ? (
+                                        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                                            <Loader2 className="h-8 w-8 text-purple-500 animate-spin" />
+                                            <p className="text-[10px] font-black uppercase italic tracking-widest text-white/40">Fetching session data...</p>
+                                        </div>
+                                    ) : sessions.length === 0 ? (
+                                        <div className="text-center py-12 space-y-4 border border-dashed border-white/10 rounded-[2rem] bg-white/[0.01]">
+                                            <div className="h-12 w-12 bg-white/5 rounded-full flex items-center justify-center mx-auto">
+                                                <History className="h-6 w-6 text-white/20" />
+                                            </div>
+                                            <p className="text-white/40 text-sm font-bold italic">No video call history for this client.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <div className="grid gap-4">
+                                                {sessions.map((slot) => (
+                                                    <div 
+                                                        key={slot._id}
+                                                        className="group flex items-center justify-between p-6 bg-white/[0.04] border border-white/5 hover:border-purple-500/30 rounded-[2rem] transition-all duration-300"
+                                                    >
+                                                        <div className="flex items-center gap-6">
+                                                            <div className="h-12 w-12 bg-purple-500/10 rounded-xl flex items-center justify-center group-hover:bg-purple-500 transition-colors">
+                                                                <Video className="h-6 w-6 text-purple-400 group-hover:text-black" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-lg font-black italic uppercase tracking-tight text-white">{format(new Date(slot.date), "MMMM do, yyyy")}</p>
+                                                                <p className="text-white/30 text-xs font-bold tracking-widest uppercase">{formatTime(slot.startTime)}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-4">
+                                                            {slot.videoCall?.userPerformanceRating && (
+                                                                <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 font-black italic text-[10px]">
+                                                                    <Star className="w-3 h-3 mr-1 fill-cyan-400" /> {slot.videoCall.userPerformanceRating}/5
+                                                                </Badge>
+                                                            )}
+                                                            <Dialog>
+                                                                <DialogTrigger asChild>
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        size="icon" 
+                                                                        className="h-10 w-10 rounded-full hover:bg-white/10 text-white/40 hover:text-white"
+                                                                        onClick={() => setSelectedSession(slot)}
+                                                                    >
+                                                                        <FileText className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DialogTrigger>
+                                                                <DialogContent className="bg-[#0a0a0a] border-white/10 text-white max-w-lg rounded-[2.5rem] p-10 backdrop-blur-3xl">
+                                                                    <DialogHeader>
+                                                                        <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter text-purple-400">Session Report</DialogTitle>
+                                                                        <DialogDescription className="text-white/40 italic">Review performance and trainer feedback.</DialogDescription>
+                                                                    </DialogHeader>
+                                                                    
+                                                                    {selectedSession && (
+                                                                        <div className="space-y-8 mt-6">
+                                                                            <div className="grid grid-cols-2 gap-4">
+                                                                                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2">
+                                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Trainer Rating</span>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+                                                                                        <span className="text-2xl font-black italic">{selectedSession.videoCall?.trainerRating || '-'}</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2">
+                                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/30">User Performance</span>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <Star className="h-5 w-5 text-cyan-500 fill-cyan-500" />
+                                                                                        <span className="text-2xl font-black italic">{selectedSession.videoCall?.userPerformanceRating || '-'}</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="space-y-4">
+                                                                                <div className="space-y-2">
+                                                                                    <h5 className="text-[10px] font-black uppercase tracking-widest text-white/30 flex items-center gap-2"><MessageSquare className="h-3 w-3" /> Trainer Feedback</h5>
+                                                                                    <div className="bg-white/5 p-5 rounded-2xl border border-white/5 text-sm italic text-white/70 leading-relaxed min-h-[80px]">
+                                                                                        {selectedSession.videoCall?.trainerFeedback || "No feedback recorded."}
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="space-y-2">
+                                                                                    <h5 className="text-[10px] font-black uppercase tracking-widest text-white/30 flex items-center gap-2"><Activity className="h-3 w-3" /> Performance Notes</h5>
+                                                                                    <div className="bg-white/5 p-5 rounded-2xl border border-white/5 text-sm italic text-white/70 leading-relaxed min-h-[80px]">
+                                                                                        {selectedSession.videoCall?.userFeedback || "No performance notes recorded."}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+
+                                                                    <DialogFooter className="mt-8">
+                                                                        <Button className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white font-black italic uppercase tracking-widest text-[10px] rounded-xl" onClick={() => setSelectedSession(null)}>Close Report</Button>
+                                                                    </DialogFooter>
+                                                                </DialogContent>
+                                                            </Dialog>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Pagination */}
+                                            {sessionTotal > sessionLimit && (
+                                                <div className="flex items-center justify-between pt-4">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        disabled={sessionPage === 1}
+                                                        onClick={() => setSessionPage(p => p - 1)}
+                                                        className="text-white/40 hover:text-white"
+                                                    >
+                                                        <ChevronLeft className="h-4 w-4 mr-2" /> Previous
+                                                    </Button>
+                                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">Page {sessionPage} of {Math.ceil(sessionTotal / sessionLimit)}</span>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        disabled={sessionPage === Math.ceil(sessionTotal / sessionLimit)}
+                                                        onClick={() => setSessionPage(p => p + 1)}
+                                                        className="text-white/40 hover:text-white"
+                                                    >
+                                                        Next <ChevronRight className="h-4 w-4 ml-2" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </div>
 
                         {/* Contact Column */}
@@ -358,10 +555,10 @@ export default function TrainerUserDetails() {
                                             </div>
                                         </div>
                                         <div className="bg-white/5 rounded-2xl p-4 flex items-center transition-colors hover:bg-white/[0.08]">
-                                            <Badge className="bg-purple-500/10 text-purple-400 border-none h-10 w-10 p-0 flex items-center justify-center rounded-xl mr-4 uppercase font-black italic text-xs">IN</Badge>
+                                            <Badge className="bg-purple-500/10 text-purple-400 border-none h-10 w-10 p-0 flex items-center justify-center rounded-xl mr-4 uppercase font-black italic text-xs">Joined</Badge>
                                             <div className="min-w-0 text-white">
                                                 <p className="text-[10px] font-black uppercase italic text-white/20 tracking-widest">Joined On</p>
-                                                <p className="font-bold truncate text-sm">{user.subscriptionStartDate ? new Date(user.subscriptionStartDate).toLocaleDateString() : 'Loading...'}</p>
+                                                <p className="font-bold truncate text-sm">{user.subscriptionStartDate ? new Date(user.subscriptionStartDate).toLocaleDateString() : 'N/A'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -413,4 +610,3 @@ export default function TrainerUserDetails() {
         </div>
     );
 }
-

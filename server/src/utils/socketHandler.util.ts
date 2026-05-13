@@ -97,7 +97,7 @@ export class SocketHandler {
 
         socket.userId = decoded.id
         socket.userRole = decoded.role
-        logger.info(`Socket authenticated for user: ${socket.userId}`)
+        // logger.info(`Socket authenticated for user: ${socket.userId}`)
         next()
       } catch (error) {
         logger.error('Socket authentication error:', error)
@@ -106,7 +106,7 @@ export class SocketHandler {
     })
 
     this.io.on('connection', socket => {
-      logger.info(`User connected: ${socket.userId}`)
+      // logger.info(`User connected: ${socket.userId}`)
       socket.join(`user_${socket.userId}`)
       this.handleConnection(socket)
     })
@@ -124,7 +124,7 @@ export class SocketHandler {
       const ids = [socket.userId, otherUserId].sort()
       const roomId = `chat_${ids[0]}_${ids[1]}`
       socket.join(roomId)
-      logger.info(`User ${socket.userId} joined chat room: ${roomId}`)
+      // logger.info(`User ${socket.userId} joined chat room: ${roomId}`)
     })
 
     socket.on('send_message', async data => {
@@ -323,7 +323,7 @@ export class SocketHandler {
     })
 
     socket.on('disconnect', () => {
-      logger.info(`User disconnected: ${socket.userId}`)
+      // logger.info(`User disconnected: ${socket.userId}`)
       // Broadcast to all rooms the user was in
       socket.rooms.forEach(room => {
         if (room.startsWith('video_')) {

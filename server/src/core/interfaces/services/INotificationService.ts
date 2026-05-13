@@ -6,6 +6,7 @@ export interface CreateNotificationDto {
   type: string;
   title: string;
   message: string;
+  link?: string;
   data?: Record<string, unknown>;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   category?: 'info' | 'warning' | 'success' | 'error';
@@ -23,6 +24,7 @@ export interface INotificationService {
   }>;
   markAsRead(notificationId: string, recipientId: string): Promise<INotification | null>;
   markAllAsRead(recipientId: string, recipientRole: string): Promise<void>;
+  markNotificationsByTypeAsRead(recipientId: string, recipientRole: string, type: string): Promise<void>;
   deleteNotification(notificationId: string, recipientId: string): Promise<void>;
   sendWorkoutReminder(userId: string, workoutName: string, scheduledAt?: Date): Promise<void>;
   sendMealReminder(userId: string, mealName: string, scheduledAt?: Date): Promise<void>;

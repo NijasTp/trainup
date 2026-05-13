@@ -65,6 +65,20 @@ export class TrainerScheduleController {
         }
     }
 
+    async getPastSessions(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const trainerId = (req.user as JwtPayload).id
+            const page = parseInt(req.query.page as string) || 1
+            const limit = parseInt(req.query.limit as string) || 10
+            const date = req.query.date as string
+            const result = await this._slotService.getTrainerSessionsPaginated(trainerId, 'past', page, limit, date)
+            res.status(STATUS_CODE.OK).json(result)
+        } catch (err) {
+            logger.error('Error fetching past sessions:', err)
+            next(err)
+        }
+    }
+
     async createSlot(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const trainerId = (req.user as JwtPayload).id

@@ -371,13 +371,13 @@ export default function EditProfile() {
               <CardContent className="p-8 flex flex-col items-center space-y-6">
                 <div className="relative group">
                   <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full group-hover:bg-primary/30 transition-colors" />
-                  <Avatar className="h-40 w-40 relative border-4 border-[#030303] shadow-2xl">
+                  <Avatar className="h-40 w-40 relative border-4 border-background shadow-2xl">
                     <AvatarImage src={profileImagePreview} className="object-cover" />
                     <AvatarFallback className="text-4xl font-black italic bg-gradient-to-br from-primary/20 to-accent/20">
                       {formData.name ? formData.name[0]?.toUpperCase() : 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  <label htmlFor="profileImage" className="absolute bottom-2 right-2 p-3 bg-white text-black rounded-2xl cursor-pointer shadow-xl hover:scale-110 transition-transform active:scale-95 border-4 border-[#030303]">
+                  <label htmlFor="profileImage" className="absolute bottom-2 right-2 p-3 bg-white text-black rounded-2xl cursor-pointer shadow-xl hover:scale-110 transition-transform active:scale-95 border-4 border-background">
                     <Upload className="h-5 w-5" />
                     <Input id="profileImage" type="file" accept="image/*" onChange={handleImageChange} className="sr-only" />
                   </label>
@@ -751,7 +751,7 @@ export default function EditProfile() {
                 >
                   <Key className="h-4 w-4 mr-2" />
                   Change Password
-                </CardButton>
+                </Button>
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                   Keep your account secure by changing your password regularly.
                 </p>
@@ -796,7 +796,7 @@ export default function EditProfile() {
           >
             <User className="h-3 w-3" /> Edit Profile
           </motion.div>
-
+          <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
             Update Your <span className="text-primary">Profile</span>
           </h1>
 

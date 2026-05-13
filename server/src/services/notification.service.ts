@@ -34,6 +34,7 @@ export class NotificationService implements INotificationService {
       type: data.type,
       title: data.title,
       message: data.message,
+      link: data.link,
       data: data.data,
       priority: data.priority || 'medium',
       category: data.category || 'info',
@@ -74,6 +75,10 @@ export class NotificationService implements INotificationService {
 
   async markAllAsRead(recipientId: string, recipientRole: string): Promise<void> {
     await this._notificationRepo.markAllAsRead(recipientId, recipientRole);
+  }
+
+  async markNotificationsByTypeAsRead(recipientId: string, recipientRole: string, type: string): Promise<void> {
+    await this._notificationRepo.markNotificationsByTypeAsRead(recipientId, recipientRole, type);
   }
 
   async deleteNotification(notificationId: string, recipientId: string): Promise<void> {
@@ -210,8 +215,6 @@ export class NotificationService implements INotificationService {
 
   async sendInactivityNotifications(): Promise<void> {
     try {
-      // This would need to be implemented based on user activity tracking
-      // For now, it's a placeholder
       logger.info('Inactivity notifications would be processed here');
     } catch (error) {
       logger.error('Error sending inactivity notifications:', error);
@@ -244,18 +247,16 @@ export class NotificationService implements INotificationService {
 
   async sendAdminPendingVerificationsNotification(): Promise<void> {
     try {
-      // Count pending trainers and gyms
       const pendingTrainers = await this._trainerRepo.count('', '', 'unverified');
-      const pendingGyms = await this._gymRepo.findGyms(1, 1, ''); // This needs adjustment
+      const pendingGyms = await this._gymRepo.findGyms(1, 1, '');
 
       if (pendingTrainers > 0 || pendingGyms.total > 0) {
         const message = NOTIFICATION_MESSAGES.ADMIN.PENDING_VERIFICATIONS
           .replace('{trainerCount}', pendingTrainers.toString())
           .replace('{gymCount}', pendingGyms.total.toString());
 
-        // Send to all admins (you'd need to get admin users)
         await this.createNotification({
-          recipientId: 'admin', // This should be actual admin IDs
+          recipientId: 'admin',
           recipientRole: 'admin',
           type: NOTIFICATION_TYPES.ADMIN.PENDING_VERIFICATIONS,
           title: 'Pending Verifications',
@@ -272,7 +273,6 @@ export class NotificationService implements INotificationService {
   async processScheduledNotifications(): Promise<void> {
     try {
       const scheduledNotifications = await this._notificationRepo.findScheduledNotifications();
-      // Process scheduled notifications (send emails, push notifications, etc.)
       logger.info(`Processing ${scheduledNotifications.length} scheduled notifications`);
     } catch (error) {
       logger.error('Error processing scheduled notifications:', error);
@@ -305,12 +305,11 @@ export class NotificationService implements INotificationService {
         const attendance = await this._attendanceRepo.findTodayAttendance(userId, gymId, today);
         
         if (!attendance) {
-          // Check if reminder was already sent today
           const existingReminder = await this.getLatestNotification(userId, 'user', 'GYM_ATTENDANCE_REMINDER');
           const lastSentDate = existingReminder ? new Date(existingReminder.createdAt).setHours(0,0,0,0) : null;
           
           if (lastSentDate === today.getTime()) {
-            continue; // Already sent today
+            continue;
           }
 
           const user = await this._userRepo.findById(userId);
@@ -329,7 +328,6 @@ export class NotificationService implements INotificationService {
               category: 'warning'
             });
 
-            // Send Email
             if (user.email) {
               await this._mailService.sendReminderMail(user.email, message);
             }

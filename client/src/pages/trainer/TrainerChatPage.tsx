@@ -76,12 +76,10 @@ export default function TrainerChatPage() {
 
     useEffect(() => {
         document.title = "TrainUp - Chat with Client";
-        console.log('Initializing chat with clientId:', clientId);
         initializeChat();
         return () => {
             if (socketRef.current) {
                 socketRef.current.disconnect();
-                console.log('Socket disconnected for client:', clientId);
             }
             if (previewUrl) {
                 URL.revokeObjectURL(previewUrl);
@@ -112,7 +110,7 @@ export default function TrainerChatPage() {
                 const planResponse = await API.get(`/trainer/user-plan/${clientId}`);
                 setUserPlan(planResponse.data.plan);
             } catch (planErr) {
-                console.error("Failed to fetch plan in chat:", planErr);
+                // Silently handle plan fetch error
             }
 
             // Fetch messages, but handle 402 (payment required/expired) specifically
@@ -121,7 +119,6 @@ export default function TrainerChatPage() {
                 setMessages(messagesResponse.data.messages);
             } catch (msgErr: any) {
                 if (msgErr.response?.status === 402) {
-                    console.warn("Messages blocked due to subscription expiry");
                     setMessages([]); // Ensure messages are cleared or kept empty
                 } else {
                     throw msgErr; // Re-throw other errors to be caught by main catch
@@ -132,7 +129,7 @@ export default function TrainerChatPage() {
             try {
                 await API.put(`/trainer/chat/read/${clientId}`);
             } catch (readErr) {
-                console.error("Failed to mark messages as read:", readErr);
+                // Silently handle read marking error
             }
 
             socketRef.current = io(import.meta.env.VITE_API_URL, {
@@ -141,10 +138,8 @@ export default function TrainerChatPage() {
             });
 
             socketRef.current.emit('join_chat', { clientId });
-            console.log('Emitted join_chat for client:', clientId);
 
             socketRef.current.on('new_message', (message: Message) => {
-                console.log('Received new_message:', message);
                 setMessages(prev => {
                     if (prev.some(m => m._id === message._id)) {
                         return prev;
@@ -154,33 +149,25 @@ export default function TrainerChatPage() {
             });
 
             socketRef.current.on('typing', ({ userId, isTyping }) => {
-                console.log('Typing event received:', { userId, isTyping, clientId });
                 if (userId === clientId) {
                     setIsOtherUserTyping(isTyping);
-                    console.log(`Client ${clientId} ${isTyping ? 'is' : 'stopped'} typing`);
-                } else {
-                    console.log(`Ignoring typing event: userId ${userId} does not match clientId ${clientId}`);
                 }
             });
 
             socketRef.current.on('connect', () => {
-                console.log('Trainer socket connected successfully');
                 socketRef.current?.emit('join_chat', { clientId }); // Re-join room on reconnect
             });
 
-            socketRef.current.on('connect_error', (err) => {
-                console.error('Trainer socket connect error:', err);
+            socketRef.current.on('connect_error', () => {
                 toast.error('Chat connection failed');
             });
 
             socketRef.current.on('error', ({ message }: { message: string }) => {
-                console.log('Socket error:', message);
                 toast.error(message);
             });
 
             setIsLoading(false);
         } catch (err: any) {
-            console.error("Failed to initialize chat:", err);
             setError(err.response?.data?.message || "Failed to load chat");
             setIsLoading(false);
         }
@@ -248,7 +235,6 @@ export default function TrainerChatPage() {
                 setRecordingDuration(prev => prev + 1);
             }, 1000);
         } catch (err) {
-            console.error("Error accessing microphone:", err);
             toast.error("Could not access microphone");
         }
     };
@@ -292,14 +278,12 @@ export default function TrainerChatPage() {
     const handleTyping = debounce(() => {
         if (socketRef.current && newMessage.trim()) {
             socketRef.current.emit('typing', { clientId, isTyping: true });
-            console.log('Emitted typing: true for client:', clientId);
         }
     }, 500);
 
     const handleStopTyping = debounce(() => {
         if (socketRef.current) {
             socketRef.current.emit('typing', { clientId, isTyping: false });
-            console.log('Emitted typing: false for client:', clientId);
         }
     }, 1000);
 
@@ -336,7 +320,6 @@ export default function TrainerChatPage() {
             };
 
             socketRef.current.emit('send_message_trainer', messageData);
-            console.log('Emitted send_message_trainer:', messageData);
 
             // Reset state
             setNewMessage('');
@@ -347,7 +330,6 @@ export default function TrainerChatPage() {
             setAudioBlob(null);
             handleStopTyping();
         } catch (err: any) {
-            console.error("Failed to send message:", err);
             toast.error("Failed to send message");
         } finally {
             setIsSending(false);
@@ -360,7 +342,6 @@ export default function TrainerChatPage() {
             setMessages(prev => prev.filter(m => m._id !== messageId));
             toast.success("Message deleted");
         } catch (err: any) {
-            console.error("Failed to delete message:", err);
             toast.error("Failed to delete message");
         }
     };
@@ -442,391 +423,388 @@ export default function TrainerChatPage() {
                             <Button>
                                 <ArrowLeft className="h-4 w-4 mr-2" />
                                 Back to Client
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="h-screen flex flex-col bg-background">
-            {/* Fixed Header */}
-            <div className="border-b bg-card/50 backdrop-blur-sm">
-                <div className="flex items-center justify-between p-4">
-                    <div className="flex items-center space-x-3">
-                        <Link to={`/trainer/user/${clientId}`}>
-                            <Button variant="ghost" size="icon">
-                                <ArrowLeft className="h-4 w-4" />
-                            </Button>
-                        </Link>
-                        <Avatar className="h-10 w-10">
-                            <AvatarImage
-                                src={client?.profileImage || "/placeholder.svg"}
-                                alt={client?.name || "Client"}
-                            />
-                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                                {client?.name?.charAt(0) || "C"}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <h2 className="font-semibold">{client?.name || "Client"}</h2>
-                            <p className="text-sm text-muted-foreground">Your Client</p>
-                        </div>
-                    </div>
-
-                    {client && (
-                        <div className="flex items-center gap-2">
-                            <Badge className={`${getPlanColor(client.trainerPlan)}`}>
-                                {client.trainerPlan.charAt(0).toUpperCase() + client.trainerPlan.slice(1)}
-                            </Badge>
-                            {isExpired && (
-                                <Badge className="bg-red-500 hover:bg-red-600 text-white border-red-500/20 animate-pulse">
-                                    Expired
-                                </Badge>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Messages Area */}
-            <div className="flex-1 overflow-hidden">
-                <div className="h-full overflow-y-auto p-4 space-y-4">
-                    {messages.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                            <MessageSquare className="h-16 w-16 text-muted-foreground/30 mb-4" />
-                            <p className="text-muted-foreground">No messages yet</p>
-                            <p className="text-sm text-muted-foreground/60 mt-1">
-                                Start a conversation with your client!
-                            </p>
-                        </div>
-                    ) : (
-                        messages.map((message, index) => {
-                            const isTrainer = message.senderType === 'trainer';
-                            const showDate = index === 0 ||
-                                formatDate(message.createdAt) !== formatDate(messages[index - 1].createdAt);
-
-                            return (
-                                <div
-                                    key={message._id}
-                                    className={`flex ${isTrainer ? 'justify-end' : 'justify-start'}`}
-                                    onMouseEnter={() => isTrainer && setHoveredMessageId(message._id)}
-                                    onMouseLeave={() => isTrainer && setHoveredMessageId(null)}
-                                >
-                                    {showDate && (
-                                        <div className="text-center py-2 w-full">
-                                            <Badge variant="outline" className="text-xs">
-                                                {formatDate(message.createdAt)}
-                                            </Badge>
-                                        </div>
-                                    )}
-
-                                    <div className={`relative max-w-[70%] rounded-2xl p-3 break-words ${isTrainer
-                                        ? 'bg-primary text-primary-foreground ml-auto'
-                                        : 'bg-muted text-foreground mr-auto'
-                                        }`}>
-
-                                        <div className="flex flex-col items-center">
-                                            {message.messageType === 'image' && message.fileUrl && (
-                                                <div className="mb-2 w-full">
-                                                    <img
-                                                        src={message.fileUrl}
-                                                        alt="Shared image"
-                                                        className="rounded-lg max-h-60 w-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                                        onClick={() => setViewImageUrl(message.fileUrl || null)}
-                                                    />
-                                                </div>
-                                            )}
-
-                                            {message.messageType === 'audio' && message.fileUrl && (
-                                                <div className={`mb-2 min-w-[200px] w-full flex items-center gap-2 p-2 rounded-xl ${isTrainer ? 'bg-primary-foreground/10' : 'bg-background/10'}`}>
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-8 w-8 rounded-full"
-                                                        onClick={(e) => {
-                                                            const audio = e.currentTarget.parentElement?.querySelector('audio');
-                                                            if (audio) {
-                                                                if (audio.paused) audio.play();
-                                                                else audio.pause();
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Play className="h-4 w-4" />
-                                                    </Button>
-                                                    <div className="flex-1 h-1 bg-current/20 rounded-full" />
-                                                    <audio controls src={message.fileUrl} className="hidden" onPlay={(e) => {
-                                                        const audio = e.currentTarget;
-                                                        const others = document.querySelectorAll('audio');
-                                                        others.forEach(a => { if (a !== audio) a.pause(); });
-                                                    }} />
-                                                </div>
-                                            )}
-
-                                            {message.messageType === 'file' && message.fileUrl && (
-                                                <div className={`mb-2 min-w-[200px] w-full flex items-center gap-3 p-3 rounded-xl border ${isTrainer ? 'bg-primary-foreground/10 border-primary-foreground/20' : 'bg-background/10 border-foreground/10'}`}>
-                                                    <Paperclip className="h-5 w-5" />
-                                                    <div className="flex-1 overflow-hidden">
-                                                        <p className="text-xs font-bold truncate">
-                                                            {message.fileUrl.split('/').pop()?.split('?')[0] || 'Document'}
-                                                        </p>
-                                                        <p className="text-[10px] opacity-70">PDF Document</p>
-                                                    </div>
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="sm" 
-                                                        className="h-8 rounded-lg"
-                                                        onClick={() => window.open(message.fileUrl, '_blank')}
-                                                    >
-                                                        View
-                                                    </Button>
-                                                </div>
-                                            )}
-
-                                            {message.message && (
-                                                <p className="text-sm break-words w-full text-left">{message.message}</p>
-                                            )}
-                                        </div>
-
-                                        <p className={`text-xs mt-1 text-right ${isTrainer ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                                            }`}>
-                                            {formatTime(message.createdAt)}
-                                        </p>
-
-                                        {/* Three dots menu */}
-                                        {hoveredMessageId === message._id && isTrainer && (
-                                            <div className={`absolute top-2 ${isTrainer ? '-left-8' : '-right-8'}`}>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-6 w-6 bg-background/80 hover:bg-background shadow-sm"
-                                                        >
-                                                            <MoreHorizontal className="h-3 w-3" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem
-                                                            onClick={() => deleteMessage(message._id)}
-                                                            className="text-destructive focus:text-destructive"
-                                                        >
-                                                            <Trash2 className="h-4 w-4 mr-2" />
-                                                            Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })
-                    )}
-                    <div ref={messagesEndRef} />
-                </div>
-            </div>
-
-            {/* Fixed Footer */}
-            <div className="border-t bg-card/50 backdrop-blur-sm p-4">
-                {isOtherUserTyping && (
-                    <p className="text-xs text-muted-foreground mb-2 animate-pulse" style={{ minHeight: '1rem' }}>
-                        {client?.name || "Client"} is typing...
-                    </p>
-                )}
-
-                {/* Audio Recording UI */}
-                {isRecording ? (
-                    <div className="flex items-center space-x-4 bg-red-500/10 p-3 rounded-2xl mb-2 border border-red-500/20 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="relative flex items-center justify-center">
-                            <div className="absolute w-4 h-4 bg-red-500 rounded-full animate-ping opacity-75" />
-                            <div className="relative w-3 h-3 bg-red-500 rounded-full" />
-                        </div>
-                        <span className="text-sm font-bold font-mono text-red-500">{formatDuration(recordingDuration)}</span>
-                        <div className="flex-1" />
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={cancelRecording}
-                            className="text-muted-foreground hover:text-white hover:bg-white/5"
-                        >
-                            Cancel
-                        </Button>
-                        <Button 
-                            size="sm" 
-                            onClick={() => {
-                                shouldSendRef.current = true;
-                                stopRecording();
-                            }}
-                            className="bg-red-500 hover:bg-red-600 text-white font-bold px-4"
-                        >
-                            <Send className="h-4 w-4 mr-2" />
-                            Send
-                        </Button>
-                    </div>
-                ) : (
-                    <div className="flex space-x-2">
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleFileSelect}
-                        />
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isSending || isExpired}
-                        >
-                            <Paperclip className="h-4 w-4" />
-                        </Button>
-
-                        <Input
-                            value={newMessage}
-                            onChange={(e) => {
-                                setNewMessage(e.target.value);
-                                handleTyping();
-                            }}
-                            onBlur={handleStopTyping}
-                            placeholder={isExpired ? "Subscription expired - cannot send messages" : "Type your message..."}
-                            className="flex-1"
-                            disabled={isExpired}
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                    sendMessage();
-                                }
-                            }}
-                            maxLength={1000}
-                        />
-
-                        {newMessage.trim() ? (
-                            <Button
-                                onClick={() => sendMessage()}
-                                disabled={isSending || isExpired}
-                                size="icon"
-                            >
-                                {isSending ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Send className="h-4 w-4" />
-                                )}
-                            </Button>
-                        ) : (
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={startRecording}
-                                disabled={isSending || isExpired}
-                            >
-                                <Mic className="h-4 w-4" />
-                            </Button>
-                        )}
-                    </div>
-                )}
-
-                {client?.trainerPlan === 'premium' && (
-                    <p className={`text-xs mt-2 ${isExpired ? 'text-red-500 font-semibold' : 'text-muted-foreground'}`}>
-                        {isExpired ? "Subscription Expired" : `Chatting with ${client?.name || "Client"} (${client?.trainerPlan} plan)`}
-                    </p>
-                )}
-            </div>
-
-            {/* Image Preview Modal */}
-            <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Send Image</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        {previewUrl && (
-                            <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted flex items-center justify-center">
-                                {selectedFile?.type.startsWith('image/') ? (
-                                    <img
-                                        src={previewUrl}
-                                        alt="Preview"
-                                        className="h-full w-full object-contain"
-                                    />
-                                ) : (
-                                    <div className="flex flex-col items-center gap-3">
-                                        {selectedFile?.type === 'application/pdf' ? (
-                                            <Paperclip className="h-12 w-12 text-primary" />
-                                        ) : (
-                                            <Mic className="h-12 w-12 text-primary" />
-                                        )}
-                                        <p className="text-sm font-medium text-muted-foreground">{selectedFile?.name}</p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        <div className="space-y-2">
-                            <Label htmlFor="caption">Caption (optional)</Label>
-                            <Input
-                                id="caption"
-                                value={imageCaption}
-                                onChange={(e) => setImageCaption(e.target.value)}
-                                placeholder="Add a caption..."
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button onClick={() => sendMessage()} disabled={isSending}>
-                            {isSending ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Sending...
-                                </>
-                            ) : (
-                                <>
-                                    <Send className="mr-2 h-4 w-4" />
-                                    Send
-                                </>
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Image Lightbox (Viewing) */}
-            <Dialog open={!!viewImageUrl} onOpenChange={(open) => !open && setViewImageUrl(null)}>
-                <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-transparent border-none shadow-none flex items-center justify-center">
-                    <div className="relative w-full h-full flex items-center justify-center">
-                        {viewImageUrl && (
-                            <img
-                                src={viewImageUrl}
-                                alt="Full size"
-                                className="max-w-full max-h-full object-contain rounded-lg"
-                            />
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {isCropping && imageToCrop && (
-                <ImageCropper
-                    image={imageToCrop}
-                    aspectRatio={4 / 3}
-                    onCropComplete={(croppedBlob) => {
-                        const croppedFile = new File([croppedBlob], selectedFile?.name || 'cropped.jpg', { type: 'image/jpeg' });
-                        setSelectedFile(croppedFile);
-                        setPreviewUrl(URL.createObjectURL(croppedBlob));
-                        setIsCropping(false);
-                        setImageToCrop(null);
-                        setIsPreviewOpen(true);
-                    }}
-                    onCancel={() => {
-                        setIsCropping(false);
-                        setImageToCrop(null);
-                        setSelectedFile(null);
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                    }}
-                />
-            )}
-        </div>
-    );
-}
+                              </Button>
+                          </Link>
+                      </div>
+                  </div>
+              </div>
+          );
+      }
+  
+      return (
+          <div className="h-screen flex flex-col bg-background">
+              {/* Fixed Header */}
+              <div className="border-b bg-card/50 backdrop-blur-sm">
+                  <div className="flex items-center justify-between p-4">
+                      <div className="flex items-center space-x-3">
+                          <Link to={`/trainer/user/${clientId}`}>
+                              <Button variant="ghost" size="icon">
+                                  <ArrowLeft className="h-4 w-4" />
+                              </Button>
+                          </Link>
+                          <Avatar className="h-10 w-10">
+                              <AvatarImage
+                                  src={client?.profileImage || "/placeholder.svg"}
+                                  alt={client?.name || "Client"}
+                              />
+                              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                  {client?.name?.charAt(0) || "C"}
+                              </AvatarFallback>
+                          </Avatar>
+                          <div>
+                              <h2 className="font-semibold">{client?.name || "Client"}</h2>
+                              <p className="text-sm text-muted-foreground">Your Client</p>
+                          </div>
+                      </div>
+  
+                      {client && (
+                          <div className="flex items-center gap-2">
+                              <Badge className={`${getPlanColor(client.trainerPlan)}`}>
+                                  {client.trainerPlan.charAt(0).toUpperCase() + client.trainerPlan.slice(1)}
+                              </Badge>
+                              {isExpired && (
+                                  <Badge className="bg-red-500 hover:bg-red-600 text-white border-red-500/20 animate-pulse">
+                                      Expired
+                                  </Badge>
+                              )}
+                          </div>
+                      )}
+                  </div>
+              </div>
+  
+              {/* Messages Area */}
+              <div className="flex-1 overflow-hidden">
+                  <div className="h-full overflow-y-auto p-4 space-y-4">
+                      {messages.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center h-full text-center">
+                              <MessageSquare className="h-16 w-16 text-muted-foreground/30 mb-4" />
+                              <p className="text-muted-foreground">No messages yet</p>
+                              <p className="text-sm text-muted-foreground/60 mt-1">
+                                  Start a conversation with your client!
+                              </p>
+                          </div>
+                      ) : (
+                          messages.map((message, index) => {
+                              const isTrainer = message.senderType === 'trainer';
+                              const showDate = index === 0 ||
+                                  formatDate(message.createdAt) !== formatDate(messages[index - 1].createdAt);
+  
+                              return (
+                                  <div
+                                      key={message._id}
+                                      className={`flex ${isTrainer ? 'justify-end' : 'justify-start'}`}
+                                      onMouseEnter={() => isTrainer && setHoveredMessageId(message._id)}
+                                      onMouseLeave={() => isTrainer && setHoveredMessageId(null)}
+                                  >
+                                      {showDate && (
+                                          <div className="text-center py-2 w-full">
+                                              <Badge variant="outline" className="text-xs">
+                                                  {formatDate(message.createdAt)}
+                                              </Badge>
+                                          </div>
+                                      )}
+  
+                                      <div className={`relative max-w-[70%] rounded-2xl p-3 break-words ${isTrainer
+                                          ? 'bg-primary text-primary-foreground ml-auto'
+                                          : 'bg-muted text-foreground mr-auto'
+                                          }`}>
+  
+                                          <div className="flex flex-col items-center">
+                                              {message.messageType === 'image' && message.fileUrl && (
+                                                  <div className="mb-2 w-full">
+                                                      <img
+                                                          src={message.fileUrl}
+                                                          alt="Shared image"
+                                                          className="rounded-lg max-h-60 w-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                                          onClick={() => setViewImageUrl(message.fileUrl || null)}
+                                                      />
+                                                  </div>
+                                              )}
+  
+                                              {message.messageType === 'audio' && message.fileUrl && (
+                                                  <div className={`mb-2 min-w-[200px] w-full flex items-center gap-2 p-2 rounded-xl ${isTrainer ? 'bg-primary-foreground/10' : 'bg-background/10'}`}>
+                                                      <Button 
+                                                          variant="ghost" 
+                                                          size="icon" 
+                                                          className="h-8 w-8 rounded-full"
+                                                          onClick={(e) => {
+                                                              const audio = e.currentTarget.parentElement?.querySelector('audio');
+                                                              if (audio) {
+                                                                  if (audio.paused) audio.play();
+                                                                  else audio.pause();
+                                                              }
+                                                          }}
+                                                      >
+                                                          <Play className="h-4 w-4" />
+                                                      </Button>
+                                                      <div className="flex-1 h-1 bg-current/20 rounded-full" />
+                                                      <audio controls src={message.fileUrl} className="hidden" onPlay={(e) => {
+                                                          const audio = e.currentTarget;
+                                                          const others = document.querySelectorAll('audio');
+                                                          others.forEach(a => { if (a !== audio) a.pause(); });
+                                                      }} />
+                                                  </div>
+                                              )}
+  
+                                              {message.messageType === 'file' && message.fileUrl && (
+                                                  <div className={`mb-2 min-w-[200px] w-full flex items-center gap-3 p-3 rounded-xl border ${isTrainer ? 'bg-primary-foreground/10 border-primary-foreground/20' : 'bg-background/10 border-foreground/10'}`}>
+                                                      <Paperclip className="h-5 w-5" />
+                                                      <div className="flex-1 overflow-hidden">
+                                                          <p className="text-xs font-bold truncate">
+                                                              {message.fileUrl.split('/').pop()?.split('?')[0] || 'Document'}
+                                                          </p>
+                                                          <p className="text-[10px] opacity-70">PDF Document</p>
+                                                      </div>
+                                                      <Button 
+                                                          variant="ghost" 
+                                                          size="sm" 
+                                                          className="h-8 rounded-lg"
+                                                          onClick={() => window.open(message.fileUrl, '_blank')}
+                                                      >
+                                                          View
+                                                      </Button>
+                                                  </div>
+                                              )}
+  
+                                              {message.message && (
+                                                  <p className="text-sm break-words w-full text-left">{message.message}</p>
+                                              )}
+                                          </div>
+  
+                                          <p className={`text-xs mt-1 text-right ${isTrainer ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                                              }`}>
+                                              {formatTime(message.createdAt)}
+                                          </p>
+  
+                                          {/* Three dots menu */}
+                                          {hoveredMessageId === message._id && isTrainer && (
+                                              <div className={`absolute top-2 ${isTrainer ? '-left-8' : '-right-8'}`}>
+                                                  <DropdownMenu>
+                                                      <DropdownMenuTrigger asChild>
+                                                          <Button
+                                                              variant="ghost"
+                                                              size="icon"
+                                                              className="h-6 w-6 bg-background/80 hover:bg-background shadow-sm"
+                                                          >
+                                                              <MoreHorizontal className="h-3 w-3" />
+                                                          </Button>
+                                                      </DropdownMenuTrigger>
+                                                      <DropdownMenuContent align="end">
+                                                          <DropdownMenuItem
+                                                              onClick={() => deleteMessage(message._id)}
+                                                              className="text-destructive focus:text-destructive"
+                                                          >
+                                                              <Trash2 className="h-4 w-4 mr-2" />
+                                                              Delete
+                                                          </DropdownMenuItem>
+                                                      </DropdownMenuContent>
+                                                  </DropdownMenu>
+                                              </div>
+                                          )}
+                                      </div>
+                                  </div>
+                              );
+                          })
+                      )}
+                      <div ref={messagesEndRef} />
+                  </div>
+              </div>
+  
+              {/* Fixed Footer */}
+              <div className="border-t bg-card/50 backdrop-blur-sm p-4">
+                  {isOtherUserTyping && (
+                      <p className="text-xs text-muted-foreground mb-2 animate-pulse" style={{ minHeight: '1rem' }}>
+                          {client?.name || "Client"} is typing...
+                      </p>
+                  )}
+  
+                  {/* Audio Recording UI */}
+                  {isRecording ? (
+                      <div className="flex items-center space-x-4 bg-red-500/10 p-3 rounded-2xl mb-2 border border-red-500/20 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                          <div className="relative flex items-center justify-center">
+                              <div className="absolute w-4 h-4 bg-red-500 rounded-full animate-ping opacity-75" />
+                              <div className="relative w-3 h-3 bg-red-500 rounded-full" />
+                          </div>
+                          <span className="text-sm font-bold font-mono text-red-500">{formatDuration(recordingDuration)}</span>
+                          <div className="flex-1" />
+                          <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={cancelRecording}
+                              className="text-muted-foreground hover:text-white hover:bg-white/5"
+                          >
+                              Cancel
+                          </Button>
+                          <Button 
+                              size="sm" 
+                              onClick={() => {
+                                  shouldSendRef.current = true;
+                                  stopRecording();
+                              }}
+                              className="bg-red-500 hover:bg-red-600 text-white font-bold px-4"
+                          >
+                              <Send className="h-4 w-4 mr-2" />
+                              Send
+                          </Button>
+                      </div>
+                  ) : (
+                      <div className="flex space-x-2">
+                          <input
+                              type="file"
+                              ref={fileInputRef}
+                              className="hidden"
+                              accept="image/*"
+                              onChange={handleFileSelect}
+                          />
+                          <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={isSending || isExpired}
+                          >
+                              <Paperclip className="h-4 w-4" />
+                          </Button>
+  
+                          <Input
+                              value={newMessage}
+                              onChange={(e) => {
+                                  setNewMessage(e.target.value);
+                                  handleTyping();
+                              }}
+                              onBlur={handleStopTyping}
+                              placeholder={isExpired ? "Subscription expired - cannot send messages" : "Type your message..."}
+                              className="flex-1"
+                              disabled={isExpired}
+                              onKeyPress={(e) => {
+                                  if (e.key === 'Enter') {
+                                      sendMessage();
+                                  }
+                              }}
+                              maxLength={1000}
+                          />
+  
+                          {newMessage.trim() ? (
+                              <Button
+                                  onClick={() => sendMessage()}
+                                  disabled={isSending || isExpired}
+                                  size="icon"
+                              >
+                                  {isSending ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                      <Send className="h-4 w-4" />
+                                  )}
+                              </Button>
+                          ) : (
+                              <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={startRecording}
+                                  disabled={isSending || isExpired}
+                              >
+                                  <Mic className="h-4 w-4" />
+                              </Button>
+                          )}
+                      </div>
+                  )}
+  
+                  {client?.trainerPlan === 'premium' && (
+                      <p className={`text-xs mt-2 ${isExpired ? 'text-red-500 font-semibold' : 'text-muted-foreground'}`}>
+                          {isExpired ? "Subscription Expired" : `Chatting with ${client?.name || "Client"} (${client?.trainerPlan} plan)`}
+                      </p>
+                  )}
+              </div>
+  
+              {/* Image Preview Modal */}
+              <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+                  <DialogContent>
+                      <DialogHeader>
+                          <DialogTitle>Send Image</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                          {previewUrl && (
+                              <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted flex items-center justify-center">
+                                  {selectedFile?.type.startsWith('image/') ? (
+                                      <img
+                                          src={previewUrl}
+                                          alt="Preview"
+                                          className="h-full w-full object-contain"
+                                      />
+                                  ) : (
+                                      <div className="flex flex-col items-center gap-3">
+                                          {selectedFile?.type === 'application/pdf' ? (
+                                              <Paperclip className="h-12 w-12 text-primary" />
+                                          ) : (
+                                              <Mic className="h-12 w-12 text-primary" />
+                                          )}
+                                          <p className="text-sm font-medium text-muted-foreground">{selectedFile?.name}</p>
+                                      </div>
+                                  )}
+                              </div>
+                          )}
+                          <div className="space-y-2">
+                              <Label htmlFor="caption">Caption (optional)</Label>
+                              <Input
+                                  id="caption"
+                                  value={imageCaption}
+                                  onChange={(e) => setImageCaption(e.target.value)}
+                                  placeholder="Add a caption..."
+                              />
+                          </div>
+                      </div>
+                      <DialogFooter>
+                          <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
+                              Cancel
+                          </Button>
+                          <Button onClick={() => sendMessage()} disabled={isSending}>
+                              {isSending ? (
+                                  <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Sending...
+                                  </>
+                              ) : (
+                                  <>
+                                      <Send className="mr-2 h-4 w-4" />
+                                      Send
+                                  </>
+                              )}
+                          </Button>
+                      </DialogFooter>
+                  </DialogContent>
+              </Dialog>
+  
+              {/* Image Lightbox (Viewing) */}
+              <Dialog open={!!viewImageUrl} onOpenChange={(open) => !open && setViewImageUrl(null)}>
+                  <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-transparent border-none shadow-none flex items-center justify-center">
+                      <div className="relative w-full h-full flex items-center justify-center">
+                          {viewImageUrl && (
+                              <img
+                                  src={viewImageUrl}
+                                  alt="View image"
+                                  className="max-w-full max-h-full object-contain rounded-lg"
+                              />
+                          )}
+                      </div>
+                  </DialogContent>
+              </Dialog>
+  
+              {/* Image Cropper */}
+              <ImageCropper
+                  image={imageToCrop}
+                  isOpen={isCropping}
+                  onClose={() => {
+                      setIsCropping(false);
+                      setImageToCrop(null);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                  }}
+                  onCropComplete={(croppedFile) => {
+                      setSelectedFile(croppedFile);
+                      setPreviewUrl(URL.createObjectURL(croppedFile));
+                      setIsCropping(false);
+                      setImageToCrop(null);
+                      setIsPreviewOpen(true);
+                  }}
+              />
+          </div>
+      );
+  }

@@ -90,6 +90,17 @@ export class SlotService implements ISlotService {
     return await this._slotRepository.findUserSessionsPaginated(userId, type, page, limit, date);
   }
 
+  async getTrainerSessionsPaginated(
+    trainerId: string,
+    type: 'upcoming' | 'past',
+    page: number,
+    limit: number,
+    date?: string,
+    userId?: string
+  ): Promise<{ sessions: ISlot[], total: number }> {
+    return await this._slotRepository.findTrainerSessionsPaginated(trainerId, type, page, limit, date, userId);
+  }
+
   async getTrainerSessionRequests(trainerId: string): Promise<ISlot[]> {
     return await this._slotRepository.findTrainerSessionRequests(trainerId)
   }

@@ -7,7 +7,7 @@ import { IUserService } from '../core/interfaces/services/IUserService';
 import { IGymService } from '../core/interfaces/services/IGymService';
 import { IMessageService } from '../core/interfaces/services/IMessageService';
 import { logger } from '../utils/logger.util';
-import { format, isBefore, parse } from 'date-fns';
+import { format } from 'date-fns';
 
 @injectable()
 export class CronService {
@@ -46,26 +46,34 @@ export class CronService {
       const FIVE_HOURS_MS = 5 * 60 * 60 * 1000;
 
       for (const recipient of recipients) {
-        // Check for recent unread_chat notification
-        const recentNotification = await this._notificationService.getLatestNotification(
-          recipient.recipientId,
-          recipient.recipientRole,
-          'unread_chat'
-        );
+        try {
+          // Double check if they still have unread messages right now
+          const currentUnreadCount = await this._messageService.getUnreadCount(recipient.recipientId);
+          if (currentUnreadCount === 0) continue;
 
-        const shouldNotify = !recentNotification || 
-          (new Date().getTime() - new Date(recentNotification.createdAt).getTime() > FIVE_HOURS_MS);
+          const recentNotification = await this._notificationService.getLatestNotification(
+            recipient.recipientId,
+            recipient.recipientRole,
+            'unread_chat'
+          );
 
-        if (shouldNotify) {
-          await this._notificationService.createNotification({
-            recipientId: recipient.recipientId,
-            recipientRole: recipient.recipientRole,
-            type: 'unread_chat',
-            title: 'Unread Messages',
-            message: 'You have unread messages in your inbox. Log in to your tactical hub to check your Intel.',
-            priority: 'medium',
-            category: 'info'
-          });
+          const shouldNotify = !recentNotification || 
+            (new Date().getTime() - new Date(recentNotification.createdAt).getTime() > FIVE_HOURS_MS);
+
+          if (shouldNotify) {
+            await this._notificationService.createNotification({
+              recipientId: recipient.recipientId,
+              recipientRole: recipient.recipientRole,
+              type: 'unread_chat',
+              title: 'Intel Update: Unread Messages',
+              message: 'You have unread messages in your inbox. Log in to your tactical hub to check your Intel.',
+              link: recipient.recipientRole === 'user' ? '/chat' : '/trainer/chat',
+              priority: 'medium',
+              category: 'info'
+            });
+          }
+        } catch (err) {
+          logger.error(`Error processing notification for ${recipient.recipientId}:`, err);
         }
       }
     } catch (error) {
@@ -79,10 +87,6 @@ export class CronService {
       const currentTime = format(new Date(), 'HH:mm');
 
       for (const reminder of activeReminders) {
-        // Simple logic: if today's check-in hasn't happened and current time is past preferred time
-        // We'll need a way to check today's attendance. 
-        // For Batch 1, I'll implement a basic notification logic.
-        
         if (reminder.preferredTime === currentTime) {
            await this._notificationService.createNotification({
              recipientId: reminder.userId,
@@ -102,8 +106,6 @@ export class CronService {
 
   private async processDailyStreaks(): Promise<void> {
     try {
-      // Logic to check last check-in date and reset streaks if gap > 1 day
-      // This will involve calling a method in UserService or a dedicated StreakService
       logger.info('Processing daily streaks...');
     } catch (error) {
       logger.error('Error processing daily streaks cron:', error);

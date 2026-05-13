@@ -35,14 +35,17 @@ import {
     User,
     AlertCircle,
     Loader2,
+    MoreHorizontal,
     ChevronLeft,
     ChevronRight,
     Navigation2,
     Search,
-    Check,
     X,
     Filter,
-    ArrowRight
+    ArrowRight,
+    Star,
+    FileText,
+    History
 } from "lucide-react";
 import { 
     format, 
@@ -65,6 +68,7 @@ interface Slot {
     endTime: string;
     isBooked: boolean;
     bookedBy?: {
+        _id: string;
         name: string;
         profileImage: string;
     };
@@ -77,6 +81,14 @@ interface Slot {
         status: 'pending' | 'approved' | 'rejected';
         _id: string;
     }[];
+    videoCall?: {
+        _id: string;
+        trainerRating?: number;
+        trainerFeedback?: string;
+        userPerformanceRating?: number;
+        userFeedback?: string;
+        status: string;
+    };
     createdAt: string;
     updatedAt: string;
 }
@@ -86,8 +98,10 @@ export default function WeeklySchedule() {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [slots, setSlots] = useState<Slot[]>([]);
     const [requests, setRequests] = useState<Slot[]>([]);
+    const [pastSessions, setPastSessions] = useState<Slot[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRequestsLoading, setIsRequestsLoading] = useState(false);
+    const [isPastLoading, setIsPastLoading] = useState(false);
     const [isAddingSlot, setIsAddingSlot] = useState(false);
     const [activeTab, setActiveTab] = useState("schedule");
     
@@ -95,6 +109,13 @@ export default function WeeklySchedule() {
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
+
+    // Pagination for Past Sessions
+    const [pastPage, setPastPage] = useState(1);
+    const [pastTotal, setPastTotal] = useState(0);
+    const pastLimit = 10;
+
+    const [selectedPastSession, setSelectedPastSession] = useState<Slot | null>(null);
 
     const [newSlot, setNewSlot] = useState({
         startTime: "09:00",
@@ -114,13 +135,18 @@ export default function WeeklySchedule() {
         fetchRequests();
     }, []);
 
+    useEffect(() => {
+        if (activeTab === 'past') {
+            fetchPastSessions();
+        }
+    }, [activeTab, pastPage]);
+
     const fetchSlots = async () => {
         try {
             setIsLoading(true);
             const response = await API.get("/trainer/slots");
             setSlots(response.data.slots);
         } catch (error) {
-            console.error("Error fetching slots:", error);
             toast.error("Failed to load slots");
         } finally {
             setIsLoading(false);
@@ -133,9 +159,22 @@ export default function WeeklySchedule() {
             const response = await API.get("/trainer/session-requests");
             setRequests(response.data.requests);
         } catch (error) {
-            console.error("Error fetching requests:", error);
+            // Silently handle error
         } finally {
             setIsRequestsLoading(false);
+        }
+    };
+
+    const fetchPastSessions = async () => {
+        try {
+            setIsPastLoading(true);
+            const response = await API.get(`/trainer/past-sessions?page=${pastPage}&limit=${pastLimit}`);
+            setPastSessions(response.data.sessions);
+            setPastTotal(response.data.total);
+        } catch (error) {
+            toast.error("Failed to load past sessions");
+        } finally {
+            setIsPastLoading(false);
         }
     };
 
@@ -215,22 +254,6 @@ export default function WeeklySchedule() {
             });
     }, [slots, selectedDate]);
 
-    // Filtered Requests Logic
-    const filteredRequests = useMemo(() => {
-        return requests.filter(req => {
-            const hasPending = req.requestedBy?.some(r => r.status === 'pending');
-            const userName = req.requestedBy?.find(r => r.status === 'pending')?.userId.name || "";
-            const matchesSearch = userName.toLowerCase().includes(searchQuery.toLowerCase());
-            return hasPending && matchesSearch;
-        });
-    }, [requests, searchQuery]);
-
-    const paginatedRequests = useMemo(() => {
-        const start = (currentPage - 1) * itemsPerPage;
-        return filteredRequests.slice(start, start + itemsPerPage);
-    }, [filteredRequests, currentPage]);
-
-    const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
 
     const formatTime = (time: string) => {
         const [hours, minutes] = time.split(':');
@@ -269,7 +292,6 @@ export default function WeeklySchedule() {
         }
     };
 
-    // NEW: Flatten requests so each user gets their own entry
     const flattenedRequests = useMemo(() => {
         const result: { slot: Slot; request: NonNullable<Slot['requestedBy']>[0] }[] = [];
         requests.forEach(slot => {
@@ -281,7 +303,6 @@ export default function WeeklySchedule() {
                 }
             });
         });
-        // Sort by date/time
         return result.sort((a, b) => new Date(a.slot.date).getTime() - new Date(b.slot.date).getTime());
     }, [requests, searchQuery]);
 
@@ -396,6 +417,9 @@ export default function WeeklySchedule() {
                                     {flattenedRequests.length}
                                 </span>
                             )}
+                        </TabsTrigger>
+                        <TabsTrigger value="past" className="rounded-xl px-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all font-black uppercase italic tracking-widest text-[10px]">
+                            Past Sessions
                         </TabsTrigger>
                     </TabsList>
 
@@ -792,6 +816,191 @@ export default function WeeklySchedule() {
                                 <Button
                                     disabled={currentPage === totalPages}
                                     onClick={() => setCurrentPage(prev => prev + 1)}
+                                    className="h-14 w-14 rounded-full bg-glass-bg border-glass-border text-muted-foreground hover:bg-glass-hover"
+                                >
+                                    <ChevronRight className="w-6 h-6" />
+                                </Button>
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="past" className="space-y-10 outline-none">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <h3 className="text-3xl font-black tracking-tighter italic uppercase flex items-center gap-6 text-foreground">
+                                Session History.
+                                <Badge variant="outline" className="border-glass-border text-muted-foreground rounded-full font-mono text-sm px-4 py-1">
+                                    {pastTotal} Total
+                                </Badge>
+                            </h3>
+                        </div>
+
+                        <div className="grid gap-6">
+                            {isPastLoading ? (
+                                <div className="py-40 flex flex-col items-center gap-6">
+                                    <Loader2 className="w-12 h-12 animate-spin text-muted-foreground opacity-10" />
+                                    <p className="text-muted-foreground font-black tracking-widest uppercase text-[10px] italic">Loading history...</p>
+                                </div>
+                            ) : pastSessions.length === 0 ? (
+                                <div className="py-40 bg-glass-bg border border-dashed border-glass-border rounded-[4rem] text-center px-10">
+                                    <div className="w-24 h-24 rounded-full bg-glass-bg flex items-center justify-center mx-auto mb-8 border border-glass-border">
+                                        <History className="w-10 h-10 text-muted-foreground opacity-20" />
+                                    </div>
+                                    <h3 className="text-2xl font-black mb-3 text-foreground italic uppercase">No past sessions.</h3>
+                                    <p className="text-muted-foreground text-lg max-w-sm mx-auto italic">Complete your first session to see history here.</p>
+                                </div>
+                            ) : (
+                                pastSessions.map((slot, index) => (
+                                    <motion.div
+                                        key={slot._id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.05 }}
+                                    >
+                                        <Card className="bg-glass-bg border-glass-border rounded-[3.5rem] overflow-hidden hover:bg-glass-hover transition-all group">
+                                            <CardContent className="p-10">
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-12">
+                                                    <div className="flex items-center gap-10">
+                                                        <Avatar className="h-20 w-20 rounded-[2rem] ring-4 ring-glass-border shadow-2xl">
+                                                            <AvatarImage src={slot.bookedBy?.profileImage} />
+                                                            <AvatarFallback className="bg-glass-bg text-foreground text-2xl font-black italic">{slot.bookedBy?.name[0]}</AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="space-y-3">
+                                                            <h3 className="text-2xl font-black tracking-tighter text-foreground italic uppercase">{slot.bookedBy?.name}</h3>
+                                                            <div className="flex flex-wrap items-center gap-4">
+                                                                <div className="flex items-center gap-2 bg-glass-bg px-3 py-1.5 rounded-xl border border-glass-border">
+                                                                    <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground/40" />
+                                                                    <span className="text-xs font-black text-foreground italic">{format(new Date(slot.date), "MMMM do, yyyy")}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2 bg-glass-bg px-3 py-1.5 rounded-xl border border-glass-border">
+                                                                    <Clock className="w-3.5 h-3.5 text-muted-foreground/40" />
+                                                                    <span className="text-xs font-black text-foreground italic">{formatTime(slot.startTime)}</span>
+                                                                </div>
+                                                                {slot.videoCall?.userPerformanceRating && (
+                                                                    <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-xl border border-primary/20">
+                                                                        <Star className="w-3.5 h-3.5 text-primary fill-primary" />
+                                                                        <span className="text-xs font-black text-primary italic">{slot.videoCall.userPerformanceRating}/5</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <Dialog>
+                                                            <DialogTrigger asChild>
+                                                                <Button 
+                                                                    className="h-14 px-8 rounded-2xl bg-white text-black hover:bg-gray-200 font-black uppercase tracking-widest text-[10px] shadow-2xl"
+                                                                    onClick={() => setSelectedPastSession(slot)}
+                                                                >
+                                                                    <FileText className="w-4 h-4 mr-3" /> View Details
+                                                                </Button>
+                                                            </DialogTrigger>
+                                                            <DialogContent className="bg-site-bg border-glass-border text-foreground max-w-xl rounded-[3rem] p-10 backdrop-blur-2xl">
+                                                                <DialogHeader>
+                                                                    <DialogTitle className="text-3xl font-black tracking-tighter italic uppercase">Session Report.</DialogTitle>
+                                                                    <DialogDescription className="text-muted-foreground mt-2 italic">Historical performance and feedback summary.</DialogDescription>
+                                                                </DialogHeader>
+                                                                
+                                                                {selectedPastSession && (
+                                                                    <div className="space-y-8 mt-10">
+                                                                        <div className="flex items-center gap-6 p-6 bg-glass-bg rounded-3xl border border-glass-border">
+                                                                            <Avatar className="h-16 w-16 rounded-2xl border border-glass-border">
+                                                                                <AvatarImage src={selectedPastSession.bookedBy?.profileImage} />
+                                                                                <AvatarFallback>{selectedPastSession.bookedBy?.name[0]}</AvatarFallback>
+                                                                            </Avatar>
+                                                                            <div>
+                                                                                <h4 className="font-black text-xl italic uppercase tracking-tighter">{selectedPastSession.bookedBy?.name}</h4>
+                                                                                <p className="text-muted-foreground text-sm font-bold">{format(new Date(selectedPastSession.date), "MMMM do, yyyy")} @ {formatTime(selectedPastSession.startTime)}</p>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="grid grid-cols-2 gap-6">
+                                                                            <div className="space-y-4 p-6 bg-glass-bg rounded-3xl border border-glass-border">
+                                                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Trainer Rating</span>
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <Star className={cn("w-6 h-6", selectedPastSession.videoCall?.trainerRating ? "text-primary fill-primary" : "text-muted-foreground opacity-20")} />
+                                                                                    <span className="text-3xl font-black tracking-tighter italic">{selectedPastSession.videoCall?.trainerRating || 'N/A'}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="space-y-4 p-6 bg-glass-bg rounded-3xl border border-glass-border">
+                                                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">User Perf. Rating</span>
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <Star className={cn("w-6 h-6", selectedPastSession.videoCall?.userPerformanceRating ? "text-primary fill-primary" : "text-muted-foreground opacity-20")} />
+                                                                                    <span className="text-3xl font-black tracking-tighter italic">{selectedPastSession.videoCall?.userPerformanceRating || 'N/A'}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="space-y-6">
+                                                                            <div className="space-y-3">
+                                                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                                                                    <FileText className="w-3.5 h-3.5" /> Trainer Feedback
+                                                                                </span>
+                                                                                <div className="p-6 bg-glass-bg rounded-3xl border border-glass-border min-h-[100px]">
+                                                                                    <p className="text-sm leading-relaxed italic text-foreground/80">
+                                                                                        {selectedPastSession.videoCall?.trainerFeedback || "No feedback provided by trainer."}
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="space-y-3">
+                                                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                                                                    <User className="w-3.5 h-3.5" /> User Performance Feedback
+                                                                                </span>
+                                                                                <div className="p-6 bg-glass-bg rounded-3xl border border-glass-border min-h-[100px]">
+                                                                                    <p className="text-sm leading-relaxed italic text-foreground/80">
+                                                                                        {selectedPastSession.videoCall?.userFeedback || "No performance notes recorded."}
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                
+                                                                <DialogFooter className="mt-10">
+                                                                    <Button 
+                                                                        className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs"
+                                                                        onClick={() => setSelectedPastSession(null)}
+                                                                    >
+                                                                        Close Report
+                                                                    </Button>
+                                                                </DialogFooter>
+                                                            </DialogContent>
+                                                        </Dialog>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </motion.div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Past Pagination */}
+                        {pastTotal > pastLimit && (
+                            <div className="flex items-center justify-center gap-4 pt-10">
+                                <Button
+                                    disabled={pastPage === 1}
+                                    onClick={() => setPastPage(prev => prev - 1)}
+                                    className="h-14 w-14 rounded-full bg-glass-bg border-glass-border text-muted-foreground hover:bg-glass-hover"
+                                >
+                                    <ChevronLeft className="w-6 h-6" />
+                                </Button>
+                                <div className="flex gap-2">
+                                    {Array.from({ length: Math.ceil(pastTotal / pastLimit) }).map((_, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setPastPage(i + 1)}
+                                            className={cn(
+                                                "w-14 h-14 rounded-2xl font-black text-lg transition-all",
+                                                pastPage === i + 1 ? "bg-primary text-primary-foreground scale-110" : "bg-glass-bg text-muted-foreground hover:bg-glass-hover border border-glass-border"
+                                            )}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    ))}
+                                </div>
+                                <Button
+                                    disabled={pastPage === Math.ceil(pastTotal / pastLimit)}
+                                    onClick={() => setPastPage(prev => prev + 1)}
                                     className="h-14 w-14 rounded-full bg-glass-bg border-glass-border text-muted-foreground hover:bg-glass-hover"
                                 >
                                     <ChevronRight className="w-6 h-6" />

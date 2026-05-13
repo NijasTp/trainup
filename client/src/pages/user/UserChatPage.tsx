@@ -133,7 +133,6 @@ export default function ChatPage() {
 
             setIsLoading(false);
         } catch (_err: unknown) {
-            console.error("Failed to initialize chat:", _err);
             const errorMessage = _err instanceof Error ? _err.message : "Secure connection failed. Please try again.";
             setError(errorMessage);
             setIsLoading(false);
@@ -209,7 +208,6 @@ export default function ChatPage() {
                 setRecordingDuration(prev => prev + 1);
             }, 1000);
         } catch (_err: unknown) {
-            console.error("Mic access denied:", _err);
             toast.error("Microphone access required for audio memos.");
         }
     };
@@ -292,7 +290,6 @@ export default function ChatPage() {
             setAudioBlob(null);
             handleStopTyping();
         } catch (_err: unknown) {
-            console.error("Message transmission failed:", _err);
             toast.error("Encryption error. Message not delivered.");
         } finally {
             setIsSending(false);

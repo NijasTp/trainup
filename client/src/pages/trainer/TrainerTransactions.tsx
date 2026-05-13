@@ -53,7 +53,7 @@ export default function TrainerTransactions() {
       });
       setTransactions(response.data);
     } catch (err: unknown) {
-      toast.error("Failed to calibrate ledger records");
+      toast.error("Failed to load transactions");
     } finally {
       setIsLoading(false);
     }
@@ -212,14 +212,14 @@ export default function TrainerTransactions() {
                   <div key={tx._id} className="p-10 hover:bg-white/[0.02] transition-colors flex flex-col md:flex-row md:items-center justify-between gap-8 group">
                     <div className="flex items-center gap-8">
                       <Avatar className="h-16 w-16 border-2 border-white/10 group-hover:border-cyan-500/50 transition-all shadow-2xl">
-                        <AvatarImage src={tx.userId?.profileImage} className="object-cover" />
+                        <AvatarImage src={typeof tx.userId === 'object' ? tx.userId?.profileImage : undefined} className="object-cover" />
                         <AvatarFallback className="bg-white/5 text-gray-500 font-black italic text-xl">
-                          {getUserInitials(tx.userId?.name)}
+                          {getUserInitials(typeof tx.userId === 'object' ? tx.userId?.name || '' : '')}
                         </AvatarFallback>
                       </Avatar>
                       <div className="space-y-1">
                         <h3 className="text-xl font-black text-white italic uppercase tracking-tighter group-hover:text-cyan-400 transition-colors">
-                          {tx.userId?.name || "Unknown Operative"}
+                          {typeof tx.userId === 'object' ? tx.userId?.name : "Unknown Operative"}
                         </h3>
                         <div className="flex flex-wrap items-center gap-4">
                           <Badge className={cn("px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest italic border", getPlanColor(tx.planType))}>

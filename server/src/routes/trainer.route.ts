@@ -62,11 +62,14 @@ router.get('/slots', authMiddleware, roleMiddleware(['trainer']), trainerSchedul
     .post('/slots', authMiddleware, roleMiddleware(['trainer']), trainerScheduleController.createSlot.bind(trainerScheduleController))
     .delete('/slots/:slotId', authMiddleware, roleMiddleware(['trainer']), trainerScheduleController.deleteSlot.bind(trainerScheduleController));
 
+router.get('/past-sessions', authMiddleware, roleMiddleware(['trainer']), trainerScheduleController.getPastSessions.bind(trainerScheduleController));
+
 router.get('/session-requests', authMiddleware, roleMiddleware(['trainer']), trainerScheduleController.getSessionRequests.bind(trainerScheduleController));
 router.post('/session-requests/:requestId/approve/:userId', authMiddleware, roleMiddleware(['trainer']), trainerScheduleController.approveSessionRequest.bind(trainerScheduleController));
 router.post('/session-requests/:requestId/reject/:userId', authMiddleware, roleMiddleware(['trainer']), trainerScheduleController.rejectSessionRequest.bind(trainerScheduleController));
 
 router.get('/client/:clientId', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getClientDetails.bind(trainerClientController));
+router.get('/client/:clientId/sessions', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getClientSessions.bind(trainerClientController));
 router.get('/chat/messages/:clientId', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getChatMessages.bind(trainerClientController));
 router.get('/chat/unread-counts', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getUnreadCounts.bind(trainerClientController));
 router.put('/chat/read/:clientId', authMiddleware, roleMiddleware(['trainer']), trainerClientController.markMessagesAsRead.bind(trainerClientController));

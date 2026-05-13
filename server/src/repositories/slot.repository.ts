@@ -111,7 +111,6 @@ export class SlotRepository implements ISlotRepository {
       };
     }
 
-    // Add date filter if provided
     if (date) {
       const filterDate = new Date(date);
       filterDate.setHours(0, 0, 0, 0);
@@ -175,7 +174,102 @@ export class SlotRepository implements ISlotRepository {
     );
 
     const sessions = await SlotModel.aggregate(pipeline);
+    return { sessions, total };
+  }
 
+  async findTrainerSessionsPaginated(
+    trainerId: string,
+    type: 'upcoming' | 'past',
+    page: number,
+    limit: number,
+    date?: string,
+    userId?: string
+  ): Promise<{ sessions: ISlot[], total: number }> {
+    const skip = (page - 1) * limit;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    let matchQuery: any = {
+      trainerId: new Types.ObjectId(trainerId)
+    };
+
+    if (userId) {
+        matchQuery.$or = [
+            { bookedBy: new Types.ObjectId(userId) },
+            { 'requestedBy.userId': new Types.ObjectId(userId) }
+        ];
+    }
+
+    if (type === 'upcoming') {
+      matchQuery.date = { $gte: now };
+      matchQuery.isBooked = true;
+    } else {
+      matchQuery.date = { $lt: now };
+      matchQuery.isBooked = true;
+    }
+
+    if (date) {
+      const filterDate = new Date(date);
+      filterDate.setHours(0, 0, 0, 0);
+      const nextDay = new Date(filterDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      matchQuery.date = {
+        $gte: filterDate,
+        $lt: nextDay
+      };
+    }
+
+    const pipeline: any[] = [
+      { $match: matchQuery },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'bookedBy',
+          foreignField: '_id',
+          as: 'bookedByUser'
+        }
+      },
+      { $addFields: { bookedBy: { $arrayElemAt: ['$bookedByUser', 0] } } },
+      {
+        $lookup: {
+          from: 'videocalls',
+          localField: '_id',
+          foreignField: 'slotId',
+          as: 'videoCall'
+        }
+      },
+      { $addFields: { videoCall: { $arrayElemAt: ['$videoCall', 0] } } }
+    ];
+
+    const totalPipeline = [...pipeline, { $count: 'total' }];
+    const totalResult = await SlotModel.aggregate(totalPipeline);
+    const total = totalResult.length > 0 ? totalResult[0].total : 0;
+
+    pipeline.push(
+      { $sort: { date: type === 'upcoming' ? 1 : -1, startTime: type === 'upcoming' ? 1 : -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          bookedBy: {
+            _id: 1,
+            name: 1,
+            profileImage: 1
+          },
+          date: 1,
+          startTime: 1,
+          endTime: 1,
+          isBooked: 1,
+          requestedBy: 1,
+          videoCallLink: 1,
+          createdAt: 1,
+          videoCall: 1
+        }
+      }
+    );
+
+    const sessions = await SlotModel.aggregate(pipeline);
     return { sessions, total };
   }
 
@@ -211,10 +305,6 @@ export class SlotRepository implements ISlotRepository {
     slotId: string,
     userId: string
   ): Promise<ISlot | null> {
-
-      let user = SlotModel.find({userId})
-      
-
     return await SlotModel.findByIdAndUpdate(
       slotId,
       {

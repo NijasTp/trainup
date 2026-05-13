@@ -512,49 +512,7 @@ const UserDashboard: React.FC = () => {
               <ActivityMatrix activityData={activityData} />
             </BentoTile>
 
-            {/* Recent Sessions (Span 6x1) */}
-            <BentoTile title="Recent Workouts" icon={Dumbbell} className="md:col-span-6 md:row-span-1">
-              <div className="space-y-4">
-                {recentWorkouts.length > 0 ? (
-                  recentWorkouts.map((w, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-glass-bg border border-glass-border group-hover:border-primary/20 transition-all">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                          <Play className="h-4 w-4 fill-current" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-black italic uppercase text-foreground truncate w-32 md:w-auto">{w.name}</p>
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">{format(new Date(w.date), "MMM dd")}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-black text-primary uppercase">{w.duration}M</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-slate-500 text-sm italic py-4">No workouts logged yet.</p>
-                )}
-              </div>
-            </BentoTile>
 
-             {/* Quick Actions (Span 6x1) */}
-             <BentoTile title="Quick Actions" icon={Zap} className="md:col-span-6 md:row-span-1">
-                <div className="grid grid-cols-2 gap-4 h-full">
-                  <Link to="/workouts/browse" className="h-full">
-                    <Button variant="outline" className="w-full h-full rounded-3xl border-glass-border bg-glass-bg flex flex-col items-center justify-center gap-3 group/btn text-foreground hover:bg-glass-hover">
-                      <Dumbbell className="h-8 w-8 text-primary group-hover/btn:scale-110 transition-transform" />
-                      <span className="text-[10px] font-black uppercase tracking-widest italic">New Workout</span>
-                    </Button>
-                  </Link>
-                  <Link to={ROUTES.USER_DIET} className="h-full">
-                    <Button variant="outline" className="w-full h-full rounded-3xl border-glass-border bg-glass-bg flex flex-col items-center justify-center gap-3 group/btn text-foreground hover:bg-glass-hover">
-                      <Target className="h-8 w-8 text-primary group-hover/btn:scale-110 transition-transform" />
-                      <span className="text-[10px] font-black uppercase tracking-widest italic">Diet Plan</span>
-                    </Button>
-                  </Link>
-                </div>
-            </BentoTile>
 
           </div>
         </div>
@@ -565,9 +523,6 @@ const UserDashboard: React.FC = () => {
   );
 };
 
-// --- Sub-components ---
-
-// Removed local ActivityMatrix implementation in favor of reusable component
 
 interface PlayProps {
   className?: string;

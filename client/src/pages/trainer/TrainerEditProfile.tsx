@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
-    User, Award,
+    User,
     Briefcase, DollarSign, Camera, Check, Loader2,
     ZoomIn, ZoomOut, Upload, ChevronLeft, ShieldCheck
 } from "lucide-react";
@@ -341,7 +341,6 @@ export default function TrainerEditProfile() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <div className="space-y-2">
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 italic">Specialization</Label>
                                         <Select onValueChange={(val) => { setValue("specialization", val); setIsOtherSpecialization(val === "Other"); }} value={specializationValue}>
