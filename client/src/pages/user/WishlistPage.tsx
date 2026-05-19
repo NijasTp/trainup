@@ -6,6 +6,12 @@ import {
     Loader2,
     Shield
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import UserGymLayout from "@/layouts/UserGymLayout";
 import { getUserWishlist, toggleWishlist } from '@/services/gymService';
 import { toast } from 'sonner';

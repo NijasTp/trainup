@@ -1,50 +1,52 @@
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
-import { Eye, EyeOff, Lock, ArrowLeft } from "lucide-react"
+import { Lock, Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { gymResetPassword as gymResetPasswordApi } from "@/services/authService"
 import { toast } from "react-toastify"
-import { passwordValidation } from "@/constants/validations"
-import { resetPassword } from "@/services/authService"
 import ColorBends from "@/components/ui/ColorBends"
+import { passwordValidation } from "@/constants/validations"
+import { ROUTES } from "@/constants/routes"
 
-export default function NewPasswordPage() {
+export default function GymResetPassword() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { email, otp } = location.state || { email: "", otp: "" }
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { state } = useLocation()
-  const navigate = useNavigate()
 
   useEffect(() => {
-    if (!state?.email) {
+    if (!email || !otp) {
       toast.error("Invalid session. Please restart recovery flow.")
-      navigate("/forgot-password")
+      navigate(ROUTES.GYM_FORGOT_PASSWORD)
     }
-  }, [state, navigate])
+  }, [email, otp, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match")
+      return
+    }
+    let isValid = passwordValidation(password)
+    if (!isValid) {
+      toast.error('Password should have at least 8 chars, one uppercase, one lowercase, one number, one special char.')
+      return
+    }
+    setIsLoading(true)
     try {
-      if (password !== confirmPassword) {
-        toast.error("Passwords don't match")
-        return
-      }
-      let isValid = passwordValidation(password)
-      if (!isValid) {
-        toast.error('Password should have at least 8 chars, one uppercase, one lowercase, one number, one special char.')
-        return
-      }
-      setIsLoading(true)
-      await resetPassword(state.email, password)
-      toast.success("Password reset successful")
-      navigate('/login')
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Error updating password')
+      const res = await gymResetPasswordApi(email, password, otp)
+      toast.success(res.message || "Gym portal password reset successfully")
+      navigate(ROUTES.GYM_LOGIN)
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to reset password. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -78,15 +80,15 @@ export default function NewPasswordPage() {
             TRAIN<span className="text-[#176B87]">UP</span>
           </h1>
           <p className="text-gray-400 text-xs font-black uppercase tracking-widest text-center">
-            Set New Password
+            Gym Recovery
           </p>
         </div>
 
         <Card className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl text-white">
           <CardHeader className="text-center pb-4">
-            <CardTitle className="text-white text-2xl font-bold">New Credentials</CardTitle>
+            <CardTitle className="text-white text-2xl font-bold">Reset Password</CardTitle>
             <CardDescription className="text-gray-400 text-sm mt-1">
-              Create a strong password for your account
+              Enter your new gym credentials for <span className="text-[#00ffd1] break-all">{email}</span>
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -117,13 +119,13 @@ export default function NewPasswordPage() {
               </div>
 
               <div>
-                <Label htmlFor="confirmPassword" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
+                <Label htmlFor="confirm-password" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
                   Confirm Password
                 </Label>
                 <div className="relative mt-2">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    id="confirmPassword"
+                    id="confirm-password"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm new password"
                     value={confirmPassword}
@@ -143,17 +145,17 @@ export default function NewPasswordPage() {
 
               <Button
                 type="submit"
-                disabled={isLoading}
                 className="w-full h-12 bg-[#176B87] hover:bg-[#64CCC5] text-white font-black rounded-xl transition-all duration-300 flex items-center justify-center cursor-pointer"
+                disabled={isLoading}
               >
-                {isLoading ? "Updating Password..." : "Update Password"}
+                {isLoading ? "Resetting..." : "Reset Password"}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <Link to="/login" className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
+              <Link to={ROUTES.GYM_LOGIN} className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
                 <ArrowLeft className="h-4 w-4" />
-                Back to Login
+                Back to Sign In
               </Link>
             </div>
           </CardContent>

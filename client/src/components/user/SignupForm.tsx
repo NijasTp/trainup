@@ -7,7 +7,7 @@ import { FaUserPlus } from "react-icons/fa";
 import { passwordValidation } from "@/constants/validations";
 import { GoogleLoginButton } from "@/pages/user/GoogleLoginButton";
 import { useDispatch } from "react-redux";
-import { login } from "@/redux/slices/userAuthSlice";
+import { login, type UserType } from "@/redux/slices/userAuthSlice";
 import debounce from "lodash.debounce";
 
 interface SignupFormProps {
@@ -95,12 +95,10 @@ const SignupForm = ({ setError }: SignupFormProps) => {
         state: { name, email, password },
       });
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to send OTP");
-      console.log('err', err)
     }
   }
 
-  const handleGoogleSuccess = (user: string) => {
+  const handleGoogleSuccess = (user: UserType) => {
     dispatch(login(user));
     navigate("/complete-profile");
   };
@@ -168,14 +166,14 @@ const SignupForm = ({ setError }: SignupFormProps) => {
               href="#terms"
               className="text-[#176B87] hover:text-[#64CCC5] transition-colors"
             >
-              Terms of Service
+              Terms
             </a>{" "}
             and{" "}
             <a
               href="#privacy"
               className="text-[#176B87] hover:text-[#64CCC5] transition-colors"
             >
-              Privacy Policy
+              Conditions
             </a>
           </label>
         </div>

@@ -110,7 +110,9 @@ import GymWorkoutsPage from './pages/gym/workouts/Workouts';
 import GymOtpVerification from './pages/gym/register/GymOtpVerification';
 import GymStatus from './pages/gym/register/GymStatus';
 import GymReapply from './pages/gym/register/GymReapply';
-import { GymProtectedRoute } from "./redirects/GymRedirects";
+import { GymProtectedRoute, GymPreventLoggedIn } from "./redirects/GymRedirects";
+import GymForgotPassword from './pages/gym/register/GymForgotPassword';
+import GymResetPassword from './pages/gym/register/GymResetPassword';
 import GymPlanSelection from './pages/user/GymPlanSelection';
 import PaymentSuccessPage from './pages/user/PaymentSuccess';
 import PaymentCancelPage from './pages/user/PaymentCancel';
@@ -276,6 +278,8 @@ function App() {
         <Route path={ROUTES.GYM_ONBOARDING} element={<GymRegister />} />
         <Route path={ROUTES.GYM_STATUS} element={<GymProtectedRoute><GymStatus /></GymProtectedRoute>} />
         <Route path={ROUTES.GYM_REAPPLY} element={<GymProtectedRoute><GymReapply /></GymProtectedRoute>} />
+        <Route path={ROUTES.GYM_FORGOT_PASSWORD} element={<GymPreventLoggedIn><GymForgotPassword /></GymPreventLoggedIn>} />
+        <Route path={ROUTES.GYM_RESET_PASSWORD} element={<GymPreventLoggedIn><GymResetPassword /></GymPreventLoggedIn>} />
 
         <Route path={ROUTES.GYM_ROOT} element={<GymProtectedRoute><GymLayout><Routes>
           <Route path="dashboard" element={<GymDashboardPage />} />

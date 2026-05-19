@@ -1,133 +1,165 @@
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
-import { Lock, Eye, EyeOff } from "lucide-react"
+import { Lock, Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Logo } from "@/components/ui/logo"
 import { trainerResetPassword as trainerResetPasswordApi } from "@/services/authService"
 import { toast } from "react-toastify"
+import ColorBends from "@/components/ui/ColorBends"
+import { passwordValidation } from "@/constants/validations"
 
 export default function TrainerResetPassword() {
-    const navigate = useNavigate()
-    const location = useLocation()
-    const { email } = location.state || { email: "" }
-    const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
-    const [showPassword, setShowPassword] = useState(false)
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState("")
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { email } = location.state || { email: "" }
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (password !== confirmPassword) {
-            setError("Passwords do not match")
-            return
-        }
-        setIsLoading(true)
-        setError("")
-        try {
-            const res=await trainerResetPasswordApi(email, password)
-            toast.success(res.message)
-            navigate('/trainer/login')
-        } catch (err) {
-            setError("Failed to reset password. Please try again.")
-        } finally {
-            setIsLoading(false)
-        }
+  useEffect(() => {
+    if (!email) {
+      toast.error("Invalid session. Please restart recovery flow.")
+      navigate("/trainer/forgot-password")
     }
+  }, [email, navigate])
 
-    return (
-        <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-            <div className="w-full max-w-md space-y-6">
-                <div className="text-center">
-                    <Logo className="justify-center mb-6" />
-                </div>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match")
+      return
+    }
+    let isValid = passwordValidation(password)
+    if (!isValid) {
+      toast.error('Password should have at least 8 chars, one uppercase, one lowercase, one number, one special char.')
+      return
+    }
+    setIsLoading(true)
+    try {
+      const res = await trainerResetPasswordApi(email, password)
+      toast.success(res.message || "Password reset successfully")
+      navigate('/trainer/login')
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to reset password. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-                <Card className="bg-gray-800 border-gray-700">
-                    <CardHeader className="text-center">
-                        <CardTitle className="text-white">Reset Password</CardTitle>
-                        <CardDescription className="text-gray-400">
-                            Enter your new password for {email || "your account"}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <Label htmlFor="password" className="text-white">
-                                    New Password
-                                </Label>
-                                <div className="relative mt-2">
-                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                    <Input
-                                        id="password"
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="Enter new password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="bg-gray-700 border-gray-600 text-white pl-10 pr-10"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-3 text-gray-400 hover:text-white"
-                                    >
-                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
-                                </div>
-                            </div>
+  return (
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden p-4 lg:p-8">
+      {/* ColorBends Background Layer */}
+      <div className="absolute inset-0 z-0">
+        <ColorBends
+          colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
+          rotation={0}
+          speed={0.2}
+          scale={1}
+          frequency={1}
+          warpStrength={1}
+          mouseInfluence={1}
+          parallax={0.5}
+          noise={0.1}
+          transparent
+          autoRotate={0}
+          className="pointer-events-none"
+          style={{ pointerEvents: 'none' }}
+        />
+        <div className="absolute inset-0 bg-black/60"></div>
+      </div>
 
-                            <div>
-                                <Label htmlFor="confirm-password" className="text-white">
-                                    Confirm Password
-                                </Label>
-                                <div className="relative mt-2">
-                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                    <Input
-                                        id="confirm-password"
-                                        type={showConfirmPassword ? "text" : "password"}
-                                        placeholder="Confirm new password"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="bg-gray-700 border-gray-600 text-white pl-10 pr-10"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3 top-3 text-gray-400 hover:text-white"
-                                    >
-                                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {error && (
-                                <p className="text-sm text-red-500">{error}</p>
-                            )}
-
-                            <Button 
-                                type="submit" 
-                                className="w-full trainup-primary text-white hover:bg-opacity-80"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? "Resetting..." : "Reset Password"}
-                            </Button>
-                        </form>
-
-                        <div className="mt-6 text-center space-y-2">
-                            <p className="text-gray-400 text-sm">Remembered your password?</p>
-                            <Link to="/trainer/login" className="text-sm trainup-accent hover:underline font-medium">
-                                Sign In
-                            </Link>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+      <div className="relative z-10 w-full max-w-md space-y-6">
+        <div className="text-center">
+          <h1 className="text-center text-4xl font-black tracking-tighter text-white mb-2">
+            TRAIN<span className="text-[#176B87]">UP</span>
+          </h1>
+          <p className="text-gray-400 text-xs font-black uppercase tracking-widest text-center">
+            Trainer Recovery
+          </p>
         </div>
-    )
+
+        <Card className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl text-white">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-white text-2xl font-bold">Reset Password</CardTitle>
+            <CardDescription className="text-gray-400 text-sm mt-1">
+              Enter your new credentials for <span className="text-[#00ffd1] break-all">{email}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <Label htmlFor="password" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
+                  New Password
+                </Label>
+                <div className="relative mt-2">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter new password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white pl-12 pr-12 h-12 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="confirm-password" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
+                  Confirm Password
+                </Label>
+                <div className="relative mt-2">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white pl-12 pr-12 h-12 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-12 bg-[#176B87] hover:bg-[#64CCC5] text-white font-black rounded-xl transition-all duration-300 flex items-center justify-center cursor-pointer"
+                disabled={isLoading}
+              >
+                {isLoading ? "Resetting..." : "Reset Password"}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <Link to="/trainer/login" className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Sign In
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
 }

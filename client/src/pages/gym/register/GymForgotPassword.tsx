@@ -6,26 +6,45 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { trainerForgotPassword as trainerForgotPasswordApi } from "@/services/authService"
+import { gymForgotPassword } from "@/services/authService"
 import { toast } from "react-toastify"
 import ColorBends from "@/components/ui/ColorBends"
+import { OTPDialog } from "@/components/ui/otp-dialog"
+import { ROUTES } from "@/constants/routes"
 
-export default function TrainerForgotPassword() {
+export default function GymForgotPassword() {
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showOTP, setShowOTP] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     try {
-      await trainerForgotPasswordApi(email)
-      toast.success("OTP sent to your email successfully")
-      navigate('/trainer/forgot-password/verify', { state: { email } })
+      await gymForgotPassword(email)
+      toast.success("OTP sent to your gym email successfully")
+      setShowOTP(true)
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Failed to send OTP. Please check your email and try again.")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleOTPVerify = (otp: string) => {
+    toast.success("OTP code entered successfully")
+    setShowOTP(false)
+    navigate('/gym/reset-password', { state: { email, otp } })
+  }
+
+  const handleResendOtp = async () => {
+    try {
+      await gymForgotPassword(email)
+      toast.success("OTP Resent Successfully")
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to resend OTP. Please try again.")
+      throw err
     }
   }
 
@@ -57,7 +76,7 @@ export default function TrainerForgotPassword() {
             TRAIN<span className="text-[#176B87]">UP</span>
           </h1>
           <p className="text-gray-400 text-xs font-black uppercase tracking-widest text-center">
-            Trainer Recovery
+            Gym Recovery
           </p>
         </div>
 
@@ -65,21 +84,21 @@ export default function TrainerForgotPassword() {
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-white text-2xl font-bold">Forgot Password</CardTitle>
             <CardDescription className="text-gray-400 text-sm mt-1">
-              Enter your email to receive an OTP verification code
+              Enter your registered gym email to receive an OTP verification code
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <Label htmlFor="email" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
-                  Email Address
+                  Gym Email Address
                 </Label>
                 <div className="relative mt-2">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="Enter your gym email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="bg-white/5 border-white/10 text-white pl-12 h-12 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
@@ -99,7 +118,7 @@ export default function TrainerForgotPassword() {
 
             <div className="mt-6 text-center space-y-3">
               <p className="text-gray-400 text-sm">Remembered your password?</p>
-              <Link to="/trainer/login" className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
+              <Link to={ROUTES.GYM_LOGIN} className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Sign In
               </Link>
@@ -107,6 +126,14 @@ export default function TrainerForgotPassword() {
           </CardContent>
         </Card>
       </div>
+
+      <OTPDialog
+        open={showOTP}
+        onOpenChange={setShowOTP}
+        onVerify={handleOTPVerify}
+        onResend={handleResendOtp}
+        email={email}
+      />
     </div>
   )
 }

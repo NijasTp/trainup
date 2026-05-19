@@ -5,118 +5,176 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Logo } from "@/components/ui/logo"
 import { trainerForgotPasswordResendOtp, trainerVerifyOtp as trainerForgotPasswordVerifyOtpApi } from "@/services/authService"
 import { toast } from "react-toastify"
+import ColorBends from "@/components/ui/ColorBends"
+import { ArrowLeft } from "lucide-react"
 
 export default function TrainerForgotPasswordVerifyOtp() {
-    const navigate = useNavigate()
-    const location = useLocation()
-    const { email } = location.state || { email: "" }
-    const [otp, setOtp] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState("")
-    const [resendTimer, setResendTimer] = useState(60)
-    const [canResend, setCanResend] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { email } = location.state || { email: "" }
+  const [otp, setOtp] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [resendTimer, setResendTimer] = useState(60)
+  const [canResend, setCanResend] = useState(false)
+  const [isResending, setIsResending] = useState(false)
 
-    useEffect(() => {
-        if (resendTimer > 0) {
-            const timer = setInterval(() => {
-                setResendTimer((prev) => prev - 1)
-            }, 1000)
-            return () => clearInterval(timer)
-        } else {
+  useEffect(() => {
+    if (!email) {
+      toast.error("Invalid recovery session")
+      navigate("/trainer/forgot-password")
+    }
+  }, [email, navigate])
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (resendTimer > 0) {
+      timer = setInterval(() => {
+        setResendTimer((prev) => {
+          if (prev <= 1) {
             setCanResend(true)
-        }
-    }, [resendTimer])
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setIsLoading(true)
-        setError("")
-        try {
-            await trainerForgotPasswordVerifyOtpApi(email, otp)
-            toast.success('OTP Verified Successfully')
-            navigate('/trainer/reset-password', { state: { email } })
-        } catch (err) {
-            setError("Invalid OTP. Please try again.")
-        } finally {
-            setIsLoading(false)
-        }
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
     }
-
-    const handleResendOtp = async () => {
-        if (canResend) {
-            try {
-                await trainerForgotPasswordResendOtp(email)
-                toast.success('OTP Resent Successfully')
-                setResendTimer(60)
-                setCanResend(false)
-            } catch (err) {
-                toast.error('Failed to resend OTP. Please try again.')
-            }
-        }
+    return () => {
+      if (timer) clearInterval(timer)
     }
+  }, [resendTimer])
 
-    return (
-        <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-            <div className="w-full max-w-md space-y-6">
-                <div className="text-center">
-                    <Logo className="justify-center mb-6" />
-                </div>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (otp.length !== 6) return
+    setIsLoading(true)
+    try {
+      await trainerForgotPasswordVerifyOtpApi(email, otp)
+      toast.success('OTP Verified Successfully')
+      navigate('/trainer/reset-password', { state: { email } })
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Invalid OTP. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-                <Card className="bg-gray-800 border-gray-700">
-                    <CardHeader className="text-center">
-                        <CardTitle className="text-white">Verify OTP</CardTitle>
-                        <CardDescription className="text-gray-400">
-                            Enter the OTP sent to {email || "your email"}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <Label htmlFor="otp" className="text-white">
-                                    OTP Code
-                                </Label>
-                                <div className="relative mt-2">
-                                    <Input
-                                        id="otp"
-                                        type="text"
-                                        placeholder="Enter OTP"
-                                        value={otp}
-                                        onChange={(e) => setOtp(e.target.value)}
-                                        className="bg-gray-700 border-gray-600 text-white"
-                                        required
-                                    />
-                                </div>
-                            </div>
+  const handleResendOtp = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (!canResend || isResending) return
+    setIsResending(true)
+    try {
+      await trainerForgotPasswordResendOtp(email)
+      toast.success('OTP Resent Successfully')
+      setResendTimer(60)
+      setCanResend(false)
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to resend OTP. Please try again.')
+    } finally {
+      setIsResending(false)
+    }
+  }
 
-                            {error && (
-                                <p className="text-sm text-red-500">{error}</p>
-                            )}
+  return (
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden p-4 lg:p-8">
+      {/* ColorBends Background Layer */}
+      <div className="absolute inset-0 z-0">
+        <ColorBends
+          colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
+          rotation={0}
+          speed={0.2}
+          scale={1}
+          frequency={1}
+          warpStrength={1}
+          mouseInfluence={1}
+          parallax={0.5}
+          noise={0.1}
+          transparent
+          autoRotate={0}
+          className="pointer-events-none"
+          style={{ pointerEvents: 'none' }}
+        />
+        <div className="absolute inset-0 bg-black/60"></div>
+      </div>
 
-                            <Button
-                                type="submit"
-                                className="w-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? "Verifying..." : "Verify OTP"}
-                            </Button>
-                        </form>
-
-                        <div className="mt-6 text-center space-y-2">
-                            <p className="text-gray-400 text-sm">Didn't receive an OTP?</p>
-                            <Link
-                                to="#"
-                                onClick={handleResendOtp}
-                                className={`text-sm trainup-accent font-medium ${!canResend ? 'opacity-50 cursor-not-allowed' : 'hover:underline'}`}
-                            >
-                                {canResend ? 'Resend OTP' : `Resend OTP in ${resendTimer}s`}
-                            </Link>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+      <div className="relative z-10 w-full max-w-md space-y-6">
+        <div className="text-center">
+          <h1 className="text-center text-4xl font-black tracking-tighter text-white mb-2">
+            TRAIN<span className="text-[#176B87]">UP</span>
+          </h1>
+          <p className="text-gray-400 text-xs font-black uppercase tracking-widest text-center">
+            Verification
+          </p>
         </div>
-    )
+
+        <Card className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl text-white">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-white text-2xl font-bold">Verify OTP</CardTitle>
+            <CardDescription className="text-gray-400 text-sm mt-1">
+              Enter the OTP sent to <span className="text-[#00ffd1] break-all">{email}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <Label htmlFor="otp" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1 block text-center">
+                  OTP Code
+                </Label>
+                <div className="relative mt-2">
+                  <Input
+                    id="otp"
+                    type="text"
+                    placeholder="••••••"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    maxLength={6}
+                    className="bg-white/5 border-white/10 text-white text-center tracking-[0.5em] pl-[0.25em] text-2xl h-14 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50 font-mono transition-all"
+                    required
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-12 bg-[#176B87] hover:bg-[#64CCC5] text-white font-black rounded-xl transition-all duration-300 flex items-center justify-center cursor-pointer"
+                disabled={isLoading || otp.length !== 6}
+              >
+                {isLoading ? "Verifying..." : "Verify OTP"}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center space-y-4">
+              <p className="text-gray-400 text-sm">Didn't receive an OTP?</p>
+              <div>
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={!canResend || isResending}
+                  className={`text-xs uppercase tracking-widest font-black transition-all ${
+                    !canResend || isResending
+                      ? "text-gray-500 cursor-not-allowed"
+                      : "text-[#176B87] hover:text-[#64CCC5] cursor-pointer"
+                  }`}
+                >
+                  {isResending
+                    ? "Sending..."
+                    : !canResend
+                    ? `Resend OTP in ${resendTimer}s`
+                    : 'Resend OTP'}
+                </button>
+              </div>
+              <div className="pt-2 border-t border-white/5">
+                <Link to="/trainer/login" className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Sign In
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
 }

@@ -1,17 +1,15 @@
-
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { forgotPassword } from "@/services/authService"
-import { toast } from "react-toastify"
 
 interface OTPDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onVerify: (otp: string) => void
+  onResend?: () => Promise<void>
   email: string
 }
 
@@ -19,6 +17,7 @@ export function OTPDialog({ open, onOpenChange, onVerify, email }: OTPDialogProp
   const [otp, setOtp] = useState("")
   const [isResendCooldown, setIsResendCooldown] = useState(true)
   const [cooldownSeconds, setCooldownSeconds] = useState(30)
+  const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
     let timer: NodeJS.Timeout
@@ -33,79 +32,105 @@ export function OTPDialog({ open, onOpenChange, onVerify, email }: OTPDialogProp
         })
       }, 1000)
     }
-    return () => clearInterval(timer)
+    return () => {
+      if (timer) clearInterval(timer)
+    }
   }, [isResendCooldown, cooldownSeconds])
 
   useEffect(() => {
     if (open) {
       setIsResendCooldown(true)
       setCooldownSeconds(30)
+      setOtp("")
     }
   }, [open])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onVerify(otp)
-  }
+    if (otp.length === 6) {
+      onVerify(otp)
+    }
+  };
 
   const handleResend = async () => {
-    if (isResendCooldown) {
-      toast.warning(`Please wait ${cooldownSeconds} seconds before requesting another OTP.`)
-      return
-    }
-
+    if (isResendCooldown || isSending) return;
+    setIsSending(true)
     try {
-      const response = await forgotPassword(email)
-      toast.success(response)
+      if (onVerify) {
+        // Wait for the caller's action
+        // (The parent handles the API call and resolves)
+        if (onResend) {
+          await onResend()
+        }
+      }
       setIsResendCooldown(true)
       setCooldownSeconds(30)
-    } catch (error: any) {
-      toast.error(error.message)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsSending(false)
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gray-800 border-gray-700">
+      <DialogContent className="bg-neutral-900/95 backdrop-blur-xl border border-white/10 text-white rounded-3xl p-6 lg:p-8 max-w-sm mx-auto shadow-2xl">
         <DialogHeader>
-          <DialogTitle className="text-white">Verify OTP</DialogTitle>
+          <DialogTitle className="text-white text-center text-xl font-bold tracking-tight">Verify Verification Code</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="otp" className="text-white">
-              Enter the 6-digit code sent to your email
+        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+          <div className="space-y-2 text-center">
+            <Label htmlFor="otp" className="text-gray-400 text-xs font-bold uppercase tracking-wider">
+              Enter the 6-digit code sent to
             </Label>
+            <p className="text-[#00ffd1] text-xs font-semibold break-all">{email}</p>
             <Input
               id="otp"
               type="text"
-              placeholder="000000"
+              placeholder="••••••"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
               maxLength={6}
-              className="bg-gray-700 border-gray-600 text-white mt-2"
+              className="bg-white/5 border-white/10 text-white text-center tracking-[0.5em] pl-[0.25em] text-2xl h-14 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50 focus:ring-offset-0 font-mono transition-all mt-4"
+              required
+              autoFocus
             />
           </div>
-          <div className="flex gap-2">
-            <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700 transition-colors flex-1">
-              Verify OTP
-            </Button>
+
+          <div className="flex gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="border-gray-600 text-white hover:bg-gray-700"
+              className="flex-1 border-white/10 text-gray-300 hover:bg-white/5 hover:text-white rounded-xl h-12 font-bold cursor-pointer"
             >
               Cancel
             </Button>
+            <Button
+              type="submit"
+              disabled={otp.length !== 6}
+              className="flex-1 bg-[#176B87] hover:bg-[#64CCC5] text-white disabled:opacity-50 rounded-xl h-12 font-bold transition-all duration-300 cursor-pointer"
+            >
+              Verify OTP
+            </Button>
           </div>
-          <div className="text-center">
+
+          <div className="text-center pt-2">
             <button
               type="button"
               onClick={handleResend}
-              disabled={isResendCooldown}
-              className={`text-sm trainup-accent hover:underline ${isResendCooldown ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isResendCooldown || isSending}
+              className={`text-xs uppercase tracking-widest font-black transition-all ${
+                isResendCooldown || isSending
+                  ? "text-gray-500 cursor-not-allowed"
+                  : "text-[#176B87] hover:text-[#64CCC5] cursor-pointer"
+              }`}
             >
-              {isResendCooldown ? `Resend OTP in ${cooldownSeconds}s` : 'Resend OTP'}
+              {isSending
+                ? "Sending..."
+                : isResendCooldown
+                ? `Resend OTP in ${cooldownSeconds}s`
+                : "Resend OTP"}
             </button>
           </div>
         </form>

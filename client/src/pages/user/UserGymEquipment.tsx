@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dumbbell,

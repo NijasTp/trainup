@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import Aurora from '@/components/ui/Aurora';
+import ColorBends from '@/components/ui/ColorBends';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { ROUTES } from '@/constants/routes';
@@ -198,9 +198,25 @@ const Register = () => {
     };
 
     return (
-        <div className="relative min-h-screen w-full flex items-center justify-center bg-[#030303] text-white overflow-hidden font-outfit p-4 lg:p-8">
+        <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden font-outfit p-4 lg:p-8">
+            {/* ColorBends Background Layer */}
             <div className="absolute inset-0 z-0">
-                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+                <ColorBends
+                    colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
+                    rotation={0}
+                    speed={0.2}
+                    scale={1}
+                    frequency={1}
+                    warpStrength={1}
+                    mouseInfluence={1}
+                    parallax={0.5}
+                    noise={0.1}
+                    transparent
+                    autoRotate={0}
+                    className="pointer-events-none"
+                    style={{ pointerEvents: 'none' }}
+                />
+                <div className="absolute inset-0 bg-black/60"></div>
             </div>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 w-full max-w-4xl">
@@ -210,12 +226,12 @@ const Register = () => {
                         {[1, 2, 3, 4].map((s) => (
                             <div key={s} className="flex-1 relative h-2 bg-white/5">
                                 <motion.div
-                                    className="absolute inset-0 bg-primary"
+                                    className="absolute inset-0 bg-[#176B87]"
                                     initial={{ width: 0 }}
                                     animate={{ width: step >= s ? '100%' : '0%' }}
                                     transition={{ duration: 0.5 }}
                                 />
-                                <div className={`absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-widest ${step === s ? 'text-primary' : 'text-gray-500'}`}>
+                                <div className={`absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-widest ${step === s ? 'text-[#176B87]' : 'text-gray-500'}`}>
                                     Step {s}
                                 </div>
                             </div>
@@ -223,15 +239,20 @@ const Register = () => {
                     </div>
 
                     <div className="p-8 lg:p-12 pt-16">
-                        <header className="mb-12">
-                            <h1 className="text-4xl font-black mb-3 italic tracking-tight">
-                                <span className="text-primary">GYM</span> REGISTRATION
+                        <header className="mb-12 text-center">
+                            <h1 className="text-center text-4xl font-black tracking-tighter text-white mb-2">
+                                TRAIN<span className="text-[#176B87]">UP</span>
                             </h1>
-                            <p className="text-gray-400 font-medium">Step {step}: {
-                                step === 1 ? 'General Information' :
-                                    step === 2 ? 'Media & Branding' :
-                                        step === 3 ? 'Certifications' : 'Opening Hours'
-                            }</p>
+                            <p className="text-gray-400 text-xs font-black uppercase tracking-widest text-center mb-4">
+                                Gym Partner Program
+                            </p>
+                            <p className="text-[#176B87] text-sm font-bold uppercase tracking-wide">
+                                Step {step}: {
+                                    step === 1 ? 'General Information' :
+                                        step === 2 ? 'Media & Branding' :
+                                            step === 3 ? 'Certifications' : 'Opening Hours'
+                                }
+                            </p>
                         </header>
 
                         <div className="min-h-[400px]">
@@ -389,14 +410,14 @@ const Register = () => {
 
                         <div className="flex flex-col sm:flex-row gap-4 mt-12 pt-8 border-t border-white/10">
                             {step > 1 && (
-                                <Button onClick={() => setStep(step - 1)} variant="outline" className="flex-1 h-14 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 text-lg font-bold">
+                                <Button onClick={() => setStep(step - 1)} variant="outline" className="flex-1 h-14 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-lg font-bold">
                                     <ChevronLeft className="mr-2" /> Back
                                 </Button>
                             )}
                             <Button
                                 onClick={step === 4 ? handleSubmit : nextStep}
                                 disabled={loading}
-                                className="flex-[2] h-14 rounded-2xl bg-primary hover:bg-primary/90 text-black text-lg font-black shadow-[0_4px_20px_rgba(var(--primary-rgb),0.3)] disabled:opacity-50"
+                                className="flex-[2] h-14 rounded-2xl bg-[#176B87] hover:bg-[#64CCC5] text-white text-lg font-black transition-all duration-300 disabled:opacity-50 cursor-pointer"
                             >
                                 {loading ? 'Processing...' : step === 4 ? 'Submit Application' : 'Continue'}
                                 {!loading && <ChevronRight className="ml-2" />}
