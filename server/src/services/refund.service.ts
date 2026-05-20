@@ -156,7 +156,6 @@ export class RefundService implements IRefundService {
             });
         }
 
-        logger.info(`Trainer refund applied: ${refundResult.refundAmount} for plan ${userPlanId}`);
 
         return refundResult;
     }

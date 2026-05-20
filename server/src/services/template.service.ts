@@ -136,7 +136,12 @@ export class TemplateService implements ITemplateService {
     }
 
     // User Template Management
-    async startWorkoutTemplate(userId: string, templateId: string): Promise<{ sessionId?: string }> {
+    async startWorkoutTemplate(
+        userId: string, 
+        templateId: string, 
+        scheduleType: 'contiguous' | 'weekly' = 'contiguous', 
+        weeklyDays: number[] = []
+    ): Promise<{ sessionId?: string }> {
         const template = await this._workoutTemplateRepo.findById(templateId);
         if (!template) throw new AppError("Template not found", STATUS_CODE.NOT_FOUND);
 
@@ -153,13 +158,23 @@ export class TemplateService implements ITemplateService {
             requiredEquipment: template.requiredEquipment,
             days: template.days,
             startDate: new Date(),
-            status: 'active'
+            status: 'active',
+            scheduleType,
+            weeklyDays
         });
 
         await this._userRepo.updateUser(userId, {
             activeWorkoutTemplate: snapshot._id as unknown as Types.ObjectId,
-            workoutTemplateStartDate: new Date()
-        });
+            workoutTemplateStartDate: new Date(),
+            $push: {
+                activeWorkoutTemplates: {
+                    templateId: snapshot._id as unknown as Types.ObjectId,
+                    startDate: new Date(),
+                    scheduleType,
+                    weeklyDays
+                }
+            }
+        } as any);
 
         // Increment popularity count
         await this._workoutTemplateRepo.update(templateId, {
@@ -197,7 +212,8 @@ export class TemplateService implements ITemplateService {
     async stopWorkoutTemplate(userId: string): Promise<void> {
         await this._userRepo.updateUser(userId, {
             activeWorkoutTemplate: null,
-            workoutTemplateStartDate: null
+            workoutTemplateStartDate: null,
+            activeWorkoutTemplates: []
         });
     }
 

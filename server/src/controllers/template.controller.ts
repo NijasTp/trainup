@@ -128,9 +128,9 @@ export class TemplateController {
     async startWorkoutTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = (req.user as JwtPayload).id;
-            const { templateId } = req.body;
+            const { templateId, scheduleType, weeklyDays } = req.body;
             if (!templateId) throw new AppError("Template ID is required", STATUS_CODE.BAD_REQUEST);
-            const result = await this._templateService.startWorkoutTemplate(userId, templateId);
+            const result = await this._templateService.startWorkoutTemplate(userId, templateId, scheduleType, weeklyDays);
             res.status(STATUS_CODE.OK).json({ message: "Workout template started", ...result });
         } catch (err) {
             next(err);

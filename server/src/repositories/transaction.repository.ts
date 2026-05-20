@@ -105,7 +105,14 @@ export class TransactionRepository implements ITransactionRepository {
     planType: string
   ): Promise<{ transactions: ITransactionDTO[]; totalPages: number; totalRevenue: number; total: number }> {
     const query: FilterQuery<ITransaction> = { trainerId };
-    if (status && status !== 'all') query.status = status;
+    if (status && status !== 'all') {
+      if (status === 'refund') {
+        query.transactionType = 'credit';
+      } else {
+        query.status = status;
+        query.transactionType = 'debit';
+      }
+    }
     if (planType && planType !== 'all') query.planType = planType;
     if (search) {
       query.$or = [
@@ -267,7 +274,7 @@ export class TransactionRepository implements ITransactionRepository {
     const planDistribution = await TransactionModel.aggregate([
       {
         $match: {
-          trainerId,
+          trainerId: new Types.ObjectId(trainerId),
           status: 'completed'
         }
       },

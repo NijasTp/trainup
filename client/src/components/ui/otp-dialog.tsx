@@ -2,7 +2,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 interface OTPDialogProps {
@@ -13,7 +12,7 @@ interface OTPDialogProps {
   email: string
 }
 
-export function OTPDialog({ open, onOpenChange, onVerify, email }: OTPDialogProps) {
+export function OTPDialog({ open, onOpenChange, onVerify, onResend, email }: OTPDialogProps) {
   const [otp, setOtp] = useState("")
   const [isResendCooldown, setIsResendCooldown] = useState(true)
   const [cooldownSeconds, setCooldownSeconds] = useState(30)
@@ -56,12 +55,8 @@ export function OTPDialog({ open, onOpenChange, onVerify, email }: OTPDialogProp
     if (isResendCooldown || isSending) return;
     setIsSending(true)
     try {
-      if (onVerify) {
-        // Wait for the caller's action
-        // (The parent handles the API call and resolves)
-        if (onResend) {
-          await onResend()
-        }
+      if (onResend) {
+        await onResend()
       }
       setIsResendCooldown(true)
       setCooldownSeconds(30)
@@ -79,22 +74,47 @@ export function OTPDialog({ open, onOpenChange, onVerify, email }: OTPDialogProp
           <DialogTitle className="text-white text-center text-xl font-bold tracking-tight">Verify Verification Code</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-          <div className="space-y-2 text-center">
-            <Label htmlFor="otp" className="text-gray-400 text-xs font-bold uppercase tracking-wider">
-              Enter the 6-digit code sent to
-            </Label>
-            <p className="text-[#00ffd1] text-xs font-semibold break-all">{email}</p>
-            <Input
-              id="otp"
-              type="text"
-              placeholder="••••••"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              maxLength={6}
-              className="bg-white/5 border-white/10 text-white text-center tracking-[0.5em] pl-[0.25em] text-2xl h-14 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50 focus:ring-offset-0 font-mono transition-all mt-4"
-              required
-              autoFocus
-            />
+          <div className="space-y-4 text-center">
+            <div className="space-y-1">
+              <Label htmlFor="otp" className="text-gray-400 text-xs font-bold uppercase tracking-wider">
+                Enter the 6-digit code sent to
+              </Label>
+              <p className="text-[#00ffd1] text-xs font-semibold break-all">{email}</p>
+            </div>
+            
+            <div className="relative flex justify-center gap-3 py-2">
+              <input
+                id="otp"
+                type="text"
+                pattern="\d*"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                maxLength={6}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                required
+                autoFocus
+              />
+              {[...Array(6)].map((_, index) => {
+                const char = otp.split("")[index] || "";
+                const isFocused = otp.length === index;
+                return (
+                  <div
+                    key={index}
+                    className={`w-12 h-14 bg-white/5 border-2 rounded-xl flex items-center justify-center text-xl font-mono font-bold transition-all duration-300 ${
+                      isFocused 
+                        ? "border-[#00ffd1] shadow-[0_0_15px_rgba(0,255,209,0.35)] bg-white/10 text-[#00ffd1]" 
+                        : char 
+                        ? "border-white/20 text-white" 
+                        : "border-white/10 text-gray-500"
+                    }`}
+                  >
+                    {char || (isFocused ? <span className="animate-pulse text-[#00ffd1]">|</span> : "•")}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex gap-3">

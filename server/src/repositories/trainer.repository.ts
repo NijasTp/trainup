@@ -5,6 +5,7 @@ import { Types } from 'mongoose'
 import { IUser, UserModel } from '../models/user.model'
 import { TrainerResponseDto, ClientDto, TrainerDto } from '../dtos/trainer.dto'
 import { SlotModel } from '../models/slot.model'
+import { VideoCallModel } from '../models/videoCall.model'
 import { BaseRepository } from './base.repository'
 
 @injectable()
@@ -268,7 +269,7 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
   async addClient(trainerId: string, userId: string): Promise<void> {
     await TrainerModel.findByIdAndUpdate(
       trainerId,
-      { $push: { clients: new Types.ObjectId(userId) } },
+      { $addToSet: { clients: new Types.ObjectId(userId) } },
       { new: true }
     ).exec()
   }
@@ -326,7 +327,7 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
           }
         }
       },
-      { $sort: { planPriority: -1, name: 1 } },
+      { $sort: { subscriptionStartDate: -1, name: 1 } },
       { $skip: skip },
       { $limit: limit },
       {
@@ -372,9 +373,11 @@ export class TrainerRepository extends BaseRepository<ITrainer> implements ITrai
   }
 
   async countCompletedSessions(trainerId: string): Promise<number> {
-    return await SlotModel.countDocuments({
-      trainerId,
-      status: 'completed'
+    const slots = await SlotModel.find({ trainerId }).select('_id').exec()
+    const slotIds = slots.map(slot => slot._id)
+    return await VideoCallModel.countDocuments({
+      slotId: { $in: slotIds },
+      status: 'ended'
     }).exec()
   }
 

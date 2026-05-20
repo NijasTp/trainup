@@ -69,11 +69,42 @@ export default function TrainerTransactions() {
     setPage(1);
   };
 
+  const handleExportCSV = () => {
+    if (!transactions.transactions.length) {
+      toast.error("No transactions to export");
+      return;
+    }
+
+    const headers = ["Client Name", "Client Email", "Plan Type", "Date", "Amount (INR)", "Type", "Status", "Transaction ID"];
+    const rows = transactions.transactions.map(tx => [
+      typeof tx.userId === 'object' ? tx.userId?.name : "Unknown",
+      typeof tx.userId === 'object' ? tx.userId?.email : "Unknown",
+      tx.planType.toUpperCase(),
+      new Date(tx.createdAt).toLocaleDateString(),
+      tx.transactionType === 'credit' ? -(tx.trainerEarnings || tx.amount) : (tx.trainerEarnings || tx.amount),
+      tx.transactionType === 'credit' ? "REFUND" : "EARNING",
+      tx.status.toUpperCase(),
+      tx.razorpayOrderId || tx.stripeSessionId || tx._id
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map(e => e.map(val => `"${val}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `earnings_history_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Transaction history exported successfully!");
+  };
+
   const getPlanColor = (plan: string) => {
     switch (plan.toLowerCase()) {
       case 'basic': return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
       case 'premium': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
       case 'pro': return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+      case 'session_bundle': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
       default: return 'bg-white/5 text-gray-400 border-white/10';
     }
   };
@@ -109,7 +140,7 @@ export default function TrainerTransactions() {
             </p>
           </div>
           <div className="flex gap-4">
-            <Button variant="outline" className="bg-white/5 border-white/10 text-gray-400 hover:text-white rounded-2xl h-14 px-8 font-black italic uppercase text-xs">
+            <Button onClick={handleExportCSV} variant="outline" className="bg-white/5 border-white/10 text-gray-400 hover:text-white rounded-2xl h-14 px-8 font-black italic uppercase text-xs">
               <Download size={16} className="mr-2" /> Export History
             </Button>
           </div>
@@ -176,6 +207,7 @@ export default function TrainerTransactions() {
                   <SelectItem value="completed">SUCCESS</SelectItem>
                   <SelectItem value="failed">FAILED</SelectItem>
                   <SelectItem value="pending">PENDING</SelectItem>
+                  <SelectItem value="refund">REFUND</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={planFilter} onValueChange={(v) => { setPlanFilter(v); setPage(1); }}>
@@ -187,6 +219,7 @@ export default function TrainerTransactions() {
                   <SelectItem value="basic">BASIC</SelectItem>
                   <SelectItem value="premium">PREMIUM</SelectItem>
                   <SelectItem value="pro">PRO</SelectItem>
+                  <SelectItem value="session_bundle">SESSION BUNDLE</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -223,7 +256,7 @@ export default function TrainerTransactions() {
                         </h3>
                         <div className="flex flex-wrap items-center gap-4">
                           <Badge className={cn("px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest italic border", getPlanColor(tx.planType))}>
-                            {tx.planType} Plan
+                            {tx.planType.replace('_', ' ')} Plan
                           </Badge>
                           <span className="text-[10px] text-gray-600 font-black italic uppercase tracking-wider flex items-center gap-2">
                             <Calendar size={12} className="text-gray-700" /> {formatDate(tx.createdAt)}
@@ -233,22 +266,37 @@ export default function TrainerTransactions() {
                     </div>
 
                     <div className="flex flex-col md:items-end gap-3">
-                      <div className="text-3xl font-black text-white italic tracking-tighter tabular-nums underline decoration-cyan-500/20 underline-offset-8">
-                        {formatAmount(tx.trainerEarnings || tx.amount)}
+                      <div className={cn(
+                        "text-3xl font-black italic tracking-tighter tabular-nums underline underline-offset-8",
+                        tx.transactionType === 'credit' 
+                          ? "text-rose-500 decoration-rose-500/20" 
+                          : "text-white decoration-cyan-500/20"
+                      )}>
+                        {tx.transactionType === 'credit' ? "-" : ""}{formatAmount(tx.trainerEarnings || tx.amount)}
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "h-2 w-2 rounded-full",
-                          tx.status === 'completed' ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-rose-500"
-                        )} />
-                        <span className={cn(
-                          "text-[10px] font-black uppercase tracking-[0.2em] italic",
-                          tx.status === 'completed' ? "text-emerald-500" : "text-rose-500"
-                        )}>
-                          {tx.status}
-                        </span>
+                        {tx.transactionType === 'credit' ? (
+                          <Badge className="bg-rose-500/10 text-rose-400 border border-rose-500/20 font-black uppercase tracking-widest text-[8px] py-0.5 rounded-full">
+                            Refund
+                          </Badge>
+                        ) : (
+                          <>
+                            <div className={cn(
+                              "h-2 w-2 rounded-full",
+                              tx.status === 'completed' ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-rose-500"
+                            )} />
+                            <span className={cn(
+                              "text-[10px] font-black uppercase tracking-[0.2em] italic",
+                              tx.status === 'completed' ? "text-emerald-500" : "text-rose-500"
+                            )}>
+                              {tx.status}
+                            </span>
+                          </>
+                        )}
                       </div>
-                      <p className="text-[8px] text-gray-700 font-black uppercase tracking-widest">RID: {tx.razorpayOrderId?.slice(-12)}</p>
+                      <p className="text-[8px] text-gray-700 font-black uppercase tracking-widest">
+                        {tx.razorpayOrderId ? `RID: ${tx.razorpayOrderId.slice(-12)}` : tx.stripeSessionId ? `SID: ${tx.stripeSessionId.slice(-12)}` : ""}
+                      </p>
                     </div>
                   </div>
                 ))}

@@ -375,7 +375,7 @@ export class TrainerService implements ITrainerService {
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
     const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0)
 
-    const totalClients = trainer.clients.length
+    const totalClients = new Set(trainer.clients.map(id => id.toString())).size
 
     const newClientsThisMonth = await this._trainerRepo.countNewClients(
       trainerId,

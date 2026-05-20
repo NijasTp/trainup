@@ -117,22 +117,42 @@ export default function TrainerForgotPasswordVerifyOtp() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <Label htmlFor="otp" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1 block text-center">
+              <div className="space-y-4 text-center">
+                <Label htmlFor="otp" className="text-gray-300 font-bold uppercase tracking-wider text-xs block text-center">
                   OTP Code
                 </Label>
-                <div className="relative mt-2">
-                  <Input
+                <div className="relative flex justify-center gap-3 py-2">
+                  <input
                     id="otp"
                     type="text"
-                    placeholder="••••••"
+                    pattern="\d*"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     maxLength={6}
-                    className="bg-white/5 border-white/10 text-white text-center tracking-[0.5em] pl-[0.25em] text-2xl h-14 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50 font-mono transition-all"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     required
                     autoFocus
                   />
+                  {[...Array(6)].map((_, index) => {
+                    const char = otp.split("")[index] || "";
+                    const isFocused = otp.length === index;
+                    return (
+                      <div
+                        key={index}
+                        className={`w-12 h-14 bg-white/5 border-2 rounded-xl flex items-center justify-center text-xl font-mono font-bold transition-all duration-300 ${
+                          isFocused 
+                            ? "border-[#00ffd1] shadow-[0_0_15px_rgba(0,255,209,0.35)] bg-white/10 text-[#00ffd1]" 
+                            : char 
+                            ? "border-white/20 text-white" 
+                            : "border-white/10 text-gray-500"
+                        }`}
+                      >
+                        {char || (isFocused ? <span className="animate-pulse text-[#00ffd1]">|</span> : "•")}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

@@ -3,11 +3,14 @@ import { motion } from 'framer-motion';
 import { Mail, ShieldCheck, ArrowRight, RefreshCw, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import Aurora from '@/components/ui/Aurora';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { ROUTES } from '@/constants/routes';
 import { requestGymAuthOtp, verifyGymAuthOtp } from '@/services/authService';
+
+const AURORA_COLORS = ["#020617", "#0f172a", "#020617"];
 
 const GymOtpVerification = () => {
     const [email, setEmail] = useState('');
@@ -86,7 +89,7 @@ const GymOtpVerification = () => {
         <div className="relative min-h-screen w-full flex items-center justify-center bg-[#030303] text-white overflow-hidden font-outfit p-4">
             <div className="absolute inset-0 z-0">
                 <Aurora
-                    colorStops={["#020617", "#0f172a", "#020617"]}
+                    colorStops={AURORA_COLORS}
                     amplitude={1.1}
                     blend={0.6}
                 />
@@ -117,7 +120,7 @@ const GymOtpVerification = () => {
                                     type="email"
                                     placeholder="Business Email"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                                     className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl focus:border-primary/50 transition-all text-lg"
                                     disabled={loading}
                                 />
@@ -132,17 +135,44 @@ const GymOtpVerification = () => {
                         </form>
                     ) : (
                         <form onSubmit={handleVerifyOtp} className="space-y-6">
-                            <div className="relative group">
-                                <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
-                                <Input
-                                    type="text"
-                                    placeholder="Enter 6-digit OTP"
-                                    value={otp}
-                                    onChange={(e) => setOtp(e.target.value)}
-                                    maxLength={6}
-                                    className="bg-white/5 border-white/10 h-14 pl-12 rounded-xl focus:border-primary/50 transition-all text-lg tracking-[0.5em] font-mono text-center"
-                                    disabled={loading}
-                                />
+                            <div className="space-y-4 text-center">
+                                <Label htmlFor="otp" className="text-gray-300 font-bold uppercase tracking-wider text-xs block text-center">
+                                    OTP Code
+                                </Label>
+                                <div className="relative flex justify-center gap-3 py-2">
+                                    <input
+                                        id="otp"
+                                        type="text"
+                                        pattern="\d*"
+                                        inputMode="numeric"
+                                        autoComplete="one-time-code"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                        maxLength={6}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        disabled={loading}
+                                        required
+                                        autoFocus
+                                    />
+                                    {[...Array(6)].map((_, index) => {
+                                        const char = otp.split("")[index] || "";
+                                        const isFocused = otp.length === index;
+                                        return (
+                                          <div
+                                            key={index}
+                                            className={`w-12 h-14 bg-white/5 border-2 rounded-xl flex items-center justify-center text-xl font-mono font-bold transition-all duration-300 ${
+                                              isFocused 
+                                                ? "border-[#00ffd1] shadow-[0_0_15px_rgba(0,255,209,0.35)] bg-white/10 text-[#00ffd1]" 
+                                                : char 
+                                                ? "border-white/20 text-white" 
+                                                : "border-white/10 text-gray-500"
+                                            }`}
+                                          >
+                                            {char || (isFocused ? <span className="animate-pulse text-[#00ffd1]">|</span> : "•")}
+                                          </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                             <Button
                                 type="submit"

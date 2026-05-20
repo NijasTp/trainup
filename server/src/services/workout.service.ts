@@ -1,4 +1,5 @@
 import { injectable, inject } from 'inversify'
+import { Types } from 'mongoose'
 import TYPES from '../core/types/types'
 import { IExerciseUpdate, IWorkoutService, IWorkoutSessionPayload } from '../core/interfaces/services/IWorkoutService'
 import { INotificationService } from '../core/interfaces/services/INotificationService'
@@ -284,13 +285,35 @@ export class WorkoutService implements IWorkoutService {
         }
 
         if (templateData) {
+          const scheduleType = (activeDetails as any).scheduleType || (templateData as any).scheduleType || 'contiguous';
+          const weeklyDays = (activeDetails as any).weeklyDays || (templateData as any).weeklyDays || [];
+
+          let diffDays = -1;
           const startDate = new Date(activeDetails.startDate);
           startDate.setHours(0, 0, 0, 0);
           const currentDate = new Date(date);
           currentDate.setHours(0, 0, 0, 0);
 
-          const diffTime = currentDate.getTime() - startDate.getTime();
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          if (scheduleType === 'weekly' && weeklyDays.length > 0) {
+            // Check if currentDate is a training day
+            if (weeklyDays.includes(currentDate.getDay())) {
+              // Count training days between startDate and currentDate (inclusive)
+              let count = 0;
+              const tempDate = new Date(startDate);
+              while (tempDate <= currentDate) {
+                if (weeklyDays.includes(tempDate.getDay())) {
+                  count++;
+                }
+                tempDate.setDate(tempDate.getDate() + 1);
+              }
+              if (count > 0) {
+                diffDays = count - 1;
+              }
+            }
+          } else {
+            const diffTime = currentDate.getTime() - startDate.getTime();
+            diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          }
 
           // Calculate total duration based on repetitions
           const repetitions = templateData.repetitions || 1;
@@ -322,16 +345,12 @@ export class WorkoutService implements IWorkoutService {
                   givenBy: templateData.createdByType === 'Trainer' ? 'trainer' : 'admin',
                   date: date,
                   time: "08:00", // Default virtual time
-                  exercises: templateDay.exercises.map((ex: { exerciseId: string, name: string, sets: number, reps: number, time?: string }) => ({
+                  exercises: templateDay.exercises.map((ex: any) => ({
                     id: ex.exerciseId,
-                    exerciseId: ex.exerciseId,
                     name: ex.name,
                     sets: ex.sets,
-                    reps: ex.reps,
-                    time: ex.time,
-                    sessions: day ? day.sessions.filter((s: unknown) =>
-                      (s as IWorkoutSession).exercises.some((se: { exerciseId: string }) => se.exerciseId.toString() === ex.exerciseId.toString())
-                    ) : []
+                    reps: ex.reps !== undefined ? String(ex.reps) : undefined,
+                    time: ex.time
                   })),
                   goal: templateData.goal || '',
                   notes: `From active template: ${templateData.title}`,

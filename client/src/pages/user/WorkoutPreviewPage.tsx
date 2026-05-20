@@ -7,19 +7,27 @@ import {
     Play,
     Activity,
     Dumbbell,
+    Calendar as CalendarIcon,
+    Check
 } from "lucide-react";
-import { getWorkoutTemplateById, startWorkoutTemplate } from "@/services/templateService";
+import { getWorkoutTemplateById, startWorkoutTemplate, stopWorkoutTemplate } from "@/services/templateService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import Aurora from "@/components/ui/Aurora";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import type { IWorkoutTemplate } from "@/interfaces/template/IWorkoutTemplate";
+import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function WorkoutPreviewPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [template, setTemplate] = useState<IWorkoutTemplate | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+    const [scheduleType, setScheduleType] = useState<'contiguous' | 'weekly'>('contiguous');
+    const [weeklyDays, setWeeklyDays] = useState<number[]>([]);
+    const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -33,7 +41,7 @@ export default function WorkoutPreviewPage() {
             const response = await getWorkoutTemplateById(id!);
             setTemplate(response.template || response);
         } catch (err: any) {
-            toast.error(err.response.data.error || "Failed to load template details");
+            toast.error(err.response?.data?.error || "Failed to load template details");
         } finally {
             setIsLoading(false);
         }
@@ -42,16 +50,34 @@ export default function WorkoutPreviewPage() {
     const handleStartWorkout = async () => {
         if (!template) return;
         try {
-            const res = await startWorkoutTemplate(template._id);
-            if (res.sessionId) {
-                toast.success("Workout session created!");
-                navigate(`/workouts/${res.sessionId}/start`);
-            } else {
-                toast.success("Program added to your active programs!");
-                navigate("/workouts");
+            if (template.type === 'one-time') {
+                const res = await startWorkoutTemplate(template._id);
+                if (res.sessionId) {
+                    toast.success("Workout session created!");
+                    navigate(`/workouts/${res.sessionId}/start`);
+                }
+                return;
             }
+
+            // Series templates open the scheduler
+            setIsScheduleOpen(true);
         } catch (err: any) {
-            toast.error(err.response.data.error || "Failed to start workout");
+            toast.error(err.response?.data?.error || "Failed to start workout");
+        }
+    };
+
+    const confirmStartTemplate = async () => {
+        if (!template) return;
+        try {
+            if (scheduleType === 'weekly' && weeklyDays.length === 0) {
+                toast.error("Please select at least one day for weekly scheduling");
+                return;
+            }
+            await startWorkoutTemplate(template._id, scheduleType, weeklyDays);
+            setIsScheduleOpen(false);
+            setIsSuccessOpen(true);
+        } catch (err: any) {
+            toast.error(err.response?.data?.error || "Failed to start workout program schedule");
         }
     };
 
@@ -230,6 +256,178 @@ export default function WorkoutPreviewPage() {
                     </motion.div>
                 </div>
             </div>
+
+            {/* STUNNING GLASS SCHEDULING DIALOG */}
+            <Dialog open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
+                <DialogContent className="max-w-xl bg-slate-950/90 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 text-white">
+                    <DialogHeader>
+                        <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                            <CalendarIcon className="h-8 w-8" />
+                        </div>
+                        <DialogTitle className="text-3xl font-black italic tracking-tight text-center uppercase">
+                            Configure Training Protocol
+                        </DialogTitle>
+                        <p className="text-slate-400 text-sm text-center">
+                            Select how you want to schedule the template days to fit your routine.
+                        </p>
+                    </DialogHeader>
+
+                    <div className="space-y-6 py-6">
+                        {/* Selector Tabs */}
+                        <div className="grid grid-cols-2 gap-4 p-1.5 bg-white/5 border border-white/5 rounded-3xl">
+                            <button
+                                onClick={() => setScheduleType('contiguous')}
+                                className={cn(
+                                    "py-4 rounded-2xl font-black italic text-xs tracking-wider transition-all uppercase",
+                                    scheduleType === 'contiguous'
+                                        ? "bg-primary text-white shadow-lg"
+                                        : "text-slate-400 hover:text-white"
+                                )}
+                            >
+                                Contiguous Rolling
+                            </button>
+                            <button
+                                onClick={() => setScheduleType('weekly')}
+                                className={cn(
+                                    "py-4 rounded-2xl font-black italic text-xs tracking-wider transition-all uppercase",
+                                    scheduleType === 'weekly'
+                                        ? "bg-primary text-white shadow-lg"
+                                        : "text-slate-400 hover:text-white"
+                                )}
+                            >
+                                Custom Weekly
+                            </button>
+                        </div>
+
+                        {/* Contiguous Detail */}
+                        {scheduleType === 'contiguous' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 text-center text-slate-400 text-sm leading-relaxed"
+                            >
+                                Days roll sequentially one after another. Perfect for daily progression or dynamic rest patterns.
+                            </motion.div>
+                        )}
+
+                        {/* Custom Weekly days checklist */}
+                        {scheduleType === 'weekly' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-4"
+                            >
+                                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest text-center">
+                                    Choose targeted training days
+                                </p>
+                                <div className="flex justify-center gap-2">
+                                    {[
+                                        { label: "S", value: 0 },
+                                        { label: "M", value: 1 },
+                                        { label: "T", value: 2 },
+                                        { label: "W", value: 3 },
+                                        { label: "T", value: 4 },
+                                        { label: "F", value: 5 },
+                                        { label: "S", value: 6 },
+                                    ].map((day) => {
+                                        const isSelected = weeklyDays.includes(day.value);
+                                        return (
+                                            <button
+                                                key={day.value}
+                                                onClick={() => {
+                                                    if (weeklyDays.includes(day.value)) {
+                                                        setWeeklyDays(weeklyDays.filter(d => d !== day.value));
+                                                    } else {
+                                                        setWeeklyDays([...weeklyDays, day.value].sort());
+                                                    }
+                                                }}
+                                                className={cn(
+                                                    "w-12 h-12 rounded-full font-black text-sm flex items-center justify-center border transition-all duration-300 shadow-md",
+                                                    isSelected
+                                                        ? "bg-primary border-primary text-white scale-110 shadow-primary/20"
+                                                        : "bg-white/5 border-white/10 text-slate-400 hover:border-slate-500 hover:text-white"
+                                                )}
+                                            >
+                                                {day.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <p className="text-[10px] text-center text-slate-500 uppercase tracking-widest font-semibold">
+                                    Training mapped on: {weeklyDays.length > 0 ? weeklyDays.map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ") : "No days selected"}
+                                </p>
+                            </motion.div>
+                        )}
+                    </div>
+
+                    <div className="flex gap-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsScheduleOpen(false)}
+                            className="flex-1 h-14 rounded-2xl border-white/10 hover:bg-white/5 font-black uppercase text-xs tracking-wider"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={confirmStartTemplate}
+                            className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-wider shadow-lg shadow-primary/20"
+                        >
+                            Activate Protocol
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* STUNNING GLASS SUCCESS CONFIRMATION OVERLAY */}
+            <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
+                <DialogContent className="max-w-md bg-slate-950/90 backdrop-blur-2xl border border-primary/30 rounded-[3rem] p-10 text-white text-center">
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="space-y-6"
+                    >
+                        <div className="mx-auto w-24 h-24 rounded-full bg-primary/20 text-primary flex items-center justify-center shadow-2xl shadow-primary/30 border border-primary/20">
+                            <Check className="h-12 w-12" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <h2 className="text-3xl font-black italic tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-white via-primary to-blue-500">
+                                Protocol Engaged
+                            </h2>
+                            <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-xs">
+                                Training flow integrated
+                            </p>
+                        </div>
+
+                        <div className="p-5 rounded-3xl bg-white/5 border border-white/5 text-slate-300 space-y-2 text-left text-xs font-semibold">
+                            <div className="flex justify-between border-b border-white/5 pb-2">
+                                <span className="text-slate-500 uppercase">Template:</span>
+                                <span className="text-white uppercase font-black">{template?.title}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-white/5 pb-2">
+                                <span className="text-slate-500 uppercase">Schedule Type:</span>
+                                <span className="text-primary uppercase font-black">{scheduleType === 'weekly' ? 'Custom Weekly' : 'Contiguous Rolling'}</span>
+                            </div>
+                            {scheduleType === 'weekly' && (
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500 uppercase">Training Days:</span>
+                                    <span className="text-white font-black">{weeklyDays.map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ")}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <Button
+                            onClick={() => {
+                                setIsSuccessOpen(false);
+                                navigate("/workouts");
+                            }}
+                            className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white font-black uppercase text-xs tracking-wider shadow-lg shadow-primary/20 animate-bounce"
+                        >
+                            Begin Protocol
+                        </Button>
+                    </motion.div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -14,6 +14,8 @@ export interface IWeightLog {
 export interface IActiveTemplate {
   templateId: Types.ObjectId | string;
   startDate: Date;
+  scheduleType?: 'contiguous' | 'weekly';
+  weeklyDays?: number[];
 }
 
 export interface IUser extends Document {
@@ -113,7 +115,9 @@ const userSchema: Schema<IUser> = new Schema(
     activeWorkoutTemplates: {
       type: [{
         templateId: { type: Schema.Types.ObjectId, ref: "WorkoutSnapshot" },
-        startDate: { type: Date }
+        startDate: { type: Date },
+        scheduleType: { type: String, enum: ['contiguous', 'weekly'], default: 'contiguous' },
+        weeklyDays: { type: [Number], default: [] }
       }],
       default: []
     },

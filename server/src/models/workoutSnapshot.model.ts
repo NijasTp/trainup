@@ -24,6 +24,8 @@ export interface IWorkoutSnapshot extends Document {
     }>;
     startDate: Date;
     status: 'active' | 'completed' | 'abandoned';
+    scheduleType?: 'contiguous' | 'weekly';
+    weeklyDays?: number[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -51,7 +53,9 @@ const WorkoutSnapshotSchema = new Schema<IWorkoutSnapshot>({
         }]
     }],
     startDate: { type: Date, default: Date.now },
-    status: { type: String, enum: ['active', 'completed', 'abandoned'], default: 'active' }
+    status: { type: String, enum: ['active', 'completed', 'abandoned'], default: 'active' },
+    scheduleType: { type: String, enum: ['contiguous', 'weekly'], default: 'contiguous' },
+    weeklyDays: { type: [Number], default: [] }
 }, { timestamps: true });
 
 export const WorkoutSnapshotModel = mongoose.model<IWorkoutSnapshot>("WorkoutSnapshot", WorkoutSnapshotSchema);

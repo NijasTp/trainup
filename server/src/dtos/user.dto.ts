@@ -44,7 +44,9 @@ export class UserDto {
       dietaryPreferences: user.dietaryPreferences,
       activeWorkoutTemplates: user.activeWorkoutTemplates?.map(t => ({
         templateId: t.templateId.toString(),
-        startDate: t.startDate
+        startDate: t.startDate,
+        scheduleType: t.scheduleType,
+        weeklyDays: t.weeklyDays
       })) || [],
       activeWorkoutTemplate: user.activeWorkoutTemplate?.toString(),
       workoutTemplateStartDate: user.workoutTemplateStartDate || undefined,
@@ -108,6 +110,8 @@ export class LoginResponseDto {
 export class ActiveTemplateDto {
   templateId: string;
   startDate: Date;
+  scheduleType?: 'contiguous' | 'weekly';
+  weeklyDays?: number[];
 }
 
 export class UserResponseDto {

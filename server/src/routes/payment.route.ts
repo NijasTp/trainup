@@ -4,14 +4,16 @@ import TYPES from "../core/types/types";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { PaymentTrainerController } from "../controllers/payment.trainer.controller";
 import { PaymentGymController } from "../controllers/payment.gym.controller";
+import { PaymentController } from "../controllers/payment.controller";
 
 const router = express.Router();
 
 const paymentTrainerController = container.get<PaymentTrainerController>(TYPES.PaymentTrainerController);
 const paymentGymController = container.get<PaymentGymController>(TYPES.PaymentGymController);
+const paymentController = container.get<PaymentController>(TYPES.PaymentController);
 
 // Stripe Trainer Routes
-router.get("/transactions", authMiddleware, paymentTrainerController.getTransactions.bind(paymentTrainerController));
+router.get("/transactions", authMiddleware, paymentController.getTransactions.bind(paymentController));
 router.get("/check-pending", authMiddleware, paymentTrainerController.checkPendingTransaction.bind(paymentTrainerController));
 router.post("/cleanup-pending", authMiddleware, paymentTrainerController.cleanupPendingTransactions.bind(paymentTrainerController));
 

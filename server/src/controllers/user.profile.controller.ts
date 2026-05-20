@@ -62,11 +62,15 @@ export class UserProfileController {
             
             const populatedTemplates = await Promise.all(
                 (user.activeWorkoutTemplates || []).map(async (t: any) => {
-                    const snapshot = await WorkoutSnapshotModel.findById(t.templateId).select('title image').lean();
+                    const snapshot = await WorkoutSnapshotModel.findById(t.templateId).select('title image originalTemplateId scheduleType weeklyDays days').lean();
                     return {
                         ...t,
                         title: snapshot?.title || 'Unknown Workout',
-                        image: snapshot?.image || ''
+                        image: snapshot?.image || '',
+                        originalTemplateId: snapshot?.originalTemplateId?.toString(),
+                        scheduleType: snapshot?.scheduleType || t.scheduleType || 'contiguous',
+                        weeklyDays: snapshot?.weeklyDays || t.weeklyDays || [],
+                        daysCount: snapshot?.days?.length || 0
                     };
                 })
             );

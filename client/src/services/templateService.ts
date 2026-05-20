@@ -20,8 +20,8 @@ export const getWorkoutTemplateById = async (id: string) => {
     return res.data;
 };
 
-export const startWorkoutTemplate = async (templateId: string) => {
-    const res = await API.post(API_ROUTES.TEMPLATE.WORKOUT.START, { templateId });
+export const startWorkoutTemplate = async (templateId: string, scheduleType?: 'contiguous' | 'weekly', weeklyDays?: number[]) => {
+    const res = await API.post(API_ROUTES.TEMPLATE.WORKOUT.START, { templateId, scheduleType, weeklyDays });
     return res.data;
 };
 
