@@ -34,7 +34,6 @@ export default function Diets() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [confirmingMeal, setConfirmingMeal] = useState<{ id: string; isTrainer: boolean; isTemplate?: boolean } | null>(null);
-  const [templateInfo, setTemplateInfo] = useState<{ name: string; day: number; duration: number } | null>(null);
 
 
   const isMealMissed = (meal: Meal) => {
@@ -59,13 +58,7 @@ export default function Diets() {
         const meals = data.meals || [];
         const templateMeals = data.templateMeals || [];
 
-        if (data.templateName) {
-          setTemplateInfo({
-            name: data.templateName,
-            day: data.templateDay || 1,
-            duration: data.templateDuration || 7
-          });
-        }
+
 
         const trainerMeals = meals
           .filter((meal) => meal.source === 'trainer' || meal.source === 'admin')

@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Flame } from 'lucide-react';
 import { StreakCalendar } from './StreakCalendar';
 import { getAllSessions } from '@/services/workoutService';
-import { Button } from '@/components/ui/button';
 
 interface StreakModalProps {
     isOpen: boolean;

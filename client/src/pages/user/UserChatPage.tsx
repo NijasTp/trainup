@@ -24,8 +24,7 @@ import {
     X,
     Play,
     StopCircle,
-    CheckCircle2,
-    Mic2
+    CheckCircle2
 } from "lucide-react";
 import {
     DropdownMenu,

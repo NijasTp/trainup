@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { CheckCircle2, Loader2, ArrowRight, ShieldCheck, Dumbbell } from "lucide-react";
+import { CheckCircle2, Loader2, ArrowRight, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Aurora from "@/components/ui/Aurora";
 import API from "@/lib/axios";

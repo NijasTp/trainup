@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { type ReactNode } from "react";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import Aurora from "@/components/ui/Aurora";
@@ -9,7 +9,7 @@ interface UserGymLayoutProps {
   title?: string;
 }
 
-export default function UserGymLayout({ children, title }: UserGymLayoutProps) {
+export default function UserGymLayout({ children }: UserGymLayoutProps) {
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-x-hidden font-outfit">
       <div className="fixed inset-0 z-0">

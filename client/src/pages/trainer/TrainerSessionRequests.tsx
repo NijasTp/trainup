@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
-import type { SessionRequest, User, RequestedBy } from "@/interfaces/trainer/ITrainerSessionRequests";
+import type { SessionRequest } from "@/interfaces/trainer/ITrainerSessionRequests";
 
 export default function TrainerSessionRequests() {
     const [requests, setRequests] = useState<SessionRequest[]>([]);

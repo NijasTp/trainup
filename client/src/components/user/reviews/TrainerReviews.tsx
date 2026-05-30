@@ -5,8 +5,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { addTrainerRating, editReview, deleteReview } from "@/services/userService";
 import API from "@/lib/axios";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/redux/store";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -52,7 +50,6 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
     const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
     const [userReview, setUserReview] = useState<Review | null>(null);
     const [filterRating, setFilterRating] = useState<number>(0);
-    const { user } = useSelector((state: RootState) => state.userAuth);
 
     const fetchReviews = async () => {
         setIsLoading(true);

@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import {
     Bell,
     ShoppingBag,
-    Heart,
     MapPin,
     Award,
     AlertCircle,
@@ -17,8 +16,6 @@ import {
     LogOut,
     ArrowUpRight,
     Dumbbell,
-    Navigation,
-    Utensils,
     Activity
 } from "lucide-react";
 import { toast } from "sonner";

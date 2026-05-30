@@ -9,10 +9,7 @@ import {
     Loader2,
     Upload,
     Search,
-    Filter,
-    MoreVertical,
-    Building2,
-    Check
+    Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

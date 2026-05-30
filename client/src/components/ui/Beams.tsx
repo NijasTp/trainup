@@ -1,7 +1,18 @@
-import { forwardRef, useImperativeHandle, useEffect, useRef, useMemo, FC, ReactNode } from 'react';
+import { forwardRef, useImperativeHandle, useEffect, useRef, useMemo, type FC, type ReactNode } from 'react';
 import * as THREE from 'three';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, type ThreeElements } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
+
+declare global {
+    namespace React {
+        namespace JSX {
+            interface IntrinsicElements extends ThreeElements {}
+        }
+    }
+    namespace JSX {
+        interface IntrinsicElements extends ThreeElements {}
+    }
+}
 
 type UniformValue = THREE.IUniform<unknown> | unknown;
 

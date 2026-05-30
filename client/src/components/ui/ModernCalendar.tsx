@@ -10,8 +10,7 @@ import {
     eachDayOfInterval, 
     isSameMonth, 
     isSameDay, 
-    isToday,
-    startOfToday
+    isToday
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -86,7 +85,7 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
 
             {/* Dates Grid */}
             <div className="grid grid-cols-7 gap-2">
-                {calendarDays.map((day, idx) => {
+                {calendarDays.map((day) => {
                     const isSelected = selected && isSameDay(day, selected);
                     const isCurrentMonth = isSameMonth(day, monthStart);
                     const isTodayDate = isToday(day);

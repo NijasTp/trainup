@@ -31,7 +31,6 @@ export default function Profile() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTransactionsLoading, setIsTransactionsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -42,12 +41,10 @@ export default function Profile() {
 
   async function fetchProfile() {
     setIsLoading(true);
-    setError(null);
     try {
       const response = await getProfilePageData();
       setProfile(response.user);
     } catch (err) {
-      setError("Failed to fetch profile");
       console.error("API error:", err);
       toast.error("Error loading profile", {
         description: "Please try again later",

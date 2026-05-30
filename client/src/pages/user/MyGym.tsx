@@ -31,7 +31,6 @@ import {
   getUserGymAnnouncements,
   getUserGymEquipment,
   getUserGymProducts,
-  getUserGymWorkoutTemplates,
   getUserWishlist,
   getAttendanceHistoryForUser,
   markAttendance,

@@ -1,6 +1,4 @@
 
-import React from 'react';
-
 const Placeholder = ({ title }: { title: string }) => (
     <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] text-gray-500">
         <h1 className="text-4xl font-black mb-4">{title}</h1>

@@ -21,8 +21,7 @@ import {
     Check,
     Crown,
     Target,
-    Trophy,
-    Loader2
+    Trophy
 } from "lucide-react";
 import { toast } from "sonner";
 import API from "@/lib/axios";

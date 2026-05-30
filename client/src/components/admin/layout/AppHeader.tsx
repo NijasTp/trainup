@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Bell, Search } from "lucide-react";
 import UserDropdown from "./UserDropdown";
 

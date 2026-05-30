@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
+import type { IGym } from '@/services/gymService';
 
 const AdminGymManagement = () => {
     const [gyms, setGyms] = useState<IGym[]>([]);
@@ -201,16 +202,16 @@ const AdminGymManagement = () => {
                                             </td>
                                             <td className="px-8 py-6">
                                                 <div className="flex flex-col gap-1">
-                                                    {getStatusBadge(gym.verifyStatus)}
-                                                    {gym.isBanned && (
-                                                        <Badge className="bg-red-500/20 text-red-500 border-0 text-[10px] py-0.5">BANNED</Badge>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
-                                                    <Calendar className="h-4 w-4 text-gray-600" />
-                                                    {new Date(gym.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                     {getStatusBadge(gym.verifyStatus || 'pending')}
+                                                     {gym.isBanned && (
+                                                         <Badge className="bg-red-500/20 text-red-500 border-0 text-[10px] py-0.5">BANNED</Badge>
+                                                     )}
+                                                 </div>
+                                             </td>
+                                             <td className="px-8 py-6">
+                                                 <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
+                                                     <Calendar className="h-4 w-4 text-gray-600" />
+                                                     {gym.createdAt ? new Date(gym.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-right">
@@ -227,7 +228,7 @@ const AdminGymManagement = () => {
                                                         variant="ghost"
                                                         size="icon"
                                                         className={`h-10 w-10 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 ${gym.isBanned ? 'text-green-500' : 'text-red-500'}`}
-                                                        onClick={() => handleBanToggle(gym._id, gym.isBanned)}
+                                                        onClick={() => handleBanToggle(gym._id, !!gym.isBanned)}
                                                     >
                                                         <Ban className="h-5 w-5" />
                                                     </Button>

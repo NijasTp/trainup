@@ -1,5 +1,4 @@
-import React from 'react';
-import { Clock, Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react';
+import { XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -15,8 +14,6 @@ interface OpeningHoursSelectorProps {
     hours: OpeningHour[];
     onChange: (hours: OpeningHour[]) => void;
 }
-
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const OpeningHoursSelector = ({ hours, onChange }: OpeningHoursSelectorProps) => {
     const handleToggleClosed = (index: number) => {

@@ -10,7 +10,7 @@ import {
     Calendar as CalendarIcon,
     Check
 } from "lucide-react";
-import { getWorkoutTemplateById, startWorkoutTemplate, stopWorkoutTemplate } from "@/services/templateService";
+import { getWorkoutTemplateById, startWorkoutTemplate } from "@/services/templateService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import Aurora from "@/components/ui/Aurora";
 import { motion } from "framer-motion";

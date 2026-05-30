@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { format, eachDayOfInterval, startOfWeek, endOfWeek, subDays, isSameMonth } from "date-fns";
+import { useState } from 'react';
+import { format, eachDayOfInterval, startOfWeek, subDays, isSameMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { IActivityData } from "@/interfaces/user/IUserDashboard";
 

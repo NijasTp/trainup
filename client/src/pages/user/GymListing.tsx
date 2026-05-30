@@ -1,13 +1,12 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { MapPin, Star, Search, Users, Dumbbell, Navigation, Filter } from "lucide-react";
-import { getGymsForUser, getSubscriptionPlan, type IGym } from "@/services/gymService";
+import { getGymsForUser, type IGym } from "@/services/gymService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { toast } from "sonner";
 import Aurora from "@/components/ui/Aurora";
@@ -19,7 +18,6 @@ export default function GymListing() {
     const [totalPages, setTotalPages] = useState(1);
     const [search, setSearch] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [isLocating, setIsLocating] = useState(false);
 
@@ -28,7 +26,6 @@ export default function GymListing() {
 
     const fetchGyms = useCallback(async () => {
         setIsLoading(true);
-        setError(null);
         try {
             const response = await getGymsForUser(
                 page,
@@ -40,7 +37,6 @@ export default function GymListing() {
             setGyms(response.gyms || []);
             setTotalPages(response.totalPages || 1);
         } catch (_err) {
-            setError("Failed to fetch gyms. Please try again later.");
             console.error("API error:", _err);
         } finally {
             setIsLoading(false);

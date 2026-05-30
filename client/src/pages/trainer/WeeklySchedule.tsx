@@ -35,7 +35,6 @@ import {
     User,
     AlertCircle,
     Loader2,
-    MoreHorizontal,
     ChevronLeft,
     ChevronRight,
     Navigation2,

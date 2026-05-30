@@ -9,8 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import {
   Scale,
-  Target,
-  Dumbbell,
   Calendar,
   Zap,
   Activity,
@@ -28,7 +26,6 @@ import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import Aurora from "@/components/ui/Aurora";
 import { getProfile, getWeightHistory, getActivityData, addWeight as addWeightService } from "@/services/userService";
-import { getRecentWorkouts } from "@/services/workoutService";
 import { compareProgress } from "@/services/progressService";
 import { ROUTES } from "@/constants/routes";
 import { Link } from "react-router-dom";
@@ -39,7 +36,7 @@ import { setDashboardData, setActivityData as setReduxActivityData, setLoading a
 import type { RootState } from "@/redux/store";
 import { updateDailyMetrics } from "@/services/userService";
 
-import type { WeightEntry, Workout, User, IBackendSession, IActivityData, TransformationData } from "@/interfaces/user/IUserDashboard";
+import type { WeightEntry, User, IActivityData, TransformationData } from "@/interfaces/user/IUserDashboard";
 
 // --- Components ---
 
@@ -81,7 +78,6 @@ const BentoTile = ({ children, className, title, icon: Icon, delay = 0 }: BentoT
 const UserDashboard: React.FC = () => {
   const [userData, setUserData] = useState<User>({ name: "", currentWeight: 0, goalWeight: 0 });
   const [weightData, setWeightData] = useState<WeightEntry[]>([]);
-  const [recentWorkouts, setRecentWorkouts] = useState<Workout[]>([]);
   const [activityData, setActivityData] = useState<IActivityData>({});
   const [transformation, setTransformation] = useState<TransformationData | null>(null);
   const [newWeight, setNewWeight] = useState("");
@@ -107,7 +103,6 @@ const UserDashboard: React.FC = () => {
       setWeightData(cachedData.weightData);
       setLastLoggedDate(cachedData.lastLoggedDate);
       setIsWeightLoggedToday(cachedData.isWeightLoggedToday);
-      setRecentWorkouts(cachedData.recentWorkouts);
       setActivityData(cachedActivity || {});
       setTransformation(cachedData.transformation);
       setWaterGlasses(cachedData.dailyMetrics?.water || 0);
@@ -121,11 +116,10 @@ const UserDashboard: React.FC = () => {
     setIsLoading(true);
     dispatch(setReduxLoading(true));
     try {
-      const [profileRes, weightRes, activityRes, workoutsRes, transformRes] = await Promise.all([
+      const [profileRes, weightRes, activityRes, transformRes] = await Promise.all([
         getProfile(),
         getWeightHistory(),
         getActivityData(),
-        getRecentWorkouts(),
         compareProgress()
       ]);
 
@@ -164,15 +158,7 @@ const UserDashboard: React.FC = () => {
       };
       setUserData(dashboardUser);
 
-      // Handle Workouts
-      const mappedWorkouts = (workoutsRes?.sessions || []).slice(0, 3).map((session: IBackendSession) => ({
-        id: session._id,
-        name: session.name,
-        date: session.date,
-        duration: Math.round(session.exercises.reduce((acc, ex) => acc + (ex.timeTaken || 0), 0) / 60) || 0,
-        completed: session.isDone
-      }));
-      setRecentWorkouts(mappedWorkouts);
+
 
       // Daily Metrics
       const water = profile.dailyMetrics?.water || 0;
@@ -190,7 +176,7 @@ const UserDashboard: React.FC = () => {
         weightData: chartData,
         lastLoggedDate: lastDateFormatted,
         isWeightLoggedToday: isLoggedToday,
-        recentWorkouts: mappedWorkouts,
+        recentWorkouts: [],
         transformation: transformRes,
         dailyMetrics: profile.dailyMetrics
       }));
@@ -524,15 +510,6 @@ const UserDashboard: React.FC = () => {
 };
 
 
-interface PlayProps {
-  className?: string;
-  fill?: string;
-}
 
-const Play = ({ className, fill }: PlayProps) => (
-  <svg viewBox="0 0 24 24" className={className} fill={fill || "currentColor"}>
-    <path d="M8 5v14l11-7z" />
-  </svg>
-);
 
 export default UserDashboard;

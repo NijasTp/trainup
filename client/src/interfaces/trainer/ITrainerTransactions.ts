@@ -4,6 +4,7 @@ export interface Transaction {
         _id: string;
         name: string;
         profileImage?: string;
+        email?: string;
     } | string;
     amount: number;
     platformFee: number;
@@ -12,6 +13,8 @@ export interface Transaction {
     status: 'pending' | 'completed' | 'failed';
     razorpayOrderId: string;
     razorpayPaymentId?: string;
+    stripeSessionId?: string;
+    transactionType?: string;
     createdAt: string;
     updatedAt: string;
 }

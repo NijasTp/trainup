@@ -14,11 +14,11 @@ import {
     Calendar as CalendarIcon,
     Check
 } from "lucide-react";
-import { getWorkoutTemplateById, toggleWorkoutTemplate, startWorkoutTemplate, stopWorkoutTemplate } from "@/services/templateService";
+import { getWorkoutTemplateById, startWorkoutTemplate, stopWorkoutTemplate } from "@/services/templateService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import Aurora from "@/components/ui/Aurora";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { updateUser } from "@/redux/slices/userAuthSlice";
 import { toast } from "sonner";

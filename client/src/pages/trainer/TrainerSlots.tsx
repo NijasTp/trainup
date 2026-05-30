@@ -65,8 +65,10 @@ export default function TrainerSlots() {
         // Validate that end time is after start time
         const start = new Date(`${newSlot.date}T${newSlot.startTime}`);
         const end = new Date(`${newSlot.date}T${newSlot.endTime}`);
-        const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-
+        if (end.getTime() <= start.getTime()) {
+            toast.error("End time must be after start time");
+            return;
+        }
 
         setIsCreating(true);
         try {

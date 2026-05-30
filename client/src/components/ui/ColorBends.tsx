@@ -135,7 +135,6 @@ export default function ColorBends({
   const autoRotateRef = useRef<number>(autoRotate);
   const pointerTargetRef = useRef<THREE.Vector2>(new THREE.Vector2(0, 0));
   const pointerCurrentRef = useRef<THREE.Vector2>(new THREE.Vector2(0, 0));
-  const pointerSmoothRef = useRef<number>(8);
 
   useEffect(() => {
     const container = containerRef.current!;

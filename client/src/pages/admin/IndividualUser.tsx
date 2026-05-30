@@ -14,7 +14,6 @@ import {
     Shield,
     Dumbbell,
     CheckCircle,
-    XCircle,
     Lock,
     Globe,
     Zap,

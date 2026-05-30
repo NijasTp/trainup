@@ -3,16 +3,11 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { verifyTrainer, rejectTrainer, getTrainerApplication } from '@/services/adminService';
 import {
   ArrowLeft,
-  CheckCircle,
   User,
-  Mail,
-  Phone,
-  MapPin,
   Award,
   Briefcase,
   FileText,
   FileCheck,
-  Calendar,
   Loader2,
   Shield,
   Star,
@@ -20,7 +15,6 @@ import {
   XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Logo } from '@/components/ui/logo';
 import {
   Dialog,
   DialogContent,
@@ -29,10 +23,8 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Badge } from '@/components/ui/badge';
-import { motion } from 'framer-motion';
 
 const TrainerApplication = () => {
   const { trainerId } = useParams();

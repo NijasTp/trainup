@@ -38,7 +38,7 @@ import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { cn } from "@/lib/utils";
 
-import type { User, UserPlan, Progress } from "@/interfaces/trainer/ITrainerUserDetails";
+import type { User, UserPlan } from "@/interfaces/trainer/ITrainerUserDetails";
 
 interface Slot {
     _id: string;

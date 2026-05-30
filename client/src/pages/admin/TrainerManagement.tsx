@@ -1,5 +1,5 @@
-import React, { useState, useEffect, type ChangeEvent } from "react";
-import { Search, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, FileText, Star, Mail, Phone, Calendar, Users, RefreshCw } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, FileText, Star, Mail, Phone, Users, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getTrainerApplication, getTrainerById, getTrainers, toggleTrainerBan } from "@/services/adminService";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -15,21 +15,17 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "react-toastify";
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const TrainerManagement = () => {
   const [response, setResponse] = useState<TrainerResponse>({ trainers: [], total: 0, page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [isBannedFilter, setIsBannedFilter] = useState<string>("all");
-  const [isVerifiedFilter, setIsVerifiedFilter] = useState<string>("all");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmBan, setConfirmBan] = useState<{ id: string, status: boolean, name: string } | null>(null);
   const trainersPerPage = 5;
@@ -43,14 +39,12 @@ const TrainerManagement = () => {
         trainersPerPage,
         searchQuery,
         isBannedFilter,
-        isVerifiedFilter,
-        startDate,
-        endDate
+        "all",
+        "",
+        ""
       );
       setResponse(res as TrainerResponse);
-      setError(null);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to fetch trainers. Please try again.");
       setResponse({ trainers: [], total: 0, page: 1, totalPages: 1 });
     } finally {
       setLoading(false);
@@ -59,7 +53,7 @@ const TrainerManagement = () => {
 
   useEffect(() => {
     fetchTrainers();
-  }, [currentPage, searchQuery, isBannedFilter, isVerifiedFilter, startDate, endDate]);
+  }, [currentPage, searchQuery, isBannedFilter]);
 
   const handleSearch = () => {
     setSearchQuery(searchInput);

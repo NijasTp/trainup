@@ -17,7 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Download, Search, ChevronLeft, ChevronRight, Wallet, History, Sparkles, Filter, ArrowUpRight, DollarSign, Loader2 } from "lucide-react";
+import { Download, Search, ChevronLeft, ChevronRight, Wallet, History, Sparkles, Filter, ArrowUpRight, Loader2 } from "lucide-react";
 import { getAdminTransactions, downloadSaleReport } from "@/services/adminService";
 import { unparse } from "papaparse";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,7 +27,7 @@ export default function AdminTransactions() {
     const [transactions, setTransactions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10);
+    const limit = 10;
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState("all");
     const [sort, setSort] = useState("newest");

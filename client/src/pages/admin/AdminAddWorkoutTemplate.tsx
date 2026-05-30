@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Trash2, Save, X, FileText, Loader2, Dumbbell, Calendar, ChevronDown, ImagePlus, Layers, Settings } from "lucide-react";
+import { Plus, Trash2, Save, X, FileText, Loader2, Dumbbell, Calendar, ChevronDown, ImagePlus, Layers, Settings } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { TrainerLayout } from "@/components/trainer/TrainerLayout";
 import { useNavigate, useParams } from "react-router-dom";

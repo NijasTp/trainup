@@ -12,6 +12,9 @@ export interface IGym {
   description?: string;
   isVerified?: boolean;
   isBanned?: boolean;
+  logo?: string;
+  verifyStatus?: string;
+  createdAt?: string;
   geoLocation: {
     type: string;
     coordinates: number[];

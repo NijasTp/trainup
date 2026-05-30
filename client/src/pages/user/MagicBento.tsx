@@ -125,7 +125,7 @@ const ParticleCard: React.FC<{
 }) => {
         const cardRef = useRef<HTMLDivElement>(null);
         const particlesRef = useRef<HTMLDivElement[]>([]);
-        const timeoutsRef = useRef<number[]>([]);
+        const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
         const isHoveredRef = useRef(false);
         const memoizedParticles = useRef<HTMLDivElement[]>([]);
         const particlesInitialized = useRef(false);
