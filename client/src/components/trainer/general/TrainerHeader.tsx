@@ -72,7 +72,7 @@ export default function TrainerSiteHeader() {
 
     const markAsRead = async (id: string) => {
         try {
-            await API.patch(`/notifications/${id}`, { read: true });
+            await API.patch(`/notifications/${id}/read`);
             setNotifications(prev =>
                 prev.map(n => (n._id === id ? { ...n, read: true } : n))
             );

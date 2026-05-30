@@ -140,7 +140,8 @@ export class TemplateController {
     async stopWorkoutTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = (req.user as JwtPayload).id;
-            await this._templateService.stopWorkoutTemplate(userId);
+            const { templateId } = req.body;
+            await this._templateService.stopWorkoutTemplate(userId, templateId);
             res.status(STATUS_CODE.OK).json({ message: "Workout template stopped" });
         } catch (err) {
             next(err);
@@ -151,7 +152,8 @@ export class TemplateController {
         try {
             const { userId, templateId } = req.body;
             if (!userId || !templateId) throw new AppError("User ID and Template ID are required", STATUS_CODE.BAD_REQUEST);
-            await this._templateService.startWorkoutTemplate(userId, templateId);
+            const creatorRole = (req.user as JwtPayload).role;
+            await this._templateService.startWorkoutTemplate(userId, templateId, 'contiguous', [], creatorRole);
             res.status(STATUS_CODE.OK).json({ message: "Workout template assigned successfully" });
         } catch (err) {
             next(err);

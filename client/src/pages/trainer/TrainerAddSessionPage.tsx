@@ -208,10 +208,23 @@ export default function TrainerAddSessionPage() {
     setIsSuggestionsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`https://wger.de/api/v2/exercise/search/?term=${term}&language=2`);
+      const response = await fetch(`/api/wger/exerciseinfo/?name=${term}&language=2`);
       if (!response.ok) throw new Error("Failed to fetch exercise suggestions");
       const data = await response.json();
-      setAllSuggestions(data.suggestions || []);
+      const mapped = (data.results || []).map((ex: any) => {
+        const mainImage = ex.images?.find((img: any) => img.is_main) || ex.images?.[0];
+        return {
+          value: ex.name,
+          data: {
+            id: ex.id,
+            base_id: ex.exercise_base || ex.id,
+            category: ex.category?.name || "Exercise",
+            image: mainImage ? mainImage.image.replace("https://wger.de", "") : "",
+            image_thumbnail: mainImage ? mainImage.image.replace("https://wger.de", "") : ""
+          }
+        };
+      });
+      setAllSuggestions(mapped);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Error fetching exercise suggestions";
       setError(errorMessage);
@@ -227,7 +240,7 @@ export default function TrainerAddSessionPage() {
     setError(null);
     try {
       console.log("Fetching exercise:", exerciseId);
-      const response = await fetch(`https://wger.de/api/v2/exerciseinfo/${exerciseId}/?language=2`);
+      const response = await fetch(`/api/wger/exerciseinfo/${exerciseId}/?language=2`);
       if (!response.ok) {
         throw new Error(`Failed to fetch exercise details: ${response.status}`);
       }

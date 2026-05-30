@@ -152,6 +152,8 @@ export class SlotService implements ISlotService {
       )
     }
 
+
+
     const trainerId =
       typeof slot.trainerId === 'object' && '_id' in slot.trainerId
         ? slot.trainerId._id

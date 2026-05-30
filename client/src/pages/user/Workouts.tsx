@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell, Plus, Target, CheckCircle, XCircle, ChevronLeft, ChevronRight, Calendar as CalendarIcon, RefreshCw, Trash2 } from "lucide-react";
+import { Dumbbell, Plus, Target, CheckCircle, XCircle, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-import { format, isToday, differenceInMinutes, parse, addDays, subDays } from "date-fns";
+import { format, isToday, addDays, subDays } from "date-fns";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
@@ -21,7 +21,7 @@ import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "@/redux/store";
 import { updateUser } from "@/redux/slices/userAuthSlice";
 import API from "@/lib/axios";
-import { stopWorkoutTemplate, startWorkoutTemplate } from "@/services/templateService";
+import { stopWorkoutTemplate } from "@/services/templateService";
 
 
 function formatTime(seconds: number | undefined): string {
@@ -31,23 +31,9 @@ function formatTime(seconds: number | undefined): string {
   return `${min}:${sec.toString().padStart(2, "0")}`;
 }
 
-function FilterButtons({ filter, setFilter }: { filter: "trainer" | "user" | "admin"; setFilter: (value: "trainer" | "user" | "admin") => void }) {
+function FilterButtons() {
   return (
     <div className="flex items-center gap-2">
-      <Button
-        variant={filter === "trainer" ? "default" : "outline"}
-        onClick={() => setFilter("trainer")}
-        className={`font-medium ${filter === "trainer" ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg" : "bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"}`}
-      >
-        Trainer Sessions
-      </Button>
-      <Button
-        variant={filter === "user" ? "default" : "outline"}
-        onClick={() => setFilter("user")}
-        className={`font-medium ${filter === "user" ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg" : "bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/5"}`}
-      >
-        My Sessions
-      </Button>
       <Link to="/workouts/browse">
         <Button
           variant="outline"
@@ -76,12 +62,12 @@ function WorkoutSessionCard({
 }) {
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Calculate if Start button should be shown (within 20 minutes of session time)
+  // Calculate if Start button should be shown (allow starting scheduled workouts anytime on the scheduled day)
   const now = new Date();
-  const sessionDateTime = parse(`${session.date} ${session.time}`, "yyyy-MM-dd HH:mm", new Date());
-  const timeDifference = differenceInMinutes(now, sessionDateTime);
-  const canStartSession = Math.abs(timeDifference) <= 20;
-  const isSessionPast = timeDifference > 20;
+  const todayStr = format(now, "yyyy-MM-dd");
+  const isSessionToday = session.date === todayStr;
+  const isSessionPast = session.date < todayStr;
+  const canStartSession = isSessionToday && !session.isDone;
 
   return (
     <Dialog>
@@ -292,7 +278,7 @@ export default function WorkoutPage() {
   const user = useSelector((state: RootState) => state.userAuth.user);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [filter, setFilter] = useState<"trainer" | "user" | "admin">("trainer");
+  const [filter] = useState<"trainer" | "user" | "admin">("user");
   const [dailyWorkouts, setDailyWorkouts] = useState<WorkoutDay[]>([]);
   const [allSessions, setAllSessions] = useState<WorkoutSession[]>([]);
   const [focusedSessionId, setFocusedSessionId] = useState<string | null>(null);
@@ -311,9 +297,15 @@ export default function WorkoutPage() {
     }
   }, [dispatch]);
 
-  const handleStopActiveTemplate = async () => {
+  const handleStopActiveTemplate = async (templateId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const confirmed = window.confirm("Are you sure you want to abandon this training protocol? All progress on this plan will be lost.");
+    if (!confirmed) return;
     try {
-      await stopWorkoutTemplate();
+      await stopWorkoutTemplate(templateId);
       await fetchUserProfile();
       await fetchWorkouts();
       toast.success("Training protocol stopped successfully!");
@@ -322,16 +314,6 @@ export default function WorkoutPage() {
     }
   };
 
-  const handleResetActiveTemplate = async (templateId: string, scheduleType?: 'contiguous' | 'weekly', weeklyDays?: number[]) => {
-    try {
-      await startWorkoutTemplate(templateId, scheduleType, weeklyDays);
-      await fetchUserProfile();
-      await fetchWorkouts();
-      toast.success("Protocol reset successfully!");
-    } catch (_err) {
-      toast.error("Failed to reset training protocol");
-    }
-  };
 
   const handleDateChange = (direction: "prev" | "next") => {
     const newDate = direction === "prev" ? subDays(selectedDate, 1) : addDays(selectedDate, 1);
@@ -388,7 +370,7 @@ export default function WorkoutPage() {
       if (todayWorkouts?.sessions.length) {
         const now = new Date().toTimeString().slice(0, 5);
         const closestSession = todayWorkouts.sessions
-          .filter((session) => filter === "user" ? ["user", "admin"].includes(session.givenBy) : session.givenBy === filter)
+          .filter((session) => filter === "user" ? ["user", "admin", "trainer"].includes(session.givenBy) : session.givenBy === filter)
           .reduce((prev, curr) => {
             const prevDiff = Math.abs(
               parseInt(prev.time.replace(":", "")) - parseInt(now.replace(":", ""))
@@ -410,7 +392,7 @@ export default function WorkoutPage() {
   const filteredSessions = dailyWorkouts.find(
     (dw) => dw.date === format(selectedDate, "yyyy-MM-dd")
   )?.sessions.filter((session) =>
-    filter === "user" ? ["user", "admin"].includes(session.givenBy) : session.givenBy === filter
+    filter === "user" ? ["user", "admin", "trainer"].includes(session.givenBy) : session.givenBy === filter
   ) || [];
 
   return (
@@ -479,7 +461,7 @@ export default function WorkoutPage() {
                 </Button>
               </div>
 
-              <FilterButtons filter={filter} setFilter={setFilter} />
+              <FilterButtons />
             </div>
 
             {/* STUNNING PREMIUM GLASSMORPHIC ACTIVE PROGRAMS WIDGET */}
@@ -502,21 +484,24 @@ export default function WorkoutPage() {
                     // Find if today's date has a mapped day for this active template
                     const dw = dailyWorkouts.find(dw => dw.date === format(selectedDate, "yyyy-MM-dd"));
                     const todayDayNumber = dw?.templateName === t.title ? dw?.templateDay : null;
+                    const todaySession = dw?.sessions?.find((s: any) => s.notes?.includes(`From active template: ${t.title}`) || s.name?.startsWith(t.title));
+                    const isTodaySessionDone = todaySession?.isDone || false;
                     
-                    // Estimate overall progress based on elapsed time vs total days, or session completed counts
+                    // Estimate overall progress based on actual completed sessions
                     const daysTotal = t.daysCount || 12;
-                    // Let's check how many days have elapsed from startDate
-                    const start = new Date(t.startDate);
-                    const now = new Date();
-                    const diffTime = Math.abs(now.getTime() - start.getTime());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    const currentProgressDay = Math.min(diffDays, daysTotal);
-                    const progressPercent = Math.min(Math.round(((currentProgressDay - 1) / daysTotal) * 100), 100);
+                    const completedSessions = allSessions.filter((s: any) => 
+                      s.isDone && 
+                      (s.templateId === t.templateId || s.name?.startsWith(t.title) || s.notes?.includes(t.title))
+                    );
+                    const completedCount = completedSessions.length;
+                    const currentProgressDay = Math.min(completedCount + 1, daysTotal);
+                    const progressPercent = Math.min(Math.round((completedCount / daysTotal) * 100), 100);
 
                     return (
-                      <div
+                      <Link
                         key={t.templateId}
-                        className="relative overflow-hidden group bg-white/[0.02] hover:bg-white/[0.04] backdrop-blur-xl border border-white/10 hover:border-primary/30 rounded-[2.5rem] p-6 space-y-6 transition-all duration-300 shadow-xl"
+                        to={`/workouts/active-protocol/${t.templateId}`}
+                        className="block relative overflow-hidden group bg-white/[0.02] hover:bg-white/[0.04] backdrop-blur-xl border border-white/10 hover:border-primary/30 rounded-[2.5rem] p-6 space-y-6 transition-all duration-300 shadow-xl"
                       >
                         {/* Radial glow effect */}
                         <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-[2.5rem] blur opacity-0 group-hover:opacity-100 transition duration-700 pointer-events-none"></div>
@@ -528,9 +513,16 @@ export default function WorkoutPage() {
                             className="w-20 h-20 object-cover rounded-2xl border border-white/5"
                           />
                           <div className="flex-1 space-y-1">
-                            <Badge className="bg-slate-900 border-white/10 text-primary font-black uppercase text-[9px] tracking-widest px-2 py-0.5 rounded-md">
-                              {t.scheduleType === 'weekly' ? 'Weekly Days' : 'Contiguous Rolling'}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-slate-900 border-white/10 text-primary font-black uppercase text-[9px] tracking-widest px-2 py-0.5 rounded-md">
+                                {t.scheduleType === 'weekly' ? 'Weekly Days' : 'Contiguous Rolling'}
+                              </Badge>
+                              {t.assignedBy === 'trainer' && (
+                                <Badge className="bg-blue-500/90 hover:bg-blue-600 text-white font-black uppercase text-[9px] tracking-widest px-2 py-0.5 rounded-md shadow-lg border-0">
+                                  Added by Trainer
+                                </Badge>
+                              )}
+                            </div>
                             <h3 className="text-xl font-black text-white italic uppercase tracking-tight leading-tight">
                               {t.title}
                             </h3>
@@ -547,7 +539,9 @@ export default function WorkoutPage() {
                           <div className="flex justify-between text-xs font-black uppercase tracking-wider text-slate-400">
                             <span>
                               {todayDayNumber ? (
-                                <span className="text-primary font-black italic">TODAY: Day {todayDayNumber}</span>
+                                <span className="text-primary font-black italic">
+                                  TODAY: Day {todayDayNumber} {isTodaySessionDone ? " (COMPLETED)" : ""}
+                                </span>
                               ) : (
                                 <span>Day {currentProgressDay} of {daysTotal}</span>
                               )}
@@ -556,8 +550,8 @@ export default function WorkoutPage() {
                           </div>
                           <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
                             <div
-                              className="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full transition-all duration-500"
-                              style={{ width: `${progressPercent}%` }}
+                                className="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full transition-all duration-500"
+                                style={{ width: `${progressPercent}%` }}
                             ></div>
                           </div>
                         </div>
@@ -572,16 +566,7 @@ export default function WorkoutPage() {
                             <Button
                               size="icon"
                               variant="outline"
-                              onClick={() => handleResetActiveTemplate(t.originalTemplateId || t.templateId, t.scheduleType, t.weeklyDays)}
-                              className="h-9 w-9 rounded-xl border-white/10 hover:border-primary/30 hover:bg-primary/10 text-slate-400 hover:text-primary transition-all duration-300"
-                              title="Reset Program Progress"
-                            >
-                              <RefreshCw className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              onClick={handleStopActiveTemplate}
+                              onClick={(e) => handleStopActiveTemplate(t.templateId, e)}
                               className="h-9 w-9 rounded-xl border-white/10 hover:border-rose-500/30 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all duration-300"
                               title="Abandon Program"
                             >
@@ -589,7 +574,7 @@ export default function WorkoutPage() {
                             </Button>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>
@@ -651,15 +636,10 @@ export default function WorkoutPage() {
                 <div className="w-24 h-24 mx-auto bg-muted/30 rounded-full flex items-center justify-center mb-6">
                   <Dumbbell className="h-10 w-10 text-muted-foreground/50" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">No workouts found</h3>
+                <h3 className="text-xl font-semibold text-foreground">No workouts scheduled</h3>
                 <p>
-                  No {filter === "trainer" ? "trainer-assigned" : "user-created or admin-assigned"} workouts scheduled for this day.
+                  No workouts scheduled for this day.
                 </p>
-                {filter === "trainer" && dailyWorkouts.some(dw => dw.templateName || dw.sessions.some(s => s.givenBy === 'admin')) && (
-                  <Button variant="link" onClick={() => setFilter('user')} className="mt-2 text-primary">
-                    Check "My Sessions" for active template workouts
-                  </Button>
-                )}
               </CardContent>
             </Card>
           )

@@ -70,7 +70,8 @@ export class UserProfileController {
                         originalTemplateId: snapshot?.originalTemplateId?.toString(),
                         scheduleType: snapshot?.scheduleType || t.scheduleType || 'contiguous',
                         weeklyDays: snapshot?.weeklyDays || t.weeklyDays || [],
-                        daysCount: snapshot?.days?.length || 0
+                        daysCount: snapshot?.days?.length || 0,
+                        days: snapshot?.days || []
                     };
                 })
             );

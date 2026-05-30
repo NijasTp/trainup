@@ -245,22 +245,13 @@ export default function TrainerClients() {
                                     <MessageSquare className="h-4 w-4 mr-2 text-cyan-400" />
                                     Send Message
                                 </Button>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Button
-                                        variant="outline"
-                                        className="h-12 bg-white/[0.03] border-white/10 hover:bg-white/10 text-white font-black italic uppercase tracking-widest text-[9px] rounded-2xl p-0"
-                                        onClick={() => navigate(`/trainer/assign-workout/${client._id}`)}
-                                    >
-                                        Assign Workout
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        className="h-12 bg-white/[0.03] border-white/10 hover:bg-white/10 text-white font-black italic uppercase tracking-widest text-[9px] rounded-2xl p-0"
-                                        onClick={() => navigate(`/trainer/assign-diet/${client._id}`)}
-                                    >
-                                        Assign Diet
-                                    </Button>
-                                </div>
+                                <Button
+                                    variant="outline"
+                                    className="w-full h-12 bg-white/[0.03] border-white/10 hover:bg-white/10 text-white font-black italic uppercase tracking-widest text-[10px] rounded-2xl"
+                                    onClick={() => navigate(`/trainer/assign-workout/${client._id}`)}
+                                >
+                                    Assign Workout
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>

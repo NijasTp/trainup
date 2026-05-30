@@ -64,16 +64,16 @@ export class WorkoutService implements IWorkoutService {
       }
     }
 
-    if (payload.givenBy === 'user' || payload.givenBy === 'admin') {
+    if (payload.userId && payload.date) {
       let day = await this._workoutDayRepo.findByUserAndDate(
-        payload.userId?.toString() || '',
-        payload.date!
+        payload.userId.toString(),
+        payload.date
       )
 
       if (!day) {
         day = await this._workoutDayRepo.create({
-          userId: payload.userId!,
-          date: payload.date!,
+          userId: payload.userId,
+          date: payload.date,
           sessions: []
         })
       }
@@ -203,13 +203,7 @@ export class WorkoutService implements IWorkoutService {
 
     if (payload.isDone) {
       await this._streakService.updateUserStreak(updated.userId!);
-
-      // Trigger "Doing a workout" if it's being started (though isDone implies completion)
-      // If we don't have separate 'start' event, we can notify on completion or similar.
-      // But user specifically said "Doing a workout" (active). 
-      // I'll assume they want an immediate notification when they interact with it in a certain way.
-      // For now, I'll add an immediate notification in updateSession if it's NOT done yet (i.e. just started/modified).
-    }
+}
 
     if (!payload.isDone && (payload.exercises || payload.exerciseUpdates)) {
       await this._notificationService.createNotification({
@@ -231,11 +225,18 @@ export class WorkoutService implements IWorkoutService {
   }
 
   async createDay(userId: string, date: string): Promise<WorkoutDayResponseDto> {
-    const existing = await this._workoutDayRepo.findByUserAndDate(userId, date)
-    if (existing) return this.mapToDayResponseDto(existing)
+    const mergedDay = await this.getDay(userId, date);
+    if (mergedDay && mergedDay._id && mergedDay._id !== "") {
+      return mergedDay;
+    }
 
-    const day = await this._workoutDayRepo.create({ userId, date, sessions: [] })
-    return this.mapToDayResponseDto(day)
+    let day = await this._workoutDayRepo.findByUserAndDate(userId, date);
+    if (!day) {
+      day = await this._workoutDayRepo.create({ userId, date, sessions: [] });
+    }
+
+    const newMergedDay = await this.getDay(userId, date);
+    return newMergedDay || this.mapToDayResponseDto(day);
   }
 
   async addSessionToDay(userId: string, date: string, sessionId: string): Promise<WorkoutDayResponseDto> {
@@ -355,6 +356,7 @@ export class WorkoutService implements IWorkoutService {
                   goal: templateData.goal || '',
                   notes: `From active template: ${templateData.title}`,
                   isDone: false,
+                  templateId: templateData._id.toString(),
                   createdAt: new Date(),
                   updatedAt: new Date()
                 });
@@ -401,9 +403,7 @@ export class WorkoutService implements IWorkoutService {
     };
     if (source) query.source = source;
 
-    console.log('DEBUG: Workout history query:', JSON.stringify(query));
     const { sessions, total } = await this._sessionRepo.findSessions(query, page, limit);
-    console.log('DEBUG: Found sessions count:', sessions.length, 'Total:', total);
 
     return {
       sessions: sessions.map((session: IWorkoutSession) => this.mapToSessionResponseDto(session)),

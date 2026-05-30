@@ -111,28 +111,7 @@ export default function WorkoutTemplates() {
           </div>
         </header>
 
-        {/* Assigned by Trainer - Conditional */}
-        {user?.assignedTrainer && (
-          <section className="space-y-8">
-            <div className="flex items-center gap-4 border-l-4 border-yellow-500 pl-6">
-              <div>
-                <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">Trainer Assigned</h2>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">Exclusive Routines from your Professional Coach</p>
-              </div>
-              <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 px-4 py-1.5 rounded-full font-black text-[10px] uppercase animate-pulse">Elite Priority</Badge>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {templates.filter(t => t.isAssignedByTrainer).map(template => (
-                <TemplateCard 
-                  key={template._id} 
-                  template={template} 
-                  isActive={isTemplateActive(template._id)}
-                  onPreview={() => navigate(`/workouts/preview/${template._id}`)}
-                />
-              ))}
-            </div>
-          </section>
-        )}
+
 
         {/* Recently Done Showcase */}
         {recentHistory.length > 0 && (
@@ -336,7 +315,7 @@ function TemplateCard({ template, isActive, onPreview }: {
             "w-full h-16 rounded-2xl font-black italic tracking-widest transition-all shadow-xl uppercase text-lg group/btn relative overflow-hidden",
             isActive 
               ? "bg-white text-black hover:bg-slate-200" 
-              : "bg-primary text-white hover:bg-primary/90"
+              : "bg-primary text-slate-950 hover:bg-primary/90"
           )}
         >
           <span className="relative z-10 flex items-center justify-center gap-3">

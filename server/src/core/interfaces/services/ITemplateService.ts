@@ -24,8 +24,8 @@ export interface ITemplateService {
     listDietTemplates(query: TemplateQueryDto): Promise<PaginatedDietTemplatesDto>;
 
     // User Template Management
-    startWorkoutTemplate(userId: string, templateId: string, scheduleType?: 'contiguous' | 'weekly', weeklyDays?: number[]): Promise<{ sessionId?: string }>;
-    stopWorkoutTemplate(userId: string): Promise<void>;
+    startWorkoutTemplate(userId: string, templateId: string, scheduleType?: 'contiguous' | 'weekly', weeklyDays?: number[], assignedBy?: string): Promise<{ sessionId?: string }>;
+    stopWorkoutTemplate(userId: string, templateId?: string): Promise<void>;
     startDietTemplate(userId: string, templateId: string): Promise<void>;
     stopDietTemplate(userId: string): Promise<void>;
 }

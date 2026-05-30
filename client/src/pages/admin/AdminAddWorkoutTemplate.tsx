@@ -11,7 +11,7 @@ import { TrainerLayout } from "@/components/trainer/TrainerLayout";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "@/lib/axios";
 import { toast } from "react-toastify";
-import type { IExercise, IWorkoutTemplate, WgerExercise } from "@/interfaces/admin/adminAddTemplates";
+import type { IExercise, IWorkoutTemplate } from "@/interfaces/admin/adminAddTemplates";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -33,13 +33,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
         isPublic: true,
         days: []
     } as any);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [allSearchResults, setAllSearchResults] = useState<WgerExercise[]>([]);
-    const [displayedSearchResults, setDisplayedSearchResults] = useState<WgerExercise[]>([]);
-    const [searchLoading, setSearchLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [page, setPage] = useState<number>(1);
-    const [perPage] = useState<number>(5);
     const [activeDayIndex, setActiveDayIndex] = useState<number | null>(null);
     const [tempImage, setTempImage] = useState<string | null>(null);
     const [showCropper, setShowCropper] = useState(false);
@@ -61,35 +55,6 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
     }, [id]);
 
     useEffect(() => {
-        if (searchQuery) {
-            const fetchExercises = async () => {
-                setSearchLoading(true);
-                try {
-                    const response = await fetch(
-                        `https://wger.de/api/v2/exercise/search/?term=${encodeURIComponent(searchQuery)}&language=2`,
-                        {
-                            headers: { Accept: "application/json" },
-                        }
-                    );
-                    if (!response.ok) throw new Error("Failed to fetch exercises");
-                    const data = await response.json();
-                    setAllSearchResults(data.suggestions || []);
-                    setPage(1);
-                } catch (error) {
-                    console.error("Error fetching WGER exercises:", error);
-                } finally {
-                    setSearchLoading(false);
-                }
-            };
-            const debounce = setTimeout(fetchExercises, 300);
-            return () => clearTimeout(debounce);
-        } else {
-            setAllSearchResults([]);
-            setDisplayedSearchResults([]);
-        }
-    }, [searchQuery]);
-
-    useEffect(() => {
         if (formData.type === 'one-time') {
             if (formData.days.length > 1) {
                 setFormData(prev => ({ ...prev, days: [prev.days[0]], repetitions: 1 }));
@@ -99,12 +64,6 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
             }
         }
     }, [formData.type, formData.days.length, formData.repetitions]);
-
-    useEffect(() => {
-        const start = (page - 1) * perPage;
-        const end = start + perPage;
-        setDisplayedSearchResults(allSearchResults.slice(start, end));
-    }, [page, allSearchResults]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -137,20 +96,31 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
         if (activeDayIndex === index) setActiveDayIndex(null);
     };
 
-    const addExerciseToDay = (dayIndex: number, exercise: WgerExercise) => {
+    const handleAddNewExercise = (dayIndex: number) => {
+        const nameInput = document.getElementById(`manual-exercise-name-${dayIndex}`) as HTMLInputElement;
+        const name = nameInput ? nameInput.value.trim() : "";
+
+        if (!name) {
+            toast.error("Please enter an exercise name");
+            return;
+        }
+
         setFormData(prev => {
             const newDays = [...prev.days];
             newDays[dayIndex].exercises.push({
-                exerciseId: exercise.data.id.toString(),
-                name: exercise.value,
-                image: exercise.data.image_thumbnail ? `https://wger.de${exercise.data.image_thumbnail}` : undefined,
+                exerciseId: `manual-${Date.now()}`,
+                name: name,
+                image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800",
                 sets: 3,
                 reps: "10-12"
             });
             return { ...prev, days: newDays };
         });
-        setSearchQuery("");
-        setAllSearchResults([]);
+
+        if (nameInput) {
+            nameInput.value = "";
+        }
+        toast.success(`"${name}" added successfully!`);
     };
 
     const removeExerciseFromDay = (dayIndex: number, exerciseIndex: number) => {
@@ -541,56 +511,30 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                                             </div>
                                                         )}
 
-                                                        <div className="relative pt-8 border-t border-white/5">
-                                                            <div className="flex items-center gap-4 mb-4">
-                                                                <Search className="h-5 w-5 text-gray-600" />
-                                                                <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Search Exercises</h5>
+                                                        <div className="pt-8 border-t border-white/5 space-y-4">
+                                                            <div className="flex items-center gap-4">
+                                                                <Dumbbell className="h-5 w-5 text-cyan-400" />
+                                                                <h5 className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Add Exercise Manually</h5>
                                                             </div>
-                                                            <Input
-                                                                placeholder="SEARCH FOR EXERCISES..."
-                                                                className="h-14 bg-black/40 border-white/5 text-xs rounded-2xl pl-6 font-black italic uppercase tracking-widest focus:ring-cyan-500/30"
-                                                                value={activeDayIndex === dIdx ? searchQuery : ''}
-                                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                            />
-
-                                                            {searchLoading && (
-                                                                <div className="flex items-center justify-center p-8">
-                                                                    <div className="h-6 w-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-                                                                </div>
-                                                            )}
-
-                                                            <AnimatePresence>
-                                                                {activeDayIndex === dIdx && searchQuery && displayedSearchResults.length > 0 && (
-                                                                    <motion.div
-                                                                        initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                                        className="absolute z-50 w-full mt-4 bg-zinc-900 border border-white/10 rounded-[2rem] shadow-3xl overflow-hidden max-h-80 overflow-y-auto backdrop-blur-3xl"
-                                                                    >
-                                                                        {displayedSearchResults.map((suggestion) => (
-                                                                            <div
-                                                                                key={suggestion.data.id}
-                                                                                className="p-4 hover:bg-cyan-500/10 cursor-pointer flex items-center gap-4 border-b border-white/5 last:border-0 transition-colors group/item"
-                                                                                onClick={() => addExerciseToDay(dIdx, suggestion)}
-                                                                            >
-                                                                                <div className="h-12 w-12 rounded-xl bg-black/40 overflow-hidden ring-1 ring-white/5">
-                                                                                    <img
-                                                                                        src={suggestion.data.image_thumbnail ? `https://wger.de${suggestion.data.image_thumbnail}` : "https://via.placeholder.com/48"}
-                                                                                        className="w-full h-full object-cover group-hover/item:scale-110 transition-transform font-outfit"
-                                                                                        alt=""
-                                                                                    />
-                                                                                </div>
-                                                                                <div className="flex-1">
-                                                                                    <p className="text-white text-xs font-black italic uppercase">{suggestion.value}</p>
-                                                                                    <p className="text-gray-600 text-[9px] font-bold uppercase tracking-widest mt-0.5">{suggestion.data.category}</p>
-                                                                                </div>
-                                                                                <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center group-hover/item:bg-cyan-500 group-hover/item:text-black transition-all">
-                                                                                    <Plus className="h-4 w-4" />
-                                                                                </div>
-                                                                            </div>
-                                                                        ))}
-                                                                    </motion.div>
-                                                                )}
-                                                            </AnimatePresence>
+                                                            <div className="flex gap-4">
+                                                                <Input
+                                                                    id={`manual-exercise-name-${dIdx}`}
+                                                                    placeholder="ENTER EXERCISE NAME (e.g. BENCH PRESS, PUSH-UPS)..."
+                                                                    className="h-14 bg-black/40 border-white/5 text-xs rounded-2xl pl-6 font-black italic uppercase tracking-widest focus:ring-cyan-500/30 flex-1"
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === 'Enter') {
+                                                                            e.preventDefault();
+                                                                            handleAddNewExercise(dIdx);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <Button
+                                                                    onClick={() => handleAddNewExercise(dIdx)}
+                                                                    className="bg-cyan-500 hover:bg-cyan-400 text-black font-black italic uppercase text-xs h-14 px-8 rounded-2xl shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                                                                >
+                                                                    <Plus className="h-4 w-4 mr-2" /> Add
+                                                                </Button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </motion.div>

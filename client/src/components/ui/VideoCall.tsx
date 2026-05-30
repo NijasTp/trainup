@@ -118,7 +118,14 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
                 if (vc.scheduledEndTime) setScheduledEndTime(new Date(vc.scheduledEndTime));
                 
                 // If we are joining an active room, tell the server
-                await API.post(`/video-call/room/${roomId}/join`);
+                const joinResponse = await API.post(`/video-call/room/${roomId}/join`);
+                const joinedVc = joinResponse.data.videoCall;
+                if (joinedVc && joinedVc.actualStartTime) {
+                    setActualStartTime(new Date(joinedVc.actualStartTime));
+                }
+                if (joinedVc && joinedVc.scheduledEndTime) {
+                    setScheduledEndTime(new Date(joinedVc.scheduledEndTime));
+                }
             } catch (err) {
                 console.error("Sync failed", err);
             }

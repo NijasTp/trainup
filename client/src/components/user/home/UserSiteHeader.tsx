@@ -18,7 +18,6 @@ import {
   User,
   Settings,
   LogOut,
-  MessageSquare,
   Activity,
   CreditCard
 } from "lucide-react"
@@ -30,7 +29,6 @@ import { cn } from "@/lib/utils"
 import { io } from "socket.io-client"
 import { StreakPopup } from "@/components/ui/StreakPopup"
 import { StreakModal } from "@/components/ui/StreakModal"
-import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { useTheme } from "@/context/ThemeContext"
 import {
   DropdownMenu,
@@ -200,7 +198,6 @@ export const SiteHeader: React.FC = () => {
       show: true 
     },
     { name: "Workouts", path: ROUTES.USER_WORKOUTS_PAGE, icon: Activity, show: true },
-    { name: "My Coach", path: ROUTES.MY_TRAINER_PROFILE, icon: MessageSquare, show: !!user?.assignedTrainerDetails },
   ].filter(link => link.show)
 
 
@@ -224,7 +221,7 @@ export const SiteHeader: React.FC = () => {
               const isActive = location.pathname === link.path
               return (
                 <Link
-                  key={link.path}
+                  key={`${link.name}-${link.path}`}
                   to={link.path}
                   className={cn(
                     "hover:text-white transition-colors relative group tracking-tighter italic uppercase text-xs lg:text-sm",
@@ -243,7 +240,6 @@ export const SiteHeader: React.FC = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-4">
-            <ThemeToggle />
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 cursor-pointer hover:bg-orange-500/20 transition-colors group relative" onClick={() => setShowStreakModal(true)}>
               <Flame className={cn("h-4 w-4", currentStreak ? "text-orange-500" : "text-muted-foreground")} />
               <span className="text-sm font-black text-orange-500 italic tracking-tighter">{currentStreak}</span>
@@ -376,7 +372,7 @@ export const SiteHeader: React.FC = () => {
               <div className="bg-black/90 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 shadow-2xl space-y-4">
                 {navLinks.map((link) => (
                   <Link
-                    key={link.path}
+                    key={`${link.name}-${link.path}`}
                     to={link.path}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(

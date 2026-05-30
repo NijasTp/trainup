@@ -140,7 +140,8 @@ export class TemplateService implements ITemplateService {
         userId: string, 
         templateId: string, 
         scheduleType: 'contiguous' | 'weekly' = 'contiguous', 
-        weeklyDays: number[] = []
+        weeklyDays: number[] = [],
+        assignedBy?: string
     ): Promise<{ sessionId?: string }> {
         const template = await this._workoutTemplateRepo.findById(templateId);
         if (!template) throw new AppError("Template not found", STATUS_CODE.NOT_FOUND);
@@ -164,14 +165,17 @@ export class TemplateService implements ITemplateService {
         });
 
         await this._userRepo.updateUser(userId, {
-            activeWorkoutTemplate: snapshot._id as unknown as Types.ObjectId,
-            workoutTemplateStartDate: new Date(),
+            $set: {
+                activeWorkoutTemplate: snapshot._id as unknown as Types.ObjectId,
+                workoutTemplateStartDate: new Date(),
+            },
             $push: {
                 activeWorkoutTemplates: {
                     templateId: snapshot._id as unknown as Types.ObjectId,
                     startDate: new Date(),
                     scheduleType,
-                    weeklyDays
+                    weeklyDays,
+                    assignedBy: assignedBy || 'user'
                 }
             }
         } as any);
@@ -188,7 +192,7 @@ export class TemplateService implements ITemplateService {
             const session = await WorkoutSession.create({
                 userId: userId,
                 name: template.title,
-                givenBy: 'admin',
+                givenBy: assignedBy || 'admin',
                 date: new Date().toISOString().split('T')[0],
                 time: new Date().toTimeString().split(' ')[0].substring(0, 5),
                 exercises: templateDay.exercises.map((ex: { exerciseId?: string, name: string, sets: number, reps?: string, time?: string }) => ({
@@ -209,12 +213,37 @@ export class TemplateService implements ITemplateService {
         return {};
     }
 
-    async stopWorkoutTemplate(userId: string): Promise<void> {
-        await this._userRepo.updateUser(userId, {
-            activeWorkoutTemplate: null,
-            workoutTemplateStartDate: null,
-            activeWorkoutTemplates: []
-        });
+    async stopWorkoutTemplate(userId: string, templateId?: string): Promise<void> {
+        if (templateId) {
+            const user = await this._userRepo.findById(userId);
+            if (user) {
+                const updatedTemplates = (user.activeWorkoutTemplates || []).filter(
+                    (t: any) => t.templateId.toString() !== templateId
+                );
+                
+                const updateData: any = {
+                    activeWorkoutTemplates: updatedTemplates
+                };
+                
+                if (user.activeWorkoutTemplate?.toString() === templateId) {
+                    if (updatedTemplates.length > 0) {
+                        updateData.activeWorkoutTemplate = updatedTemplates[0].templateId;
+                        updateData.workoutTemplateStartDate = updatedTemplates[0].startDate;
+                    } else {
+                        updateData.activeWorkoutTemplate = null;
+                        updateData.workoutTemplateStartDate = null;
+                    }
+                }
+                
+                await this._userRepo.updateUser(userId, updateData);
+            }
+        } else {
+            await this._userRepo.updateUser(userId, {
+                activeWorkoutTemplate: null,
+                workoutTemplateStartDate: null,
+                activeWorkoutTemplates: []
+            });
+        }
     }
 
     async startDietTemplate(userId: string, templateId: string): Promise<void> {

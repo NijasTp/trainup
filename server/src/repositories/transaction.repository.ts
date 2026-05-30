@@ -308,16 +308,30 @@ export class TransactionRepository implements ITransactionRepository {
     })
       .populate<{ userId: { name: string } }>('userId', 'name')
       .sort({ createdAt: -1 })
-      .limit(5)
+      .limit(8)
       .lean();
 
-    return transactions.map(t => ({
-      type: t.metadata?.type === 'bundle_purchase' ? 'bundle' : 'subscription',
-      message: t.metadata?.type === 'bundle_purchase' 
-        ? `Session stack purchase (${t.planType}) from ${t.userId?.name ?? 'Unknown User'}`
-        : `New ${t.planType} subscription from ${t.userId?.name ?? 'Unknown User'}`,
-      date: t.createdAt.toISOString(),
-    }));
+    return transactions.map(t => {
+      const isRefund = t.transactionType === 'credit';
+      const amount = t.trainerEarnings || t.amount;
+      
+      let message = "";
+      if (isRefund) {
+        message = `Refund of ₹${amount} processed for ${t.userId?.name ?? 'Unknown User'}`;
+      } else {
+        message = t.metadata?.type === 'bundle_purchase' 
+          ? `Earned ₹${amount} from session bundle (${t.planType}) by ${t.userId?.name ?? 'Unknown User'}`
+          : `Earned ₹${amount} from new ${t.planType} subscription by ${t.userId?.name ?? 'Unknown User'}`;
+      }
+
+      return {
+        type: isRefund ? 'refund' : (t.metadata?.type === 'bundle_purchase' ? 'bundle' : 'subscription'),
+        message,
+        amount,
+        isRefund,
+        date: t.createdAt.toISOString(),
+      };
+    });
   }
 
   async getAllTransactions(

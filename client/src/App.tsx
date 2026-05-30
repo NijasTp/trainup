@@ -125,6 +125,7 @@ import WorkoutPreviewPage from './pages/user/WorkoutPreviewPage';
 import UserGymAnnouncements from './pages/user/UserGymAnnouncements';
 import BundlePaymentSuccess from './pages/user/BundlePaymentSuccess';
 import BundlePaymentCancel from './pages/user/BundlePaymentCancel';
+import ActiveProtocolPage from './pages/user/ActiveProtocolPage';
 
 
 import { useEffect, useCallback } from 'react';
@@ -208,6 +209,7 @@ function App() {
         <Route path={ROUTES.USER_PROGRESS} element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WORKOUT_HISTORY} element={<ProtectedRoute><WorkoutHistoryPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_WORKOUT_PREVIEW} element={<ProtectedRoute><WorkoutPreviewPage /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_ACTIVE_PROTOCOL} element={<ProtectedRoute><ActiveProtocolPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYMS} element={<ProtectedRoute><GymListing /></ProtectedRoute>} />
         <Route path={ROUTES.USER_TRAINER_PRICING} element={<ProtectedRoute><TrainerPricingPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_GYM_PLAN_SELECTION} element={<ProtectedRoute><GymPlanSelection /></ProtectedRoute>} />

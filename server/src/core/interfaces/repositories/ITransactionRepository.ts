@@ -46,7 +46,7 @@ export interface ITransactionRepository {
     monthlyEarnings: Array<{ month: string; earnings: number; clients: number }>;
     planDistribution: Array<{ plan: string; count: number }>;
   }>;
-  getRecentActivity(trainerId: string): Promise<Array<{ type: string; message: string; date: string }>>;
+  getRecentActivity(trainerId: string): Promise<Array<{ type: string; message: string; date: string; amount?: number; isRefund?: boolean }>>;
   getAllTransactions(
     page: number,
     limit: number,

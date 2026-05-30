@@ -18,7 +18,7 @@ export default function VideoCallPage() {
         if (isTrainer) {
             navigate(ROUTES.TRAINER_DASHBOARD);
         } else {
-            navigate(ROUTES.USER_DASHBOARD);
+            navigate(ROUTES.MY_TRAINER_PROFILE);
         }
     };
 

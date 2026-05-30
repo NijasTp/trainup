@@ -35,6 +35,7 @@ export const ROUTES = {
   USER_WORKOUT_SUCCESS: '/workouts/:id/success',
   USER_WORKOUT_HISTORY: '/workouts/history',
   USER_WORKOUT_PREVIEW: '/workouts/preview/:id',
+  USER_ACTIVE_PROTOCOL: '/workouts/active-protocol/:id',
 
   USER_DIET: '/diets',
   USER_ADD_DIET: '/diets/add',

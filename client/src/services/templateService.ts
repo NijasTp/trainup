@@ -25,8 +25,8 @@ export const startWorkoutTemplate = async (templateId: string, scheduleType?: 'c
     return res.data;
 };
 
-export const stopWorkoutTemplate = async () => {
-    const res = await API.post(API_ROUTES.TEMPLATE.WORKOUT.STOP);
+export const stopWorkoutTemplate = async (templateId?: string) => {
+    const res = await API.post(API_ROUTES.TEMPLATE.WORKOUT.STOP, { templateId });
     return res.data;
 };
 

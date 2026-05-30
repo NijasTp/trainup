@@ -4,9 +4,8 @@ import {
   Users,
   DollarSign,
   TrendingUp,
-  Calendar,
+  TrendingDown,
   Star,
-  Target,
   Activity,
   ArrowUpRight,
   ShieldAlert
@@ -30,6 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 interface DashboardStats {
   totalClients: number;
@@ -135,203 +135,229 @@ export default function TrainerDashboard() {
   const totalPlanCount = stats.planDistribution.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
-    <div className="min-h-screen bg-site-bg text-foreground selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#030303] text-foreground selection:bg-cyan-500/30 font-outfit overflow-x-hidden">
       <TrainerSiteHeader />
       
-      {/* Aurora Background Effects */}
+      {/* Dynamic Aurora Ambient Backdrops */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[-15%] left-[-15%] w-[50%] h-[50%] bg-cyan-500/5 blur-[140px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-15%] right-[-15%] w-[50%] h-[50%] bg-blue-600/5 blur-[140px] rounded-full animate-pulse" style={{ animationDelay: '3s' }} />
       </div>
 
       <main className="relative container mx-auto px-6 py-12 space-y-12 z-10">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2">
-             <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 px-3 py-1 font-black italic uppercase tracking-widest text-[10px]">
-              Overview
+        {/* Elite Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 border-b border-white/5 pb-10">
+          <div className="space-y-3">
+            <Badge className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-4 py-1.5 font-black italic uppercase tracking-widest text-[9px] rounded-full">
+              Command Center
             </Badge>
-            <h1 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
-              My <span className="text-cyan-500">Dashboard</span>
+            <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none text-white">
+              Trainer <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 italic">Dashboard</span>
             </h1>
-            <p className="text-white/40 font-medium text-lg max-w-xl">
-              Real-time analytics and performance metrics for your training dashboard.
+            <p className="text-slate-400 font-medium text-base md:text-lg max-w-2xl">
+              Monitor active client engagement, evaluate financial trajectories, and coordinate training schedules through an elite modern console.
             </p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
              <Button 
                 onClick={() => navigate("/trainer/weekly-schedule")}
-                className="h-14 px-8 bg-white text-black hover:bg-white/90 font-black uppercase italic tracking-widest transition-transform active:scale-95"
+                className="h-16 px-10 bg-cyan-500 hover:bg-cyan-400 text-black font-black uppercase italic tracking-widest rounded-2xl shadow-xl shadow-cyan-500/10 transition-all duration-300 hover:-translate-y-0.5 active:scale-95 border-0"
               >
                 Schedule Session
               </Button>
           </div>
         </div>
         
-        {/* Unassigned Users Notification */}
-        {stats.unassignedClientsCount > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl group cursor-pointer hover:bg-amber-500/20 transition-all"
-            onClick={() => navigate("/trainer/clients")}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30">
-                <ShieldAlert className="h-6 w-6 text-amber-400" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black uppercase italic tracking-widest text-amber-400">Assignment Pending</h3>
-                <p className="text-xs text-amber-400/60 font-medium">You have {stats.unassignedClientsCount} client{stats.unassignedClientsCount > 1 ? 's' : ''} waiting for workout or diet plans.</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 text-amber-400 font-black uppercase italic tracking-widest text-xs">
-              Action Required <ArrowUpRight className="h-4 w-4" />
-            </div>
-          </motion.div>
-        )}
-        
-        {/* Monetization Pending Notification */}
-        {!stats.hasSessionBundles && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between p-6 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl group cursor-pointer hover:bg-cyan-500/20 transition-all shadow-[0_0_20px_rgba(6,182,212,0.1)]"
-            onClick={() => navigate("/trainer/edit-profile")}
-          >
-            <div className="flex items-center gap-6">
-              <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
-                <DollarSign className="h-7 w-7 text-cyan-400" />
-              </div>
-              <div>
-                <h3 className="text-base font-black uppercase italic tracking-widest text-cyan-400">Payment Setup Needed</h3>
-                <p className="text-xs text-cyan-400/60 font-bold uppercase tracking-wider mt-1">Configure your session prices to allow clients to purchase call packages.</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 px-6 py-3 bg-cyan-500 text-black rounded-xl font-black uppercase italic tracking-widest text-[10px] group-hover:scale-105 transition-transform">
-              Configure Now <ArrowUpRight className="h-4 w-4" />
-            </div>
-          </motion.div>
-        )}
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-white/[0.03] backdrop-blur-xl border-white/10 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-               <Users className="h-16 w-16" />
-            </div>
-            <CardContent className="p-8">
-              <div className="space-y-4">
-                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                  <Users className="h-5 w-5 text-blue-400" />
+        {/* Interactive Alerts Loop */}
+        <div className="grid grid-cols-1 gap-4">
+          {/* Unassigned Users Notification */}
+          {stats.unassignedClientsCount > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.005 }}
+              className="flex items-center justify-between p-6 bg-amber-500/[0.04] border border-amber-500/20 rounded-[2rem] group cursor-pointer hover:bg-amber-500/[0.08] transition-all duration-300 shadow-xl"
+              onClick={() => navigate("/trainer/clients")}
+            >
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-2xl group-hover:scale-105 transition-transform duration-300">
+                  <ShieldAlert className="h-7 w-7 text-amber-400 animate-bounce" />
                 </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase italic tracking-widest text-white/40 mb-1">Active Clients</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black italic">{stats.totalClients}</span>
-                    <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20 text-[10px] font-black italic italic tracking-tighter">
+                <div className="space-y-1">
+                  <h3 className="text-base font-black uppercase italic tracking-widest text-amber-400">Client Allocations Pending</h3>
+                  <p className="text-xs text-slate-400 font-medium">You have <span className="text-amber-400 font-bold">{stats.unassignedClientsCount} client{stats.unassignedClientsCount > 1 ? 's' : ''}</span> waiting for custom training structures or diet blueprints.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-amber-400 font-black uppercase italic tracking-widest text-[10px] bg-amber-500/10 px-4 py-2 rounded-xl group-hover:bg-amber-400 group-hover:text-black transition-all">
+                Action Required <ArrowUpRight className="h-3 w-3" />
+              </div>
+            </motion.div>
+          )}
+          
+          {/* Payment Setup Needed Notification */}
+          {!stats.hasSessionBundles && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.005 }}
+              className="flex items-center justify-between p-6 bg-cyan-500/[0.03] border border-cyan-500/20 rounded-[2rem] group cursor-pointer hover:bg-cyan-500/[0.07] transition-all duration-300 shadow-xl"
+              onClick={() => navigate("/trainer/edit-profile")}
+            >
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-2xl group-hover:scale-105 transition-transform duration-300">
+                  <DollarSign className="h-7 w-7 text-cyan-400" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-black uppercase italic tracking-widest text-cyan-400">Payment Infrastructure Configuration</h3>
+                  <p className="text-xs text-slate-400 font-medium">Configure session stack packages to enable automated client call purchases.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-cyan-400 font-black uppercase italic tracking-widest text-[10px] bg-cyan-500/10 px-4 py-2 rounded-xl group-hover:bg-cyan-400 group-hover:text-black transition-all">
+                Configure Profile <ArrowUpRight className="h-3 w-3" />
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Stats Grid with Glowing Highlights */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Active Clients */}
+          <motion.div 
+            whileHover={{ y: -6 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <Card className="bg-white/[0.02] backdrop-blur-2xl border border-white/5 hover:border-blue-500/20 rounded-[2.5rem] shadow-2xl relative overflow-hidden group h-full">
+              <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-500">
+                 <Users className="h-32 w-32 text-blue-500" />
+              </div>
+              <CardContent className="p-8 space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-xl group-hover:scale-110 transition-transform">
+                  <Users className="h-6 w-6 text-blue-400" />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-400">Active Operatives</p>
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-5xl font-black italic tracking-tighter text-white">{stats.totalClients}</span>
+                    <Badge className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black italic uppercase tracking-widest px-2.5 py-0.5 rounded-full">
                       +{stats.newClientsThisMonth} NEW
                     </Badge>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="bg-white/[0.03] backdrop-blur-xl border-white/10 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-               <DollarSign className="h-16 w-16" />
-            </div>
-            <CardContent className="p-8">
-              <div className="space-y-4">
-                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
-                  <DollarSign className="h-5 w-5 text-green-400" />
+          {/* Monthly Revenue */}
+          <motion.div 
+            whileHover={{ y: -6 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <Card className="bg-white/[0.02] backdrop-blur-2xl border border-white/5 hover:border-cyan-500/20 rounded-[2.5rem] shadow-2xl relative overflow-hidden group h-full">
+              <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-500">
+                 <DollarSign className="h-32 w-32 text-cyan-500" />
+              </div>
+              <CardContent className="p-8 space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-xl group-hover:scale-110 transition-transform">
+                  <DollarSign className="h-6 w-6 text-cyan-400" />
                 </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase italic tracking-widest text-white/40 mb-1">Monthly Revenue</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black italic">{formatAmount(stats.totalEarningsThisMonth)}</span>
-                  </div>
-                   <p className={`text-[10px] font-bold mt-2 flex items-center gap-1 ${Number(growthPercentage) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    <ArrowUpRight className="h-3 w-3" />
-                    {Number(growthPercentage) >= 0 ? '+' : ''}{growthPercentage}% vs Last Month
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-400">Monthly Revenue</p>
+                  <span className="text-4xl font-black italic tracking-tighter text-white">{formatAmount(stats.totalEarningsThisMonth)}</span>
+                  <p className={cn(
+                    "text-[10px] font-black uppercase tracking-wider flex items-center gap-1 mt-1",
+                    Number(growthPercentage) >= 0 ? "text-emerald-400" : "text-rose-400"
+                  )}>
+                    {Number(growthPercentage) >= 0 ? "+" : ""}{growthPercentage}% vs last month
                   </p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="bg-white/[0.03] backdrop-blur-xl border-white/10 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-               <Star className="h-16 w-16" />
-            </div>
-            <CardContent className="p-8">
-              <div className="space-y-4">
-                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                  <Star className="h-5 w-5 text-amber-400" />
+          {/* Average Rating */}
+          <motion.div 
+            whileHover={{ y: -6 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <Card className="bg-white/[0.02] backdrop-blur-2xl border border-white/5 hover:border-amber-500/20 rounded-[2.5rem] shadow-2xl relative overflow-hidden group h-full">
+              <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-500">
+                 <Star className="h-32 w-32 text-amber-500" />
+              </div>
+              <CardContent className="p-8 space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-xl group-hover:scale-110 transition-transform">
+                  <Star className="h-6 w-6 text-amber-400 animate-pulse" />
                 </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase italic tracking-widest text-white/40 mb-1">Average Rating</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black italic">{stats.averageRating.toFixed(1)}</span>
-                    <span className="text-white/20 font-black italic">/ 5.0</span>
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-400">Satisfaction Score</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-5xl font-black italic tracking-tighter text-white">{stats.averageRating.toFixed(1)}</span>
+                    <span className="text-slate-500 font-bold text-base uppercase">/ 5.0</span>
                   </div>
-                  <div className="flex gap-0.5 mt-2">
+                  <div className="flex gap-1 mt-1.5 w-full bg-white/[0.02] p-1 rounded-full border border-white/5">
                     {[1, 2, 3, 4, 5].map((s) => (
-                      <div key={s} className={`h-1 flex-1 rounded-full ${s <= Math.round(stats.averageRating) ? 'bg-amber-400' : 'bg-white/5'}`} />
+                      <div 
+                        key={s} 
+                        className={cn(
+                          "h-1.5 flex-1 rounded-full transition-all duration-500",
+                          s <= Math.round(stats.averageRating) ? "bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-white/5"
+                        )} 
+                      />
                     ))}
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="bg-white/[0.03] backdrop-blur-xl border-white/10 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-               <Activity className="h-16 w-16" />
-            </div>
-            <CardContent className="p-8">
-              <div className="space-y-4">
-                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                  <Activity className="h-5 w-5 text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase italic tracking-widest text-white/40 mb-1">Total Sessions</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black italic">{stats.totalSessions}</span>
-                  </div>
-                  <p className="text-[10px] font-bold text-white/20 mt-2 uppercase tracking-widest">Completed Sessions</p>
-                </div>
+          {/* Total Sessions */}
+          <motion.div 
+            whileHover={{ y: -6 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <Card className="bg-white/[0.02] backdrop-blur-2xl border border-white/5 hover:border-purple-500/20 rounded-[2.5rem] shadow-2xl relative overflow-hidden group h-full">
+              <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-500">
+                 <Activity className="h-32 w-32 text-purple-500" />
               </div>
-            </CardContent>
-          </Card>
+              <CardContent className="p-8 space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 shadow-xl group-hover:scale-110 transition-transform">
+                  <Activity className="h-6 w-6 text-purple-400" />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-400">Total Consultations</p>
+                  <span className="text-4xl font-black italic tracking-tighter text-white">{stats.totalSessions}</span>
+                  <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-wider">Completed Sessions</p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
-        {/* Charts Section */}
+        {/* Charts Panel */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="bg-white/[0.03] backdrop-blur-xl border-white/10 shadow-2xl">
-            <CardHeader className="p-8 pb-0">
-              <CardTitle className="text-sm font-black uppercase italic tracking-widest flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-cyan-400" />
-                Earnings Growth
+          {/* Area Chart: Earnings */}
+          <Card className="bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-[3rem] shadow-2xl p-6 group">
+            <CardHeader className="p-6 pb-2">
+              <CardTitle className="text-xs font-black uppercase italic tracking-widest flex items-center gap-3 text-slate-400 group-hover:text-cyan-400 transition-colors">
+                <div className="w-1.5 h-4 bg-cyan-500 rounded-full" />
+                Financial Trajectory
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6">
               <div className="h-[350px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={stats.monthlyEarnings}>
                     <defs>
-                      <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
+                      <linearGradient id="colorEarningsGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.25}/>
                         <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
                     <XAxis 
                       dataKey="month" 
                       axisLine={false} 
                       tickLine={false} 
-                      tick={{fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 900}} 
+                      tick={{fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 900, letterSpacing: '0.05em'}} 
                       dy={10}
                     />
                     <YAxis 
@@ -341,9 +367,9 @@ export default function TrainerDashboard() {
                       tickFormatter={(val) => `₹${val/1000}k`}
                     />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                      contentStyle={{ backgroundColor: '#0c0c0c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', backdropFilter: 'blur(20px)' }}
                       itemStyle={{ color: '#06b6d4', fontWeight: 900, fontSize: '12px', textTransform: 'uppercase' }}
-                      labelStyle={{ color: 'white', fontWeight: 700, marginBottom: '4px' }}
+                      labelStyle={{ color: 'white', fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', marginBottom: '6px' }}
                     />
                     <Area 
                       type="monotone" 
@@ -351,7 +377,7 @@ export default function TrainerDashboard() {
                       stroke="#06b6d4" 
                       strokeWidth={4}
                       fillOpacity={1} 
-                      fill="url(#colorEarnings)" 
+                      fill="url(#colorEarningsGrad)" 
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -359,23 +385,24 @@ export default function TrainerDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/[0.03] backdrop-blur-xl border-white/10 shadow-2xl">
-            <CardHeader className="p-8 pb-0">
-              <CardTitle className="text-sm font-black uppercase italic tracking-widest flex items-center gap-2">
-                <Users className="h-4 w-4 text-cyan-400" />
-                Client Growth
+          {/* Bar Chart: Client Allocations */}
+          <Card className="bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-[3rem] shadow-2xl p-6 group">
+            <CardHeader className="p-6 pb-2">
+              <CardTitle className="text-xs font-black uppercase italic tracking-widest flex items-center gap-3 text-slate-400 group-hover:text-blue-400 transition-colors">
+                <div className="w-1.5 h-4 bg-blue-500 rounded-full" />
+                Client Allocation Progress
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6">
               <div className="h-[350px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.monthlyEarnings}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
                     <XAxis 
                       dataKey="month" 
                       axisLine={false} 
                       tickLine={false} 
-                      tick={{fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 900}} 
+                      tick={{fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 900, letterSpacing: '0.05em'}} 
                       dy={10}
                     />
                     <YAxis 
@@ -384,16 +411,16 @@ export default function TrainerDashboard() {
                       tick={{fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 900}} 
                     />
                     <Tooltip 
-                      cursor={{fill: 'rgba(255,255,255,0.05)'}}
-                      contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                      cursor={{fill: 'rgba(255,255,255,0.02)'}}
+                      contentStyle={{ backgroundColor: '#0c0c0c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', backdropFilter: 'blur(20px)' }}
                       itemStyle={{ color: '#06b6d4', fontWeight: 900, fontSize: '12px', textTransform: 'uppercase' }}
-                      labelStyle={{ color: 'white', fontWeight: 700, marginBottom: '4px' }}
+                      labelStyle={{ color: 'white', fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', marginBottom: '6px' }}
                     />
                     <Bar 
                       dataKey="clients" 
                       fill="#06b6d4" 
-                      radius={[6, 6, 0, 0]}
-                      barSize={40}
+                      radius={[8, 8, 0, 0]}
+                      barSize={32}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -402,98 +429,139 @@ export default function TrainerDashboard() {
           </Card>
         </div>
 
-        {/* Lower Grid: Distribution and Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="bg-white/[0.03] backdrop-blur-xl border-white/10 shadow-2xl">
-            <CardHeader className="p-8">
-              <CardTitle className="text-sm font-black uppercase italic tracking-widest flex items-center gap-2">
-                <Target className="h-4 w-4 text-cyan-400" />
-                Plan Distribution
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 pt-0">
-              <div className="space-y-6">
-                {stats.planDistribution.map((plan) => {
-                  const percentage = totalPlanCount > 0
-                    ? ((plan.count / totalPlanCount) * 100).toFixed(1)
-                    : '0';
+        {/* Lower Grid: Plan Distribution and Dynamic Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Plan Distribution */}
+          <div className="lg:col-span-5">
+            <Card className="bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-[3rem] shadow-2xl p-8 h-full">
+              <CardHeader className="p-0 mb-8">
+                <CardTitle className="text-xs font-black uppercase italic tracking-widest flex items-center gap-3 text-slate-400">
+                  <div className="w-1.5 h-4 bg-purple-500 rounded-full" />
+                  Subscription Distribution
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="space-y-8">
+                  {stats.planDistribution.map((plan) => {
+                    const percentage = totalPlanCount > 0
+                      ? ((plan.count / totalPlanCount) * 100).toFixed(1)
+                      : '0';
 
-                  const planColor = {
-                    basic: 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]',
-                    premium: 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]',
-                    pro: 'bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
-                  }[plan.plan as 'basic'|'premium'|'pro'] || 'bg-white/20';
+                    const planColor = {
+                      basic: 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]',
+                      premium: 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]',
+                      pro: 'bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                    }[plan.plan as 'basic'|'premium'|'pro'] || 'bg-white/20';
 
-                  return (
-                    <div key={plan.plan} className="space-y-3">
-                      <div className="flex justify-between items-end">
-                        <div className="space-y-1">
-                          <p className="text-xs font-black uppercase italic tracking-widest text-white">{plan.plan} Plan</p>
-                          <p className="text-[10px] text-white/40 font-bold">{plan.count} clients</p>
+                    return (
+                      <div key={plan.plan} className="space-y-3 group">
+                        <div className="flex justify-between items-end">
+                          <div className="space-y-1">
+                            <p className="text-sm font-black uppercase italic tracking-widest text-white group-hover:text-cyan-400 transition-colors">{plan.plan} Protocol</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{plan.count} client{plan.count !== 1 ? 's' : ''}</p>
+                          </div>
+                          <span className="text-3xl font-black italic tracking-tighter text-white">{percentage}%</span>
                         </div>
-                        <span className="text-2xl font-black italic tracking-tighter">{percentage}%</span>
+                        <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                          <div
+                            className={`${planColor} h-full rounded-full transition-all duration-1000 ease-out`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden p-0.5">
-                        <div
-                          className={`${planColor} h-full rounded-full transition-all duration-1000 ease-out`}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          <Card className="bg-white/[0.03] backdrop-blur-xl border-white/10 shadow-2xl">
-            <CardHeader className="p-8">
-              <CardTitle className="text-sm font-black uppercase italic tracking-widest flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-cyan-400" />
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 pt-0">
-              <div className="space-y-4">
-                {stats.recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors group">
-                    <div className={`p-3 rounded-xl ${
-                        activity.type === 'subscription' ? 'bg-green-500/10' :
-                        activity.type === 'session' ? 'bg-blue-500/10' :
-                        activity.type === 'rating' ? 'bg-amber-500/10' :
-                        'bg-white/10'
-                      }`}>
-                      {activity.type === 'subscription' && <DollarSign className="h-4 w-4 text-green-400" />}
-                      {activity.type === 'session' && <Calendar className="h-4 w-4 text-blue-400" />}
-                      {activity.type === 'rating' && <Star className="h-4 w-4 text-amber-400" />}
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">{activity.message}</p>
-                      <div className="flex items-center justify-between">
-                         <Badge variant="outline" className="text-[9px] border-white/10 text-white/40 font-black uppercase italic tracking-tighter">
-                          {activity.type}
-                        </Badge>
-                        <p className="text-[10px] text-white/20 font-black uppercase tracking-widest">
-                          {new Date(activity.date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
+          {/* Dynamic Recent Activity with Credit/Debit Markers */}
+          <div className="lg:col-span-7">
+            <Card className="bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-[3rem] shadow-2xl p-8 h-full">
+              <CardHeader className="p-0 mb-8 flex flex-row items-center justify-between">
+                <CardTitle className="text-xs font-black uppercase italic tracking-widest flex items-center gap-3 text-slate-400">
+                  <div className="w-1.5 h-4 bg-emerald-500 rounded-full" />
+                  Recent Activity logs
+                </CardTitle>
+                <Badge variant="outline" className="border-white/10 text-slate-500 uppercase text-[9px] font-black tracking-widest rounded-full py-1 px-3">
+                  Real-time Feed
+                </Badge>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="space-y-4">
+                  {stats.recentActivity.map((activity: any, index: number) => {
+                    const isRefund = activity.isRefund;
+                    const amount = activity.amount;
+
+                    return (
+                      <div key={index} className="flex items-start gap-5 p-5 rounded-[2rem] bg-white/[0.01] border border-white/5 hover:border-white/10 hover:bg-white/[0.03] transition-all duration-300 group">
+                        <div className={cn(
+                          "p-3.5 rounded-2xl transition-all duration-300 shadow-xl",
+                          isRefund 
+                            ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" 
+                            : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        )}>
+                          {isRefund ? (
+                            <TrendingDown className="h-5 w-5" />
+                          ) : (
+                            <TrendingUp className="h-5 w-5" />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 space-y-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <p className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors leading-relaxed">
+                              {activity.message}
+                            </p>
+                            {amount !== undefined && (
+                              <span className={cn(
+                                "text-lg font-black italic tracking-tighter tabular-nums whitespace-nowrap px-3 py-1 bg-white/[0.02] rounded-xl border border-white/5 self-start sm:self-auto shadow-inner",
+                                isRefund ? "text-rose-500" : "text-emerald-400"
+                              )}>
+                                {isRefund ? "-" : "+"}{formatAmount(amount)}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center justify-between pt-1">
+                            <Badge 
+                              variant="outline" 
+                              className={cn(
+                                "text-[8px] font-black uppercase italic tracking-widest px-3 py-0.5 rounded-full border",
+                                isRefund 
+                                  ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                                  : activity.type === 'bundle'
+                                  ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                  : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                              )}
+                            >
+                              {activity.type === 'bundle' ? 'Call Stack' : activity.type}
+                            </Badge>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                              {new Date(activity.date).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                        </div>
                       </div>
+                    );
+                  })}
+                  
+                  {stats.recentActivity.length === 0 && (
+                    <div className="text-center py-20 space-y-4 bg-white/[0.01] border border-white/5 rounded-[2.5rem] border-dashed">
+                      <Activity className="h-12 w-12 mx-auto text-slate-600 animate-pulse" />
+                      <p className="text-xs font-black uppercase italic tracking-widest text-slate-500">No recent activity detected</p>
                     </div>
-                  </div>
-                ))}
-                {stats.recentActivity.length === 0 && (
-                  <div className="text-center py-12 space-y-4 opacity-20">
-                    <Activity className="h-12 w-12 mx-auto" />
-                    <p className="text-xs font-black uppercase italic tracking-widest">No recent activity</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
 

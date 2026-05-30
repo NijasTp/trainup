@@ -1,19 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Search, Calendar, Trophy, ImagePlus, MoreVertical, Edit, Trash2, Eye, Filter, Sparkles, Layout, Dumbbell, Utensils, Box, Layers, Clock, Trash } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Plus, Search, Edit, Eye, Layers, Clock, Trash } from "lucide-react";
 import { TrainerLayout } from "@/components/trainer/TrainerLayout";
 import { useNavigate } from "react-router-dom";
 import API from "@/lib/axios";
 import type { IDietTemplate, IWorkoutTemplate, TemplateResponse } from "@/interfaces/admin/templateManagement";
-import { motion, AnimatePresence } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 
 const TrainerTemplateManagement = () => {
-    const [templateType, setTemplateType] = useState<"workout" | "diet">("workout");
+    const templateType = "workout";
     const [response, setResponse] = useState<TemplateResponse>({ templates: [], total: 0, page: 1, totalPages: 1 });
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -106,7 +105,7 @@ const TrainerTemplateManagement = () => {
 
                 {/* Search and Filters */}
                 <div className="grid md:grid-cols-4 gap-6">
-                    <div className="md:col-span-2 relative group">
+                    <div className="md:col-span-3 relative group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
                         <Input
                             placeholder={`SEARCH YOUR ${templateType.toUpperCase()}S...`}
@@ -115,20 +114,6 @@ const TrainerTemplateManagement = () => {
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                             className="bg-black/40 border-white/10 h-14 pl-12 rounded-2xl text-white font-black italic uppercase text-sm focus:ring-1 focus:ring-primary/50"
                         />
-                    </div>
-                    <div className="flex bg-black/40 border border-white/10 rounded-2xl p-1.5 h-14">
-                        <button
-                            onClick={() => { setTemplateType('workout'); setCurrentPage(1); }}
-                            className={`flex-1 flex items-center justify-center gap-2 rounded-xl font-black italic uppercase text-[10px] transition-all ${templateType === 'workout' ? 'bg-primary text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
-                        >
-                            <Dumbbell size={14} /> Training
-                        </button>
-                        <button
-                            onClick={() => { setTemplateType('diet'); setCurrentPage(1); }}
-                            className={`flex-1 flex items-center justify-center gap-2 rounded-xl font-black italic uppercase text-[10px] transition-all ${templateType === 'diet' ? 'bg-primary text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
-                        >
-                            <Utensils size={14} /> Nutrition
-                        </button>
                     </div>
                     <Button onClick={handleSearch} className="h-14 rounded-2xl bg-white/5 border border-white/10 text-white font-black italic uppercase text-xs hover:bg-white/10">
                         Apply Filters

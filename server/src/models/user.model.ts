@@ -16,6 +16,7 @@ export interface IActiveTemplate {
   startDate: Date;
   scheduleType?: 'contiguous' | 'weekly';
   weeklyDays?: number[];
+  assignedBy?: 'trainer' | 'admin' | 'user';
 }
 
 export interface IUser extends Document {
@@ -117,7 +118,8 @@ const userSchema: Schema<IUser> = new Schema(
         templateId: { type: Schema.Types.ObjectId, ref: "WorkoutSnapshot" },
         startDate: { type: Date },
         scheduleType: { type: String, enum: ['contiguous', 'weekly'], default: 'contiguous' },
-        weeklyDays: { type: [Number], default: [] }
+        weeklyDays: { type: [Number], default: [] },
+        assignedBy: { type: String, enum: ['trainer', 'admin', 'user'], default: 'user' }
       }],
       default: []
     },

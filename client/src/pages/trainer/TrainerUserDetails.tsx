@@ -16,7 +16,6 @@ import {
 import { 
     ArrowLeft, 
     Dumbbell, 
-    Apple, 
     MessageSquare, 
     Camera, 
     ChevronRight, 
@@ -38,7 +37,6 @@ import { toast } from "sonner";
 import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 
 import type { User, UserPlan, Progress } from "@/interfaces/trainer/ITrainerUserDetails";
 
@@ -62,7 +60,6 @@ export default function TrainerUserDetails() {
     const navigate = useNavigate();
     const [user, setUser] = useState<User | null>(null);
     const [userPlan, setUserPlan] = useState<UserPlan | null>(null);
-    const [progressList, setProgressList] = useState<Progress[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -99,17 +96,7 @@ export default function TrainerUserDetails() {
         }
     }, [id]);
 
-    const fetchProgress = useCallback(async () => {
-        try {
-            const response = await API.get(`/trainer/client-progress/${id}`);
-            const sorted = response.data.progress.sort((a: Progress, b: Progress) =>
-                new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
-            setProgressList(sorted);
-        } catch (_err: unknown) {
-            // Silently handle
-        }
-    }, [id]);
+
 
     const fetchSessions = useCallback(async () => {
         try {
@@ -129,10 +116,9 @@ export default function TrainerUserDetails() {
         if (id) {
             fetchUser();
             fetchUserPlan();
-            fetchProgress();
             fetchSessions();
         }
-    }, [id, fetchUser, fetchUserPlan, fetchProgress, fetchSessions]);
+    }, [id, fetchUser, fetchUserPlan, fetchSessions]);
 
     const handleStartChat = () => {
         if (!user?.trainerPlan || user.trainerPlan === 'basic') {
@@ -352,7 +338,7 @@ export default function TrainerUserDetails() {
                         <div className="lg:col-span-2 space-y-8">
                             <Card className="bg-white/[0.03] backdrop-blur-3xl border-white/10 rounded-[2.5rem] overflow-hidden">
                                 <div className="p-8 border-b border-white/5 flex items-center justify-between">
-                                    <h3 className="text-xl font-black italic uppercase tracking-tighter text-cyan-400">Training & Diet</h3>
+                                    <h3 className="text-xl font-black italic uppercase tracking-tighter text-cyan-400">Training Portal</h3>
                                     <Badge className="bg-white/5 text-white/40 border-white/10 font-black italic tracking-widest uppercase text-[9px]">Management</Badge>
                                 </div>
                                 <CardContent className="p-8 grid gap-4">
@@ -382,20 +368,6 @@ export default function TrainerUserDetails() {
                                             </div>
                                         </div>
                                         <ChevronRight className="h-6 w-6 text-white/10 group-hover:text-blue-400 transition-all group-hover:translate-x-1" />
-                                    </Link>
-
-                                    <Link to={`/trainer/diet/${id}`} className="group relative bg-white/[0.04] border border-white/5 hover:bg-green-500/10 hover:border-green-500/30 p-8 rounded-[2rem] transition-all duration-500 flex items-center justify-between overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 blur-[50px] scale-0 group-hover:scale-100 transition-transform duration-700" />
-                                        <div className="flex items-center gap-6">
-                                            <div className="h-16 w-16 bg-green-500/10 rounded-2xl flex items-center justify-center group-hover:bg-green-500 text-green-400 group-hover:text-black transition-all duration-500">
-                                                <Apple className="h-8 w-8" />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <h4 className="text-2xl font-black italic uppercase tracking-tight group-hover:text-green-400 transition-colors text-white">Diet Plan</h4>
-                                                <p className="text-white/30 text-xs font-bold tracking-widest uppercase">Nutrition Management</p>
-                                            </div>
-                                        </div>
-                                        <ChevronRight className="h-6 w-6 text-white/10 group-hover:text-green-400 transition-all group-hover:translate-x-1" />
                                     </Link>
                                 </CardContent>
                             </Card>

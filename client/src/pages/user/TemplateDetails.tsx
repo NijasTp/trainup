@@ -77,9 +77,14 @@ export default function TemplateDetails() {
 
             if (isActive) {
                 // If active, stop the program
-                await stopWorkoutTemplate();
+                await stopWorkoutTemplate(template._id);
                 await refreshProfile();
                 toast.success(`Successfully stopped program: ${template.title}`);
+                return;
+            }
+
+            if (!template.days || template.days.length === 0) {
+                toast.error("This template has no workout days assigned. You cannot activate an empty protocol.");
                 return;
             }
 
@@ -251,7 +256,7 @@ export default function TemplateDetails() {
                                         "w-full h-24 rounded-[2.5rem] text-2xl font-black italic tracking-widest transition-all shadow-2xl overflow-hidden group relative border-0",
                                         isActive
                                             ? "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-900/20"
-                                            : "bg-primary hover:bg-primary/90 text-white shadow-primary/20"
+                                            : "bg-primary hover:bg-primary/90 text-slate-950 shadow-primary/20"
                                     )}
                                 >
                                     <span className="relative z-10 flex items-center justify-center gap-4 uppercase">
@@ -350,7 +355,7 @@ export default function TemplateDetails() {
                                 className={cn(
                                     "py-4 rounded-2xl font-black italic text-xs tracking-wider transition-all uppercase",
                                     scheduleType === 'contiguous'
-                                        ? "bg-primary text-white shadow-lg"
+                                        ? "bg-primary text-slate-950 shadow-lg"
                                         : "text-slate-400 hover:text-white"
                                 )}
                             >
@@ -361,7 +366,7 @@ export default function TemplateDetails() {
                                 className={cn(
                                     "py-4 rounded-2xl font-black italic text-xs tracking-wider transition-all uppercase",
                                     scheduleType === 'weekly'
-                                        ? "bg-primary text-white shadow-lg"
+                                        ? "bg-primary text-slate-950 shadow-lg"
                                         : "text-slate-400 hover:text-white"
                                 )}
                             >
@@ -414,7 +419,7 @@ export default function TemplateDetails() {
                                                 className={cn(
                                                     "w-12 h-12 rounded-full font-black text-sm flex items-center justify-center border transition-all duration-300 shadow-md",
                                                     isSelected
-                                                        ? "bg-primary border-primary text-white scale-110 shadow-primary/20"
+                                                        ? "bg-primary border-primary text-slate-950 scale-110 shadow-primary/20"
                                                         : "bg-white/5 border-white/10 text-slate-400 hover:border-slate-500 hover:text-white"
                                                 )}
                                             >
@@ -440,7 +445,7 @@ export default function TemplateDetails() {
                         </Button>
                         <Button
                             onClick={confirmStartTemplate}
-                            className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-wider shadow-lg shadow-primary/20"
+                            className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-slate-950 font-black uppercase text-xs tracking-wider shadow-lg shadow-primary/20"
                         >
                             Activate Protocol
                         </Button>

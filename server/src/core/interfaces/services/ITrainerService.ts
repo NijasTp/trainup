@@ -47,6 +47,8 @@ export interface DashboardStats {
     type: string
     message: string
     date: string
+    amount?: number
+    isRefund?: boolean
   }>
   unassignedClientsCount: number
   hasSessionBundles: boolean

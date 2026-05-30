@@ -292,6 +292,10 @@ export interface GymSummary {
   certifications?: string[] | null;
   memberCount: number;
   rating: number;
+  geoLocation?: {
+    type: "Point";
+    coordinates: [number, number];
+  } | null;
 }
 
 export interface MyGymResponseDto {

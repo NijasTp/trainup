@@ -108,15 +108,14 @@ export const StreakCalendar: React.FC<StreakCalendarProps> = ({ sessions }) => {
                                     initial={{ scale: 0.8, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     className={cn(
-                                        "absolute inset-0 flex items-center justify-center rounded-lg",
-                                        isToday ? "bg-orange-500/40 ring-1 ring-orange-500/50 shadow-[0_0_10px_rgba(249,115,22,0.3)]" : "bg-orange-500/20"
+                                        "absolute inset-0 flex items-center justify-center rounded-lg bg-primary shadow-[0_0_10px_rgba(255,255,255,0.15)]"
                                     )}
                                 />
                             )}
 
                             <span className={cn(
                                 "relative z-10",
-                                isWorkoutDay ? "text-orange-100 font-bold" : "text-gray-400",
+                                isWorkoutDay ? "text-slate-950 font-black" : "text-gray-400",
                                 isToday && !isWorkoutDay && "text-white underline underline-offset-4 decoration-primary"
                             )}>
                                 {format(day, 'd')}
@@ -128,8 +127,8 @@ export const StreakCalendar: React.FC<StreakCalendarProps> = ({ sessions }) => {
 
             <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-center gap-3 text-[9px] text-gray-500 font-bold uppercase tracking-widest">
                 <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500/40" />
-                    <span>Streak</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    <span>Completed</span>
                 </div>
                 <div className="flex items-center gap-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-white/5 border border-white/10" />

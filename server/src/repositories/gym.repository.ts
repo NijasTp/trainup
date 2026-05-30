@@ -585,7 +585,8 @@ export class GymRepository implements IGymRepository {
       images: gym.images ?? null,
       certifications: gym.certifications || null,
       memberCount: gym.members?.length ?? 0,
-      rating: (gym as unknown as { avgRating?: number }).avgRating ?? 0
+      rating: (gym as unknown as { avgRating?: number }).avgRating ?? 0,
+      geoLocation: gym.geoLocation || null
     }
 
     const members: MemberSummary[] =

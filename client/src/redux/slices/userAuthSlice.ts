@@ -15,6 +15,10 @@ interface WeightLog {
 export interface ActiveTemplate {
   templateId: string;
   startDate: string;
+  scheduleType?: 'contiguous' | 'weekly';
+  weeklyDays?: number[];
+  assignedBy?: 'trainer' | 'admin' | 'user';
+  originalTemplateId?: string;
 }
 
 export interface AssignedTrainerDetails {

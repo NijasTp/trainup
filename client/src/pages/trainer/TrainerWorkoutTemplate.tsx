@@ -42,7 +42,7 @@ export default function TrainerWorkoutTemplateForm() {
         setSearchLoading(true);
         try {
           const response = await fetch(
-            `https://wger.de/api/v2/exercise/search/?term=${encodeURIComponent(searchQuery)}&language=2`,
+            `/api/wger/exerciseinfo/?name=${encodeURIComponent(searchQuery)}&language=2`,
             {
               headers: {
                 Accept: "application/json",
@@ -53,7 +53,20 @@ export default function TrainerWorkoutTemplateForm() {
           if (!response.ok) throw new Error("Failed to fetch exercises");
 
           const data = await response.json();
-          setSearchResults(data.suggestions || []);
+          const mapped = (data.results || []).map((ex: any) => {
+            const mainImage = ex.images?.find((img: any) => img.is_main) || ex.images?.[0];
+            return {
+              value: ex.name,
+              data: {
+                id: ex.id,
+                base_id: ex.exercise_base || ex.id,
+                category: ex.category?.name || "Exercise",
+                image: mainImage ? mainImage.image.replace("https://wger.de", "") : "",
+                image_thumbnail: mainImage ? mainImage.image.replace("https://wger.de", "") : ""
+              }
+            };
+          });
+          setSearchResults(mapped);
         } catch (error) {
           console.error("Error fetching WGER exercises:", error);
           toast.error("Failed to search exercises");

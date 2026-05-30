@@ -92,9 +92,11 @@ export class UserRepository implements IUserRepository {
     if (data.assignedTrainer && typeof data.assignedTrainer === 'string') {
       data.assignedTrainer = new Types.ObjectId(data.assignedTrainer)
     }
+    const hasOperators = Object.keys(data).some(key => key.startsWith('$'));
+    const updateQuery = hasOperators ? data : { $set: data };
     return await UserModel.findByIdAndUpdate(
       id,
-      { $set: data },
+      updateQuery,
       { new: true }
     ).exec()
   }

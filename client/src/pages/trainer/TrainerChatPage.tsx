@@ -789,22 +789,24 @@ export default function TrainerChatPage() {
               </Dialog>
   
               {/* Image Cropper */}
-              <ImageCropper
-                  image={imageToCrop}
-                  isOpen={isCropping}
-                  onClose={() => {
-                      setIsCropping(false);
-                      setImageToCrop(null);
-                      if (fileInputRef.current) fileInputRef.current.value = '';
-                  }}
-                  onCropComplete={(croppedFile) => {
-                      setSelectedFile(croppedFile);
-                      setPreviewUrl(URL.createObjectURL(croppedFile));
-                      setIsCropping(false);
-                      setImageToCrop(null);
-                      setIsPreviewOpen(true);
-                  }}
-              />
+              {isCropping && imageToCrop && (
+                  <ImageCropper
+                      image={imageToCrop}
+                      onCancel={() => {
+                          setIsCropping(false);
+                          setImageToCrop(null);
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      onCropComplete={(croppedBlob) => {
+                          const croppedFile = new File([croppedBlob], "cropped-image.jpg", { type: "image/jpeg" });
+                          setSelectedFile(croppedFile);
+                          setPreviewUrl(URL.createObjectURL(croppedFile));
+                          setIsCropping(false);
+                          setImageToCrop(null);
+                          setIsPreviewOpen(true);
+                      }}
+                  />
+              )}
           </div>
       );
   }

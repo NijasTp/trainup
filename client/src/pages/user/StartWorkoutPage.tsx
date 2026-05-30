@@ -1,39 +1,25 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import { getWorkoutSession } from "@/services/workoutService";
-import { CheckCircle, Info, Pause, Play, SkipForward } from "lucide-react";
-
+import { getWorkoutSession, updateWorkoutSession } from "@/services/workoutService";
+import { 
+  Play, 
+  Pause, 
+  SkipForward, 
+  RotateCcw, 
+  Plus, 
+  Check, 
+  Clock, 
+  Flame,
+  Info
+} from "lucide-react";
+import Aurora from "@/components/ui/Aurora";
 import type { IExercise, IWorkoutSession, ExerciseTime } from "@/interfaces/user/IStartWorkout";
-
-function InfoPopup() {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <Button
-        variant="outline"
-        size="icon"
-        className="bg-card/80 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:scale-105 transition-all duration-300"
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-      >
-        <Info className="h-5 w-5 text-primary" />
-      </Button>
-      {open && (
-        <div className="absolute top-12 right-0 w-72 p-5 bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-2xl z-20 animate-fade-in">
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Complete each exercise in sequence. Follow the countdown, perform the sets or time, and mark as done to proceed. Use the pause button to pause timers. Track time taken per exercise, add notes, and skip if needed. The UI is fully responsive.
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
 
 function formatTime(seconds: number): string {
   const min = Math.floor(seconds / 60);
@@ -44,6 +30,7 @@ function formatTime(seconds: number): string {
 export default function StartSessionPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  
   const [session, setSession] = useState<IWorkoutSession | null>(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number>(0);
   const [phase, setPhase] = useState<"countdown" | "exercise" | "preview">("countdown");
@@ -52,21 +39,16 @@ export default function StartSessionPage() {
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
   const [previewCountdown, setPreviewCountdown] = useState<number>(15);
+  const [initialPreviewRest, setInitialPreviewRest] = useState<number>(15);
   const [exerciseTimes, setExerciseTimes] = useState<ExerciseTime[]>([]);
   const [currentExerciseTime, setCurrentExerciseTime] = useState<number>(0);
   const [accumulatedTime, setAccumulatedTime] = useState<number>(0);
   const [currentNotes, setCurrentNotes] = useState<string>("");
+  
   const lastStartRef = useRef<number | null>(null);
   const whistleSoundRef = useRef<HTMLAudioElement | null>(null);
-
-  // Dynamic preview countdown based on exercise rest time
-  useEffect(() => {
-    if (session?.exercises[currentExerciseIndex]?.rest) {
-      const restTime = parseInt(session.exercises[currentExerciseIndex].rest) || 15;
-      setPreviewCountdown(Math.max(5, restTime)); // Minimum 5 seconds
-    }
-  }, [currentExerciseIndex, session]);
 
   // Initialize sounds and load session
   useEffect(() => {
@@ -75,7 +57,10 @@ export default function StartSessionPage() {
       setIsLoading(true);
       try {
         const response = await getWorkoutSession(id!);
-        if (response.isDone) return navigate("/workouts");
+        if (response.isDone) {
+          toast.info("This session is already completed!");
+          return navigate("/workouts");
+        }
         setSession({
           ...response,
           exercises: response.exercises.map((ex: IExercise) => ({ ...ex, isDone: false })),
@@ -112,7 +97,7 @@ export default function StartSessionPage() {
       setCurrentExerciseTime(0);
       setCurrentNotes(session?.exercises[currentExerciseIndex]?.notes || "");
       if (whistleSoundRef.current) {
-        whistleSoundRef.current.play().catch(() => console.log("Sound playback failed"));
+        whistleSoundRef.current.play().catch(() => console.log("Sound playback blocked by browser"));
       }
     }
   }, [phase, countdown, session, currentExerciseIndex]);
@@ -153,9 +138,8 @@ export default function StartSessionPage() {
     } else if (phase === "preview" && previewCountdown === 0) {
       setPhase("countdown");
       setCountdown(3);
-      setPreviewCountdown(session?.exercises[currentExerciseIndex]?.rest ? parseInt(session.exercises[currentExerciseIndex].rest) || 15 : 15);
     }
-  }, [phase, previewCountdown, session, currentExerciseIndex]);
+  }, [phase, previewCountdown]);
 
   function togglePause() {
     if (isPaused) {
@@ -173,7 +157,21 @@ export default function StartSessionPage() {
     setIsPaused(!isPaused);
   }
 
-  function handleExerciseComplete() {
+  function triggerRestPhase(completedIndex: number) {
+    if (session) {
+      const completedEx = session.exercises[completedIndex];
+      const restTime = completedEx.rest ? parseInt(completedEx.rest) || 30 : 30;
+      
+      setPhase("preview");
+      setTimer(null);
+      setIsPaused(false);
+      setPreviewCountdown(restTime);
+      setInitialPreviewRest(restTime);
+      setCurrentExerciseIndex(completedIndex + 1);
+    }
+  }
+
+  async function handleExerciseComplete() {
     if (session) {
       const updatedExercises = [...session.exercises];
       updatedExercises[currentExerciseIndex] = {
@@ -188,13 +186,24 @@ export default function StartSessionPage() {
       setExerciseTimes(updatedTimes);
 
       if (currentExerciseIndex + 1 < session.exercises.length) {
-        setPhase("preview");
-        setTimer(null);
-        setIsPaused(false);
-        setCurrentExerciseIndex(currentExerciseIndex + 1);
+        triggerRestPhase(currentExerciseIndex);
       } else {
         const totalWorkoutTime = updatedTimes.reduce((acc, et) => acc + et.duration, 0);
-        navigate(`/workouts/${id}/success`, { state: { exerciseTimes: updatedTimes, totalWorkoutTime, isDone: true } });
+        
+        try {
+          // Sync workout completion in DB
+          await updateWorkoutSession(id!, { isDone: true });
+          toast.success("Workout completed! Amazing effort!");
+          navigate(`/workouts/${id}/success`, { 
+            state: { 
+              exerciseTimes: updatedTimes, 
+              totalWorkoutTime, 
+              isDone: true 
+            } 
+          });
+        } catch (err) {
+          toast.error("Failed to complete workout session on server.");
+        }
       }
     }
   }
@@ -213,247 +222,385 @@ export default function StartSessionPage() {
       setExerciseTimes(updatedTimes);
 
       if (currentExerciseIndex + 1 < session.exercises.length) {
-        setPhase("preview");
-        setTimer(null);
-        setIsPaused(false);
-        setCurrentExerciseIndex(currentExerciseIndex + 1);
+        triggerRestPhase(currentExerciseIndex);
       } else {
         const totalWorkoutTime = updatedTimes.reduce((acc, et) => acc + et.duration, 0);
-        navigate(`/workouts/${id}/success`, { state: { exerciseTimes: updatedTimes, totalWorkoutTime, isDone: true } });
+        navigate(`/workouts/${id}/success`, { 
+          state: { 
+            exerciseTimes: updatedTimes, 
+            totalWorkoutTime, 
+            isDone: true 
+          } 
+        });
       }
     }
   }
 
-  function handlePreviousExercise() {
+  function handleGoBack() {
     if (currentExerciseIndex > 0) {
-      setCurrentExerciseIndex(currentExerciseIndex - 1);
-      setPhase("preview");
-      setTimer(null);
+      const prevIndex = currentExerciseIndex - 1;
+      
+      // Reset isDone status of previous exercise to redo
+      if (session) {
+        const updatedExercises = [...session.exercises];
+        updatedExercises[prevIndex] = {
+          ...updatedExercises[prevIndex],
+          isDone: false,
+        };
+        setSession({ ...session, exercises: updatedExercises });
+      }
+
+      setCurrentExerciseIndex(prevIndex);
+      setPhase("exercise");
+      
+      if (session?.exercises[prevIndex]?.time) {
+        const timeStr = session.exercises[prevIndex].time || "0 min";
+        const timeInSeconds = parseInt(timeStr) * 60;
+        setTimer(timeInSeconds);
+      } else {
+        setTimer(null);
+      }
       setIsPaused(false);
+      setAccumulatedTime(0);
+      setCurrentExerciseTime(0);
+      lastStartRef.current = Date.now();
+      toast.info(`Moved back to: ${session?.exercises[prevIndex].name}`);
     }
   }
 
+  const handleExtendRest = () => {
+    setPreviewCountdown((prev) => prev + 10);
+    toast.success("Rest extended by 10s!");
+  };
+
+  const handleSkipRest = () => {
+    setPreviewCountdown(0);
+    toast.info("Rest skipped");
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent"></div>
-        <SiteHeader />
-        <main className="relative container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-          <div className="flex flex-col items-center space-y-6">
-            <div className="relative">
-              <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-              <div className="absolute inset-0 w-16 h-16 border-2 border-transparent border-t-blue-300 rounded-full animate-pulse"></div>
-            </div>
-            <p className="text-gray-300 font-semibold text-lg">Loading your workout...</p>
-          </div>
-        </main>
-        <SiteFooter />
+      <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white justify-center items-center font-outfit">
+        <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+        <div className="relative z-10 flex flex-col items-center space-y-4">
+          <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <p className="text-slate-400 font-medium">Assembling your workout dashboard...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !session) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent"></div>
-        <SiteHeader />
-        <main className="relative container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-          <div className="text-center py-16">
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-red-500/10 rounded-full border border-red-500/30 mb-6">
-              <span className="text-red-400 font-semibold text-lg">{error || "Session not found"}</span>
-            </div>
-            <Button
-              onClick={() => navigate("/workouts")}
-              className="bg-blue-600 hover:bg-blue-700 hover:scale-105 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300"
-            >
-              Back to Workouts
-            </Button>
+      <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white justify-center items-center font-outfit">
+        <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+        <div className="relative z-10 text-center space-y-6 max-w-md px-4">
+          <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-3xl text-rose-400 font-bold uppercase tracking-wider">
+            {error || "Session not found or already completed"}
           </div>
-        </main>
-        <SiteFooter />
+          <Button onClick={() => navigate("/workouts")} className="bg-primary hover:bg-primary/90 text-white font-bold uppercase rounded-xl px-8">
+            Back to Workouts
+          </Button>
+        </div>
       </div>
     );
   }
 
   const currentExercise = session.exercises[currentExerciseIndex];
   const progressPercentage = (currentExerciseIndex / session.exercises.length) * 100;
+  
+  // Calculate rest ring stroke-dashoffset
+  const restRatio = previewCountdown / (initialPreviewRest || 1);
+  const strokeDashoffset = 282.6 * (1 - restRatio);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-black via-gray-900 to-black">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent"></div>
+    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+      {/* Background Visuals */}
+      <div className="absolute inset-0 z-0">
+        <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+      </div>
+
       <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 flex flex-col items-center flex-1">
-        <div className="flex items-center justify-between w-full max-w-6xl mb-10">
-          <div className="flex items-center gap-4">
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-blue-400 via-blue-300 to-blue-200 bg-clip-text text-transparent">
+
+      <main className="relative z-10 flex-1 container mx-auto px-4 py-8 max-w-5xl flex flex-col space-y-8">
+        
+        {/* Header Title */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="space-y-1 text-center sm:text-left">
+            <h1 className="text-3xl md:text-5xl font-black italic uppercase tracking-tight text-white flex items-center gap-2 justify-center sm:justify-start">
+              <Flame className="h-6 w-6 text-primary animate-pulse" />
               {session.name}
             </h1>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+              Intense Training Protocol • Day Progress Action
+            </p>
           </div>
-          <InfoPopup />
+          <Link to="/workouts">
+            <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs uppercase font-bold tracking-wider">
+              Quit Session
+            </Button>
+          </Link>
         </div>
 
-        <div className="w-full max-w-6xl mb-8">
-          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div
-              className="h-2 bg-gradient-to-r from-blue-500 to-blue-300 transition-all duration-500"
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-gray-400 mt-2 text-sm">
+        {/* Global Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs font-black uppercase tracking-wider text-slate-400">
             <span>Exercise {currentExerciseIndex + 1} of {session.exercises.length}</span>
+            <span>{Math.round(progressPercentage)}% Complete</span>
+          </div>
+          <div className="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+            <div
+              className="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full transition-all duration-500"
+              style={{ width: `${progressPercentage}%` }}
+            ></div>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 w-full max-w-6xl">
-          <div className="lg:w-80 order-last lg:order-first">
-            <Card className="bg-gray-800/90 backdrop-blur-md border-blue-500/20 shadow-xl sticky top-4">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-gray-100">Exercise List</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {session.exercises.map((ex, i) => (
-                    <li
-                      key={i}
-                      className={`p-3 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-md ${i === currentExerciseIndex
-                        ? "bg-blue-500/20 border border-blue-500/50"
+        {/* Workout Grid Split */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          
+          {/* Sidebar Exercise Tracker */}
+          <div className="lg:col-span-1 space-y-4 order-last lg:order-first">
+            <Card className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-6 shadow-2xl space-y-6">
+              <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
+                Exercise Routine
+              </h2>
+
+              <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                {session.exercises.map((ex, i) => (
+                  <div
+                    key={i}
+                    className={`flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300 ${
+                      i === currentExerciseIndex
+                        ? "bg-primary/10 border-primary/45 shadow-lg shadow-primary/5 scale-[1.02]"
                         : ex.isDone
-                          ? "bg-green-500/20 border border-green-500/50"
-                          : "bg-gray-700/50"
-                        }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-100 font-medium">{ex.name}</span>
-                        <div className="flex items-center gap-2">
-                          {ex.isDone && <CheckCircle className="h-4 w-4 text-green-400" />}
-                          <span className="text-sm text-gray-400">
-                            {i < currentExerciseIndex
-                              ? formatTime(exerciseTimes[i].duration)
-                              : i === currentExerciseIndex
-                                ? formatTime(currentExerciseTime)
-                                : ""}
-                          </span>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
+                        ? "bg-green-500/5 border-green-500/20 opacity-80"
+                        : "bg-white/[0.01] border-white/5"
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
+                      i === currentExerciseIndex
+                        ? "bg-primary text-slate-950"
+                        : ex.isDone
+                        ? "bg-green-500 text-white"
+                        : "bg-white/5 text-slate-400"
+                    }`}>
+                      {ex.isDone ? <Check className="h-4 w-4" /> : i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-black text-white truncate">{ex.name}</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                        {ex.sets} sets • {ex.reps ? `${ex.reps} reps` : ex.time || "Sets"}
+                      </p>
+                    </div>
+                    {i === currentExerciseIndex && (
+                      <span className="text-[10px] text-primary font-black italic animate-pulse">ACTIVE</span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </Card>
           </div>
 
-          <div className="flex-1">
+          {/* Main Phase Execution Panel */}
+          <div className="lg:col-span-2">
+            
+            {/* 1. Countdown Phase */}
             {phase === "countdown" && (
-              <Card className="bg-gray-800/90 backdrop-blur-md border-blue-500/30 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-                <CardContent className="flex flex-col items-center justify-center py-20">
-                  <div className="text-9xl font-extrabold text-blue-400 animate-pulse">{countdown}</div>
-                  <p className="text-2xl text-gray-300 mt-6 font-medium">Get ready for {currentExercise.name}!</p>
-                </CardContent>
+              <Card className="relative overflow-hidden bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-[3rem] p-12 text-center shadow-2xl py-24">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-blue-500/10 blur rounded-[3rem] pointer-events-none"></div>
+                <div className="space-y-6">
+                  <p className="text-sm font-black uppercase tracking-widest text-primary italic animate-bounce">
+                    Prepare Muscle Group
+                  </p>
+                  <div className="text-8xl md:text-9xl font-black italic uppercase text-primary tracking-tight font-display scale-[1.1] animate-pulse">
+                    {countdown}
+                  </div>
+                  <h3 className="text-xl md:text-3xl font-black text-white italic uppercase tracking-tight max-w-md mx-auto">
+                    Get ready for {currentExercise.name}
+                  </h3>
+                </div>
               </Card>
             )}
 
-            {phase === "preview" && currentExerciseIndex < session.exercises.length && (
-              <Card className="bg-gray-800/90 backdrop-blur-md border-blue-500/30 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-                <CardHeader>
-                  <CardTitle className="text-3xl font-bold text-gray-100">Coming Up Next</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex flex-col items-center">
-                    <img
-                      src={
-                        currentExercise.image
-                          ? currentExercise.image.startsWith("http")
-                            ? currentExercise.image
-                            : `https://wger.de${currentExercise.image}`
-                          : "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
-                      }
-                      alt={currentExercise.name}
-                      className="w-full h-64 md:h-72 object-cover rounded-lg shadow-md transition-transform duration-300 hover:scale-105"
+            {/* 2. Preview Rest Phase */}
+            {phase === "preview" && (
+              <Card className="relative overflow-hidden bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl flex flex-col md:flex-row gap-8 items-center">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/5 to-blue-500/5 blur rounded-[3rem] pointer-events-none"></div>
+
+                {/* Rest Circular Timer */}
+                <div className="relative flex-shrink-0 flex justify-center items-center">
+                  <svg className="w-40 h-40 transform -rotate-90">
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="45"
+                      className="stroke-white/5"
+                      strokeWidth="8"
+                      fill="transparent"
                     />
-                    <h3 className="text-2xl font-bold text-gray-100 mt-4">{currentExercise.name}</h3>
-                    <div className="text-sm text-gray-400 mt-2">
-                      {currentExercise.sets} sets • {currentExercise.reps || currentExercise.time}
-                      {currentExercise.weight ? ` • ${currentExercise.weight}kg` : ""}
-                      {currentExercise.rest && ` • Rest: ${currentExercise.rest}`}
-                      {currentExercise.notes && <p className="mt-2 text-gray-300">Notes: {currentExercise.notes}</p>}
-                    </div>
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="45"
+                      className="stroke-primary transition-all duration-300"
+                      strokeWidth="8"
+                      fill="transparent"
+                      strokeDasharray="282.6"
+                      strokeDashoffset={strokeDashoffset}
+                    />
+                  </svg>
+                  <div className="absolute flex flex-col justify-center items-center">
+                    <span className="text-3xl font-black text-white italic">{previewCountdown}s</span>
+                    <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Rest</span>
                   </div>
-                  <div className="text-center">
-                    <p className="text-xl font-semibold text-blue-400">Starting in {previewCountdown} seconds...</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                </div>
 
-            {phase === "exercise" && (
-              <Card className="bg-gray-800/90 backdrop-blur-md border-blue-500/30 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-                <CardHeader>
-                  <CardTitle className="text-3xl font-bold text-gray-100">{currentExercise.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-8">
-                  <img
-                    src={
-                      currentExercise.image
-                        ? currentExercise.image.startsWith("http")
-                          ? currentExercise.image
-                          : `https://wger.de${currentExercise.image}`
-                        : "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
-                    }
-                    alt={currentExercise.name}
-                    className="w-full h-64 md:h-72 object-cover rounded-lg shadow-md transition-transform duration-300 hover:scale-105"
-                  />
-                  <div className="text-center text-gray-400">
-                    {currentExercise.sets} sets • {currentExercise.reps || currentExercise.time}
-                    {currentExercise.weight ? ` • ${currentExercise.weight}kg` : ""}
-                    {currentExercise.rest && ` • Rest: ${currentExercise.rest}`}
+                {/* Rest details and controls */}
+                <div className="flex-1 space-y-6 text-center md:text-left w-full">
+                  <div className="space-y-2">
+                    <Badge className="bg-primary/10 border border-primary/20 text-primary font-black uppercase text-[10px] tracking-widest px-3 py-1 rounded-md">
+                      REST ACTIVE
+                    </Badge>
+                    <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tight text-white">
+                      COMING UP NEXT
+                    </h2>
+                    <h3 className="text-lg md:text-xl font-bold text-slate-300">
+                      {currentExercise.name}
+                    </h3>
+                    <p className="text-xs text-slate-400 font-medium">
+                      {currentExercise.sets} sets • {currentExercise.reps ? `${currentExercise.reps} reps` : currentExercise.time || "Sets"} • Rest: {currentExercise.rest || 60}s
+                    </p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-lg text-gray-300">Time Elapsed: {formatTime(currentExerciseTime)}</p>
-                    {currentExercise.time && timer !== null && (
-                      <p className="text-5xl font-extrabold text-blue-400 mt-2">
-                        {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    {currentExerciseIndex > 0 && (
+
+                  {/* Rest Action Buttons */}
+                  <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                    <Button
+                      onClick={handleExtendRest}
+                      className="h-12 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-xs uppercase font-black tracking-wider text-white flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4 text-primary" /> +10s Rest
+                    </Button>
+                    <Button
+                      onClick={handleSkipRest}
+                      className="h-12 bg-primary text-slate-950 hover:bg-primary/90 border border-primary/10 rounded-2xl text-xs uppercase font-black tracking-wider flex items-center gap-2"
+                    >
+                      <SkipForward className="h-4 w-4 fill-current" /> Skip Rest
+                    </Button>
+                    {currentExerciseIndex > 1 && (
                       <Button
-                        onClick={handlePreviousExercise}
-                        variant="outline"
-                        className="flex-1 bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/70 hover:scale-105 font-semibold py-6 transition-all duration-300"
+                        onClick={handleGoBack}
+                        variant="ghost"
+                        className="h-12 text-slate-400 hover:text-white rounded-2xl text-xs uppercase font-black tracking-wider flex items-center gap-2"
                       >
-                        Previous
+                        <RotateCcw className="h-4 w-4" /> Previous
                       </Button>
                     )}
-                    <Button
-                      onClick={togglePause}
-                      variant="outline"
-                      className="flex-1 bg-blue-500/20 border-blue-500/50 text-blue-300 hover:bg-blue-500/30 hover:scale-105 transition-all duration-300"
-                    >
-                      {isPaused ? <Play className="h-5 w-5 mr-2" /> : <Pause className="h-5 w-5 mr-2" />}
-                      {isPaused ? "Resume" : "Pause"}
-                    </Button>
-                    <Button
-                      onClick={handleSkipExercise}
-                      variant="outline"
-                      className="flex-1 bg-yellow-500/20 border-yellow-500/50 text-yellow-300 hover:bg-yellow-500/30 hover:scale-105 transition-all duration-300"
-                    >
-                      <SkipForward className="h-5 w-5 mr-2" />
-                      Skip
-                    </Button>
-                    <Button
-                      onClick={handleExerciseComplete}
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 hover:scale-105 text-white font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      Mark as Done
-                    </Button>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             )}
+
+            {/* 3. Active Exercise Execution Phase */}
+            {phase === "exercise" && (
+              <Card className="relative overflow-hidden bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-[3rem] p-6 md:p-10 shadow-2xl space-y-8">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/5 to-blue-500/5 blur rounded-[3rem] pointer-events-none"></div>
+
+                <div className="flex flex-col md:flex-row gap-6 items-center">
+                  <img
+                    src={currentExercise.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800"}
+                    alt={currentExercise.name}
+                    className="w-full md:w-48 h-48 md:h-48 object-cover rounded-[2.5rem] border border-white/10 shadow-xl flex-shrink-0"
+                  />
+                  <div className="flex-1 space-y-4 text-center md:text-left w-full">
+                    <Badge className="bg-primary/10 border border-primary/20 text-primary font-black uppercase text-[10px] tracking-widest px-3 py-1 rounded-md">
+                      EXERCISE ACTIVE
+                    </Badge>
+                    <h2 className="text-2xl md:text-4xl font-black italic uppercase tracking-tight text-white leading-tight">
+                      {currentExercise.name}
+                    </h2>
+                    
+                    {/* Setup specifications */}
+                    <div className="flex flex-wrap gap-4 justify-center md:justify-start text-xs font-black uppercase tracking-wider text-slate-400">
+                      <span className="px-3 py-1 bg-white/5 border border-white/5 rounded-lg">{currentExercise.sets} Sets</span>
+                      <span className="px-3 py-1 bg-white/5 border border-white/5 rounded-lg">{currentExercise.reps ? `${currentExercise.reps} Reps` : currentExercise.time || "Sets"}</span>
+                      {currentExercise.weight && (
+                        <span className="px-3 py-1 bg-primary/10 border border-primary/20 text-primary rounded-lg">{currentExercise.weight} kg</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Timing stats & clocks */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 border-t border-b border-white/5">
+                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-center">
+                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Exercise Elapsed Time</p>
+                    <p className="text-3xl font-black text-white italic mt-1">{formatTime(currentExerciseTime)}</p>
+                  </div>
+                  {currentExercise.time && timer !== null && (
+                    <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 text-center">
+                      <p className="text-[10px] text-primary font-black uppercase tracking-wider">Timed Set Target</p>
+                      <p className="text-3xl font-black text-primary italic mt-1">{formatTime(timer)}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Exercise notes */}
+                {currentExercise.notes && (
+                  <div className="p-4 bg-white/5 border border-white/5 rounded-2xl flex gap-3 items-start">
+                    <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Coach/Template Notes</p>
+                      <p className="text-sm text-slate-300 font-medium mt-1 leading-relaxed">{currentExercise.notes}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Active Controls Bar */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  {currentExerciseIndex > 0 && (
+                    <Button
+                      onClick={handleGoBack}
+                      variant="outline"
+                      className="h-14 rounded-2xl border-white/10 hover:border-slate-400 bg-white/5 text-slate-300 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 flex-1"
+                    >
+                      <RotateCcw className="h-4 w-4" /> Go Back
+                    </Button>
+                  )}
+                  <Button
+                    onClick={togglePause}
+                    variant="outline"
+                    className="h-14 rounded-2xl border-primary/20 hover:border-primary/50 bg-primary/5 text-primary text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 flex-1"
+                  >
+                    {isPaused ? <Play className="h-4 w-4 fill-current" /> : <Pause className="h-4 w-4 fill-current" />}
+                    {isPaused ? "Resume" : "Pause"}
+                  </Button>
+                  <Button
+                    onClick={handleSkipExercise}
+                    variant="outline"
+                    className="h-14 rounded-2xl border-yellow-500/20 hover:border-yellow-500/50 bg-yellow-500/5 text-yellow-400 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 flex-1"
+                  >
+                    <SkipForward className="h-4 w-4 fill-current" /> Skip
+                  </Button>
+                  <Button
+                    onClick={handleExerciseComplete}
+                    className="h-14 rounded-2xl bg-gradient-to-r from-primary to-blue-500 hover:from-primary/95 hover:to-blue-500/95 text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 flex-1 shadow-lg shadow-primary/10"
+                  >
+                    <Check className="h-4 w-4 stroke-[3px]" /> Complete Set
+                  </Button>
+                </div>
+
+              </Card>
+            )}
+
           </div>
+
         </div>
+
       </main>
+
       <SiteFooter />
     </div>
   );

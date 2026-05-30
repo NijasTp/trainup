@@ -26,9 +26,12 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { motion } from "framer-motion";
+import { StreakCalendar } from "@/components/ui/StreakCalendar";
 
 export default function WorkoutHistoryPage() {
   const [history, setHistory] = useState<any[]>([]);
+  const [allHistoryForCalendar, setAllHistoryForCalendar] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [source, setSource] = useState<string | undefined>(undefined);
@@ -37,18 +40,28 @@ export default function WorkoutHistoryPage() {
   useEffect(() => {
     document.title = "TrainUp - Workout History";
     loadHistory();
+    loadAllHistoryForCalendar();
   }, [page, source]);
 
   async function loadHistory() {
     setIsLoading(true);
     try {
-      const res = await fetchWorkoutHistory(page, 10, source);
+      const res = await fetchWorkoutHistory(page, 6, source);
       setHistory(res.sessions || []);
       setTotalPages(res.totalPages || 1);
     } catch (err) {
       console.error("Failed to load history", err);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function loadAllHistoryForCalendar() {
+    try {
+      const res = await fetchWorkoutHistory(1, 1000, source);
+      setAllHistoryForCalendar(res.sessions || []);
+    } catch (err) {
+      console.error("Failed to load full history for calendar", err);
     }
   }
 
@@ -111,63 +124,90 @@ export default function WorkoutHistoryPage() {
           </div>
         </header>
 
-        {isLoading ? (
-          <div className="grid gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 rounded-[2rem] bg-white/5 animate-pulse border border-white/5" />
-            ))}
-          </div>
-        ) : history.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-20 text-center space-y-6">
-            <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center border border-white/10 text-slate-500 shadow-2xl">
-              <History className="h-10 w-10 opacity-20" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold">No Records Found</h2>
-              <p className="text-slate-400 max-w-xs mx-auto">
-                {source ? `You haven't completed any workouts from "${source}" yet.` : "Your legends haven't been written yet. Start a session to begin your timeline."}
-              </p>
-            </div>
-            {source && (
-              <Button onClick={() => { setSource(undefined); setPage(1); }} variant="outline" className="rounded-xl border-white/10">
-                Clear Filters
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6">
-            {history.map((session, index) => (
-              <HistoryCard key={session._id} session={session} index={index} />
-            ))}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-4 py-8">
-                <Button 
-                  disabled={page === 1} 
-                  onClick={() => setPage(p => p - 1)}
-                  variant="outline" 
-                  className="rounded-full h-12 w-12 p-0 border-white/10 bg-white/5"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <div className="flex items-center gap-2 px-6 py-2 bg-white/5 rounded-full border border-white/10">
-                  <span className="text-primary font-black">{page}</span>
-                  <span className="text-slate-500">/</span>
-                  <span className="font-bold text-slate-300">{totalPages}</span>
+        {/* Two-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: History Cards */}
+          <div className="lg:col-span-8 space-y-6">
+            {isLoading ? (
+              <div className="grid gap-6">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-32 rounded-[2rem] bg-white/5 animate-pulse border border-white/5" />
+                ))}
+              </div>
+            ) : history.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 bg-white/5 rounded-[2.5rem] border border-white/10">
+                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center border border-white/10 text-slate-500 shadow-2xl">
+                  <History className="h-10 w-10 opacity-20" />
                 </div>
-                <Button 
-                  disabled={page === totalPages} 
-                  onClick={() => setPage(p => p + 1)}
-                  variant="outline" 
-                  className="rounded-full h-12 w-12 p-0 border-white/10 bg-white/5"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold">No Records Found</h2>
+                  <p className="text-slate-400 max-w-xs mx-auto">
+                    {source ? `You haven't completed any workouts from "${source}" yet.` : "Your legends haven't been written yet. Start a session to begin your timeline."}
+                  </p>
+                </div>
+                {source && (
+                  <Button onClick={() => { setSource(undefined); setPage(1); }} variant="outline" className="rounded-xl border-white/10">
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                {history.map((session, index) => (
+                  <HistoryCard key={session._id} session={session} index={index} />
+                ))}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-4 py-8">
+                    <Button 
+                      disabled={page === 1} 
+                      onClick={() => setPage(p => p - 1)}
+                      variant="outline" 
+                      className="rounded-full h-12 w-12 p-0 border-white/10 bg-white/5 text-white hover:bg-white/10"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                    <div className="flex items-center gap-2 px-6 py-2 bg-white/5 rounded-full border border-white/10">
+                      <span className="text-primary font-black">{page}</span>
+                      <span className="text-slate-500">/</span>
+                      <span className="font-bold text-slate-300">{totalPages}</span>
+                    </div>
+                    <Button 
+                      disabled={page === totalPages} 
+                      onClick={() => setPage(p => p + 1)}
+                      variant="outline" 
+                      className="rounded-full h-12 w-12 p-0 border-white/10 bg-white/5 text-white hover:bg-white/10"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
+
+          {/* Right Column: Consistency Calendar Widget */}
+          <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
+            <div className="relative group p-6 bg-slate-950/80 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-2xl space-y-6">
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-[2.5rem] blur opacity-75 transition duration-1000 group-hover:opacity-100"></div>
+              
+              <div className="relative space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-6 bg-primary rounded-full"></div>
+                  <h2 className="text-lg font-black uppercase italic tracking-wider text-white">Consistency Streak</h2>
+                </div>
+                <p className="text-xs text-slate-400 font-medium">
+                  Visualization of your daily performance. Green highlights mark completed sessions.
+                </p>
+
+                <div className="pt-2">
+                  <StreakCalendar sessions={allHistoryForCalendar} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
 
       <SiteFooter />
@@ -187,56 +227,61 @@ function HistoryCard({ session, index }: { session: any, index: number }) {
   const style = sourceColors[session.source] || sourceColors.user;
 
   return (
-    <Card 
-      className="group relative bg-white/5 backdrop-blur-2xl border-white/10 hover:border-primary/40 transition-all duration-500 rounded-[2.5rem] overflow-hidden shadow-2xl"
-      style={{ animation: `slideUp 0.6s ease-out forwards ${index * 0.1}s`, opacity: 0 }}
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: Math.min(index * 0.1, 0.5), ease: "easeOut" }}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-      
-      <CardContent className="p-8 flex flex-col md:flex-row md:items-center gap-8">
-        <div className="flex flex-col gap-4 flex-1">
-          <div className="flex items-center gap-3">
-            <Badge className={cn("rounded-full px-3 py-1 font-bold text-[10px] uppercase flex items-center gap-1.5", style.bg, style.text, style.border)}>
-              {style.icon} {session.source || 'Session'}
-            </Badge>
-            <span className="text-slate-500 text-xs font-bold tracking-widest uppercase flex items-center gap-2">
-              <CalendarIcon className="h-3 w-3" /> {
-                (() => {
-                  const date = new Date(session.completedAt || session.updatedAt || Date.now());
-                  return isNaN(date.getTime()) ? 'Recent Session' : format(date, "MMMM d, yyyy");
-                })()
-              }
-            </span>
-          </div>
-
-          <h3 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter group-hover:text-primary transition-colors">
-            {session.name}
-          </h3>
-
-          <div className="flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-              <Clock className="h-4 w-4 text-primary" />
-              <span className="text-sm font-bold">{session.exercises?.length || 0} Drills</span>
+      <Card 
+        className="group relative bg-white/5 backdrop-blur-2xl border-white/10 hover:border-primary/40 transition-all duration-500 rounded-[2.5rem] overflow-hidden shadow-2xl w-full"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+        
+        <CardContent className="p-8 flex flex-col md:flex-row md:items-center gap-8">
+          <div className="flex flex-col gap-4 flex-1">
+            <div className="flex items-center gap-3">
+              <Badge className={cn("rounded-full px-3 py-1 font-bold text-[10px] uppercase flex items-center gap-1.5", style.bg, style.text, style.border)}>
+                {style.icon} {session.source || 'Session'}
+              </Badge>
+              <span className="text-slate-500 text-xs font-bold tracking-widest uppercase flex items-center gap-2">
+                <CalendarIcon className="h-3 w-3" /> {
+                  (() => {
+                    const date = new Date(session.completedAt || session.updatedAt || Date.now());
+                    return isNaN(date.getTime()) ? 'Recent Session' : format(date, "MMMM d, yyyy");
+                  })()
+                }
+              </span>
             </div>
-            {session.goal && (
-              <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-                <Target className="h-4 w-4 text-primary" />
-                <span className="text-sm font-bold truncate max-w-[150px]">{session.goal}</span>
-              </div>
-            )}
-          </div>
-        </div>
 
-        <div className="flex flex-col items-center justify-center p-6 bg-white/5 rounded-[2rem] border border-white/10 min-w-[160px] group-hover:bg-primary group-hover:border-primary transition-all duration-500 group-hover:shadow-[0_0_50px_rgba(var(--primary-rgb),0.3)]">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-white/80 transition-colors">Performance</span>
-          <span className="text-3xl font-black italic group-hover:text-white flex items-center gap-1">
-            {session.isDone ? '100' : '0'}<span className="text-sm font-bold opacity-50group-hover:text-white/60 text-primary group-hover:text-white/60 transition-colors">%</span>
-          </span>
-          <Badge className="mt-2 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-black tracking-widest text-[9px] group-hover:bg-white/20 group-hover:text-white group-hover:border-white/30 transition-all">
-            COMPLETED
-          </Badge>
-        </div>
-      </CardContent>
-    </Card>
+            <h3 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter group-hover:text-primary transition-colors">
+              {session.name}
+            </h3>
+
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                <Clock className="h-4 w-4 text-primary" />
+                <span className="text-sm font-bold">{session.exercises?.length || 0} Drills</span>
+              </div>
+              {session.goal && (
+                <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                  <Target className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-bold truncate max-w-[150px]">{session.goal}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center justify-center p-6 bg-white/5 rounded-[2rem] border border-white/10 min-w-[160px] group-hover:bg-primary group-hover:border-primary transition-all duration-500 group-hover:shadow-[0_0_50px_rgba(var(--primary-rgb),0.3)]">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-white/80 transition-colors">Performance</span>
+            <span className="text-3xl font-black italic group-hover:text-white flex items-center gap-1 transition-colors">
+              {session.isDone ? '100' : '0'}<span className="text-sm font-bold text-primary group-hover:text-white/60 transition-colors">%</span>
+            </span>
+            <Badge className="mt-2 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-black tracking-widest text-[9px] group-hover:bg-white/20 group-hover:text-white group-hover:border-white/30 transition-all">
+              COMPLETED
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +29,8 @@ export default function Diets() {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [trainerDiet, setTrainerDiet] = useState<Meal[]>([]);
   const [userDiet, setUserDiet] = useState<Meal[]>([]);
-  const [currentView, setCurrentView] = useState<'trainer' | 'self'>('trainer');
+  const [currentView] = useState<'self' | 'trainer'>('self');
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [confirmingMeal, setConfirmingMeal] = useState<{ id: string; isTrainer: boolean; isTemplate?: boolean } | null>(null);
@@ -49,10 +49,10 @@ export default function Diets() {
   // Fetch meals
   useEffect(() => {
     const fetchMeals = async () => {
+      setLoading(true);
       try {
-        const today = new Date().toISOString().split('T')[0];
         const response = await api.post<ApiResponse>('/diet/', {
-          date: today,
+          date: selectedDate,
         });
 
         const data = response.data;
@@ -103,7 +103,7 @@ export default function Diets() {
     };
 
     fetchMeals();
-  }, []);
+  }, [selectedDate]);
 
   const handleMarkEaten = async () => {
     if (!confirmingMeal) return;
@@ -166,7 +166,6 @@ export default function Diets() {
   };
 
   const meals = currentView === 'trainer' ? trainerDiet : userDiet;
-  const otherMealsCount = currentView === 'trainer' ? userDiet.length : trainerDiet.length;
 
   if (loading) {
     return (
@@ -202,71 +201,36 @@ export default function Diets() {
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-2">
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-              Your Daily Diet Plan
+              Your Food Logs & Nutrition
             </h1>
             <InfoModal modalMessage="Click the 'Mark Eaten' button only after you have actually eaten the meal. This helps track your progress accurately." />
           </div>
-          <Link to="/diets/add">
-            <Button
-              variant="default"
-              className="relative px-6 py-3 font-medium transition-all duration-300"
-            >
-              Create Diet+
-            </Button>
-          </Link>
           <p className="my-5 text-lg text-muted-foreground max-w-2xl mx-auto">
-            View your trainer-assigned and self-assigned meals for today. Mark meals as eaten to track your intake.
+            Log your meals, check your macro intake, and track your daily nutrition over time.
           </p>
 
-          {templateInfo && (
-            <div className="inline-flex items-center gap-3 p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl mb-8">
-              <CheckCircle2 className="h-5 w-5 text-orange-500" />
-              <div className="text-left">
-                <p className="text-sm font-bold text-orange-500">Active Template: {templateInfo.name}</p>
-                <p className="text-xs text-orange-400/80">Day {templateInfo.day} of {templateInfo.duration}</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Switch Buttons */}
-        <div className="flex justify-center gap-4 mb-8">
-          <Button
-            onClick={() => setCurrentView('trainer')}
-            variant={currentView === 'trainer' ? "default" : "outline"}
-            className={`relative px-6 py-3 font-medium transition-all duration-300 ${currentView === 'trainer'
-              ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg"
-              : "hover:bg-primary/10 border-primary/30"
-              }`}
-          >
-            Trainer Assigned
-            {currentView !== 'trainer' && otherMealsCount > 0 && (
-              <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground rounded-full px-2 py-0.5 text-xs">
-                {otherMealsCount}
-              </Badge>
-            )}
-          </Button>
-          <Button
-            onClick={() => setCurrentView('self')}
-            variant={currentView === 'self' ? "default" : "outline"}
-            className={`relative px-6 py-3 font-medium transition-all duration-300 ${currentView === 'self'
-              ? "bg-gradient-to-r from-primary to-primary/90 shadow-lg"
-              : "hover:bg-primary/10 border-primary/30"
-              }`}
-          >
-            Self Assigned
-            {currentView !== 'self' && otherMealsCount > 0 && (
-              <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground rounded-full px-2 py-0.5 text-xs">
-                {otherMealsCount}
-              </Badge>
-            )}
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full max-w-xs rounded-xl border border-primary/30 bg-black/40 px-4 py-2.5 text-sm text-white focus:border-primary/50 focus:outline-none transition-all duration-300"
+            />
+            <Link to={`/diets/add?date=${selectedDate}`}>
+              <Button
+                variant="default"
+                className="relative px-6 py-3 font-medium transition-all duration-300 w-full sm:w-auto"
+              >
+                Log Food +
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Meals Section */}
         <section className="space-y-6">
           <h2 className="text-3xl font-bold text-foreground text-center">
-            {currentView === 'trainer' ? 'Assigned by Trainer' : 'Assigned by Myself'}
+            Meals Logged
           </h2>
           <div className="space-y-4">
             {meals.length === 0 ? (

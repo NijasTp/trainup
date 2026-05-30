@@ -30,7 +30,9 @@ const mealSchema = z.object({
 });
 
 export default function UserAddDiet() {
-  const [date, setDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const queryParams = new URLSearchParams(window.location.search);
+  const initialDate = queryParams.get("date") || new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState<string>(initialDate);
   const [meals, setMeals] = useState<Meal[]>([]);
   const [newMeal, setNewMeal] = useState<Partial<Meal>>({
     name: "",

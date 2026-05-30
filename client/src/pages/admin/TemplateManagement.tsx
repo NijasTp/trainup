@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogClose, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Search, ChevronLeft, ChevronRight, Loader2, FileText, Plus, Eye, Edit, Trash, Dumbbell, Utensils, Calendar, Sparkles, Clock, Users, Layers, Trophy } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Search, Plus, Eye, Edit, Trash, Dumbbell, Clock, Users, Layers, Trophy } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import API from "@/lib/axios";
-import type { IDietTemplate, IWorkoutTemplate, TemplateResponse, IExercise, TemplateMeal } from "@/interfaces/admin/templateManagement";
+import type { IDietTemplate, IWorkoutTemplate, TemplateResponse } from "@/interfaces/admin/templateManagement";
 import { KEY } from "@/constants/keyConstants";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
 const TemplateManagement = () => {
-  const [templateType, setTemplateType] = useState<"workout" | "diet">("workout");
+  const templateType = "workout";
   const [response, setResponse] = useState<TemplateResponse>({ templates: [], total: 0, page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -110,7 +110,7 @@ const TemplateManagement = () => {
 
         {/* Search and Filters */}
         <div className="grid md:grid-cols-4 gap-6">
-          <div className="md:col-span-2 relative group">
+          <div className="md:col-span-3 relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyan-500 transition-colors h-5 w-5" />
             <Input
               placeholder={`SEARCH ${templateType.toUpperCase()} ARCHITECTURE...`}
@@ -119,20 +119,6 @@ const TemplateManagement = () => {
               onKeyPress={handleKeyPress}
               className="bg-black/40 border-white/10 h-14 pl-12 rounded-2xl text-white font-black italic uppercase text-sm focus:ring-1 focus:ring-cyan-500/50"
             />
-          </div>
-          <div className="flex bg-black/40 border border-white/10 rounded-2xl p-1.5 h-14">
-            <button
-              onClick={() => { setTemplateType('workout'); setCurrentPage(1); }}
-              className={`flex-1 flex items-center justify-center gap-2 rounded-xl font-black italic uppercase text-[10px] transition-all ${templateType === 'workout' ? 'bg-cyan-500 text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
-            >
-              <Dumbbell size={14} /> Training
-            </button>
-            <button
-              onClick={() => { setTemplateType('diet'); setCurrentPage(1); }}
-              className={`flex-1 flex items-center justify-center gap-2 rounded-xl font-black italic uppercase text-[10px] transition-all ${templateType === 'diet' ? 'bg-cyan-500 text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
-            >
-              <Utensils size={14} /> Nutrition
-            </button>
           </div>
           <Button onClick={handleSearch} className="h-14 rounded-2xl bg-white/5 border border-white/10 text-white font-black italic uppercase text-xs hover:bg-white/10">
             Filter Search

@@ -46,7 +46,8 @@ export class UserDto {
         templateId: t.templateId.toString(),
         startDate: t.startDate,
         scheduleType: t.scheduleType,
-        weeklyDays: t.weeklyDays
+        weeklyDays: t.weeklyDays,
+        assignedBy: t.assignedBy
       })) || [],
       activeWorkoutTemplate: user.activeWorkoutTemplate?.toString(),
       workoutTemplateStartDate: user.workoutTemplateStartDate || undefined,
@@ -112,6 +113,7 @@ export class ActiveTemplateDto {
   startDate: Date;
   scheduleType?: 'contiguous' | 'weekly';
   weeklyDays?: number[];
+  assignedBy?: 'trainer' | 'admin' | 'user';
 }
 
 export class UserResponseDto {

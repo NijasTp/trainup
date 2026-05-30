@@ -12,7 +12,12 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": {
+      "^/api/wger": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        secure: false,
+      },
+      "^(?!/api/wger)/api": {
         target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,

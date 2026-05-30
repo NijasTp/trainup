@@ -513,7 +513,10 @@ export class UserService implements IUserService {
             dietaryPreferences: user.dietaryPreferences,
             activeWorkoutTemplates: user.activeWorkoutTemplates?.map(t => ({
                 templateId: t.templateId.toString(),
-                startDate: t.startDate
+                startDate: t.startDate,
+                scheduleType: t.scheduleType,
+                weeklyDays: t.weeklyDays,
+                assignedBy: t.assignedBy
             })) || [],
             activeWorkoutTemplate: user.activeWorkoutTemplate?.toString(),
             createdAt: user.createdAt,

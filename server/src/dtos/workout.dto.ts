@@ -32,6 +32,7 @@ export class WorkoutSessionResponseDto {
   isDone?: boolean;
   completedAt?: Date;
   source?: "trainer" | "user" | "admin" | "template" | "gym";
+  templateId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
