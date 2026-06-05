@@ -31,7 +31,7 @@ import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import TrainerReviews from "@/components/user/reviews/TrainerReviews";
 import Aurora from "@/components/ui/Aurora";
 
-import type { Position, Trainer, User } from "@/interfaces/user/IIndividualTrainer";
+import type { Position, Trainer, User } from "@/interfaces/user/iIndividualTrainer";
 
 const SpotlightCard = ({
     children,
