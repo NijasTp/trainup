@@ -6,9 +6,7 @@ import {
   TrendingUp,
   TrendingDown,
   Star,
-  Activity,
-  ArrowUpRight,
-  ShieldAlert
+  Activity
 } from "lucide-react";
 import { motion } from "framer-motion";
 import API from "@/lib/axios";
