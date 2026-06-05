@@ -14,6 +14,7 @@ import { IGymAnnouncement } from '../models/gymAnnouncement.model'
 import mongoose from 'mongoose'
 import cloudinary from '../config/cloudinary'
 import { IWorkoutTemplate } from '../models/workoutTemplate.model'
+import { GymJobModel } from '../models/gymJob.model'
 
 
 import { IJwtService } from '../core/interfaces/services/IJwtService'
@@ -1014,8 +1015,9 @@ export class GymService implements IGymService {
   ): Promise<any> {
     return await this._workoutTemplateRepo.create({
       ...data,
-      createdBy: new mongoose.Types.ObjectId(gymId),
-      creatorModel: 'Gym'
+      createdById: new mongoose.Types.ObjectId(gymId),
+      createdByType: 'Gym',
+      gymId: new mongoose.Types.ObjectId(gymId)
     });
   }
 
@@ -1025,7 +1027,7 @@ export class GymService implements IGymService {
     limit: number,
     search: string
   ): Promise<{ templates: any[]; total: number; totalPages: number }> {
-    const query: any = { createdBy: new mongoose.Types.ObjectId(gymId), creatorModel: 'Gym' };
+    const query: any = { createdById: new mongoose.Types.ObjectId(gymId), createdByType: 'Gym' };
 
     if (search) {
       query.title = { $regex: search, $options: 'i' };
@@ -1059,6 +1061,212 @@ export class GymService implements IGymService {
       ...data,
       gymId: new mongoose.Types.ObjectId(gymId)
     });
+  }
+
+  async getInterestedTrainers(
+    jobId: string,
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<any> {
+    const skip = (page - 1) * limit;
+
+    const pipeline: any[] = [
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(jobId),
+          gymId: new mongoose.Types.ObjectId(gymId)
+        }
+      },
+      {
+        $project: {
+          interestedTrainers: { $ifNull: ["$interestedTrainers", []] }
+        }
+      },
+      {
+        $unwind: {
+          path: "$interestedTrainers",
+          preserveNullAndEmptyArrays: false
+        }
+      },
+      {
+        $lookup: {
+          from: "trainers",
+          localField: "interestedTrainers.trainerId",
+          foreignField: "_id",
+          as: "trainerInfo"
+        }
+      },
+      {
+        $unwind: "$trainerInfo"
+      }
+    ];
+
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { "trainerInfo.name": { $regex: search, $options: "i" } },
+            { "trainerInfo.email": { $regex: search, $options: "i" } },
+            { "trainerInfo.specialization": { $regex: search, $options: "i" } }
+          ]
+        }
+      });
+    }
+
+    pipeline.push({
+      $sort: {
+        "interestedTrainers.isPinned": -1,
+        "interestedTrainers.appliedAt": -1
+      }
+    });
+
+    pipeline.push({
+      $facet: {
+        metadata: [{ $count: "total" }],
+        data: [
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $project: {
+              _id: "$trainerInfo._id",
+              name: "$trainerInfo.name",
+              email: "$trainerInfo.email",
+              phone: "$trainerInfo.phone",
+              specialization: "$trainerInfo.specialization",
+              experience: "$trainerInfo.experience",
+              rating: "$trainerInfo.rating",
+              certificate: "$trainerInfo.certificate",
+              profileImage: "$trainerInfo.profileImage",
+              profileStatus: "$trainerInfo.profileStatus",
+              bio: "$trainerInfo.bio",
+              isPinned: "$interestedTrainers.isPinned",
+              appliedAt: "$interestedTrainers.appliedAt"
+            }
+          }
+        ]
+      }
+    });
+
+    const result = await GymJobModel.aggregate(pipeline);
+    const data = result[0]?.data || [];
+    const total = result[0]?.metadata[0]?.total || 0;
+
+    return {
+      data,
+      total,
+      totalPages: Math.ceil(total / limit)
+    };
+  }
+
+  async togglePinTrainer(
+    jobId: string,
+    gymId: string,
+    trainerId: string
+  ): Promise<any> {
+    const job = await GymJobModel.findOne({
+      _id: new mongoose.Types.ObjectId(jobId),
+      gymId: new mongoose.Types.ObjectId(gymId)
+    });
+    if (!job) {
+      throw new AppError('Job posting not found', STATUS_CODE.NOT_FOUND);
+    }
+
+    if (!job.interestedTrainers) {
+      job.interestedTrainers = [];
+    }
+
+    const applicant = job.interestedTrainers.find(
+      (t) => t.trainerId.toString() === trainerId
+    );
+
+    if (!applicant) {
+      throw new AppError('Trainer has not applied or shown interest in this job', STATUS_CODE.BAD_REQUEST);
+    }
+
+    applicant.isPinned = !applicant.isPinned;
+    job.markModified('interestedTrainers');
+    await job.save();
+    return job;
+  }
+
+  async getTrainerJobs(
+    trainerId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<any> {
+    const query: any = { isActive: true };
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [jobs, total] = await Promise.all([
+      GymJobModel.find(query)
+        .populate('gymId', 'name logo profileImage address')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      GymJobModel.countDocuments(query)
+    ]);
+
+    const mappedJobs = jobs.map((job: any) => {
+      const interestedTrainers = job.interestedTrainers || [];
+      const hasShowedInterest = interestedTrainers.some(
+        (t: any) => t.trainerId.toString() === trainerId
+      );
+      return {
+        ...job,
+        hasShowedInterest
+      };
+    });
+
+    return {
+      jobs: mappedJobs,
+      total,
+      totalPages: Math.ceil(total / limit)
+    };
+  }
+
+  async toggleTrainerInterest(
+    jobId: string,
+    trainerId: string
+  ): Promise<any> {
+    const job = await GymJobModel.findById(jobId);
+    if (!job) {
+      throw new AppError('Job posting not found', STATUS_CODE.NOT_FOUND);
+    }
+
+    if (!job.interestedTrainers) {
+      job.interestedTrainers = [];
+    }
+
+    const index = job.interestedTrainers.findIndex(
+      (t) => t.trainerId.toString() === trainerId
+    );
+
+    if (index > -1) {
+      job.interestedTrainers.splice(index, 1);
+    } else {
+      job.interestedTrainers.push({
+        trainerId: new mongoose.Types.ObjectId(trainerId),
+        appliedAt: new Date(),
+        isPinned: false
+      });
+    }
+
+    job.markModified('interestedTrainers');
+    await job.save();
+
+    const hasShowedInterest = index === -1;
+    return { success: true, hasShowedInterest };
   }
 
   async getGymDashboardStats(gymId: string): Promise<any> {

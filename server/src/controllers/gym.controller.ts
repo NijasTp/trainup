@@ -480,6 +480,35 @@ export class GymController {
     }
   }
 
+  async getInterestedTrainers(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const { id } = req.params;
+      const { page = '1', limit = '10', search = '' } = req.query as any;
+      const result = await this._gymService.getInterestedTrainers(
+        id,
+        gymId,
+        parseInt(page),
+        parseInt(limit),
+        search
+      );
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async togglePinTrainer(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const gymId = (req.user as JwtPayload).id;
+      const { id, trainerId } = req.params;
+      const result = await this._gymService.togglePinTrainer(id, gymId, trainerId);
+      res.status(STATUS_CODE.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   // Workout Templates
   async createWorkoutTemplate(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

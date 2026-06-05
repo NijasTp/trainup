@@ -1,3 +1,5 @@
+import type { IExerciseDb } from "../exercise/IExerciseDb";
+
 export interface Exercise {
     id: string;
     name: string;
@@ -5,18 +7,20 @@ export interface Exercise {
     sets: number;
     reps?: string;
     weight?: string;
+    exerciseId?: string;
+    gifUrl?: string;
+    bodyParts?: string[];
+    targetMuscles?: string[];
+    secondaryMuscles?: string[];
+    equipments?: string[];
+    instructions?: string[];
+    description?: string;
+    exerciseData?: any;
 }
 
 export interface WgerExercise {
     value: string;
-    data: {
-        id: string; // or string | number depending on API
-        base_id: string;
-        name: string;
-        category: string;
-        image: string;
-        image_thumbnail: string;
-    };
+    data: IExerciseDb;
 }
 
 export interface WorkoutTemplate {

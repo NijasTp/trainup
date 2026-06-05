@@ -16,7 +16,8 @@ import {
     Menu,
     X,
     Settings,
-    ChevronDown
+    ChevronDown,
+    Briefcase
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -118,6 +119,7 @@ export default function TrainerSiteHeader() {
         { name: "Clients", path: "/trainer/clients", icon: Users },
         { name: "Schedule", path: "/trainer/weekly-schedule", icon: Calendar },
         { name: "Blueprints", path: "/trainer/templates", icon: Activity },
+        { name: "Jobs", path: "/trainer/jobs", icon: Briefcase },
     ];
 
     const trainerName = trainer?.name || "Trainer";

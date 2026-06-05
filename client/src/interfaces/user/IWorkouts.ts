@@ -1,3 +1,9 @@
+export interface SetDetail {
+    setNumber: number;
+    duration: number;
+    restDuration: number;
+}
+
 export interface Exercise {
     id: string;
     name: string;
@@ -5,7 +11,9 @@ export interface Exercise {
     reps: string;
     weight?: number;
     image?: string;
+    gifUrl?: string;
     timeTaken?: number;
+    setDetails?: SetDetail[];
 }
 
 export interface WorkoutSession {

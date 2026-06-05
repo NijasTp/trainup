@@ -7,6 +7,14 @@ export interface IExercise {
     weight?: string;
     rest?: string;
     notes?: string;
+    gifUrl?: string;
+    bodyParts?: string[];
+    targetMuscles?: string[];
+    secondaryMuscles?: string[];
+    equipments?: string[];
+    instructions?: string[];
+    description?: string;
+    exerciseData?: any;
 }
 
 export interface IWorkoutTemplateDay {
@@ -28,6 +36,7 @@ export interface IWorkoutTemplate {
     createdById?: string;
     createdByType?: 'Admin' | 'Trainer' | 'Gym';
     gymId?: string;
+    targetBodyParts?: string[];
 }
 
 export interface WgerExerciseData {

@@ -73,6 +73,7 @@ export const ROUTES = {
   TRAINER_WAITLIST: "/trainer/waitlist",
   TRAINER_REJECTED: "/trainer/rejected",
   TRAINER_DASHBOARD: "/trainer/dashboard",
+  TRAINER_JOBS: "/trainer/jobs",
   TRAINER_NOTIFICATIONS: "/trainer/notifications",
   TRAINER_CLIENTS: "/trainer/clients",
   TRAINER_TRANSACTIONS: "/trainer/transactions",

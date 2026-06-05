@@ -73,6 +73,7 @@ import WeeklySchedule from './pages/trainer/WeeklySchedule';
 import TrainerClients from './pages/trainer/TrainerClientListing';
 import TrainerChats from './pages/trainer/TrainerChats';
 import TrainerEditProfile from './pages/trainer/TrainerEditProfile';
+import TrainerJobs from './pages/trainer/TrainerJobs';
 import ProfileCompletion from './pages/user/ProfileCompletion';
 import TrainerAssignWorkouts from './pages/trainer/TrainerAssignWorkouts';
 import TrainerAssignDiets from './pages/trainer/TrainerAssignDiets';
@@ -253,6 +254,7 @@ function App() {
         <Route path={ROUTES.TRAINER_ASSIGN_DIET} element={<TrainerProtectedRoute><TrainerAssignDiets /></TrainerProtectedRoute>} />
 
         {/* Trainer Template Management */}
+        <Route path={ROUTES.TRAINER_JOBS} element={<TrainerProtectedRoute><TrainerJobs /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_TEMPLATES} element={<TrainerProtectedRoute><TrainerTemplateManagement /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_NEW_WORKOUT_TEMPLATE} element={<TrainerProtectedRoute><AdminAddWorkoutTemplate mode="trainer" /></TrainerProtectedRoute>} />
         <Route path={ROUTES.TRAINER_NEW_DIET_TEMPLATE} element={<TrainerProtectedRoute><NewDietTemplate mode="trainer" /></TrainerProtectedRoute>} />

@@ -6,6 +6,14 @@ export interface IWorkoutTemplateExercise {
     reps?: string;
     weight?: string;
     time?: string;
+    gifUrl?: string;
+    bodyParts?: string[];
+    targetMuscles?: string[];
+    secondaryMuscles?: string[];
+    equipments?: string[];
+    instructions?: string[];
+    description?: string;
+    exerciseData?: any;
 }
 
 export interface IWorkoutTemplateDay {
@@ -33,6 +41,7 @@ export interface IWorkoutTemplate {
     createdByType: 'Admin' | 'Trainer' | 'Gym';
     gymId?: string;
     isAssignedByTrainer?: boolean;
+    targetBodyParts?: string[];
     createdAt: string;
     updatedAt: string;
 }

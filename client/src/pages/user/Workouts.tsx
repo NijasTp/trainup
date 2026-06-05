@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell, Plus, Target, CheckCircle, XCircle, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Trash2 } from "lucide-react";
+import { Dumbbell, Plus, Target, CheckCircle, XCircle, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -17,11 +17,10 @@ import { WorkoutCalendar } from "@/components/user/workouts/WorkoutCalendar";
 import type { WorkoutSession, WorkoutDay } from "@/interfaces/user/IWorkouts";
 import Aurora from "@/components/ui/Aurora";
 
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState } from "@/redux/store";
+import { useDispatch } from "react-redux";
 import { updateUser } from "@/redux/slices/userAuthSlice";
 import API from "@/lib/axios";
-import { stopWorkoutTemplate } from "@/services/templateService";
+
 
 
 function formatTime(seconds: number | undefined): string {
@@ -62,7 +61,6 @@ function WorkoutSessionCard({
 }) {
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Calculate if Start button should be shown (allow starting scheduled workouts anytime on the scheduled day)
   const now = new Date();
   const todayStr = format(now, "yyyy-MM-dd");
   const isSessionToday = session.date === todayStr;
@@ -150,7 +148,7 @@ function WorkoutSessionCard({
                         </div>
                       )}
                       <img
-                        src={exercise.image || 'https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp'}
+                        src={exercise.gifUrl || exercise.image || 'https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp'}
                         alt={exercise.name}
                         className={`h-16 w-16 object-cover rounded-md transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"
                           }`}
@@ -186,7 +184,7 @@ function WorkoutSessionCard({
         <DialogHeader>
           <div className="relative w-full h-48 rounded-lg overflow-hidden">
             <img
-              src={session.exercises[0]?.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"}
+              src={session.exercises[0]?.gifUrl || session.exercises[0]?.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"}
               alt={session.name}
               className="w-full h-full object-cover"
             />
@@ -232,22 +230,40 @@ function WorkoutSessionCard({
           {session.exercises.map((exercise) => (
             <div
               key={exercise.id}
-              className="flex items-center gap-4 p-4 border-b border-border/60"
+              className="flex flex-col gap-3 p-4 border-b border-border/60"
             >
-              <img
-                src={exercise.image || 'https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp'}
-                alt={exercise.name}
-                className="h-24 w-24 object-cover rounded-md"
-                loading="lazy"
-              />
-              <div className="flex-1">
-                <p className="font-medium text-foreground">{exercise.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {exercise.sets} sets • {exercise.reps}
-                  {exercise.weight ? ` • ${exercise.weight}kg` : ""}
-                  {exercise.timeTaken ? ` • Time: ${formatTime(exercise.timeTaken)}` : ""}
-                </p>
+              <div className="flex items-center gap-4">
+                <img
+                  src={exercise.gifUrl || exercise.image || 'https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp'}
+                  alt={exercise.name}
+                  className="h-24 w-24 object-cover rounded-md"
+                  loading="lazy"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">{exercise.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {exercise.sets} sets • {exercise.reps}
+                    {exercise.weight ? ` • ${exercise.weight}kg` : ""}
+                    {exercise.timeTaken ? ` • Total Time: ${formatTime(exercise.timeTaken)}` : ""}
+                  </p>
+                </div>
               </div>
+              
+              {exercise.setDetails && exercise.setDetails.length > 0 && (
+                <div className="pl-4 border-l-2 border-primary/30 space-y-1.5">
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Set Breakdown:</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                    {exercise.setDetails.map((set) => (
+                      <div key={set.setNumber} className="bg-white/5 border border-white/5 p-2 rounded-xl text-slate-300">
+                        <span className="font-black text-primary">Set {set.setNumber}:</span> {formatTime(set.duration)}
+                        {set.restDuration > 0 && (
+                          <div className="text-[10px] text-slate-500">Rest: {set.restDuration}s</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
           {session.notes && (
@@ -275,7 +291,6 @@ function WorkoutSessionCard({
 
 export default function WorkoutPage() {
   const dispatch = useDispatch();
-  const user = useSelector((state: RootState) => state.userAuth.user);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [filter] = useState<"trainer" | "user" | "admin">("user");
@@ -297,22 +312,6 @@ export default function WorkoutPage() {
     }
   }, [dispatch]);
 
-  const handleStopActiveTemplate = async (templateId: string, e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    const confirmed = window.confirm("Are you sure you want to abandon this training protocol? All progress on this plan will be lost.");
-    if (!confirmed) return;
-    try {
-      await stopWorkoutTemplate(templateId);
-      await fetchUserProfile();
-      await fetchWorkouts();
-      toast.success("Training protocol stopped successfully!");
-    } catch (_err) {
-      toast.error("Failed to stop training protocol");
-    }
-  };
 
 
   const handleDateChange = (direction: "prev" | "next") => {
@@ -327,6 +326,7 @@ export default function WorkoutPage() {
       const response = await getWorkoutDays(format(selectedDate, "yyyy-MM-dd"));
       const workoutDay = response ? [response] : [{ _id: "", userId: "", date: format(selectedDate, "yyyy-MM-dd"), sessions: [] }];
       setDailyWorkouts(workoutDay);
+      console.log('worjouts:',workoutDay)
     } catch (err: unknown) {
       setError("Failed to fetch workouts");
       console.error("API error:", err);
@@ -462,140 +462,6 @@ export default function WorkoutPage() {
               </div>
 
               <FilterButtons />
-            </div>
-
-            {/* STUNNING PREMIUM GLASSMORPHIC ACTIVE PROGRAMS WIDGET */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                  <Dumbbell className="h-4 w-4 text-primary animate-pulse" />
-                  Active Training Protocols
-                </h2>
-                {user?.activeWorkoutTemplates && user.activeWorkoutTemplates.length > 0 && (
-                  <Badge className="bg-primary/10 border border-primary/20 text-primary uppercase font-bold text-[10px] tracking-widest px-3 py-1 rounded-full">
-                    {user.activeWorkoutTemplates.length} Active
-                  </Badge>
-                )}
-              </div>
-
-              {user?.activeWorkoutTemplates && user.activeWorkoutTemplates.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {user.activeWorkoutTemplates.map((t: any) => {
-                    // Find if today's date has a mapped day for this active template
-                    const dw = dailyWorkouts.find(dw => dw.date === format(selectedDate, "yyyy-MM-dd"));
-                    const todayDayNumber = dw?.templateName === t.title ? dw?.templateDay : null;
-                    const todaySession = dw?.sessions?.find((s: any) => s.notes?.includes(`From active template: ${t.title}`) || s.name?.startsWith(t.title));
-                    const isTodaySessionDone = todaySession?.isDone || false;
-                    
-                    // Estimate overall progress based on actual completed sessions
-                    const daysTotal = t.daysCount || 12;
-                    const completedSessions = allSessions.filter((s: any) => 
-                      s.isDone && 
-                      (s.templateId === t.templateId || s.name?.startsWith(t.title) || s.notes?.includes(t.title))
-                    );
-                    const completedCount = completedSessions.length;
-                    const currentProgressDay = Math.min(completedCount + 1, daysTotal);
-                    const progressPercent = Math.min(Math.round((completedCount / daysTotal) * 100), 100);
-
-                    return (
-                      <Link
-                        key={t.templateId}
-                        to={`/workouts/active-protocol/${t.templateId}`}
-                        className="block relative overflow-hidden group bg-white/[0.02] hover:bg-white/[0.04] backdrop-blur-xl border border-white/10 hover:border-primary/30 rounded-[2.5rem] p-6 space-y-6 transition-all duration-300 shadow-xl"
-                      >
-                        {/* Radial glow effect */}
-                        <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-[2.5rem] blur opacity-0 group-hover:opacity-100 transition duration-700 pointer-events-none"></div>
-
-                        <div className="relative flex gap-4">
-                          <img
-                            src={t.image || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"}
-                            alt={t.title}
-                            className="w-20 h-20 object-cover rounded-2xl border border-white/5"
-                          />
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-slate-900 border-white/10 text-primary font-black uppercase text-[9px] tracking-widest px-2 py-0.5 rounded-md">
-                                {t.scheduleType === 'weekly' ? 'Weekly Days' : 'Contiguous Rolling'}
-                              </Badge>
-                              {t.assignedBy === 'trainer' && (
-                                <Badge className="bg-blue-500/90 hover:bg-blue-600 text-white font-black uppercase text-[9px] tracking-widest px-2 py-0.5 rounded-md shadow-lg border-0">
-                                  Added by Trainer
-                                </Badge>
-                              )}
-                            </div>
-                            <h3 className="text-xl font-black text-white italic uppercase tracking-tight leading-tight">
-                              {t.title}
-                            </h3>
-                            {t.scheduleType === 'weekly' && (
-                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                                Days: {t.weeklyDays?.map((d: number) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ")}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Progress Bar & Session Tracking */}
-                        <div className="relative space-y-2">
-                          <div className="flex justify-between text-xs font-black uppercase tracking-wider text-slate-400">
-                            <span>
-                              {todayDayNumber ? (
-                                <span className="text-primary font-black italic">
-                                  TODAY: Day {todayDayNumber} {isTodaySessionDone ? " (COMPLETED)" : ""}
-                                </span>
-                              ) : (
-                                <span>Day {currentProgressDay} of {daysTotal}</span>
-                              )}
-                            </span>
-                            <span>{progressPercent}% COMPLETE</span>
-                          </div>
-                          <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                            <div
-                                className="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full transition-all duration-500"
-                                style={{ width: `${progressPercent}%` }}
-                            ></div>
-                          </div>
-                        </div>
-
-                        {/* Action buttons */}
-                        <div className="relative flex items-center justify-between pt-2 border-t border-white/5">
-                          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                            Started: {format(new Date(t.startDate), "MMM d, yyyy")}
-                          </span>
-
-                          <div className="flex gap-2">
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              onClick={(e) => handleStopActiveTemplate(t.templateId, e)}
-                              className="h-9 w-9 rounded-xl border-white/10 hover:border-rose-500/30 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all duration-300"
-                              title="Abandon Program"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="relative overflow-hidden bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-8 text-center space-y-4">
-                  <div className="mx-auto w-14 h-14 rounded-2xl bg-white/5 text-slate-500 flex items-center justify-center">
-                    <Dumbbell className="h-6 w-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-black italic uppercase text-slate-300">No Active Protocols</h3>
-                    <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
-                      Accelerate your strength gains and conditioning. Explore our expert-designed programs.
-                    </p>
-                  </div>
-                  <Link to="/workouts/browse">
-                    <Button className="h-10 px-6 rounded-xl bg-primary hover:bg-primary/95 text-white font-black uppercase text-xs tracking-wider shadow-lg shadow-primary/10 mt-2">
-                      Browse Templates
-                    </Button>
-                  </Link>
-                </div>
-              )}
             </div>
           </div>
         </section>

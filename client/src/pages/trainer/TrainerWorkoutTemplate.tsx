@@ -12,6 +12,7 @@ import TrainerSiteHeader from "@/components/trainer/general/TrainerHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 
 import type { Exercise, WgerExercise, WorkoutTemplate } from "@/interfaces/trainer/ITrainerWorkoutTemplate";
+import { searchExercises } from "@/services/exerciseService";
 
 export default function TrainerWorkoutTemplateForm() {
   const { id } = useParams<{ id?: string }>();
@@ -41,34 +42,14 @@ export default function TrainerWorkoutTemplateForm() {
       const fetchExercises = async () => {
         setSearchLoading(true);
         try {
-          const response = await fetch(
-            `/api/wger/exerciseinfo/?name=${encodeURIComponent(searchQuery)}&language=2`,
-            {
-              headers: {
-                Accept: "application/json",
-              },
-            }
-          );
-
-          if (!response.ok) throw new Error("Failed to fetch exercises");
-
-          const data = await response.json();
-          const mapped = (data.results || []).map((ex: any) => {
-            const mainImage = ex.images?.find((img: any) => img.is_main) || ex.images?.[0];
-            return {
-              value: ex.name,
-              data: {
-                id: ex.id,
-                base_id: ex.exercise_base || ex.id,
-                category: ex.category?.name || "Exercise",
-                image: mainImage ? mainImage.image.replace("https://wger.de", "") : "",
-                image_thumbnail: mainImage ? mainImage.image.replace("https://wger.de", "") : ""
-              }
-            };
-          });
+          const exercises = await searchExercises(searchQuery);
+          const mapped = exercises.map((ex) => ({
+            value: ex.name,
+            data: ex,
+          }));
           setSearchResults(mapped);
         } catch (error) {
-          console.error("Error fetching WGER exercises:", error);
+          console.error("Error fetching exercises:", error);
           toast.error("Failed to search exercises");
         } finally {
           setSearchLoading(false);
@@ -114,12 +95,21 @@ export default function TrainerWorkoutTemplateForm() {
       exercises: [
         ...prev.exercises,
         {
-          id: exercise.data.id,
+          id: exercise.data.exerciseId,
           name: exercise.value,
-          image: exercise.data.image,
+          image: exercise.data.gifUrl || "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp",
           sets: 1,
           reps: "10-12",
           weight: "bodyweight",
+          exerciseId: exercise.data.exerciseId,
+          gifUrl: exercise.data.gifUrl,
+          bodyParts: exercise.data.bodyParts,
+          targetMuscles: exercise.data.targetMuscles,
+          secondaryMuscles: exercise.data.secondaryMuscles,
+          equipments: exercise.data.equipments,
+          instructions: exercise.data.instructions,
+          description: exercise.data.description || "",
+          exerciseData: exercise.data,
         },
       ],
     }));
@@ -251,7 +241,7 @@ export default function TrainerWorkoutTemplateForm() {
                     <Input
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search exercises (via WGER API)"
+                      placeholder="Search exercises"
                       className="pl-10 bg-background/50 border-border/50"
                     />
                   </div>
@@ -267,23 +257,21 @@ export default function TrainerWorkoutTemplateForm() {
                     <div className="mt-2 max-h-60 overflow-y-auto border border-border/50 rounded-md bg-card/40 backdrop-blur-sm">
                       {searchResults.map((exercise) => (
                         <div
-                          key={exercise.data.id}
+                          key={exercise.data.exerciseId}
                           className="flex items-center justify-between p-3 hover:bg-background/20 transition-colors cursor-pointer border-b border-border/30 last:border-b-0"
                           onClick={() => addExercise(exercise)}
                         >
                           <div className="flex items-center gap-3">
                             <img
                               src={
-                                exercise.data.image_thumbnail
-                                  ? `https://wger.de${exercise.data.image_thumbnail}`
-                                  : "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
+                                exercise.data.gifUrl || "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
                               }
                               alt={exercise.value}
                               className="w-10 h-10 rounded object-cover"
                             />
                             <div>
                               <span className="font-medium text-foreground">{exercise.value}</span>
-                              <span className="block text-xs text-muted-foreground">{exercise.data.category}</span>
+                              <span className="block text-xs text-muted-foreground">{exercise.data.bodyParts?.[0] || "Exercise"}</span>
                             </div>
                           </div>
                           <Button size="sm" variant="outline">

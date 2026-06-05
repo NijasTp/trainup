@@ -72,7 +72,7 @@ export class TemplateService implements ITemplateService {
                 { isPublic: true },
                 { gymId: query.gymId }
             ];
-        } else {
+        } else if (!query.createdById) {
             filter.isPublic = true;
         }
 
@@ -195,12 +195,21 @@ export class TemplateService implements ITemplateService {
                 givenBy: assignedBy || 'admin',
                 date: new Date().toISOString().split('T')[0],
                 time: new Date().toTimeString().split(' ')[0].substring(0, 5),
-                exercises: templateDay.exercises.map((ex: { exerciseId?: string, name: string, sets: number, reps?: string, time?: string }) => ({
+                exercises: templateDay.exercises.map((ex: any) => ({
                     id: ex.exerciseId || Math.random().toString(36).substring(7),
                     name: ex.name,
                     sets: ex.sets,
                     reps: ex.reps,
-                    time: ex.time
+                    time: ex.time,
+                    exerciseId: ex.exerciseId,
+                    gifUrl: ex.gifUrl,
+                    bodyParts: ex.bodyParts,
+                    targetMuscles: ex.targetMuscles,
+                    secondaryMuscles: ex.secondaryMuscles,
+                    equipments: ex.equipments,
+                    instructions: ex.instructions,
+                    description: ex.description,
+                    exerciseData: ex.exerciseData,
                 })),
                 goal: template.goal,
                 isDone: false,
@@ -300,6 +309,7 @@ export class TemplateService implements ITemplateService {
             createdById: t.createdById.toString(),
             createdByType: t.createdByType,
             gymId: t.gymId?.toString(),
+            targetBodyParts: t.targetBodyParts || [],
             createdAt: t.createdAt,
             updatedAt: t.updatedAt
         };

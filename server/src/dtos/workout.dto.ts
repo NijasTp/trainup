@@ -16,6 +16,15 @@ export class ExerciseDto {
   reps?: string;
   time?: string;
   timeTaken?: number;
+  gifUrl?: string;
+  bodyParts?: string[];
+  targetMuscles?: string[];
+  secondaryMuscles?: string[];
+  equipments?: string[];
+  instructions?: string[];
+  description?: string;
+  exerciseData?: any;
+  setDetails?: any[];
 }
 
 export class WorkoutSessionResponseDto {

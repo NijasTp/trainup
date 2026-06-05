@@ -20,6 +20,19 @@ export interface IWorkoutSnapshot extends Document {
             weight?: string;
             rest?: string;
             notes?: string;
+            gifUrl?: string;
+            bodyParts?: string[];
+            targetMuscles?: string[];
+            secondaryMuscles?: string[];
+            equipments?: string[];
+            instructions?: string[];
+            description?: string;
+            exerciseData?: any;
+            setDetails?: Array<{
+                setNumber: number;
+                duration: number;
+                restDuration: number;
+            }>;
         }>;
     }>;
     startDate: Date;
@@ -49,7 +62,16 @@ const WorkoutSnapshotSchema = new Schema<IWorkoutSnapshot>({
             reps: String,
             weight: String,
             rest: String,
-            notes: String
+            notes: String,
+            gifUrl: { type: String, default: "" },
+            bodyParts: { type: [String], default: [] },
+            targetMuscles: { type: [String], default: [] },
+            secondaryMuscles: { type: [String], default: [] },
+            equipments: { type: [String], default: [] },
+            instructions: { type: [String], default: [] },
+            description: { type: String, default: "" },
+            exerciseData: { type: Schema.Types.Mixed },
+            setDetails: { type: [Schema.Types.Mixed], default: [] }
         }]
     }],
     startDate: { type: Date, default: Date.now },

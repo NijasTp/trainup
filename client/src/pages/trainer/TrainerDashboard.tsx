@@ -167,57 +167,7 @@ export default function TrainerDashboard() {
               </Button>
           </div>
         </div>
-        
-        {/* Interactive Alerts Loop */}
-        <div className="grid grid-cols-1 gap-4">
-          {/* Unassigned Users Notification */}
-          {stats.unassignedClientsCount > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.005 }}
-              className="flex items-center justify-between p-6 bg-amber-500/[0.04] border border-amber-500/20 rounded-[2rem] group cursor-pointer hover:bg-amber-500/[0.08] transition-all duration-300 shadow-xl"
-              onClick={() => navigate("/trainer/clients")}
-            >
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-2xl group-hover:scale-105 transition-transform duration-300">
-                  <ShieldAlert className="h-7 w-7 text-amber-400 animate-bounce" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-base font-black uppercase italic tracking-widest text-amber-400">Client Allocations Pending</h3>
-                  <p className="text-xs text-slate-400 font-medium">You have <span className="text-amber-400 font-bold">{stats.unassignedClientsCount} client{stats.unassignedClientsCount > 1 ? 's' : ''}</span> waiting for custom training structures or diet blueprints.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-amber-400 font-black uppercase italic tracking-widest text-[10px] bg-amber-500/10 px-4 py-2 rounded-xl group-hover:bg-amber-400 group-hover:text-black transition-all">
-                Action Required <ArrowUpRight className="h-3 w-3" />
-              </div>
-            </motion.div>
-          )}
-          
-          {/* Payment Setup Needed Notification */}
-          {!stats.hasSessionBundles && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.005 }}
-              className="flex items-center justify-between p-6 bg-cyan-500/[0.03] border border-cyan-500/20 rounded-[2rem] group cursor-pointer hover:bg-cyan-500/[0.07] transition-all duration-300 shadow-xl"
-              onClick={() => navigate("/trainer/edit-profile")}
-            >
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-2xl group-hover:scale-105 transition-transform duration-300">
-                  <DollarSign className="h-7 w-7 text-cyan-400" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-base font-black uppercase italic tracking-widest text-cyan-400">Payment Infrastructure Configuration</h3>
-                  <p className="text-xs text-slate-400 font-medium">Configure session stack packages to enable automated client call purchases.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-cyan-400 font-black uppercase italic tracking-widest text-[10px] bg-cyan-500/10 px-4 py-2 rounded-xl group-hover:bg-cyan-400 group-hover:text-black transition-all">
-                Configure Profile <ArrowUpRight className="h-3 w-3" />
-              </div>
-            </motion.div>
-          )}
-        </div>
+   
 
         {/* Stats Grid with Glowing Highlights */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

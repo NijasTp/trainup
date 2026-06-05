@@ -98,7 +98,15 @@ export default function ActiveProtocolPage() {
             reps: ex.reps,
             time: ex.time,
             rest: ex.rest || "60",
-            image: ex.image || ""
+            image: ex.image || "",
+            gifUrl: ex.gifUrl || ex.image || "",
+            bodyParts: ex.bodyParts || [],
+            targetMuscles: ex.targetMuscles || [],
+            secondaryMuscles: ex.secondaryMuscles || [],
+            equipments: ex.equipments || [],
+            instructions: ex.instructions || [],
+            description: ex.description || "",
+            exerciseData: ex.exerciseData
           })),
           goal: todaySession.goal,
           notes: todaySession.notes,

@@ -1,6 +1,12 @@
 
 import { Document, model, Schema, Types } from "mongoose";
 
+export interface ISetDetail {
+  setNumber: number;
+  duration: number;
+  restDuration: number;
+}
+
 export interface IExercise {
   id: string;
   name: string;
@@ -9,6 +15,16 @@ export interface IExercise {
   reps?: string;
   time?: string;
   timeTaken?: number;
+  exerciseId?: string;
+  gifUrl?: string;
+  bodyParts?: string[];
+  targetMuscles?: string[];
+  secondaryMuscles?: string[];
+  equipments?: string[];
+  instructions?: string[];
+  description?: string;
+  exerciseData?: any;
+  setDetails?: ISetDetail[];
 }
 
 export interface IWorkoutSession extends Document {
@@ -30,6 +46,12 @@ export interface IWorkoutSession extends Document {
   templateId?: Types.ObjectId | string;
 }
 
+const SetDetailSchema = new Schema<ISetDetail>({
+  setNumber: { type: Number, required: true },
+  duration: { type: Number, required: true },
+  restDuration: { type: Number, default: 0 }
+}, { _id: false });
+
 const ExerciseSchema = new Schema<IExercise>(
   {
     id: { type: String, required: true },
@@ -39,6 +61,16 @@ const ExerciseSchema = new Schema<IExercise>(
     reps: { type: String },
     time: { type: String },
     timeTaken: { type: Number },
+    exerciseId: { type: String },
+    gifUrl: { type: String, default: "" },
+    bodyParts: { type: [String], default: [] },
+    targetMuscles: { type: [String], default: [] },
+    secondaryMuscles: { type: [String], default: [] },
+    equipments: { type: [String], default: [] },
+    instructions: { type: [String], default: [] },
+    description: { type: String, default: "" },
+    exerciseData: { type: Schema.Types.Mixed },
+    setDetails: { type: [SetDetailSchema], default: [] },
   },
   { _id: false }
 );

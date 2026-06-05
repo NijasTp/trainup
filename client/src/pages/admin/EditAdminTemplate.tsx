@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Dumbbell, Utensils, Save, Loader2, ChevronDown, Box, ImagePlus, Layers, Calendar } from "lucide-react";
+import { Plus, Edit, Trash2, Dumbbell, Utensils, Save, Loader2, ChevronDown, Box, ImagePlus, Calendar, Search } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { TrainerLayout } from "@/components/trainer/TrainerLayout";
 import { toast } from "react-toastify";
@@ -16,6 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import ImageCropper from "@/components/common/ImageCropper";
+import { useDebounce } from "use-debounce";
+import { searchExercises } from "@/services/exerciseService";
 
 const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) => {
   const { id, template: templateType } = useParams<{ id: string; template: "workout" | "diet" }>();
@@ -39,7 +41,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
     name: '',
     sets: 3,
     reps: '10-12',
-    weight: 0,
+    weight: '0',
     rest: '60s',
     notes: ''
   });
@@ -54,6 +56,13 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
     notes: ''
   });
 
+  // Exercise DB direct search states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery] = useDebounce(searchQuery, 300);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState<any | null>(null);
+
   useEffect(() => {
     if (id && templateType) {
       fetchTemplate();
@@ -61,15 +70,23 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
   }, [id, templateType]);
 
   useEffect(() => {
-    if (templateType === 'workout' && template && (template as any).type === 'one-time') {
-      if (template.days.length > 1) {
-        setTemplate(prev => prev ? ({ ...prev, days: [prev.days[0]], repetitions: 1 }) : null);
-        toast.info("Truncated to 1 day for one-time session protocol");
-      } else if ((template as any).repetitions !== 1) {
-        setTemplate(prev => prev ? ({ ...prev, repetitions: 1 }) : null);
-      }
+    if (debouncedQuery) {
+      const fetchSuggestions = async () => {
+        setSearching(true);
+        try {
+          const results = await searchExercises(debouncedQuery);
+          setSuggestions(results || []);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setSearching(false);
+        }
+      };
+      fetchSuggestions();
+    } else {
+      setSuggestions([]);
     }
-  }, [templateType, template?.days.length, (template as any)?.type, (template as any)?.repetitions]);
+  }, [debouncedQuery]);
 
   const fetchTemplate = async () => {
     try {
@@ -79,8 +96,20 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
       const data = response.data;
       if (!data.days) data.days = [];
       if (!data.title && data.name) data.title = data.name;
-      // Ensure repetitions exists for workouts
-      if (templateType === 'workout' && data.repetitions === undefined) data.repetitions = 1;
+      
+      // Force compatibility: default type to one-time and repetitions to 1
+      if (templateType === 'workout') {
+        data.type = 'one-time';
+        data.repetitions = 1;
+        if (data.days.length === 0) {
+          data.days = [{ dayNumber: 1, exercises: [], meals: [] }];
+        } else if (data.days.length > 1) {
+          data.days = [data.days[0]];
+        }
+        if (!data.targetBodyParts) {
+          data.targetBodyParts = [];
+        }
+      }
       setTemplate(data);
     } catch (error: any) {
       console.error("Error fetching template:", error);
@@ -103,6 +132,8 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
           formData.append('days', JSON.stringify(template.days));
         } else if (key === 'requiredEquipment') {
           formData.append('requiredEquipment', JSON.stringify((template as WorkoutTemplate).requiredEquipment));
+        } else if (key === 'targetBodyParts') {
+          formData.append('targetBodyParts', JSON.stringify((template as WorkoutTemplate).targetBodyParts || []));
         } else if (key === 'imageFile') {
           formData.append('image', template.imageFile as Blob, 'template.jpg');
         } else if (key !== 'image' && (template as any)[key] !== undefined) {
@@ -159,7 +190,9 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
   const handleAddExercise = (dayIndex: number) => {
     setEditingDayIndex(dayIndex);
     setEditingItemIndex(null);
-    setExerciseForm({ name: '', sets: 3, reps: '10-12', weight: 0, rest: '60s', notes: '' });
+    setExerciseForm({ name: '', sets: 3, reps: '10-12', weight: '0', rest: '60s', notes: '' });
+    setSelectedExercise(null);
+    setSearchQuery("");
     setShowExerciseModal(true);
   };
 
@@ -169,20 +202,42 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
     setEditingDayIndex(dayIndex);
     setEditingItemIndex(exIndex);
     setExerciseForm({ ...exercise });
+    setSelectedExercise(exercise.exerciseData || exercise);
     setShowExerciseModal(true);
   };
 
   const handleSaveExercise = () => {
-    if (!template || editingDayIndex === null) return;
+    if (!template || editingDayIndex === null || !selectedExercise) return;
     const updatedDays = [...template.days];
     const day = { ...updatedDays[editingDayIndex] };
     const exercises = [...day.exercises];
-    if (editingItemIndex !== null) exercises[editingItemIndex] = exerciseForm;
-    else exercises.push(exerciseForm);
+
+    const exercisePayload: Exercise = {
+      ...exerciseForm,
+      exerciseId: selectedExercise.exerciseId,
+      name: selectedExercise.name,
+      gifUrl: selectedExercise.gifUrl,
+      bodyParts: selectedExercise.bodyParts,
+      targetMuscles: selectedExercise.targetMuscles,
+      secondaryMuscles: selectedExercise.secondaryMuscles,
+      equipments: selectedExercise.equipments,
+      instructions: selectedExercise.instructions,
+      description: selectedExercise.description || "",
+      exerciseData: selectedExercise,
+      image: selectedExercise.gifUrl || exerciseForm.image
+    };
+
+    if (editingItemIndex !== null) {
+      exercises[editingItemIndex] = exercisePayload;
+    } else {
+      exercises.push(exercisePayload);
+    }
     day.exercises = exercises;
     updatedDays[editingDayIndex] = day;
     setTemplate({ ...template, days: updatedDays } as any);
     setShowExerciseModal(false);
+    setSelectedExercise(null);
+    setSearchQuery("");
   };
 
   const handleDeleteExercise = (dayIndex: number, exIndex: number) => {
@@ -243,7 +298,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20">
+      <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-700 pb-20">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/5 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl gap-6">
           <div className="flex items-center gap-6">
             <div className="w-16 h-16 bg-cyan-500/20 rounded-3xl flex items-center justify-center text-cyan-400 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
@@ -300,7 +355,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
                   <div className="relative group cursor-pointer aspect-[21/9] rounded-[2rem] overflow-hidden border-2 border-dashed border-white/10 hover:border-white/20 transition-all bg-black/40">
                     <img src={template.image} alt="Banner" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Button onClick={() => document.getElementById('imageInput')?.click()} variant="outline" className="bg-white/10 border-white/20 text-white font-black italic uppercase text-[10px] rounded-xl">Refresh Signal</Button>
+                      <Button onClick={(e) => { e.stopPropagation(); document.getElementById('imageInput')?.click(); }} variant="outline" className="bg-white/10 border-white/20 text-white font-black italic uppercase text-[10px] rounded-xl">Refresh Signal</Button>
                     </div>
                     <input id="imageInput" type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
                   </div>
@@ -317,19 +372,32 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
                   </div>
                   {templateType === 'workout' ? (
                     <div className="space-y-4">
-                      <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Plan Repetitions</label>
-                      <div className="relative group">
-                        <Layers className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5 transition-colors group-focus-within:text-cyan-400" />
-                        <Input
-                          type="number"
-                          value={(template as WorkoutTemplate).repetitions}
-                          disabled={(template as any).type === 'one-time'}
-                          onChange={(e) => setTemplate({ ...template, repetitions: parseInt(e.target.value) } as any)}
-                          className="bg-black/40 border-white/10 h-16 pl-14 rounded-2xl text-white font-black italic uppercase text-sm disabled:opacity-30 disabled:grayscale transition-all"
-                        />
-                        {(template as any).type === 'one-time' && (
-                          <div className="absolute -bottom-5 left-2 text-[8px] text-cyan-500/50 font-black uppercase italic">Disabled for one-time sessions</div>
-                        )}
+                      <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Target Body Parts</label>
+                      <div className="flex flex-wrap gap-2.5">
+                        {["abs", "arm", "chest", "leg", "back", "shoulder"].map((part) => {
+                          const isSelected = (template as WorkoutTemplate).targetBodyParts?.includes(part);
+                          return (
+                            <button
+                              key={part}
+                              type="button"
+                              onClick={() => {
+                                const current = (template as WorkoutTemplate).targetBodyParts || [];
+                                const updated = current.includes(part)
+                                  ? current.filter(p => p !== part)
+                                  : [...current, part];
+                                setTemplate(prev => prev ? ({ ...prev, targetBodyParts: updated }) : null);
+                              }}
+                              className={cn(
+                                "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border",
+                                isSelected
+                                  ? "bg-cyan-500 text-black border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)] scale-105"
+                                  : "bg-black/40 text-gray-400 border-white/10 hover:border-white/20 hover:text-white"
+                              )}
+                            >
+                              {part}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   ) : (
@@ -360,9 +428,11 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
                 <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
                   <Calendar className={cn("h-6 w-6", templateType === 'workout' ? "text-cyan-400" : "text-orange-400")} /> Deployment Schedule
                 </h3>
-                <Button onClick={addDay} className="bg-white/5 border border-white/10 text-white hover:bg-white/10 font-black italic uppercase text-[10px] h-10 px-6 rounded-xl transition-all">
-                  <Plus className="h-4 w-4 mr-2" /> Add Deployment Day
-                </Button>
+                {templateType !== 'workout' && (
+                  <Button onClick={addDay} className="bg-white/5 border border-white/10 text-white hover:bg-white/10 font-black italic uppercase text-[10px] h-10 px-6 rounded-xl transition-all">
+                    <Plus className="h-4 w-4 mr-2" /> Add Deployment Day
+                  </Button>
+                )}
               </div>
 
               <div className="space-y-6">
@@ -387,14 +457,16 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 text-gray-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
-                          onClick={(e) => { e.stopPropagation(); removeDay(dIdx); }}
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
+                        {templateType !== 'workout' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 text-gray-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                            onClick={(e) => { e.stopPropagation(); removeDay(dIdx); }}
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </Button>
+                        )}
                         <div className={cn("h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center transition-transform duration-300", activeDayIndex === dIdx ? "rotate-180" : "rotate-0")}>
                           <ChevronDown className="text-gray-500 h-5 w-5" />
                         </div>
@@ -415,29 +487,38 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
                                 <>
                                   {(day.exercises || []).map((ex, eIdx) => (
                                     <div key={eIdx} className="p-6 rounded-[2rem] bg-zinc-900/50 border border-white/5 hover:border-cyan-500/20 transition-all group/item space-y-4">
-                                      <div className="flex justify-between items-start">
-                                        <div>
-                                          <h5 className="text-white font-black italic uppercase group-hover/item:text-cyan-400 transition-colors">{ex.name}</h5>
-                                          <p className="text-[10px] text-gray-500 font-black uppercase italic tracking-widest mt-1">Exercise Module</p>
+                                      <div className="flex justify-between items-start gap-4">
+                                        <div className="flex gap-4 items-center min-w-0">
+                                          <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 bg-black shrink-0">
+                                            <img src={ex.image || ex.gifUrl} alt="" className="w-full h-full object-cover" />
+                                          </div>
+                                          <div className="min-w-0">
+                                            <h5 className="text-white font-black italic uppercase group-hover/item:text-cyan-400 transition-colors truncate pr-2">{ex.name}</h5>
+                                            <p className="text-[9px] text-gray-500 font-black uppercase italic tracking-widest mt-1 capitalize">Target: {ex.targetMuscles?.[0] || "General"}</p>
+                                          </div>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 shrink-0">
                                           <Button onClick={() => handleEditExercise(dIdx, eIdx)} size="icon" className="h-8 w-8 bg-white/5 hover:bg-cyan-500 hover:text-black rounded-lg transition-all border border-white/5"><Edit size={14} /></Button>
                                           <Button onClick={() => handleDeleteExercise(dIdx, eIdx)} size="icon" className="h-8 w-8 bg-white/5 hover:bg-rose-500 hover:text-white rounded-lg transition-all border border-white/5"><Trash2 size={14} /></Button>
                                         </div>
                                       </div>
-                                      <div className="flex gap-4">
-                                        <div className="bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
-                                          <span className="text-[8px] font-black text-gray-500 uppercase italic tracking-widest block">Sets</span>
-                                          <span className="text-xs font-black italic text-white">{ex.sets}</span>
+                                      <div className="grid grid-cols-4 gap-2">
+                                        <div className="bg-black/40 px-2 py-1.5 rounded-xl border border-white/5 text-center">
+                                          <span className="text-[7px] font-black text-gray-500 uppercase italic tracking-widest block">Sets</span>
+                                          <span className="text-xs font-black italic text-cyan-400">{ex.sets}</span>
                                         </div>
-                                        <div className="bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 flex-1">
-                                          <span className="text-[8px] font-black text-gray-500 uppercase italic tracking-widest block">Reps / Duration</span>
-                                          <span className="text-xs font-black italic text-white uppercase">{ex.reps}</span>
+                                        <div className="bg-black/40 px-2 py-1.5 rounded-xl border border-white/5 text-center col-span-2">
+                                          <span className="text-[7px] font-black text-gray-500 uppercase italic tracking-widest block">Reps / Duration</span>
+                                          <span className="text-xs font-black italic text-white uppercase truncate">{ex.reps}</span>
+                                        </div>
+                                        <div className="bg-black/40 px-2 py-1.5 rounded-xl border border-white/5 text-center">
+                                          <span className="text-[7px] font-black text-gray-500 uppercase italic tracking-widest block">Load</span>
+                                          <span className="text-xs font-black italic text-white">{ex.weight || "0"}</span>
                                         </div>
                                       </div>
                                     </div>
                                   ))}
-                                  <button onClick={() => handleAddExercise(dIdx)} className="p-10 rounded-[2rem] border-2 border-dashed border-white/5 hover:border-cyan-500/30 hover:bg-cyan-500/5 flex flex-col items-center justify-center gap-4 transition-all text-gray-600 hover:text-cyan-400 min-h-[160px]">
+                                  <button onClick={() => handleAddExercise(dIdx)} className="p-10 rounded-[2rem] border-2 border-dashed border-white/5 hover:border-cyan-500/30 hover:bg-cyan-500/5 flex flex-col items-center justify-center gap-4 transition-all text-gray-600 hover:text-cyan-400 min-h-[140px]">
                                     <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-cyan-500 group-hover:text-black transition-all">
                                       <Plus size={24} />
                                     </div>
@@ -492,12 +573,15 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
                   <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-white transition-colors">Phase Units</span>
                   <span className="text-white font-black italic text-lg">{template.days?.length || 0}</span>
                 </div>
-                {templateType === 'workout' && (
+                {templateType === 'workout' ? (
                   <div className="flex justify-between items-center group/metric">
                     <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-white transition-colors">Net Duration</span>
-                    <span className="text-cyan-400 font-black italic text-lg">
-                      {(template.days?.length || 0) * ((template as WorkoutTemplate).repetitions || 1)} DAYS
-                    </span>
+                    <span className="text-cyan-400 font-black italic text-lg">1 DAY (ONE-TIME)</span>
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center group/metric">
+                    <span className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest group-hover/metric:text-white transition-colors">Net Duration</span>
+                    <span className="text-orange-400 font-black italic text-lg">{(template as DietTemplate).duration || 0} DAYS</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center group/metric">
@@ -530,7 +614,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
           <DialogContent className="max-w-2xl bg-[#0a0a0b] border border-white/10 text-white rounded-[2.5rem] p-10 shadow-3xl">
             <DialogHeader className="mb-10">
               <div className="flex items-center gap-6">
-                <div className="h-14 w-14 rounded-2xl bg-cyan-500 text-black flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                <div className="h-14 w-14 rounded-2xl bg-cyan-500 text-black flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
                   <Dumbbell size={28} />
                 </div>
                 <div>
@@ -541,51 +625,112 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
                 </div>
               </div>
             </DialogHeader>
+            
             <div className="space-y-8">
-              <div className="space-y-3">
-                <Label className="text-[10px] font-black text-gray-500 tracking-[0.2em] uppercase ml-1 italic">Module Identity</Label>
-                <Input
-                  value={exerciseForm.name}
-                  onChange={(e) => setExerciseForm({ ...exerciseForm, name: e.target.value })}
-                  className="bg-black border-white/10 h-16 px-6 rounded-2xl text-white font-black italic text-lg focus:ring-1 focus:ring-cyan-500/50"
-                  placeholder="E.G. TITAN SQUATS"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black text-gray-500 tracking-[0.2em] uppercase ml-1 italic">Volume Grid</Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <span className="text-[8px] font-black text-gray-600 uppercase italic">Sets</span>
-                      <Input type="number" value={exerciseForm.sets} onChange={(e) => setExerciseForm({ ...exerciseForm, sets: parseInt(e.target.value) })} className="bg-black border-white/10 h-14 rounded-xl text-center font-black italic text-cyan-400" />
+              {editingItemIndex === null && !selectedExercise ? (
+                // Show search box and results if adding and no exercise is selected yet
+                <div className="space-y-6">
+                  <div className="relative group">
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 h-5 w-5" />
+                    <Input
+                      placeholder="SEARCH EXERCISE (e.g. BENCH PRESS)..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-black/40 border-white/10 h-16 pl-14 rounded-2xl text-white font-black italic uppercase text-sm focus:ring-1 focus:ring-cyan-500/50 transition-all"
+                    />
+                  </div>
+
+                  {searching && (
+                    <div className="flex items-center gap-3 justify-center py-10">
+                      <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+                      <span className="text-xs font-black uppercase text-gray-500 tracking-widest animate-pulse">Querying ExerciseDB...</span>
+                    </div>
+                  )}
+
+                  {!searching && suggestions.length > 0 && (
+                    <div className="grid grid-cols-2 gap-4 max-h-[300px] overflow-y-auto p-4 bg-black/40 rounded-2xl border border-white/5">
+                      {suggestions.map((suggestion) => (
+                        <div
+                          key={suggestion.exerciseId}
+                          onClick={() => {
+                            setSelectedExercise(suggestion);
+                            setExerciseForm(prev => ({
+                              ...prev,
+                              name: suggestion.name,
+                              image: suggestion.gifUrl
+                            }));
+                          }}
+                          className="group relative cursor-pointer bg-[#0c0c0e] border border-white/5 hover:border-cyan-500/40 rounded-xl p-3 flex flex-col gap-2 overflow-hidden"
+                        >
+                          <div className="relative w-full aspect-square bg-black/60 rounded-lg overflow-hidden border border-white/5">
+                            <img src={suggestion.gifUrl} alt={suggestion.name} className="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                            <h5 className="font-bold text-white text-[11px] line-clamp-1 capitalize">{suggestion.name}</h5>
+                            <Badge className="bg-cyan-500/10 text-cyan-300 border-0 text-[7px] px-1 uppercase font-black">{suggestion.bodyParts?.[0]}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Show exercise info and configuration form
+                <>
+                  {selectedExercise && (
+                    <div className="grid grid-cols-[120px_1fr] gap-4 bg-black/40 p-4 border border-white/5 rounded-2xl items-center">
+                      <div className="w-full aspect-square rounded-xl overflow-hidden border border-white/10 bg-black">
+                        <img src={selectedExercise.gifUrl || selectedExercise.image} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="space-y-1.5 text-[11px] text-gray-400">
+                        <h4 className="text-white font-black uppercase italic text-sm">{selectedExercise.name}</h4>
+                        <div><span className="font-bold text-gray-500 uppercase tracking-wider text-[8px]">Target: </span><span className="text-white capitalize">{selectedExercise.targetMuscles?.join(", ") || selectedExercise.targetMuscles}</span></div>
+                        <div><span className="font-bold text-gray-500 uppercase tracking-wider text-[8px]">Equipment: </span><span className="text-white capitalize">{selectedExercise.equipments?.join(", ") || selectedExercise.equipments}</span></div>
+                        {editingItemIndex === null && (
+                          <button type="button" onClick={() => setSelectedExercise(null)} className="text-[10px] text-cyan-400 font-bold hover:underline">Change Exercise Selection</button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black text-gray-500 tracking-[0.2em] uppercase ml-1 italic">Volume Grid</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <span className="text-[8px] font-black text-gray-600 uppercase italic">Sets</span>
+                          <Input type="number" value={exerciseForm.sets} onChange={(e) => setExerciseForm({ ...exerciseForm, sets: parseInt(e.target.value) || 1 })} className="bg-black border-white/10 h-14 rounded-xl text-center font-black italic text-cyan-400" />
+                        </div>
+                        <div className="space-y-2">
+                          <span className="text-[8px] font-black text-gray-600 uppercase italic">Reps / Duration</span>
+                          <Input value={exerciseForm.reps} onChange={(e) => setExerciseForm({ ...exerciseForm, reps: e.target.value })} className="bg-black border-white/10 h-14 rounded-xl text-center font-black italic" placeholder="10-12 or 60s" />
+                        </div>
+                      </div>
                     </div>
                     <div className="space-y-4">
-                      <span className="text-[8px] font-black text-gray-600 uppercase italic">Reps / Duration</span>
-                      <Input value={exerciseForm.reps} onChange={(e) => setExerciseForm({ ...exerciseForm, reps: e.target.value })} className="bg-black border-white/10 h-14 rounded-xl text-center font-black italic" placeholder="10-12 or 60s" />
+                      <Label className="text-[10px] font-black text-gray-500 tracking-[0.2em] uppercase ml-1 italic">Tension Matrix</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <span className="text-[8px] font-black text-gray-600 uppercase italic">Load (KG)</span>
+                          <Input value={exerciseForm.weight} onChange={(e) => setExerciseForm({ ...exerciseForm, weight: e.target.value })} className="bg-black border-white/10 h-14 rounded-xl text-center font-black italic" />
+                        </div>
+                        <div className="space-y-2">
+                          <span className="text-[8px] font-black text-gray-600 uppercase italic">Rest Period</span>
+                          <Input value={exerciseForm.rest} onChange={(e) => setExerciseForm({ ...exerciseForm, rest: e.target.value })} className="bg-black border-white/10 h-14 rounded-xl text-center font-black italic" placeholder="60s" />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black text-gray-500 tracking-[0.2em] uppercase ml-1 italic">Tension Matrix</Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <span className="text-[8px] font-black text-gray-600 uppercase italic">Load (KG)</span>
-                      <Input type="number" value={exerciseForm.weight} onChange={(e) => setExerciseForm({ ...exerciseForm, weight: parseFloat(e.target.value) })} className="bg-black border-white/10 h-14 rounded-xl text-center font-black italic" />
-                    </div>
-                    <div className="space-y-2">
-                      <span className="text-[8px] font-black text-gray-600 uppercase italic">Rest Period</span>
-                      <Input value={exerciseForm.rest} onChange={(e) => setExerciseForm({ ...exerciseForm, rest: e.target.value })} className="bg-black border-white/10 h-14 rounded-xl text-center font-black italic" placeholder="60s" />
-                    </div>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-gray-500 tracking-[0.2em] uppercase ml-1 italic">Field Directives</Label>
+                    <Textarea value={exerciseForm.notes} onChange={(e) => setExerciseForm({ ...exerciseForm, notes: e.target.value })} className="bg-black border-white/10 p-6 rounded-2xl text-white font-medium min-h-[100px] resize-none focus:ring-1 focus:ring-cyan-500/50 italic text-xs tracking-widest" placeholder="FOCUS ON CONTROLLED NEGATIVES..." />
                   </div>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <Label className="text-[10px] font-black text-gray-500 tracking-[0.2em] uppercase ml-1 italic">Field Directives</Label>
-                <Textarea value={exerciseForm.notes} onChange={(e) => setExerciseForm({ ...exerciseForm, notes: e.target.value })} className="bg-black border-white/10 p-6 rounded-2xl text-white font-medium min-h-[120px] resize-none focus:ring-1 focus:ring-cyan-500/50 italic text-xs tracking-widest" placeholder="FOCUS ON MAXIMAL MOTOR UNIT RECRUITMENT..." />
-              </div>
+                </>
+              )}
             </div>
+
             <DialogFooter className="mt-10">
-              <Button onClick={handleSaveExercise} className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black italic rounded-2xl h-16 text-lg uppercase shadow-lg shadow-cyan-500/20 transition-all hover:scale-[1.02]">
+              <Button onClick={handleSaveExercise} disabled={!selectedExercise} className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black italic rounded-2xl h-16 text-lg uppercase shadow-lg shadow-cyan-500/20 transition-all hover:scale-[1.02] disabled:opacity-50">
                 Synchronize Module
               </Button>
             </DialogFooter>

@@ -1,23 +1,11 @@
+import type { IExerciseDb } from "../exercise/IExerciseDb";
+
 export interface WgerExerciseSuggestion {
     value: string;
-    data: {
-        id: string;
-        base_id: string;
-        name: string;
-        category: string;
-        image: string;
-        image_thumbnail: string;
-    };
+    data: IExerciseDb;
 }
 
-export interface WgerExerciseInfo {
-    id: number;
-    name: string;
-    description: string;
-    category: number;
-    equipment?: number[];
-    images?: { image: string; is_main: boolean }[];
-}
+export type WgerExerciseInfo = IExerciseDb;
 
 export interface Exercise {
     id: string;
@@ -27,4 +15,13 @@ export interface Exercise {
     time?: string;
     weight?: number;
     image?: string;
+    exerciseId?: string;
+    gifUrl?: string;
+    bodyParts?: string[];
+    targetMuscles?: string[];
+    secondaryMuscles?: string[];
+    equipments?: string[];
+    instructions?: string[];
+    description?: string;
+    exerciseData?: any;
 }

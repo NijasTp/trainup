@@ -1,5 +1,11 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 
+export interface IInterestedTrainer {
+    trainerId: Types.ObjectId | string;
+    appliedAt: Date;
+    isPinned: boolean;
+}
+
 export interface IGymJob extends Document {
     _id: Types.ObjectId | string;
     gymId: Types.ObjectId | string;
@@ -10,6 +16,7 @@ export interface IGymJob extends Document {
     type: 'Trainer' | 'Staff' | 'Manager';
     location: 'On-site' | 'Remote' | 'Hybrid';
     isActive: boolean;
+    interestedTrainers?: IInterestedTrainer[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -32,6 +39,11 @@ const gymJobSchema: Schema<IGymJob> = new Schema(
             default: 'On-site',
         },
         isActive: { type: Boolean, default: true },
+        interestedTrainers: [{
+            trainerId: { type: Schema.Types.ObjectId, ref: 'Trainer', required: true },
+            appliedAt: { type: Date, default: Date.now },
+            isPinned: { type: Boolean, default: false }
+        }]
     },
     { timestamps: true }
 );

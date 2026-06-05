@@ -13,6 +13,7 @@ import { useDebounce } from "use-debounce";
 import API from "@/lib/axios";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import type { Exercise, WgerExerciseInfo, WgerExerciseSuggestion } from "@/interfaces/trainer/ITrainerAddSession";
+import { searchExercises } from "@/services/exerciseService";
 
 
 function ExerciseSuggestionCard({
@@ -35,7 +36,7 @@ function ExerciseSuggestionCard({
       <CardContent>
         <div className="space-y-2">
           <Badge variant="secondary" className="bg-white text-black border-0 shadow-lg">
-            {suggestion.data.category}
+            {suggestion.data.bodyParts?.[0] || "Exercise"}
           </Badge>
           <div className="relative w-full h-32">
             {!imageLoaded && (
@@ -45,11 +46,7 @@ function ExerciseSuggestionCard({
             )}
             <img
               src={
-                suggestion.data.image
-                  ? `https://wger.de${suggestion.data.image}`
-                  : suggestion.data.image_thumbnail
-                    ? `https://wger.de${suggestion.data.image_thumbnail}`
-                    : "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
+                suggestion.data.gifUrl || "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
               }
               alt={suggestion.value}
               className={`w-full h-32 object-cover rounded-md transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
@@ -144,7 +141,7 @@ export default function TrainerAddSessionPage() {
   const [notes, setNotes] = useState("");
   const [date, setDate] = useState("");
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("pushup");
   const [debouncedQuery] = useDebounce(searchQuery, 300);
   const [allSuggestions, setAllSuggestions] = useState<WgerExerciseSuggestion[]>([]);
   const [displayedSuggestions, setDisplayedSuggestions] = useState<WgerExerciseSuggestion[]>([]);
@@ -208,22 +205,11 @@ export default function TrainerAddSessionPage() {
     setIsSuggestionsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/wger/exerciseinfo/?name=${term}&language=2`);
-      if (!response.ok) throw new Error("Failed to fetch exercise suggestions");
-      const data = await response.json();
-      const mapped = (data.results || []).map((ex: any) => {
-        const mainImage = ex.images?.find((img: any) => img.is_main) || ex.images?.[0];
-        return {
-          value: ex.name,
-          data: {
-            id: ex.id,
-            base_id: ex.exercise_base || ex.id,
-            category: ex.category?.name || "Exercise",
-            image: mainImage ? mainImage.image.replace("https://wger.de", "") : "",
-            image_thumbnail: mainImage ? mainImage.image.replace("https://wger.de", "") : ""
-          }
-        };
-      });
+      const exercises = await searchExercises(term);
+      const mapped = exercises.map((ex) => ({
+        value: ex.name,
+        data: ex,
+      }));
       setAllSuggestions(mapped);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Error fetching exercise suggestions";
@@ -235,53 +221,44 @@ export default function TrainerAddSessionPage() {
     }
   }
 
-  async function handleSelectExercise(exerciseId: string, exerciseName: string) {
-    setIsLoading(true);
-    setError(null);
-    try {
-      console.log("Fetching exercise:", exerciseId);
-      const response = await fetch(`/api/wger/exerciseinfo/${exerciseId}/?language=2`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch exercise details: ${response.status}`);
-      }
-      const data = await response.json();
-      setSelectedExercise({ ...data, name: exerciseName });
-      setShowConfig(true);
-      setSets(3);
-      setReps("10-12");
-      setTimeDuration("30 min");
-      setWeight(0);
-    } catch (err: unknown) {
-      console.error("Fetch error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Error fetching exercise details";
-      setError(errorMessage);
-      toast.error("Failed to load exercise details", { description: errorMessage });
-    } finally {
-      setIsLoading(false);
+  function handleSelectExercise(exerciseId: string) {
+    const foundSug = allSuggestions.find((sug) => sug.data.exerciseId === exerciseId);
+    if (!foundSug) {
+      toast.error("Exercise details not found");
+      return;
     }
+    setSelectedExercise(foundSug.data);
+    setShowConfig(true);
+    setSets(3);
+    setReps("10-12");
+    setTimeDuration("30 min");
+    setWeight(0);
   }
 
   function handleAddExercise() {
     if (selectedExercise) {
       const newExercise: Exercise = {
-        id: selectedExercise.id.toString(),
+        id: selectedExercise.exerciseId,
         name: selectedExercise.name,
         sets,
-        reps: selectedExercise.category === 15 ? undefined : reps,
-        time: selectedExercise.category === 15 ? timeDuration : undefined,
-        weight:
-          selectedExercise.equipment && selectedExercise.equipment.length > 0 && !selectedExercise.equipment.includes(7)
-            ? weight
-            : undefined,
-        image:
-          selectedExercise.images?.find((img) => img.is_main)?.image ||
-          selectedExercise.images?.[0]?.image ||
-          "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp",
+        reps: isCardio ? undefined : reps,
+        time: isCardio ? timeDuration : undefined,
+        weight: isWeighted ? weight : undefined,
+        image: selectedExercise.gifUrl || "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp",
+        exerciseId: selectedExercise.exerciseId,
+        gifUrl: selectedExercise.gifUrl,
+        bodyParts: selectedExercise.bodyParts,
+        targetMuscles: selectedExercise.targetMuscles,
+        secondaryMuscles: selectedExercise.secondaryMuscles,
+        equipments: selectedExercise.equipments,
+        instructions: selectedExercise.instructions,
+        description: selectedExercise.description || "",
+        exerciseData: selectedExercise,
       };
       setExercises([...exercises, newExercise]);
       setSelectedExercise(null);
       setShowConfig(false);
-      setSearchQuery("");
+      setSearchQuery("pushup");
       toast.success(`Added ${newExercise.name} to session`);
     }
   }
@@ -329,8 +306,10 @@ export default function TrainerAddSessionPage() {
   }
 
   const isWeighted =
-    selectedExercise?.equipment && selectedExercise.equipment.length > 0 && !selectedExercise.equipment.includes(7);
-  const isCardio = selectedExercise?.category === 15;
+    selectedExercise?.equipments &&
+    selectedExercise.equipments.length > 0 &&
+    !selectedExercise.equipments.includes("body weight");
+  const isCardio = selectedExercise?.bodyParts?.includes("cardio") || false;
   const totalPages = Math.ceil(allSuggestions.length / perPage);
 
   return (
@@ -479,9 +458,9 @@ export default function TrainerAddSessionPage() {
                       <div className="grid gap-4 sm:grid-cols-2">
                         {displayedSuggestions.map((sug) => (
                           <ExerciseSuggestionCard
-                            key={sug.data.id}
+                            key={sug.data.exerciseId}
                             suggestion={sug}
-                            onAdd={() => handleSelectExercise(sug.data.base_id, sug.value)}
+                            onAdd={() => handleSelectExercise(sug.data.exerciseId)}
                             isLoading={isLoading}
                           />
                         ))}
@@ -526,19 +505,16 @@ export default function TrainerAddSessionPage() {
                 )}
                 {showExerciseSearch && showConfig && selectedExercise && (
                   <div className="space-y-6">
-                    {selectedExercise.description && (
-                      <div
-                        className="text-muted-foreground prose prose-invert max-w-none"
-                        dangerouslySetInnerHTML={{ __html: selectedExercise.description }}
-                      />
+                    {selectedExercise.instructions && selectedExercise.instructions.length > 0 && (
+                      <div className="text-muted-foreground prose prose-invert max-w-none space-y-2">
+                        {selectedExercise.instructions.map((inst, i) => (
+                          <p key={i}>{inst}</p>
+                        ))}
+                      </div>
                     )}
-                    {selectedExercise.images && selectedExercise.images.length > 0 && (
+                    {selectedExercise.gifUrl && (
                       <img
-                        src={
-                          selectedExercise.images.find((img) => img.is_main)?.image ||
-                          selectedExercise.images[0].image ||
-                          "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
-                        }
+                        src={selectedExercise.gifUrl}
                         alt={selectedExercise.name || "Exercise"}
                         className="w-full h-64 object-cover rounded-md"
                       />
@@ -607,7 +583,7 @@ export default function TrainerAddSessionPage() {
                         onClick={() => {
                           setSelectedExercise(null);
                           setShowConfig(false);
-                          setSearchQuery("");
+                          setSearchQuery("pushup");
                         }}
                         className="border-border/50"
                       >

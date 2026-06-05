@@ -8,6 +8,17 @@ const ExerciseSchema = z.object({
     sets: z.number().min(1),
     reps: z.string().optional(),
     time: z.string().optional(),
+    weight: z.string().optional(),
+    rest: z.string().optional(),
+    notes: z.string().optional(),
+    gifUrl: z.string().optional(),
+    bodyParts: z.array(z.string()).optional(),
+    targetMuscles: z.array(z.string()).optional(),
+    secondaryMuscles: z.array(z.string()).optional(),
+    equipments: z.array(z.string()).optional(),
+    instructions: z.array(z.string()).optional(),
+    description: z.string().optional(),
+    exerciseData: z.any().optional(),
 });
 
 const DaySchema = z.object({
@@ -25,6 +36,7 @@ export const CreateWorkoutTemplateSchema = z.object({
     repetitions: z.preprocess((val) => (val === '' || val === undefined) ? undefined : Number(val), z.number().min(1).optional()),
     goal: z.string().optional(),
     days: z.preprocess((val) => typeof val === 'string' ? JSON.parse(val) : val, z.array(DaySchema)),
+    targetBodyParts: z.preprocess((val) => typeof val === 'string' ? JSON.parse(val) : val, z.array(z.string())).optional(),
 });
 
 export const UpdateWorkoutTemplateSchema = CreateWorkoutTemplateSchema.partial();

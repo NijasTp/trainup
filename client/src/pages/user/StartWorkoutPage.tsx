@@ -19,7 +19,7 @@ import {
   Info
 } from "lucide-react";
 import Aurora from "@/components/ui/Aurora";
-import type { IExercise, IWorkoutSession, ExerciseTime } from "@/interfaces/user/IStartWorkout";
+import type { IExercise, IWorkoutSession } from "@/interfaces/user/IStartWorkout";
 
 function formatTime(seconds: number): string {
   const min = Math.floor(seconds / 60);
@@ -33,6 +33,7 @@ export default function StartSessionPage() {
   
   const [session, setSession] = useState<IWorkoutSession | null>(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number>(0);
+  const [currentSetIndex, setCurrentSetIndex] = useState<number>(0);
   const [phase, setPhase] = useState<"countdown" | "exercise" | "preview">("countdown");
   const [countdown, setCountdown] = useState<number>(3);
   const [timer, setTimer] = useState<number | null>(null);
@@ -42,10 +43,12 @@ export default function StartSessionPage() {
   
   const [previewCountdown, setPreviewCountdown] = useState<number>(15);
   const [initialPreviewRest, setInitialPreviewRest] = useState<number>(15);
-  const [exerciseTimes, setExerciseTimes] = useState<ExerciseTime[]>([]);
   const [currentExerciseTime, setCurrentExerciseTime] = useState<number>(0);
   const [accumulatedTime, setAccumulatedTime] = useState<number>(0);
-  const [currentNotes, setCurrentNotes] = useState<string>("");
+
+  // Set and rest timings maps
+  const [setDurationsMap, setSetDurationsMap] = useState<Record<number, number[]>>({});
+  const [restDurationsMap, setRestDurationsMap] = useState<Record<number, number[]>>({});
   
   const lastStartRef = useRef<number | null>(null);
   const whistleSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -65,11 +68,6 @@ export default function StartSessionPage() {
           ...response,
           exercises: response.exercises.map((ex: IExercise) => ({ ...ex, isDone: false })),
         });
-        setExerciseTimes(response.exercises.map((ex: IExercise) => ({
-          exerciseId: ex.id,
-          name: ex.name,
-          duration: 0,
-        })));
       } catch (err: any) {
         setError(err.message || "Failed to fetch session");
         toast.error("Failed to load session", { description: err.message });
@@ -87,32 +85,34 @@ export default function StartSessionPage() {
       return () => clearTimeout(timerId);
     } else if (phase === "countdown" && countdown === 0) {
       setPhase("exercise");
-      if (session?.exercises[currentExerciseIndex]?.time) {
-        const timeStr = session.exercises[currentExerciseIndex].time || "0 min";
+      const currentExercise = session?.exercises[currentExerciseIndex];
+      if (currentExercise?.time) {
+        const timeStr = currentExercise.time || "0 min";
         const timeInSeconds = parseInt(timeStr) * 60;
         setTimer(timeInSeconds);
+      } else {
+        setTimer(null);
       }
       setAccumulatedTime(0);
       lastStartRef.current = Date.now();
       setCurrentExerciseTime(0);
-      setCurrentNotes(session?.exercises[currentExerciseIndex]?.notes || "");
       if (whistleSoundRef.current) {
         whistleSoundRef.current.play().catch(() => console.log("Sound playback blocked by browser"));
       }
     }
   }, [phase, countdown, session, currentExerciseIndex]);
 
-  // Exercise timer (for timed exercises)
+  // Exercise set timer (for timed exercises)
   useEffect(() => {
     if (phase === "exercise" && timer !== null && timer > 0 && !isPaused) {
       const timerId = setTimeout(() => setTimer(timer - 1), 1000);
       return () => clearTimeout(timerId);
     } else if (phase === "exercise" && timer === 0) {
-      handleExerciseComplete();
+      handleSetComplete();
     }
   }, [timer, phase, isPaused]);
 
-  // Current exercise time tracker (excluding pauses)
+  // Current set elapsed time tracker (excluding pauses)
   useEffect(() => {
     if (phase === "exercise") {
       const interval = setInterval(() => {
@@ -130,14 +130,13 @@ export default function StartSessionPage() {
     }
   }, [phase, isPaused, accumulatedTime]);
 
-  // Preview timer (rest between exercises)
+  // Preview timer (rest between sets/exercises)
   useEffect(() => {
     if (phase === "preview" && previewCountdown > 0) {
       const previewTimer = setTimeout(() => setPreviewCountdown(previewCountdown - 1), 1000);
       return () => clearTimeout(previewTimer);
     } else if (phase === "preview" && previewCountdown === 0) {
-      setPhase("countdown");
-      setCountdown(3);
+      handleRestPhaseEnd();
     }
   }, [phase, previewCountdown]);
 
@@ -157,114 +156,272 @@ export default function StartSessionPage() {
     setIsPaused(!isPaused);
   }
 
-  function triggerRestPhase(completedIndex: number) {
-    if (session) {
-      const completedEx = session.exercises[completedIndex];
-      const restTime = completedEx.rest ? parseInt(completedEx.rest) || 30 : 30;
-      
+  const handleSetComplete = () => {
+    if (!session) return;
+    const currentExercise = session.exercises[currentExerciseIndex];
+    const duration = currentExerciseTime;
+
+    // Record set duration
+    setSetDurationsMap(prev => ({
+      ...prev,
+      [currentExerciseIndex]: [...(prev[currentExerciseIndex] || []), duration]
+    }));
+
+    if (currentSetIndex + 1 < currentExercise.sets) {
+      // Go to rest phase between sets of same exercise
+      const restTime = currentExercise.rest ? parseInt(currentExercise.rest) || 30 : 30;
       setPhase("preview");
       setTimer(null);
       setIsPaused(false);
       setPreviewCountdown(restTime);
       setInitialPreviewRest(restTime);
-      setCurrentExerciseIndex(completedIndex + 1);
-    }
-  }
-
-  async function handleExerciseComplete() {
-    if (session) {
-      const updatedExercises = [...session.exercises];
-      updatedExercises[currentExerciseIndex] = {
-        ...updatedExercises[currentExerciseIndex],
-        isDone: true,
-        notes: currentNotes,
-      };
-      setSession({ ...session, exercises: updatedExercises });
-
-      const updatedTimes = [...exerciseTimes];
-      updatedTimes[currentExerciseIndex].duration = currentExerciseTime;
-      setExerciseTimes(updatedTimes);
-
+    } else {
+      // All sets of this exercise are finished!
       if (currentExerciseIndex + 1 < session.exercises.length) {
-        triggerRestPhase(currentExerciseIndex);
+        // Rest before transitioning to the next exercise
+        const restTime = currentExercise.rest ? parseInt(currentExercise.rest) || 30 : 30;
+        setPhase("preview");
+        setTimer(null);
+        setIsPaused(false);
+        setPreviewCountdown(restTime);
+        setInitialPreviewRest(restTime);
       } else {
-        const totalWorkoutTime = updatedTimes.reduce((acc, et) => acc + et.duration, 0);
-        
-        try {
-          // Sync workout completion in DB
-          await updateWorkoutSession(id!, { isDone: true });
-          toast.success("Workout completed! Amazing effort!");
-          navigate(`/workouts/${id}/success`, { 
-            state: { 
-              exerciseTimes: updatedTimes, 
-              totalWorkoutTime, 
-              isDone: true 
-            } 
-          });
-        } catch (err) {
-          toast.error("Failed to complete workout session on server.");
-        }
+        // Last set of last exercise completed! Finish the workout!
+        handleWorkoutComplete(duration);
       }
     }
-  }
+  };
 
-  function handleSkipExercise() {
-    if (session) {
-      const updatedExercises = [...session.exercises];
-      updatedExercises[currentExerciseIndex] = {
-        ...updatedExercises[currentExerciseIndex],
-        isDone: true,
-      };
-      setSession({ ...session, exercises: updatedExercises });
+  const handleRestPhaseEnd = () => {
+    if (!session) return;
+    const currentExercise = session.exercises[currentExerciseIndex];
+    const restTaken = initialPreviewRest - previewCountdown;
 
-      const updatedTimes = [...exerciseTimes];
-      updatedTimes[currentExerciseIndex].duration = 0;
-      setExerciseTimes(updatedTimes);
+    // Record rest time taken
+    setRestDurationsMap(prev => ({
+      ...prev,
+      [currentExerciseIndex]: [...(prev[currentExerciseIndex] || []), restTaken]
+    }));
 
-      if (currentExerciseIndex + 1 < session.exercises.length) {
-        triggerRestPhase(currentExerciseIndex);
-      } else {
-        const totalWorkoutTime = updatedTimes.reduce((acc, et) => acc + et.duration, 0);
-        navigate(`/workouts/${id}/success`, { 
-          state: { 
-            exerciseTimes: updatedTimes, 
-            totalWorkoutTime, 
-            isDone: true 
-          } 
-        });
-      }
-    }
-  }
-
-  function handleGoBack() {
-    if (currentExerciseIndex > 0) {
-      const prevIndex = currentExerciseIndex - 1;
-      
-      // Reset isDone status of previous exercise to redo
-      if (session) {
-        const updatedExercises = [...session.exercises];
-        updatedExercises[prevIndex] = {
-          ...updatedExercises[prevIndex],
-          isDone: false,
-        };
-        setSession({ ...session, exercises: updatedExercises });
-      }
-
-      setCurrentExerciseIndex(prevIndex);
+    if (currentSetIndex + 1 < currentExercise.sets) {
+      // Next set of SAME exercise
+      setCurrentSetIndex(prev => prev + 1);
       setPhase("exercise");
-      
-      if (session?.exercises[prevIndex]?.time) {
-        const timeStr = session.exercises[prevIndex].time || "0 min";
+      if (currentExercise.time) {
+        const timeStr = currentExercise.time || "0 min";
         const timeInSeconds = parseInt(timeStr) * 60;
         setTimer(timeInSeconds);
       } else {
         setTimer(null);
       }
-      setIsPaused(false);
       setAccumulatedTime(0);
       setCurrentExerciseTime(0);
       lastStartRef.current = Date.now();
-      toast.info(`Moved back to: ${session?.exercises[prevIndex].name}`);
+    } else {
+      // Next exercise countdown
+      setCurrentExerciseIndex(prev => prev + 1);
+      setCurrentSetIndex(0);
+      setPhase("countdown");
+      setCountdown(3);
+    }
+  };
+
+  const handleWorkoutComplete = async (lastSetDuration: number) => {
+    if (!session) return;
+
+    // Combine setDurations async state safely
+    const finalSetDurationsMap = {
+      ...setDurationsMap,
+      [currentExerciseIndex]: [...(setDurationsMap[currentExerciseIndex] || []), lastSetDuration]
+    };
+
+    const finalRestDurationsMap = {
+      ...restDurationsMap
+    };
+
+    const updatedExercises = session.exercises.map((ex, exIdx) => {
+      const exSetDurations = finalSetDurationsMap[exIdx] || [];
+      const exRestDurations = finalRestDurationsMap[exIdx] || [];
+      
+      const totalTimeTaken = exSetDurations.reduce((sum, d) => sum + d, 0);
+      const setDetails = exSetDurations.map((dur, sIdx) => ({
+        setNumber: sIdx + 1,
+        duration: dur,
+        restDuration: exRestDurations[sIdx] || 0
+      }));
+
+      return {
+        ...ex,
+        isDone: true,
+        timeTaken: totalTimeTaken,
+        setDetails
+      };
+    });
+
+    const totalWorkoutTime = updatedExercises.reduce((acc, ex) => acc + (ex.timeTaken || 0), 0);
+
+    try {
+      setIsLoading(true);
+      const response = await updateWorkoutSession(id!, {
+        isDone: true,
+        exercises: updatedExercises as any
+      });
+      toast.success("Workout completed! Amazing effort!");
+      navigate(`/workouts/${id}/success`, { 
+        state: { 
+          exerciseTimes: updatedExercises.map(ex => ({
+            exerciseId: ex.id,
+            name: ex.name,
+            duration: ex.timeTaken || 0
+          })), 
+          totalWorkoutTime, 
+          isDone: true,
+          streak: response?.streak
+        } 
+      });
+    } catch (err) {
+      toast.error("Failed to complete workout session on server.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  function handleSkipExercise() {
+    if (!session) return;
+    const currentExercise = session.exercises[currentExerciseIndex];
+    
+    // Fill remaining sets with 0
+    const remainingSetsCount = currentExercise.sets - currentSetIndex;
+    const zeroSets = Array(remainingSetsCount).fill(0);
+    const zeroRests = Array(remainingSetsCount).fill(0);
+
+    setSetDurationsMap(prev => ({
+      ...prev,
+      [currentExerciseIndex]: [...(prev[currentExerciseIndex] || []), ...zeroSets]
+    }));
+    setRestDurationsMap(prev => ({
+      ...prev,
+      [currentExerciseIndex]: [...(prev[currentExerciseIndex] || []), ...zeroRests]
+    }));
+
+    if (currentExerciseIndex + 1 < session.exercises.length) {
+      setCurrentExerciseIndex(prev => prev + 1);
+      setCurrentSetIndex(0);
+      setPhase("countdown");
+      setCountdown(3);
+    } else {
+      const finalSetDurationsMap = {
+        ...setDurationsMap,
+        [currentExerciseIndex]: [...(setDurationsMap[currentExerciseIndex] || []), ...zeroSets]
+      };
+      
+      const updatedExercises = session.exercises.map((ex, exIdx) => {
+        const exSetDurations = finalSetDurationsMap[exIdx] || [];
+        const exRestDurations = restDurationsMap[exIdx] || [];
+        
+        const totalTimeTaken = exSetDurations.reduce((sum, d) => sum + d, 0);
+        const setDetails = exSetDurations.map((dur, sIdx) => ({
+          setNumber: sIdx + 1,
+          duration: dur,
+          restDuration: exRestDurations[sIdx] || 0
+        }));
+
+        return {
+          ...ex,
+          isDone: true,
+          timeTaken: totalTimeTaken,
+          setDetails
+        };
+      });
+
+      const totalWorkoutTime = updatedExercises.reduce((acc, ex) => acc + (ex.timeTaken || 0), 0);
+
+      setIsLoading(true);
+      updateWorkoutSession(id!, {
+        isDone: true,
+        exercises: updatedExercises as any
+      }).then(() => {
+        toast.success("Workout completed!");
+        navigate(`/workouts/${id}/success`, { 
+          state: { 
+            exerciseTimes: updatedExercises.map(ex => ({
+              exerciseId: ex.id,
+              name: ex.name,
+              duration: ex.timeTaken || 0
+            })), 
+            totalWorkoutTime, 
+            isDone: true 
+          } 
+        });
+      }).catch(() => {
+        toast.error("Failed to complete session.");
+      }).finally(() => {
+        setIsLoading(false);
+      });
+    }
+  }
+
+  function handleGoBack() {
+    if (!session) return;
+    
+    if (currentSetIndex > 0) {
+      // Move to previous set of the same exercise
+      const prevSetIdx = currentSetIndex - 1;
+      
+      setSetDurationsMap(prev => {
+        const arr = prev[currentExerciseIndex] || [];
+        return { ...prev, [currentExerciseIndex]: arr.slice(0, -1) };
+      });
+      setRestDurationsMap(prev => {
+        const arr = prev[currentExerciseIndex] || [];
+        return { ...prev, [currentExerciseIndex]: arr.slice(0, -1) };
+      });
+
+      setCurrentSetIndex(prevSetIdx);
+      setPhase("exercise");
+      
+      const currentExercise = session.exercises[currentExerciseIndex];
+      if (currentExercise.time) {
+        const timeStr = currentExercise.time || "0 min";
+        const timeInSeconds = parseInt(timeStr) * 60;
+        setTimer(timeInSeconds);
+      } else {
+        setTimer(null);
+      }
+      setAccumulatedTime(0);
+      setCurrentExerciseTime(0);
+      lastStartRef.current = Date.now();
+      toast.info(`Moved back to set ${prevSetIdx + 1}`);
+    } else if (currentExerciseIndex > 0) {
+      // Move to last set of the previous exercise
+      const prevExIdx = currentExerciseIndex - 1;
+      const prevExercise = session.exercises[prevExIdx];
+      const prevSetIdx = prevExercise.sets - 1;
+
+      setSetDurationsMap(prev => {
+        const arr = prev[prevExIdx] || [];
+        return { ...prev, [prevExIdx]: arr.slice(0, -1) };
+      });
+      setRestDurationsMap(prev => {
+        const arr = prev[prevExIdx] || [];
+        return { ...prev, [prevExIdx]: arr.slice(0, -1) };
+      });
+
+      setCurrentExerciseIndex(prevExIdx);
+      setCurrentSetIndex(prevSetIdx);
+      setPhase("exercise");
+
+      if (prevExercise.time) {
+        const timeStr = prevExercise.time || "0 min";
+        const timeInSeconds = parseInt(timeStr) * 60;
+        setTimer(timeInSeconds);
+      } else {
+        setTimer(null);
+      }
+      setAccumulatedTime(0);
+      setCurrentExerciseTime(0);
+      lastStartRef.current = Date.now();
+      toast.info(`Moved back to ${prevExercise.name} - set ${prevSetIdx + 1}`);
     }
   }
 
@@ -274,8 +431,8 @@ export default function StartSessionPage() {
   };
 
   const handleSkipRest = () => {
-    setPreviewCountdown(0);
     toast.info("Rest skipped");
+    handleRestPhaseEnd();
   };
 
   if (isLoading) {
@@ -308,14 +465,11 @@ export default function StartSessionPage() {
 
   const currentExercise = session.exercises[currentExerciseIndex];
   const progressPercentage = (currentExerciseIndex / session.exercises.length) * 100;
-  
-  // Calculate rest ring stroke-dashoffset
   const restRatio = previewCountdown / (initialPreviewRest || 1);
   const strokeDashoffset = 282.6 * (1 - restRatio);
 
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-      {/* Background Visuals */}
       <div className="absolute inset-0 z-0">
         <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
@@ -346,7 +500,7 @@ export default function StartSessionPage() {
         {/* Global Progress Bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-xs font-black uppercase tracking-wider text-slate-400">
-            <span>Exercise {currentExerciseIndex + 1} of {session.exercises.length}</span>
+            <span>Exercise {currentExerciseIndex + 1} of {session.exercises.length} • Set {currentSetIndex + 1} of {currentExercise.sets}</span>
             <span>{Math.round(progressPercentage)}% Complete</span>
           </div>
           <div className="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
@@ -393,6 +547,7 @@ export default function StartSessionPage() {
                       <p className="text-xs font-black text-white truncate">{ex.name}</p>
                       <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                         {ex.sets} sets • {ex.reps ? `${ex.reps} reps` : ex.time || "Sets"}
+                        {i === currentExerciseIndex && ` (Set ${currentSetIndex + 1}/${ex.sets})`}
                       </p>
                     </div>
                     {i === currentExerciseIndex && (
@@ -409,15 +564,25 @@ export default function StartSessionPage() {
             
             {/* 1. Countdown Phase */}
             {phase === "countdown" && (
-              <Card className="relative overflow-hidden bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-[3rem] p-12 text-center shadow-2xl py-24">
+              <Card className="relative overflow-hidden bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-[3rem] p-12 text-center shadow-2xl py-12">
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-blue-500/10 blur rounded-[3rem] pointer-events-none"></div>
-                <div className="space-y-6">
+                <div className="space-y-6 flex flex-col items-center">
                   <p className="text-sm font-black uppercase tracking-widest text-primary italic animate-bounce">
-                    Prepare Muscle Group
+                    Prepare Muscle Focus
                   </p>
-                  <div className="text-8xl md:text-9xl font-black italic uppercase text-primary tracking-tight font-display scale-[1.1] animate-pulse">
+                  
+                  {/* exercise gif shown in place of countdown */}
+                  <img
+                    src={currentExercise.gifUrl || currentExercise.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800"}
+                    alt={currentExercise.name}
+                    className="w-64 h-64 object-cover rounded-[2rem] border border-white/10 shadow-2xl"
+                  />
+
+                  {/* countdown underneath image */}
+                  <div className="text-6xl md:text-8xl font-black italic uppercase text-primary tracking-tight font-display scale-[1.1] animate-pulse">
                     {countdown}
                   </div>
+                  
                   <h3 className="text-xl md:text-3xl font-black text-white italic uppercase tracking-tight max-w-md mx-auto">
                     Get ready for {currentExercise.name}
                   </h3>
@@ -465,10 +630,10 @@ export default function StartSessionPage() {
                       REST ACTIVE
                     </Badge>
                     <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tight text-white">
-                      COMING UP NEXT
+                      {currentSetIndex + 1 < currentExercise.sets ? "PREPARE FOR NEXT SET" : "COMING UP NEXT"}
                     </h2>
                     <h3 className="text-lg md:text-xl font-bold text-slate-300">
-                      {currentExercise.name}
+                      {currentExercise.name} {currentSetIndex + 1 < currentExercise.sets ? `(Set ${currentSetIndex + 2}/${currentExercise.sets})` : ""}
                     </h3>
                     <p className="text-xs text-slate-400 font-medium">
                       {currentExercise.sets} sets • {currentExercise.reps ? `${currentExercise.reps} reps` : currentExercise.time || "Sets"} • Rest: {currentExercise.rest || 60}s
@@ -489,7 +654,7 @@ export default function StartSessionPage() {
                     >
                       <SkipForward className="h-4 w-4 fill-current" /> Skip Rest
                     </Button>
-                    {currentExerciseIndex > 1 && (
+                    {(currentSetIndex > 0 || currentExerciseIndex > 0) && (
                       <Button
                         onClick={handleGoBack}
                         variant="ghost"
@@ -510,13 +675,13 @@ export default function StartSessionPage() {
 
                 <div className="flex flex-col md:flex-row gap-6 items-center">
                   <img
-                    src={currentExercise.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800"}
+                    src={currentExercise.gifUrl || currentExercise.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800"}
                     alt={currentExercise.name}
                     className="w-full md:w-48 h-48 md:h-48 object-cover rounded-[2.5rem] border border-white/10 shadow-xl flex-shrink-0"
                   />
                   <div className="flex-1 space-y-4 text-center md:text-left w-full">
                     <Badge className="bg-primary/10 border border-primary/20 text-primary font-black uppercase text-[10px] tracking-widest px-3 py-1 rounded-md">
-                      EXERCISE ACTIVE
+                      SET {currentSetIndex + 1} OF {currentExercise.sets} ACTIVE
                     </Badge>
                     <h2 className="text-2xl md:text-4xl font-black italic uppercase tracking-tight text-white leading-tight">
                       {currentExercise.name}
@@ -524,7 +689,7 @@ export default function StartSessionPage() {
                     
                     {/* Setup specifications */}
                     <div className="flex flex-wrap gap-4 justify-center md:justify-start text-xs font-black uppercase tracking-wider text-slate-400">
-                      <span className="px-3 py-1 bg-white/5 border border-white/5 rounded-lg">{currentExercise.sets} Sets</span>
+                      <span className="px-3 py-1 bg-white/5 border border-white/5 rounded-lg">Set {currentSetIndex + 1} / {currentExercise.sets}</span>
                       <span className="px-3 py-1 bg-white/5 border border-white/5 rounded-lg">{currentExercise.reps ? `${currentExercise.reps} Reps` : currentExercise.time || "Sets"}</span>
                       {currentExercise.weight && (
                         <span className="px-3 py-1 bg-primary/10 border border-primary/20 text-primary rounded-lg">{currentExercise.weight} kg</span>
@@ -536,7 +701,7 @@ export default function StartSessionPage() {
                 {/* Timing stats & clocks */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 border-t border-b border-white/5">
                   <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-center">
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Exercise Elapsed Time</p>
+                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Set Active Duration</p>
                     <p className="text-3xl font-black text-white italic mt-1">{formatTime(currentExerciseTime)}</p>
                   </div>
                   {currentExercise.time && timer !== null && (
@@ -560,7 +725,7 @@ export default function StartSessionPage() {
 
                 {/* Active Controls Bar */}
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  {currentExerciseIndex > 0 && (
+                  {(currentSetIndex > 0 || currentExerciseIndex > 0) && (
                     <Button
                       onClick={handleGoBack}
                       variant="outline"
@@ -582,13 +747,13 @@ export default function StartSessionPage() {
                     variant="outline"
                     className="h-14 rounded-2xl border-yellow-500/20 hover:border-yellow-500/50 bg-yellow-500/5 text-yellow-400 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 flex-1"
                   >
-                    <SkipForward className="h-4 w-4 fill-current" /> Skip
+                    <SkipForward className="h-4 w-4 fill-current" /> Skip Ex
                   </Button>
                   <Button
-                    onClick={handleExerciseComplete}
+                    onClick={handleSetComplete}
                     className="h-14 rounded-2xl bg-gradient-to-r from-primary to-blue-500 hover:from-primary/95 hover:to-blue-500/95 text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 flex-1 shadow-lg shadow-primary/10"
                   >
-                    <Check className="h-4 w-4 stroke-[3px]" /> Complete Set
+                    <Check className="h-4 w-4 stroke-[3px]" /> Complete Set {currentSetIndex + 1}
                   </Button>
                 </div>
 

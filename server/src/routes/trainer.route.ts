@@ -78,4 +78,7 @@ router.post('/chat/upload', authMiddleware, roleMiddleware(['trainer']), upload.
 router.get('/chats', authMiddleware, roleMiddleware(['trainer']), trainerClientController.getConversations.bind(trainerClientController));
 router.delete('/chat/message/:messageId', authMiddleware, roleMiddleware(['trainer']), trainerClientController.deleteMessage.bind(trainerClientController));
 
+router.get('/jobs', authMiddleware, roleMiddleware(['trainer']), trainerDashboardController.getJobs.bind(trainerDashboardController));
+router.post('/jobs/:id/interest', authMiddleware, roleMiddleware(['trainer']), trainerDashboardController.toggleInterest.bind(trainerDashboardController));
+
 export default router;

@@ -9,6 +9,14 @@ export interface IWorkoutTemplateExercise {
     weight?: string;
     rest?: string;
     notes?: string;
+    gifUrl?: string;
+    bodyParts?: string[];
+    targetMuscles?: string[];
+    secondaryMuscles?: string[];
+    equipments?: string[];
+    instructions?: string[];
+    description?: string;
+    exerciseData?: any;
 }
 
 
@@ -35,6 +43,7 @@ export interface IWorkoutTemplate extends Document {
     createdById: Types.ObjectId | string;
     createdByType: 'Admin' | 'Trainer' | 'Gym';
     gymId?: Types.ObjectId | string; // Optional context
+    targetBodyParts: string[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -50,6 +59,14 @@ const ExerciseSchema = new Schema<IWorkoutTemplateExercise>(
         weight: { type: String },
         rest: { type: String },
         notes: { type: String },
+        gifUrl: { type: String, default: "" },
+        bodyParts: { type: [String], default: [] },
+        targetMuscles: { type: [String], default: [] },
+        secondaryMuscles: { type: [String], default: [] },
+        equipments: { type: [String], default: [] },
+        instructions: { type: [String], default: [] },
+        description: { type: String, default: "" },
+        exerciseData: { type: Schema.Types.Mixed },
     },
     { _id: false }
 );
@@ -80,7 +97,8 @@ const WorkoutTemplateSchema = new Schema<IWorkoutTemplate>(
         days: { type: [DaySchema], default: [] },
         createdById: { type: Schema.Types.ObjectId, required: true, refPath: 'createdByType' },
         createdByType: { type: String, required: true, enum: ['Admin', 'Trainer', 'Gym'] },
-        gymId: { type: Schema.Types.ObjectId, ref: 'Gym' }
+        gymId: { type: Schema.Types.ObjectId, ref: 'Gym' },
+        targetBodyParts: { type: [String], default: [] }
     },
     { timestamps: true }
 );

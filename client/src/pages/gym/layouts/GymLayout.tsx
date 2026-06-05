@@ -36,14 +36,16 @@ interface SidebarItemProps {
 const SidebarItem = ({ icon: Icon, label, path, active, isOpen }: SidebarItemProps) => (
     <Link to={path}>
         <motion.div
-            whileHover={{ scale: 1.02, x: 5 }}
+            whileHover={{ scale: 1.02, x: isOpen ? 5 : 0 }}
             whileTap={{ scale: 0.98 }}
-            className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${active
+            className={`flex items-center rounded-xl transition-all duration-300 ${
+                isOpen ? 'gap-4 px-4 py-3' : 'justify-center p-3'
+            } ${active
                 ? 'bg-primary/20 text-primary border border-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)]'
                 : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
         >
-            <Icon className={`h-5 w-5 ${active ? 'text-primary' : ''}`} />
+            <Icon className={`${isOpen ? 'h-5 w-5' : 'h-6 w-6'} ${active ? 'text-primary' : ''}`} />
             <AnimatePresence>
                 {isOpen && (
                     <motion.span
@@ -109,7 +111,7 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
                 animate={{ width: isSidebarOpen ? 280 : 80 }}
                 className="fixed left-0 top-0 z-50 h-screen bg-white/5 backdrop-blur-2xl border-r border-white/10 p-4 flex flex-col gap-8 transition-all duration-300"
             >
-                <div className="flex items-center justify-between px-2">
+                <div className={`flex items-center px-2 ${isSidebarOpen ? 'justify-between' : 'justify-center'}`}>
                     <AnimatePresence>
                         {isSidebarOpen && (
                             <motion.div
@@ -127,7 +129,7 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                         className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                     >
-                        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                        {isSidebarOpen ? <X size={20} /> : <Menu size={24} />}
                     </button>
                 </div>
 
@@ -145,9 +147,12 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
                 <div className="pt-4 border-t border-white/10">
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                        className={`w-full flex items-center text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all ${
+                            isSidebarOpen ? 'gap-4 px-4 py-3' : 'justify-center p-3'
+                        }`}
+                        title={!isSidebarOpen ? "Logout" : undefined}
                     >
-                        <LogOut size={20} />
+                        <LogOut size={isSidebarOpen ? 20 : 24} />
                         {isSidebarOpen && <span className="font-medium">Logout</span>}
                     </button>
                 </div>

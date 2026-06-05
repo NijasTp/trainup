@@ -6,11 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Search, 
   Dumbbell, 
-  Target, 
-  Clock, 
   ChevronRight,
   TrendingUp,
-  Star
+  Layers,
+  Activity,
+  X
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
@@ -28,17 +28,21 @@ import { formatDistanceToNow } from "date-fns";
 
 export default function WorkoutTemplates() {
   const [templates, setTemplates] = useState<IWorkoutTemplate[]>([]);
-  const [recentHistory, setRecentHistory] = useState<any[]>([]); // Sessions can be complex, keeping any for now but could be refined if IWorkoutSession exists
+  const [recentHistory, setRecentHistory] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Filters State
+  const [selectedBodyParts, setSelectedBodyParts] = useState<string[]>([]);
+  const [isFullBody, setIsFullBody] = useState(false);
 
   const user = useSelector((state: RootState) => state.userAuth.user);
 
   const fetchTemplates = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await getWorkoutTemplates({ search, limit: 20 });
+      const response = await getWorkoutTemplates({ search, limit: 40 });
       setTemplates(response?.templates || []);
     } catch (_err) {
       toast.error("Failed to fetch workout templates");
@@ -66,17 +70,49 @@ export default function WorkoutTemplates() {
     return user?.activeWorkoutTemplates?.some(t => t.templateId === templateId) || user?.activeWorkoutTemplate === templateId;
   };
 
+  const toggleBodyPart = (part: string) => {
+    setSelectedBodyParts(prev => 
+      prev.includes(part) ? prev.filter(p => p !== part) : [...prev, part]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedBodyParts([]);
+    setIsFullBody(false);
+  };
+
+  const applyFilters = (list: IWorkoutTemplate[]) => {
+    return list.filter(template => {
+      // Full Body filter: targets 3 or more body parts
+      if (isFullBody) {
+        if (!template.targetBodyParts || template.targetBodyParts.length < 3) {
+          return false;
+        }
+      }
+      // Selected body parts filter: must target at least one of the selected parts
+      if (selectedBodyParts.length > 0) {
+        if (!template.targetBodyParts || !template.targetBodyParts.some(part => selectedBodyParts.includes(part))) {
+          return false;
+        }
+      }
+      return true;
+    });
+  };
+
   const oneTimeTemplates = templates.filter(t => t.type === 'one-time');
   const seriesTemplates = templates.filter(t => t.type === 'series');
+
+  const filteredOneTime = applyFilters(oneTimeTemplates);
+  const filteredSeries = applyFilters(seriesTemplates);
 
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit selection:bg-primary/30">
       <div className="absolute inset-0 z-0">
-        <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+        <Aurora colorStops={["#020617", "#09090b", "#020617"]} amplitude={1.1} blend={0.6} />
       </div>
       <SiteHeader />
 
-      <main className="container mx-auto px-4 py-12 relative z-10 space-y-20 flex-1">
+      <main className="container mx-auto px-4 py-12 relative z-10 space-y-16 flex-1">
         {/* Hero Section */}
         <header className="flex flex-col lg:flex-row gap-12 items-center justify-between">
           <div className="space-y-6 max-w-2xl text-center lg:text-left">
@@ -105,13 +141,11 @@ export default function WorkoutTemplates() {
             <div className="absolute -inset-4 bg-primary/20 blur-[100px] rounded-full animate-pulse"></div>
             <img 
                src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop"
-               className="relative rounded-[3rem] border border-white/10 shadow-3xl rotate-2 hover:rotate-0 transition-transform duration-700"
+               className="relative rounded-[3rem] border border-white/10 shadow-3xl rotate-2 hover:rotate-0 transition-transform duration-700 w-full object-cover aspect-[4/3]"
                alt="Aesthetics"
             />
           </div>
         </header>
-
-
 
         {/* Recently Done Showcase */}
         {recentHistory.length > 0 && (
@@ -141,34 +175,90 @@ export default function WorkoutTemplates() {
           </section>
         )}
 
+        {/* Premium Body Parts Filter Bar */}
+        <section className="bg-zinc-950/60 border border-white/5 rounded-[2.5rem] p-6 backdrop-blur-xl shadow-3xl space-y-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Activity className="text-primary h-5 w-5" />
+              <h3 className="font-black text-sm uppercase tracking-widest italic text-zinc-300">Target Core Areas</h3>
+            </div>
+            {(selectedBodyParts.length > 0 || isFullBody) && (
+              <button 
+                onClick={clearFilters} 
+                className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-white transition-colors flex items-center gap-1.5 self-end md:self-auto bg-primary/10 px-3.5 py-1.5 rounded-xl border border-primary/20"
+              >
+                Clear Filters <X size={12} />
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-3 items-center">
+            {/* Full Body Toggle Button */}
+            <button
+              onClick={() => setIsFullBody(!isFullBody)}
+              className={cn(
+                "px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border",
+                isFullBody
+                  ? "bg-primary text-black border-primary/50 shadow-[0_0_20px_rgba(var(--primary-rgb),0.35)] scale-105"
+                  : "bg-white/5 text-zinc-400 border-white/5 hover:border-white/10 hover:text-white"
+              )}
+            >
+              <Layers size={14} />
+              Full Body Focus
+            </button>
+
+            {/* Separator */}
+            <div className="hidden sm:block w-px h-8 bg-white/10 mx-1" />
+
+            {/* Body Parts Buttons */}
+            {["abs", "arm", "chest", "leg", "back", "shoulder"].map((part) => {
+              const isSelected = selectedBodyParts.includes(part);
+              return (
+                <button
+                  key={part}
+                  onClick={() => toggleBodyPart(part)}
+                  className={cn(
+                    "px-5 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border",
+                    isSelected
+                      ? "bg-zinc-100 text-black border-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.15)] scale-105"
+                      : "bg-white/5 text-zinc-400 border-white/5 hover:border-white/10 hover:text-white"
+                  )}
+                >
+                  {part}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-[450px] rounded-[3rem] bg-white/5 animate-pulse border border-white/10"></div>
+              <div key={i} className="h-[480px] rounded-[3rem] bg-white/5 border border-white/10"></div>
             ))}
           </div>
-        ) : templates.length === 0 ? (
-          <div className="text-center py-24 space-y-6">
-            <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/10 text-slate-500">
-              <Dumbbell className="h-10 w-10 opacity-20" />
+        ) : (filteredOneTime.length === 0 && filteredSeries.length === 0) ? (
+          <div className="text-center py-24 space-y-6 bg-zinc-950/20 border border-white/5 rounded-[3rem]">
+            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/10 text-slate-500">
+              <Dumbbell className="h-8 w-8 opacity-25" />
             </div>
-            <h2 className="text-2xl font-bold uppercase italic tracking-widest">Zero Intelligence Found</h2>
-            <Button onClick={() => setSearch("")} variant="outline" className="border-white/10 rounded-2xl px-8 h-12">System Reset</Button>
+            <h2 className="text-2xl font-bold uppercase italic tracking-widest text-zinc-400">No blueprints match filters</h2>
+            <Button onClick={clearFilters} variant="outline" className="border-white/10 rounded-2xl px-8 h-12 hover:bg-white/5">Reset Filters</Button>
           </div>
         ) : (
-          <>
+          <div className="space-y-16">
             {/* Quick Sessions */}
-            {oneTimeTemplates.length > 0 && (
-              <section className="space-y-10">
-                <div className="flex items-center gap-4 border-l-4 border-blue-500 pl-6">
+            {filteredOneTime.length > 0 && (
+              <section className="space-y-8">
+                <div className="flex items-center gap-4 border-l-4 border-primary pl-6">
                   <div>
-                    <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">Quick Hits</h2>
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">One-Time Tactical Sessions</p>
+                    <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Quick Hits</h2>
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">One-Time Tactical Sessions</p>
                   </div>
-                  <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 px-4 py-1.5 rounded-full font-black text-[10px] uppercase">Instant Access</Badge>
+                  <Badge className="bg-primary/10 text-primary border-primary/20 px-3.5 py-1.5 rounded-full font-black text-[9px] uppercase tracking-wider">Instant Access</Badge>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                  {oneTimeTemplates.map(template => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {filteredOneTime.map(template => (
                     <TemplateCard 
                       key={template._id} 
                       template={template} 
@@ -181,17 +271,17 @@ export default function WorkoutTemplates() {
             )}
 
             {/* Training Series */}
-            {seriesTemplates.length > 0 && (
-              <section className="space-y-12">
-                <div className="flex items-center gap-4 border-l-4 border-primary pl-6">
+            {filteredSeries.length > 0 && (
+              <section className="space-y-8">
+                <div className="flex items-center gap-4 border-l-4 border-orange-500 pl-6">
                   <div>
-                    <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white leading-none">Elite Programs</h2>
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">Multi-Session Transformations</p>
+                    <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Elite Programs</h2>
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Multi-Session Transformations</p>
                   </div>
-                  <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1.5 rounded-full font-black text-[10px] uppercase">Series</Badge>
+                  <Badge className="bg-orange-500/10 text-orange-400 border-orange-500/20 px-3.5 py-1.5 rounded-full font-black text-[9px] uppercase tracking-wider">Series</Badge>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                  {seriesTemplates.map(template => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {filteredSeries.map(template => (
                     <TemplateCard 
                       key={template._id} 
                       template={template} 
@@ -202,7 +292,7 @@ export default function WorkoutTemplates() {
                 </div>
               </section>
             )}
-          </>
+          </div>
         )}
       </main>
       <SiteFooter />
@@ -257,73 +347,80 @@ function TemplateCard({ template, isActive, onPreview }: {
     advanced: "bg-rose-500/10 text-rose-400 border-rose-500/20"
   };
 
+  // Safe drill count extraction
+  const drillCount = template.days?.[0]?.exercises?.length || 0;
+
   return (
     <Card 
-      className="group relative bg-white/5 backdrop-blur-xl border-white/10 hover:border-primary/40 transition-all duration-700 overflow-hidden rounded-[3rem] flex flex-col shadow-2xl hover:-translate-y-4"
+      className="group relative bg-[#0e0e11] border border-white/5 hover:border-primary/30 transition-all duration-500 overflow-hidden rounded-[2.5rem] flex flex-col shadow-2xl hover:-translate-y-3"
     >
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative aspect-[16/10] overflow-hidden">
         <img
           src={template.image || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"}
           alt={template.title}
-          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70"
+          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e11] via-transparent to-transparent" />
         
-        <div className="absolute top-8 left-8 z-10 flex flex-col gap-3">
-          <Badge className={cn("uppercase text-[10px] font-black tracking-widest px-4 py-1.5 border backdrop-blur-md shadow-xl", difficultyColors[template.difficultyLevel] || difficultyColors.intermediate)}>
+        {/* Top Badges */}
+        <div className="absolute top-6 left-6 z-10 flex flex-col gap-2">
+          <Badge className={cn("uppercase text-[9px] font-black tracking-wider px-3.5 py-1 border backdrop-blur-md shadow-xl", difficultyColors[template.difficultyLevel] || difficultyColors.intermediate)}>
             {template.difficultyLevel}
           </Badge>
           {isActive && (
-            <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-black tracking-widest text-[10px] uppercase backdrop-blur-md shadow-xl">
-              Currently Engaged
+            <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-black tracking-wider text-[9px] uppercase backdrop-blur-md shadow-xl animate-pulse">
+              Active Engaged
             </Badge>
           )}
         </div>
 
-        <div className="absolute bottom-8 left-8 right-8">
-           <div className="flex items-center gap-1 mb-2">
-             {[1, 2, 3, 4, 5].map(i => (
-               <Star key={i} className={cn("h-3 w-3 fill-current", i <= 4 ? "text-primary" : "text-slate-600")} />
-             ))}
-             <span className="text-[10px] font-black text-white/50 ml-1">4.8 AVERAGE</span>
-           </div>
-           <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none shadow-black drop-shadow-2xl">
-             {template.title}
-           </h3>
+        {/* Drill Count badge */}
+        <div className="absolute bottom-4 right-6 bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 rounded-xl">
+          <span className="text-[9px] font-black text-primary uppercase tracking-widest">{drillCount} DRILLS</span>
         </div>
       </div>
 
-      <CardContent className="p-8 flex flex-col flex-1 space-y-8">
-        <div className="flex items-center justify-between pointer-events-none">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-primary" />
-            <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{template.days?.length || 1} Phases</span>
+      <CardContent className="p-8 flex flex-col flex-1 space-y-6 bg-[#0e0e11]">
+        {/* Body Parts Badges */}
+        {template.targetBodyParts && template.targetBodyParts.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {template.targetBodyParts.map((part) => (
+              <span 
+                key={part} 
+                className="bg-white/5 border border-white/10 text-zinc-300 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider"
+              >
+                {part}
+              </span>
+            ))}
           </div>
-          <div className="flex items-center gap-2">
-            <Target className="h-4 w-4 text-primary" />
-            <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{template.type}</span>
-          </div>
+        )}
+
+        <div className="space-y-2">
+          <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white leading-tight group-hover:text-primary transition-colors">
+            {template.title}
+          </h3>
         </div>
 
-        <p className="text-slate-400 text-sm leading-relaxed line-clamp-3 font-light">
+        <p className="text-zinc-400 text-xs leading-relaxed line-clamp-3 font-light">
           {template.description || "Achieve tactical superiority with this precision engineered training protocol designed for maximum hypertrophy."}
         </p>
 
-        <Button 
-          onClick={onPreview}
-          className={cn(
-            "w-full h-16 rounded-2xl font-black italic tracking-widest transition-all shadow-xl uppercase text-lg group/btn relative overflow-hidden",
-            isActive 
-              ? "bg-white text-black hover:bg-slate-200" 
-              : "bg-primary text-slate-950 hover:bg-primary/90"
-          )}
-        >
-          <span className="relative z-10 flex items-center justify-center gap-3">
-             {isActive ? 'Continue Session' : template.type === 'one-time' ? 'Preview Drill' : 'View Protocol'}
-             <ChevronRight className="h-5 w-5 group-hover/btn:translate-x-2 transition-transform" />
-          </span>
-          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" />
-        </Button>
+        <div className="pt-2">
+          <Button 
+            onClick={onPreview}
+            className={cn(
+              "w-full h-14 rounded-2xl font-black italic tracking-widest transition-all shadow-xl uppercase text-xs group/btn relative overflow-hidden",
+              isActive 
+                ? "bg-white text-black hover:bg-zinc-200" 
+                : "bg-primary text-slate-950 hover:bg-primary/90"
+            )}
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2">
+               {isActive ? 'Continue Session' : template.type === 'one-time' ? 'Start Session' : 'View Protocol'}
+               <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1.5 transition-transform" />
+            </span>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

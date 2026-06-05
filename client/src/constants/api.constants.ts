@@ -120,6 +120,8 @@ export const API_ROUTES = {
     SCHEDULE: '/trainer/weekly-schedule',
     CHANGE_PASSWORD: '/trainer/change-password',
     SESSION_BUNDLES: '/trainer/session-bundles',
+    JOBS: '/trainer/jobs',
+    JOB_INTEREST: (id: string) => `/trainer/jobs/${id}/interest`,
   },
   GYM: {
     GET_DETAILS: '/gym/get-details',
@@ -134,6 +136,8 @@ export const API_ROUTES = {
     JOBS: {
         BASE: '/gym/jobs',
         DETAIL: (id: string) => `/gym/jobs/${id}`,
+        INTERESTED: (id: string) => `/gym/jobs/${id}/interested`,
+        PIN: (id: string, trainerId: string) => `/gym/jobs/${id}/interested/${trainerId}/pin`,
     },
     WORKOUT_TEMPLATES: {
         BASE: '/gym/workout-templates',

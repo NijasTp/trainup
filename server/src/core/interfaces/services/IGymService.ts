@@ -242,6 +242,32 @@ export interface IGymService {
 
   deleteJob(jobId: string, gymId: string): Promise<void>;
 
+  getInterestedTrainers(
+    jobId: string,
+    gymId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<any>;
+
+  togglePinTrainer(
+    jobId: string,
+    gymId: string,
+    trainerId: string
+  ): Promise<any>;
+
+  getTrainerJobs(
+    trainerId: string,
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<any>;
+
+  toggleTrainerInterest(
+    jobId: string,
+    trainerId: string
+  ): Promise<any>;
+
   // Workout Templates
   createWorkoutTemplate(
     gymId: string,

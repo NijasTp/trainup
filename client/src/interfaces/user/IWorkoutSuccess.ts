@@ -8,4 +8,5 @@ export interface LocationState {
     exerciseTimes: ExerciseTime[];
     totalWorkoutTime: number;
     isDone: boolean;
+    streak?: number;
 }

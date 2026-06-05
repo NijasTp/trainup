@@ -57,6 +57,8 @@ router.get('/jobs', authMiddleware, roleMiddleware(['gym']), gymController.getJo
 router.post('/jobs', authMiddleware, roleMiddleware(['gym']), gymController.createJob.bind(gymController));
 router.put('/jobs/:id', authMiddleware, roleMiddleware(['gym']), gymController.updateJob.bind(gymController));
 router.delete('/jobs/:id', authMiddleware, roleMiddleware(['gym']), gymController.deleteJob.bind(gymController));
+router.get('/jobs/:id/interested', authMiddleware, roleMiddleware(['gym']), gymController.getInterestedTrainers.bind(gymController));
+router.patch('/jobs/:id/interested/:trainerId/pin', authMiddleware, roleMiddleware(['gym']), gymController.togglePinTrainer.bind(gymController));
 
 // Workout Templates
 router.get('/workout-templates', authMiddleware, roleMiddleware(['gym']), gymController.getGymWorkoutTemplates.bind(gymController));

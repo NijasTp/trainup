@@ -5,10 +5,18 @@ export interface Exercise {
   sets: number;
   reps?: string;
   time?: string;
-  weight?: number;
+  weight?: string;
   rest?: string;
   notes?: string;
   image?: string;
+  gifUrl?: string;
+  bodyParts?: string[];
+  targetMuscles?: string[];
+  secondaryMuscles?: string[];
+  equipments?: string[];
+  instructions?: string[];
+  description?: string;
+  exerciseData?: any;
 }
 
 export interface Meal {
@@ -44,6 +52,7 @@ export interface WorkoutTemplate {
   requiredEquipment: string[];
   isPublic: boolean;
   days: TemplateDay[];
+  targetBodyParts?: string[];
 }
 
 export interface DietTemplate {

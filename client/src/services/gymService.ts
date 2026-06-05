@@ -48,12 +48,21 @@ export interface IGymAttendance {
 
 export interface IGymJob {
   _id: string;
+  gymId?: {
+    _id: string;
+    name: string;
+    logo?: string;
+    profileImage?: string;
+    address?: string;
+  };
   title: string;
   description: string;
   requirements?: string[];
   salary?: string | number;
-  type: 'full-time' | 'part-time' | 'contract';
-  status: 'open' | 'closed';
+  type: 'Trainer' | 'Staff' | 'Manager';
+  location?: 'On-site' | 'Remote' | 'Hybrid';
+  isActive: boolean;
+  hasShowedInterest?: boolean;
 }
 
 export interface IGymProduct {
@@ -355,5 +364,25 @@ export const getUserWishlist = async () => {
 
 export const toggleWishlist = async (productId: string) => {
   const res = await API.post(API_ROUTES.USER_GYM_PRODUCT.ADD_TO_WISH_LIST(productId));
+  return res.data;
+};
+
+export const getJobApplicants = async (jobId: string, page: number = 1, limit: number = 10, search: string = '') => {
+  const res = await API.get(`${API_ROUTES.GYM.JOBS.INTERESTED(jobId)}?page=${page}&limit=${limit}&search=${search}`);
+  return res.data;
+};
+
+export const togglePinApplicant = async (jobId: string, trainerId: string) => {
+  const res = await API.patch(API_ROUTES.GYM.JOBS.PIN(jobId, trainerId));
+  return res.data;
+};
+
+export const getTrainerJobs = async (page: number = 1, limit: number = 10, search: string = '') => {
+  const res = await API.get(`${API_ROUTES.TRAINER.JOBS}?page=${page}&limit=${limit}&search=${search}`);
+  return res.data;
+};
+
+export const toggleShowInterest = async (jobId: string) => {
+  const res = await API.post(API_ROUTES.TRAINER.JOB_INTEREST(jobId));
   return res.data;
 };

@@ -4,6 +4,7 @@ import TYPES from '../core/types/types'
 import { ITrainerService } from '../core/interfaces/services/ITrainerService'
 import { ITransactionService } from '../core/interfaces/services/ITransactionService'
 import { IJwtService, JwtPayload } from '../core/interfaces/services/IJwtService'
+import { IGymService } from '../core/interfaces/services/IGymService'
 import { STATUS_CODE } from '../constants/status'
 import { logger } from '../utils/logger.util'
 
@@ -12,7 +13,8 @@ export class TrainerDashboardController {
     constructor(
         @inject(TYPES.ITrainerService) private _trainerService: ITrainerService,
         @inject(TYPES.ITransactionService) private _transactionService: ITransactionService,
-        @inject(TYPES.IJwtService) private _JwtService: IJwtService
+        @inject(TYPES.IJwtService) private _JwtService: IJwtService,
+        @inject(TYPES.IGymService) private _gymService: IGymService
     ) { }
 
     async getDashboard(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -57,6 +59,35 @@ export class TrainerDashboardController {
             res.status(STATUS_CODE.OK).json({ application })
         } catch (err) {
             logger.error('Error fetching trainer application:', err)
+            next(err)
+        }
+    }
+
+    async getJobs(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const trainerId = (req.user as JwtPayload).id
+            const { page = '1', limit = '10', search = '' } = req.query as any
+            const result = await this._gymService.getTrainerJobs(
+                trainerId,
+                parseInt(page),
+                parseInt(limit),
+                search
+            )
+            res.status(STATUS_CODE.OK).json(result)
+        } catch (err) {
+            logger.error('Error fetching trainer jobs:', err)
+            next(err)
+        }
+    }
+
+    async toggleInterest(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const trainerId = (req.user as JwtPayload).id
+            const { id } = req.params
+            const result = await this._gymService.toggleTrainerInterest(id, trainerId)
+            res.status(STATUS_CODE.OK).json(result)
+        } catch (err) {
+            logger.error('Error toggling trainer interest:', err)
             next(err)
         }
     }

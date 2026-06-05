@@ -15,6 +15,7 @@ import Aurora from "@/components/ui/Aurora";
 import { getWorkoutSession, updateWorkoutSession } from "@/services/workoutService";
 
 import type { IExercise, IWorkoutSession, WgerExerciseSuggestion, WgerExerciseInfo } from "@/interfaces/user/IUserWorkoutEdit";
+import { searchExercises } from "@/services/exerciseService";
 
 function InfoPopup() {
   const [open, setOpen] = useState(false);
@@ -84,11 +85,7 @@ function ExerciseCard({
             )}
             <img
               src={
-                exercise.image
-                  ? exercise.image.startsWith("http")
-                    ? exercise.image
-                    : `https://wger.de${exercise.image}`
-                  : "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
+                exercise.image || "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
               }
               alt={exercise.name}
               className={`h-16 w-16 object-cover rounded-md transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
@@ -128,7 +125,7 @@ function ExerciseSuggestionCard({
       <CardContent>
         <div className="space-y-2">
           <Badge variant="secondary" className="bg-white/90 text-foreground border-0 shadow-lg">
-            {suggestion.data.category}
+            {suggestion.data.bodyParts?.[0] || "Exercise"}
           </Badge>
           <div className="relative w-full h-32">
             {!imageLoaded && (
@@ -138,11 +135,7 @@ function ExerciseSuggestionCard({
             )}
             <img
               src={
-                suggestion.data.image
-                  ? `https://wger.de${suggestion.data.image}`
-                  : suggestion.data.image_thumbnail
-                    ? `https://wger.de${suggestion.data.image_thumbnail}`
-                    : "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
+                suggestion.data.gifUrl || "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
               }
               alt={suggestion.value}
               className={`w-full h-32 object-cover rounded-md transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
@@ -172,7 +165,7 @@ export default function EditSessionPage() {
   const [sessionDate, setSessionDate] = useState<string>("");
   const [sessionTime, setSessionTime] = useState<string>("");
   const [sessionGoal, setSessionGoal] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("pushup");
   const [debouncedQuery] = useDebounce(searchQuery, 300);
   const [suggestions, setSuggestions] = useState<WgerExerciseSuggestion[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<WgerExerciseInfo | null>(null);
@@ -222,22 +215,11 @@ export default function EditSessionPage() {
     setIsSuggestionsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/wger/exerciseinfo/?name=${term}&language=2`);
-      if (!response.ok) throw new Error("Failed to fetch exercise suggestions");
-      const data = await response.json();
-      const mapped = (data.results || []).map((ex: any) => {
-        const mainImage = ex.images?.find((img: any) => img.is_main) || ex.images?.[0];
-        return {
-          value: ex.name,
-          data: {
-            id: ex.id,
-            base_id: ex.exercise_base || ex.id,
-            category: ex.category?.name || "Exercise",
-            image: mainImage ? mainImage.image.replace("https://wger.de", "") : "",
-            image_thumbnail: mainImage ? mainImage.image.replace("https://wger.de", "") : ""
-          }
-        };
-      });
+      const exercises = await searchExercises(term);
+      const mapped = exercises.map((ex) => ({
+        value: ex.name,
+        data: ex,
+      }));
       setSuggestions(mapped);
     } catch (err: any) {
       setError(err.message || "Error fetching exercise suggestions");
@@ -247,50 +229,47 @@ export default function EditSessionPage() {
     }
   }
 
-  async function handleAddClick(exerciseId: string, exerciseName: string) {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/wger/exerciseinfo/${exerciseId}/?language=2`);
-      if (!response.ok) throw new Error("Failed to fetch exercise details");
-      const data = await response.json();
-      setSelectedExercise({ ...data, name: exerciseName });
-      setModalOpen(true);
-      setSets(3);
-      setReps("10-12");
-      setTime("30 min");
-      setWeight(0);
-      setRest("60s");
-      setExerciseNotes("");
-    } catch (err: any) {
-      setError(err.message || "Error fetching exercise details");
-      toast.error("Failed to load exercise details", { description: err.message });
-    } finally {
-      setIsLoading(false);
+  function handleAddClick(exerciseId: string) {
+    const foundSug = suggestions.find((sug) => sug.data.exerciseId === exerciseId);
+    if (!foundSug) {
+      toast.error("Exercise details not found");
+      return;
     }
+    setSelectedExercise(foundSug.data);
+    setModalOpen(true);
+    setSets(3);
+    setReps("10-12");
+    setTime("30 min");
+    setWeight(0);
+    setRest("60s");
+    setExerciseNotes("");
   }
 
   function handleAddToSession() {
     if (selectedExercise) {
       const newExercise: IExercise = {
-        id: selectedExercise.id.toString(),
+        id: selectedExercise.exerciseId,
         name: selectedExercise.name,
         sets,
-        reps: selectedExercise.category === 15 ? undefined : reps,
-        time: selectedExercise.category === 15 ? time : undefined,
-        weight:
-          selectedExercise.equipment && selectedExercise.equipment.length > 0 && !selectedExercise.equipment.includes(7)
-            ? weight
-            : undefined,
+        reps: isCardio ? undefined : reps,
+        time: isCardio ? time : undefined,
+        weight: isWeighted ? weight : undefined,
         rest,
         notes: exerciseNotes || undefined,
-        image:
-          selectedExercise.images?.find((img) => img.is_main)?.image ||
-          selectedExercise.images?.[0]?.image ||
-          "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp",
+        image: selectedExercise.gifUrl || "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp",
+        exerciseId: selectedExercise.exerciseId,
+        gifUrl: selectedExercise.gifUrl,
+        bodyParts: selectedExercise.bodyParts,
+        targetMuscles: selectedExercise.targetMuscles,
+        secondaryMuscles: selectedExercise.secondaryMuscles,
+        equipments: selectedExercise.equipments,
+        instructions: selectedExercise.instructions,
+        description: selectedExercise.description || "",
+        exerciseData: selectedExercise,
       };
       setAddedExercises([...addedExercises, newExercise]);
       setModalOpen(false);
+      setSearchQuery("pushup");
     }
   }
 
@@ -321,8 +300,10 @@ export default function EditSessionPage() {
   }
 
   const isWeighted =
-    selectedExercise?.equipment && selectedExercise.equipment.length > 0 && !selectedExercise.equipment.includes(7);
-  const isCardio = selectedExercise?.category === 15;
+    selectedExercise?.equipments &&
+    selectedExercise.equipments.length > 0 &&
+    !selectedExercise.equipments.includes("body weight");
+  const isCardio = selectedExercise?.bodyParts?.includes("cardio") || false;
 
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
@@ -487,9 +468,9 @@ export default function EditSessionPage() {
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {suggestions.map((sug) => (
                     <ExerciseSuggestionCard
-                      key={sug.data.id}
+                      key={sug.data.exerciseId}
                       suggestion={sug}
-                      onAdd={() => handleAddClick(sug.data.base_id, sug.value)}
+                      onAdd={() => handleAddClick(sug.data.exerciseId)}
                       isLoading={isLoading}
                     />
                   ))}
@@ -528,19 +509,16 @@ export default function EditSessionPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
-            {selectedExercise?.description && (
-              <div
-                className="text-muted-foreground prose prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: selectedExercise.description }}
-              />
+            {selectedExercise?.instructions && selectedExercise.instructions.length > 0 && (
+              <div className="text-muted-foreground prose prose-invert max-w-none space-y-2">
+                {selectedExercise.instructions.map((inst, i) => (
+                  <p key={i}>{inst}</p>
+                ))}
+              </div>
             )}
-            {selectedExercise?.images && selectedExercise.images.length > 0 && (
+            {selectedExercise?.gifUrl && (
               <img
-                src={
-                  selectedExercise.images.find((img) => img.is_main)?.image ||
-                  selectedExercise.images[0].image ||
-                  "https://myworkout.ai/wp-content/uploads/2023/09/Image-Placeholder.webp"
-                }
+                src={selectedExercise.gifUrl}
                 alt={selectedExercise.name || "Exercise"}
                 className="w-full h-64 object-cover rounded-md"
               />

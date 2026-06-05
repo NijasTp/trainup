@@ -1,7 +1,14 @@
+export interface ISetDetail {
+    setNumber: number;
+    duration: number;
+    restDuration: number;
+}
+
 export interface IExercise {
     id: string;
     name: string;
     image?: string;
+    gifUrl?: string;
     sets: number;
     weight?: number;
     reps?: string;
@@ -10,6 +17,7 @@ export interface IExercise {
     notes?: string;
     isDone?: boolean;
     timeTaken?: number;
+    setDetails?: ISetDetail[];
 }
 
 export interface IWorkoutSession {

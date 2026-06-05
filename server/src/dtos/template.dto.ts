@@ -7,6 +7,14 @@ export class WorkoutTemplateExerciseDto {
     weight?: string;
     rest?: string;
     notes?: string;
+    gifUrl?: string;
+    bodyParts?: string[];
+    targetMuscles?: string[];
+    secondaryMuscles?: string[];
+    equipments?: string[];
+    instructions?: string[];
+    description?: string;
+    exerciseData?: any;
 }
 
 export class WorkoutTemplateDayDto {
@@ -28,6 +36,7 @@ export class CreateWorkoutTemplateRequestDto {
     createdById?: string;
     createdByType?: 'Admin' | 'Trainer' | 'Gym';
     gymId?: string;
+    targetBodyParts?: string[];
 }
 
 export class WorkoutTemplateResponseDto extends CreateWorkoutTemplateRequestDto {

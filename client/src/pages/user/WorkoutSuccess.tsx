@@ -62,24 +62,33 @@ export default function SuccessPage() {
       if (didUpdate.current) return;
 
       try {
-        if (id && state?.exerciseTimes && state.isDone) {
+        if (id && state?.isDone) {
           didUpdate.current = true;
-          const exerciseUpdates = state.exerciseTimes.map((et) => ({
-            exerciseId: et.exerciseId,
-            timeTaken: et.duration,
-          }));
-          const response = await updateWorkoutSession(id, {
-            isDone: true,
-            exerciseUpdates,
-          });
-
-          if (response && response.streak !== undefined) {
-            dispatch(updateUser({ streak: response.streak }));
+          
+          if (state.streak !== undefined) {
+            dispatch(updateUser({ streak: state.streak }));
+            setIsLoading(false);
+            return;
           }
 
-          toast.success("Workout marked as complete!", {
-            description: "Your progress has been saved.",
-          });
+          if (state.exerciseTimes) {
+            const exerciseUpdates = state.exerciseTimes.map((et) => ({
+              exerciseId: et.exerciseId,
+              timeTaken: et.duration,
+            }));
+            const response = await updateWorkoutSession(id, {
+              isDone: true,
+              exerciseUpdates,
+            });
+
+            if (response && response.streak !== undefined) {
+              dispatch(updateUser({ streak: response.streak }));
+            }
+
+            toast.success("Workout marked as complete!", {
+              description: "Your progress has been saved.",
+            });
+          }
         }
       } catch (err: any) {
         didUpdate.current = false;
