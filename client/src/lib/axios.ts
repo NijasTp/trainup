@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { ROUTES } from "../constants/routes";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
   withCredentials: true,
   timeout: 10000, // 10s timeout
 });
