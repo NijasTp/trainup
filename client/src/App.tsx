@@ -136,7 +136,6 @@ import { updateUser } from './redux/slices/userAuthSlice';
 import type { RootState } from './redux/store';
 
 function App() {
-  console.log('a console in front end for testing the pipeline')
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state: RootState) => state.userAuth.isAuthenticated);
   const refreshProfile = useCallback(async () => {
