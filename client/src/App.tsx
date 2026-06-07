@@ -136,9 +136,9 @@ import { updateUser } from './redux/slices/userAuthSlice';
 import type { RootState } from './redux/store';
 
 function App() {
+  console.log('a console in front end for testing the pipeline')
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state: RootState) => state.userAuth.isAuthenticated);
-  console.log('tested. added console')
   const refreshProfile = useCallback(async () => {
     try {
       const res = await API.get('/user/get-profile');

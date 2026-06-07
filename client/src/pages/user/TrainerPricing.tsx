@@ -9,7 +9,7 @@ import { getIndividualTrainer } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import Aurora from "@/components/ui/Aurora";
-import type { Trainer } from "@/interfaces/user/IIndividualTrainer";
+import type { Trainer } from "@/interfaces/user/iIndividualTrainer";
 
 export default function TrainerPricingPage() {
     const { id } = useParams<{ id: string }>();
