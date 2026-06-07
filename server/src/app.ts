@@ -70,8 +70,7 @@ app.use(BASE_ROUTE.NOTIFICATION, notificationRoutes)
 app.use(BASE_ROUTE.TEMPLATE, templateRoutes);
 app.use(BASE_ROUTE.SUBSCRIPTION, subscriptionRoutes);
 
-
+console.log('checking the working of ci/cd')
 app.use(errorHandler);
-console.log('checking the working of CI/CD')
 export { httpServer, io };
 export default app;
