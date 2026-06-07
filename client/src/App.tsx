@@ -138,7 +138,7 @@ import type { RootState } from './redux/store';
 function App() {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state: RootState) => state.userAuth.isAuthenticated);
-
+  console.log('tested. added console')
   const refreshProfile = useCallback(async () => {
     try {
       const res = await API.get('/user/get-profile');
