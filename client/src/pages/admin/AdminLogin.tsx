@@ -117,7 +117,7 @@ function AdminLogin() {
       dispatch(login(res.admin));
       toast.success("Login successful");
       navigate("/admin/dashboard");
-    } catch (error: any) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       toast.error(error.response?.data?.error || "Login failed");
     } finally {
       setLoading(false);

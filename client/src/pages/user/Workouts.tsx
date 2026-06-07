@@ -327,7 +327,7 @@ export default function WorkoutPage() {
       const workoutDay = response ? [response] : [{ _id: "", userId: "", date: format(selectedDate, "yyyy-MM-dd"), sessions: [] }];
       setDailyWorkouts(workoutDay);
       console.log('worjouts:',workoutDay)
-    } catch (err: unknown) {
+    } catch (errVal) { const err = errVal as SafeAny;
       setError("Failed to fetch workouts");
       console.error("API error:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to load workouts";

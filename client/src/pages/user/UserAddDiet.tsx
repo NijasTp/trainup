@@ -63,7 +63,7 @@ export default function UserAddDiet() {
         const response = await getMealsByDate(date);
         setMeals(response.meals || []);
         setLoading(false);
-      } catch (err) {
+      } catch (errVal) { const err = errVal as SafeAny;
         setError("Failed to fetch existing diet data");
         setLoading(false);
         toast.error("Failed to fetch existing diet data");
@@ -88,7 +88,7 @@ export default function UserAddDiet() {
       if (!response.data.foods.length) {
         toast.error("No meals found. Try adding a meal manually below.");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to fetch USDA food data");
       setLoading(false);
       toast.error("Failed to fetch USDA food data");
@@ -171,7 +171,7 @@ export default function UserAddDiet() {
       try {
         await deleteMeal(date, meal._id);
         toast.success("Meal removed successfully");
-      } catch (err: any) {
+      } catch (errVal) { const err = errVal as SafeAny;
         toast.error(err.response?.data?.error || "Failed to remove meal");
         console.log('error while removing meal', err);
         return;
@@ -206,7 +206,7 @@ export default function UserAddDiet() {
       const updatedResponse = await getMealsByDate(date);
       setMeals(updatedResponse.meals || []);
       navigate('/diets');
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       setError(err.response?.data?.error || "Failed to update diet day");
       toast.error(err.response?.data?.error || "Failed to update diet day");
 

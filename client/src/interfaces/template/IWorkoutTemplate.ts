@@ -13,7 +13,7 @@ export interface IWorkoutTemplateExercise {
     equipments?: string[];
     instructions?: string[];
     description?: string;
-    exerciseData?: any;
+    exerciseData?: SafeAny;
 }
 
 export interface IWorkoutTemplateDay {

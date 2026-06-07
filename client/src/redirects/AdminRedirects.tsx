@@ -31,7 +31,7 @@ export const AdminPreventLoggedIn: React.FC<AdminPreventLoggedInProps> = ({ chil
         try {
           await checkAdminSession();
           navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
-        } catch (error: unknown) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
           console.error("Session check failed:", error);
 
           // Handle unknown error with type guard or casting for response

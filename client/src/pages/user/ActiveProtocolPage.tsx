@@ -22,8 +22,8 @@ export default function ActiveProtocolPage() {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.userAuth.user);
 
-  const [activeTemplate, setActiveTemplate] = useState<any>(null);
-  const [todaySession, setTodaySession] = useState<any>(null);
+  const [activeTemplate, setActiveTemplate] = useState<SafeAny>(null);
+  const [todaySession, setTodaySession] = useState<SafeAny>(null);
   const [selectedDayTab, setSelectedDayTab] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isStarting, setIsStarting] = useState<boolean>(false);
@@ -34,7 +34,7 @@ export default function ActiveProtocolPage() {
       if (res.data.user) {
         dispatch(updateUser(res.data.user));
       }
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Failed to load user profile", err);
     }
   }, [dispatch]);
@@ -50,13 +50,13 @@ export default function ActiveProtocolPage() {
       
       if (dailyData && dailyData.sessions) {
         // Find session linked to this template ID or template name
-        const match = dailyData.sessions.find((s: any) => 
+        const match = dailyData.sessions.find((s: SafeAny) => 
           s.notes?.includes("From active template") || 
           s._id.includes(`template-${id}`)
         );
         setTodaySession(match || null);
       }
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to load active protocol details");
     } finally {
       setIsLoading(false);
@@ -69,7 +69,7 @@ export default function ActiveProtocolPage() {
 
   useEffect(() => {
     if (user?.activeWorkoutTemplates) {
-      const found = user.activeWorkoutTemplates.find((t: any) => t.templateId === id) as any;
+      const found = user.activeWorkoutTemplates.find((t: SafeAny) => t.templateId === id) as SafeAny;
       if (found) {
         setActiveTemplate(found);
         // Default preview tab to today's active day if present
@@ -91,7 +91,7 @@ export default function ActiveProtocolPage() {
           givenBy: todaySession.givenBy,
           date: todaySession.date,
           time: todaySession.time,
-          exercises: todaySession.exercises.map((ex: any) => ({
+          exercises: todaySession.exercises.map((ex: SafeAny) => ({
             id: ex.id,
             name: ex.name,
             sets: ex.sets,
@@ -120,7 +120,7 @@ export default function ActiveProtocolPage() {
         // Already materialized
         navigate(`/workouts/${todaySession._id}/start`);
       }
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to start workout session");
     } finally {
       setIsStarting(false);
@@ -141,7 +141,7 @@ export default function ActiveProtocolPage() {
       );
       await loadPageData();
       toast.success("Training protocol progress reset successfully!");
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to reset progress");
     } finally {
       setIsLoading(false);
@@ -158,7 +158,7 @@ export default function ActiveProtocolPage() {
       await fetchUserProfile();
       toast.success("Abandoned protocol successfully.");
       navigate("/workouts");
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to abandon protocol");
     } finally {
       setIsLoading(false);
@@ -300,7 +300,7 @@ export default function ActiveProtocolPage() {
                 <CardContent className="space-y-6">
                   {/* Exercises List */}
                   <div className="divide-y divide-white/5">
-                    {todaySession.exercises && todaySession.exercises.map((ex: any, idx: number) => (
+                    {todaySession.exercises && todaySession.exercises.map((ex: SafeAny, idx: number) => (
                       <div key={idx} className="flex gap-4 py-4 first:pt-0 last:pb-0 items-center">
                         <img
                           src={ex.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800"}
@@ -360,7 +360,7 @@ export default function ActiveProtocolPage() {
               <div className="flex flex-col gap-2">
                 <p className="text-[10px] text-slate-500 font-black uppercase tracking-wider">Timeline Browser</p>
                 <div className="grid grid-cols-4 gap-2">
-                  {activeTemplate.days && activeTemplate.days.map((day: any) => (
+                  {activeTemplate.days && activeTemplate.days.map((day: SafeAny) => (
                     <Button
                       key={day.dayNumber}
                       onClick={() => setSelectedDayTab(day.dayNumber)}
@@ -384,7 +384,7 @@ export default function ActiveProtocolPage() {
                 </h3>
 
                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                  {activeTemplate.days && activeTemplate.days.find((d: any) => d.dayNumber === selectedDayTab)?.exercises.map((ex: any, i: number) => (
+                  {activeTemplate.days && activeTemplate.days.find((d: SafeAny) => d.dayNumber === selectedDayTab)?.exercises.map((ex: SafeAny, i: number) => (
                     <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.02] border border-white/5">
                       <div className="w-10 h-10 rounded-lg bg-white/5 text-primary flex items-center justify-center font-bold text-xs border border-white/5">
                         {i + 1}

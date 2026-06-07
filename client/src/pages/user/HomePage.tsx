@@ -194,7 +194,7 @@ export default function HomePage() {
         console.error("Failed to fetch active programs:", _err);
       }
 
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error("Error fetching home data:", error);
     } finally {
       setIsLoading(false);

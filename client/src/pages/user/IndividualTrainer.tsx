@@ -31,7 +31,7 @@ import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import TrainerReviews from "@/components/user/reviews/TrainerReviews";
 import Aurora from "@/components/ui/Aurora";
 
-import type { Position, Trainer, User } from "@/interfaces/user/iIndividualTrainer";
+import type { Position, Trainer, User } from "@/interfaces/user/IIndividualTrainer";
 
 const SpotlightCard = ({
     children,
@@ -119,14 +119,14 @@ export default function TrainerPage() {
             if (trainerData && typeof trainerData.price === "string") {
                 try {
                     trainerData.price = JSON.parse(trainerData.price);
-                } catch (e) {
+                } catch (eVal) { const e = eVal as SafeAny;
                     console.error("Failed to parse price:", e);
                 }
             }
 
             setTrainer(trainerData);
             setIsLoading(false);
-        } catch (err) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to fetch trainer:", err);
             setError("Failed to load trainer details");
             toast.error("Failed to load trainer details");
@@ -138,7 +138,7 @@ export default function TrainerPage() {
         try {
             const response = await API.get("/user/get-profile");
             setUser(response.data.user);
-        } catch (err) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to fetch user:", err);
             toast.error("Failed to load user data");
         }
@@ -170,7 +170,7 @@ export default function TrainerPage() {
         }
     };
 
-    const handleReviewAdded = (newReview: any) => {
+    const handleReviewAdded = (newReview: SafeAny) => {
         if (trainer) {
             setTrainer({
                 ...trainer,

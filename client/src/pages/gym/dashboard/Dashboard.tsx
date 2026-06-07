@@ -13,7 +13,7 @@ import {
 import { getGymDashboardStats } from '@/services/gymService';
 import { toast } from 'react-hot-toast';
 
-const StatCard = ({ title, value, icon: Icon, trend, color }: any) => {
+const StatCard = ({ title, value, icon: Icon, trend, color }: SafeAny) => {
     // Map icon string to component
     const IconComponent = {
         Users,
@@ -50,7 +50,7 @@ const StatCard = ({ title, value, icon: Icon, trend, color }: any) => {
 
 const Dashboard = () => {
     const [loading, setLoading] = useState(true);
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<SafeAny>(null);
 
     useEffect(() => {
         fetchStats();
@@ -61,7 +61,7 @@ const Dashboard = () => {
             setLoading(true);
             const statsData = await getGymDashboardStats();
             setData(statsData);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to fetch dashboard statistics');
         } finally {
             setLoading(false);
@@ -102,7 +102,7 @@ const Dashboard = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat: any, i: number) => (
+                {stats.map((stat: SafeAny, i: number) => (
                     <StatCard key={i} {...stat} />
                 ))}
             </div>
@@ -155,7 +155,7 @@ const Dashboard = () => {
                         </h3>
                         <div className="space-y-6">
                             {membershipDistribution?.length > 0 ? (
-                                membershipDistribution.map((item: any, i: number) => (
+                                membershipDistribution.map((item: SafeAny, i: number) => (
                                     <div key={i} className="space-y-2">
                                         <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
                                             <span className="text-gray-400">{item.name}</span>
@@ -189,7 +189,7 @@ const Dashboard = () => {
 
                         <div className="space-y-4">
                             {announcements.length > 0 ? (
-                                announcements.map((ann: any, i: number) => (
+                                announcements.map((ann: SafeAny, i: number) => (
                                     <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/20 transition-all cursor-pointer group">
                                         <div className="flex justify-between items-start mb-2">
                                             <span className="text-[9px] font-black text-primary uppercase tracking-widest">{ann.date}</span>

@@ -152,7 +152,7 @@ export const syncSubscriptionStatus = createAsyncThunk(
           assignedTrainer: response.user.assignedTrainer || null,
         }));
       }
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error('Failed to sync subscription status', error);
     }
   }

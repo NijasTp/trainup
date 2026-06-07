@@ -89,7 +89,7 @@ export default function Diets() {
         setTrainerDiet(trainerMeals);
         setUserDiet(userMeals);
         setLoading(false);
-      } catch (err) {
+      } catch (_err) {
         setError('Error fetching meals. Please try again later.');
         setLoading(false);
       }
@@ -129,8 +129,8 @@ export default function Diets() {
     try {
       await markEaten(now.toISOString().split('T')[0], mealId)
       toast.success("Meal marked as eaten!");
-    } catch (error: unknown) {
-      const err = error as any;
+    } catch (errorVal) { const error = errorVal as SafeAny;
+      const err = error as SafeAny;
       toast.error(err.response?.data?.error || 'Failed to mark meal as eaten');
     }
   };

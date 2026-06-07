@@ -93,7 +93,7 @@ export default function TrainerDietTemplateForm() {
     try {
       const response = await API.get(`/diet/trainer/diet-templates/${id}`);
       setTemplate(response.data);
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error("Error fetching template:", error);
       toast.error("Failed to load template");
     } finally {
@@ -119,7 +119,7 @@ export default function TrainerDietTemplateForm() {
       if (!data.foods.length) {
         toast.error("No meals found. Try adding a meal manually below.");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to fetch USDA food data");
       toast.error("Failed to fetch USDA food data");
     } finally {
@@ -132,7 +132,7 @@ export default function TrainerDietTemplateForm() {
     if (name === "title" || name === "description") {
       setTemplate((prev) => ({ ...prev, [name]: value }));
     } else {
-      setNewMeal((prev: any) => ({
+      setNewMeal((prev: SafeAny) => ({
         ...prev,
         [name]: name === "name" || name === "time" || name === "notes" ? value : parseFloat(value) || 0,
       }));
@@ -225,7 +225,7 @@ export default function TrainerDietTemplateForm() {
         toast.success("Diet template created successfully");
       }
       navigate("/trainer/templates");
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.error || "Failed to save diet template");
     } finally {
       setSaving(false);

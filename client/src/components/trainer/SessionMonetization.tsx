@@ -38,7 +38,7 @@ export const SessionMonetization: React.FC = () => {
       if (data.trainer?.sessionBundles) {
         setBundles(data.trainer.sessionBundles);
       }
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error('Failed to fetch bundles:', error);
     } finally {
       setIsLoading(false);
@@ -80,7 +80,7 @@ export const SessionMonetization: React.FC = () => {
     try {
       await updateSessionBundles(bundles);
       toast.success('Price packages updated');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Sync failed. Check connection.');
     } finally {
       setIsSaving(false);

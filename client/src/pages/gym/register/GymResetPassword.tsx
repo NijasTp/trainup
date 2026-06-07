@@ -35,7 +35,7 @@ export default function GymResetPassword() {
       toast.error("Passwords do not match")
       return
     }
-    let isValid = passwordValidation(password)
+    const isValid = passwordValidation(password)
     if (!isValid) {
       toast.error('Password should have at least 8 chars, one uppercase, one lowercase, one number, one special char.')
       return
@@ -45,7 +45,7 @@ export default function GymResetPassword() {
       const res = await gymResetPasswordApi(email, password, otp)
       toast.success(res.message || "Gym portal password reset successfully")
       navigate(ROUTES.GYM_LOGIN)
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.error || "Failed to reset password. Please try again.")
     } finally {
       setIsLoading(false)

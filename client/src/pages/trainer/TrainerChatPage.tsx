@@ -47,7 +47,7 @@ export default function TrainerChatPage() {
     const [client, setClient] = useState<Client | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
-    const [userPlan, setUserPlan] = useState<any>(null);
+    const [userPlan, setUserPlan] = useState<SafeAny>(null);
     const isExpired = userPlan ? new Date(userPlan.expiryDate) < new Date() : false;
     const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -109,7 +109,7 @@ export default function TrainerChatPage() {
             try {
                 const planResponse = await API.get(`/trainer/user-plan/${clientId}`);
                 setUserPlan(planResponse.data.plan);
-            } catch (planErr) {
+            } catch (_planErr) {
                 // Silently handle plan fetch error
             }
 
@@ -117,7 +117,7 @@ export default function TrainerChatPage() {
             try {
                 const messagesResponse = await API.get(`/trainer/chat/messages/${clientId}`);
                 setMessages(messagesResponse.data.messages);
-            } catch (msgErr: any) {
+            } catch (msgErrVal) { const msgErr = msgErrVal as SafeAny;
                 if (msgErr.response?.status === 402) {
                     setMessages([]); // Ensure messages are cleared or kept empty
                 } else {
@@ -128,7 +128,7 @@ export default function TrainerChatPage() {
             // Mark messages as read
             try {
                 await API.put(`/trainer/chat/read/${clientId}`);
-            } catch (readErr) {
+            } catch (_readErr) {
                 // Silently handle read marking error
             }
 
@@ -167,7 +167,7 @@ export default function TrainerChatPage() {
             });
 
             setIsLoading(false);
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             setError(err.response?.data?.message || "Failed to load chat");
             setIsLoading(false);
         }
@@ -234,7 +234,7 @@ export default function TrainerChatPage() {
             timerRef.current = setInterval(() => {
                 setRecordingDuration(prev => prev + 1);
             }, 1000);
-        } catch (err) {
+        } catch (_err) {
             toast.error("Could not access microphone");
         }
     };
@@ -329,7 +329,7 @@ export default function TrainerChatPage() {
             setImageCaption('');
             setAudioBlob(null);
             handleStopTyping();
-        } catch (err: any) {
+        } catch (_err) {
             toast.error("Failed to send message");
         } finally {
             setIsSending(false);
@@ -341,7 +341,7 @@ export default function TrainerChatPage() {
             await API.delete(`/trainer/chat/message/${messageId}`);
             setMessages(prev => prev.filter(m => m._id !== messageId));
             toast.success("Message deleted");
-        } catch (err: any) {
+        } catch (_err) {
             toast.error("Failed to delete message");
         }
     };

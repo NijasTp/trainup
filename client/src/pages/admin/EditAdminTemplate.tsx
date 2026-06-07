@@ -59,9 +59,9 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
   // Exercise DB direct search states
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery] = useDebounce(searchQuery, 300);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<SafeAny[]>([]);
   const [searching, setSearching] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<any | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<SafeAny | null>(null);
 
   useEffect(() => {
     if (id && templateType) {
@@ -76,7 +76,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
         try {
           const results = await searchExercises(debouncedQuery);
           setSuggestions(results || []);
-        } catch (err) {
+        } catch (errVal) { const err = errVal as SafeAny;
           console.error(err);
         } finally {
           setSearching(false);
@@ -111,7 +111,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
         }
       }
       setTemplate(data);
-    } catch (error: any) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error("Error fetching template:", error);
       toast.error("Failed to load template");
       navigate(mode === 'trainer' ? '/trainer/templates' : '/admin/templates');
@@ -136,8 +136,8 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
           formData.append('targetBodyParts', JSON.stringify((template as WorkoutTemplate).targetBodyParts || []));
         } else if (key === 'imageFile') {
           formData.append('image', template.imageFile as Blob, 'template.jpg');
-        } else if (key !== 'image' && (template as any)[key] !== undefined) {
-          formData.append(key, String((template as any)[key]));
+        } else if (key !== 'image' && (template as SafeAny)[key] !== undefined) {
+          formData.append(key, String((template as SafeAny)[key]));
         }
       });
 
@@ -146,7 +146,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
       });
       toast.success("Blueprint synchronized successfully!");
       navigate(mode === 'trainer' ? '/trainer/templates' : '/admin/templates');
-    } catch (error: any) {
+    } catch (_error) {
       toast.error("Protocol synchronization failed");
     } finally {
       setSaving(false);
@@ -177,14 +177,14 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
       meals: []
     };
     const updatedDays = [...(template.days || []), newDay];
-    setTemplate({ ...template, days: updatedDays } as any);
+    setTemplate({ ...template, days: updatedDays } as SafeAny);
     setActiveDayIndex(updatedDays.length - 1);
   };
 
   const removeDay = (index: number) => {
     if (!template) return;
     const updatedDays = template.days.filter((_, i) => i !== index).map((d, i) => ({ ...d, dayNumber: i + 1 }));
-    setTemplate({ ...template, days: updatedDays } as any);
+    setTemplate({ ...template, days: updatedDays } as SafeAny);
   };
 
   const handleAddExercise = (dayIndex: number) => {
@@ -234,7 +234,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
     }
     day.exercises = exercises;
     updatedDays[editingDayIndex] = day;
-    setTemplate({ ...template, days: updatedDays } as any);
+    setTemplate({ ...template, days: updatedDays } as SafeAny);
     setShowExerciseModal(false);
     setSelectedExercise(null);
     setSearchQuery("");
@@ -244,7 +244,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
     if (!template) return;
     const updatedDays = [...template.days];
     updatedDays[dayIndex].exercises = updatedDays[dayIndex].exercises.filter((_, i) => i !== exIndex);
-    setTemplate({ ...template, days: updatedDays } as any);
+    setTemplate({ ...template, days: updatedDays } as SafeAny);
   };
 
   const handleAddMeal = (dayIndex: number) => {
@@ -272,7 +272,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
     else meals.push(mealForm);
     day.meals = meals;
     updatedDays[editingDayIndex] = day;
-    setTemplate({ ...template, days: updatedDays } as any);
+    setTemplate({ ...template, days: updatedDays } as SafeAny);
     setShowMealModal(false);
   };
 
@@ -280,7 +280,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
     if (!template) return;
     const updatedDays = [...template.days];
     updatedDays[dayIndex].meals = updatedDays[dayIndex].meals.filter((_, i) => i !== mealIndex);
-    setTemplate({ ...template, days: updatedDays } as any);
+    setTemplate({ ...template, days: updatedDays } as SafeAny);
   };
 
   if (loading) {
@@ -366,7 +366,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
                     <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Protocol ID</label>
                     <Input
                       value={template.title}
-                      onChange={(e) => setTemplate({ ...template, title: e.target.value } as any)}
+                      onChange={(e) => setTemplate({ ...template, title: e.target.value } as SafeAny)}
                       className="bg-black/40 border-white/10 h-16 rounded-2xl text-white font-black italic uppercase text-sm focus:ring-1 focus:ring-primary/50 transition-all"
                     />
                   </div>
@@ -405,7 +405,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
                       <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Goal Vector</label>
                       <Input
                         value={template.goal}
-                        onChange={(e) => setTemplate({ ...template, goal: e.target.value } as any)}
+                        onChange={(e) => setTemplate({ ...template, goal: e.target.value } as SafeAny)}
                         className="bg-black/40 border-white/10 h-16 rounded-2xl text-white font-black italic uppercase text-sm"
                       />
                     </div>
@@ -416,7 +416,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
                   <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic">Directive Description</label>
                   <Textarea
                     value={template.description}
-                    onChange={(e) => setTemplate({ ...template, description: e.target.value } as any)}
+                    onChange={(e) => setTemplate({ ...template, description: e.target.value } as SafeAny)}
                     className="bg-black/40 border-white/10 text-white min-h-[160px] rounded-[2rem] font-black italic uppercase text-xs p-8 tracking-widest leading-relaxed focus:ring-1 focus:ring-primary/20 transition-all shadow-inner"
                   />
                 </div>

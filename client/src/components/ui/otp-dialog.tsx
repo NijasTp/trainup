@@ -60,7 +60,7 @@ export function OTPDialog({ open, onOpenChange, onVerify, onResend, email }: OTP
       }
       setIsResendCooldown(true)
       setCooldownSeconds(30)
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error(error)
     } finally {
       setIsSending(false)

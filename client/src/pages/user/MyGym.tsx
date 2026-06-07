@@ -55,9 +55,9 @@ const safeFormatDate = (date: string | Date | undefined | null, formatStr: strin
 };
 
 export default function MyGym() {
-  const [gymData, setGymData] = useState<{ gym: IGym & { reviews?: any[] }; userSubscription: any } | null>(null);
+  const [gymData, setGymData] = useState<{ gym: IGym & { reviews?: SafeAny[] }; userSubscription: SafeAny } | null>(null);
   const [announcements, setAnnouncements] = useState<IGymAnnouncement[]>([]);
-  const [equipment, setEquipment] = useState<any[]>([]);
+  const [equipment, setEquipment] = useState<SafeAny[]>([]);
   const [attendance, setAttendance] = useState<IGymAttendance[]>([]);
   const [products, setProducts] = useState<IGymProduct[]>([]);
   const [wishlist, setWishlist] = useState<IGymProduct[]>([]);
@@ -104,7 +104,7 @@ export default function MyGym() {
       setHasAttendedToday(attendedToday);
     } catch (_err: unknown) {
       console.error("Dashboard fetch error:", _err);
-      const error = _err as any;
+      const error = _err as SafeAny;
       if (error?.response?.status === 404) {
         dispatch(updateUser({ activeGymDetails: null }));
         toast.error("Active membership required");
@@ -170,7 +170,7 @@ export default function MyGym() {
             toast.success("Attendance marked successfully!");
             setHasAttendedToday(true);
             fetchDashboardData();
-          } catch (error: any) {
+          } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to mark attendance:", error);
             const msg = error.response?.data?.message || error.response?.data?.error || "Failed to mark attendance";
             toast.error(msg);
@@ -206,7 +206,7 @@ export default function MyGym() {
       navigate("/gyms");
     } catch (_err: unknown) {
       console.error("Failed to cancel membership:", _err);
-      const errorMessage = (_err && typeof _err === 'object' && 'response' in _err) ? (_err as any).response?.data?.error : "Failed to cancel membership";
+      const errorMessage = (_err && typeof _err === 'object' && 'response' in _err) ? (_err as SafeAny).response?.data?.error : "Failed to cancel membership";
       toast.error(errorMessage || "Failed to cancel membership");
     }
   };

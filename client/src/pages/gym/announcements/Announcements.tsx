@@ -27,9 +27,9 @@ import { format } from 'date-fns';
 
 const Announcements = () => {
     const [view, setView] = useState<'list' | 'editor'>('list');
-    const [announcements, setAnnouncements] = useState<any[]>([]);
+    const [announcements, setAnnouncements] = useState<SafeAny[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editingAnn, setEditingAnn] = useState<any | null>(null);
+    const [editingAnn, setEditingAnn] = useState<SafeAny | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -48,7 +48,7 @@ const Announcements = () => {
             const data = await getGymAnnouncements(page, 10, searchTerm);
             setAnnouncements(data.announcements);
             setTotalPages(data.totalPages);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to load announcements');
         } finally {
             setLoading(false);
@@ -89,7 +89,7 @@ const Announcements = () => {
             setEditingAnn(null);
             setImageFile(null);
             setPreviewUrl(null);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to save announcement');
         }
     };
@@ -100,7 +100,7 @@ const Announcements = () => {
             await deleteAnnouncement(id);
             toast.success('Announcement removed');
             fetchAnnouncements();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to delete announcement');
         }
     };

@@ -149,7 +149,7 @@ export default function WeeklySchedule() {
             setIsLoading(true);
             const response = await API.get("/trainer/slots");
             setSlots(response.data.slots);
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to load slots");
         } finally {
             setIsLoading(false);
@@ -161,7 +161,7 @@ export default function WeeklySchedule() {
             setIsRequestsLoading(true);
             const response = await API.get("/trainer/session-requests");
             setRequests(response.data.requests);
-        } catch (error) {
+        } catch (_error) {
             // Silently handle error
         } finally {
             setIsRequestsLoading(false);
@@ -174,7 +174,7 @@ export default function WeeklySchedule() {
             const response = await API.get(`/trainer/past-sessions?page=${pastPage}&limit=${pastLimit}`);
             setPastSessions(response.data.sessions);
             setPastTotal(response.data.total);
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to load past sessions");
         } finally {
             setIsPastLoading(false);
@@ -192,7 +192,7 @@ export default function WeeklySchedule() {
             setSlots([response.data.slot, ...slots]);
             setIsAddingSlot(false);
             toast.success("Slot added successfully");
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.error || "Failed to add slot");
         }
     };
@@ -202,7 +202,7 @@ export default function WeeklySchedule() {
             await API.delete(`/trainer/slots/${slotId}`);
             setSlots(slots.filter(s => s._id !== slotId));
             toast.success("Slot deleted");
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.error || "Failed to delete slot");
         }
     };
@@ -213,7 +213,7 @@ export default function WeeklySchedule() {
             toast.success("Session approved!");
             fetchSlots();
             fetchRequests();
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.message || "Failed to approve session");
         }
     };
@@ -231,7 +231,7 @@ export default function WeeklySchedule() {
             toast.success("Session rejected");
             fetchSlots();
             fetchRequests();
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.message || "Failed to reject session");
         }
     };
@@ -241,7 +241,7 @@ export default function WeeklySchedule() {
             const data = await getVideoCallBySlotId(slotId);
             const roomId = data.videoCall.roomId;
             navigate(ROUTES.TRAINER_CLIENT_VIDEO_CALL.replace(':roomId', roomId));
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.message || 'Failed to join video call');
         }
     };

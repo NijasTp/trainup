@@ -64,7 +64,7 @@ const IndividualUser = () => {
                 const res = await getUserById(userId);
                 setUser(res);
                 setError(null);
-            } catch (err: unknown) {
+            } catch (errVal) { const err = errVal as SafeAny;
                 const error = err as { response?: { data?: { message?: string } } };
                 console.error("Error fetching user:", error);
                 setError(error.response?.data?.message || "Failed to load user");
@@ -88,7 +88,7 @@ const IndividualUser = () => {
             setUser(updatedUser)
             toast.success(`User ${user?.name} ${!currentBanStatus ? 'banned' : 'unbanned'} successfully`)
             setError(null)
-        } catch (err: unknown) {
+        } catch (errVal) { const err = errVal as SafeAny;
             const error = err as { response?: { data?: { message?: string } } }
             console.error("Error updating user ban status:", error)
             toast.error(error.response?.data?.message || "Failed to update ban status.")

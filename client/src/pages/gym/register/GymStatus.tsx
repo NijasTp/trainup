@@ -29,7 +29,7 @@ const GymStatus = () => {
         try {
             await dispatch(checkGymSessionThunk()).unwrap();
             toast.success('Status updated');
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error('Refresh failed:', error);
         } finally {
             setIsRefreshing(false);
@@ -54,7 +54,7 @@ const GymStatus = () => {
         try {
             await dispatch(logoutGymThunk()).unwrap();
             navigate(ROUTES.GYM_LOGIN);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error('Logout failed:', error);
             navigate(ROUTES.GYM_LOGIN);
         }

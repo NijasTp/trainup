@@ -28,7 +28,7 @@ export interface Trainer {
     trainerPlan?: 'basic' | 'premium' | 'pro';
     profileImage?: string;
     certificate?: string;
-    reviews?: any[];
+    reviews?: SafeAny[];
     price?: {
         basic: number;
         premium: number;

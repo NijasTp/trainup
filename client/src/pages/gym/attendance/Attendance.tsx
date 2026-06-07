@@ -18,7 +18,7 @@ import { format } from 'date-fns';
 const Attendance = () => {
     const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [loading, setLoading] = useState(true);
-    const [records, setRecords] = useState<any[]>([]);
+    const [records, setRecords] = useState<SafeAny[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [stats, setStats] = useState({
         todayEntries: 0,
@@ -36,7 +36,7 @@ const Attendance = () => {
             const data = await getGymAttendance(selectedDate);
             setRecords(data.records);
             setStats(data.stats);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to load attendance records');
         } finally {
             setLoading(false);

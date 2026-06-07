@@ -211,7 +211,7 @@ export default function TrainerAddSessionPage() {
         data: ex,
       }));
       setAllSuggestions(mapped);
-    } catch (err: unknown) {
+    } catch (errVal) { const err = errVal as SafeAny;
       const errorMessage = err instanceof Error ? err.message : "Error fetching exercise suggestions";
       setError(errorMessage);
       console.error('err', err);

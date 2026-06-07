@@ -53,7 +53,7 @@ export default function VideoCall({ roomId, onLeave }: VideoCallProps) {
             try {
                 const response = await API.get(`/video-call/token/${roomId}`);
                 setToken(response.data.token);
-            } catch (err) {
+            } catch (_err) {
                 toast.error("Failed to authenticate video session");
                 onLeave();
             } finally {
@@ -126,7 +126,7 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
                 if (joinedVc && joinedVc.scheduledEndTime) {
                     setScheduledEndTime(new Date(joinedVc.scheduledEndTime));
                 }
-            } catch (err) {
+            } catch (errVal) { const err = errVal as SafeAny;
                 console.error("Sync failed", err);
             }
         };
@@ -167,7 +167,7 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
             const isEnabled = localParticipant.isCameraEnabled;
             await localParticipant.setCameraEnabled(!isEnabled);
             setMediaError(prev => prev?.type === 'video' ? null : prev);
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Video toggle failed", err);
             setMediaError({ type: 'video', message: "Camera access denied" });
             toast.error("Could not access camera");
@@ -179,7 +179,7 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
             const isEnabled = localParticipant.isMicrophoneEnabled;
             await localParticipant.setMicrophoneEnabled(!isEnabled);
             setMediaError(prev => prev?.type === 'audio' ? null : prev);
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Audio toggle failed", err);
             setMediaError({ type: 'audio', message: "Microphone access denied" });
             toast.error("Could not access microphone");
@@ -412,7 +412,7 @@ function VideoCallUI({ roomId, onLeave }: { roomId: string, onLeave: () => void 
                                         toast.success("Session Completed.");
                                         await room.disconnect();
                                         onLeave();
-                                    } catch (e) { toast.error("Submission failed"); }
+                                    } catch (_e) { toast.error("Submission failed"); }
                                     finally { setIsSubmittingFeedback(false); }
                                 }}
                                 disabled={isSubmittingFeedback || rating === 0}

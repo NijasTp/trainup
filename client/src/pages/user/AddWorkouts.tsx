@@ -148,7 +148,7 @@ export default function AddWorkoutPage() {
         : [{ _id: "", userId: "", date: selectedDate!, sessions: [] }];
       setDailyWorkouts(workoutDay);
       console.log("Fetched workouts:", workoutDay);
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       setError("Failed to fetch workouts");
       console.error("API error:", err);
       toast.error("Failed to load workouts", { description: err.message });

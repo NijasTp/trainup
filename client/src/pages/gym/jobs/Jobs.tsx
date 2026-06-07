@@ -35,20 +35,20 @@ import { toast } from 'react-hot-toast';
 
 const Jobs = () => {
     const [view, setView] = useState<'list' | 'editor'>('list');
-    const [jobs, setJobs] = useState<any[]>([]);
+    const [jobs, setJobs] = useState<SafeAny[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editingJob, setEditingJob] = useState<any | null>(null);
+    const [editingJob, setEditingJob] = useState<SafeAny | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
-    const [selectedJobForApplicants, setSelectedJobForApplicants] = useState<any | null>(null);
-    const [applicants, setApplicants] = useState<any[]>([]);
+    const [selectedJobForApplicants, setSelectedJobForApplicants] = useState<SafeAny | null>(null);
+    const [applicants, setApplicants] = useState<SafeAny[]>([]);
     const [applicantsLoading, setApplicantsLoading] = useState(false);
     const [applicantsSearchTerm, setApplicantsSearchTerm] = useState('');
     const [applicantsPage, setApplicantsPage] = useState(1);
     const [applicantsTotalPages, setApplicantsTotalPages] = useState(1);
-    const [selectedTrainerForDetails, setSelectedTrainerForDetails] = useState<any | null>(null);
+    const [selectedTrainerForDetails, setSelectedTrainerForDetails] = useState<SafeAny | null>(null);
 
     const fetchApplicants = async (jobId: string, targetPage: number = 1, search: string = '') => {
         try {
@@ -57,7 +57,7 @@ const Jobs = () => {
             setApplicants(data.data || []);
             setApplicantsTotalPages(data.totalPages || 1);
             setApplicantsPage(targetPage);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to load interested applicants');
         } finally {
             setApplicantsLoading(false);
@@ -70,7 +70,7 @@ const Jobs = () => {
             await togglePinApplicant(selectedJobForApplicants._id, trainerId);
             toast.success('Pin status updated');
             fetchApplicants(selectedJobForApplicants._id, applicantsPage, applicantsSearchTerm);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to update pin status');
         }
     };
@@ -87,7 +87,7 @@ const Jobs = () => {
             const data = await getGymJobs(page, 10, searchTerm);
             setJobs(data.jobs);
             setTotalPages(data.totalPages);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to load jobs');
         } finally {
             setLoading(false);
@@ -114,7 +114,7 @@ const Jobs = () => {
                 setView('list');
                 setEditingJob(null);
             }
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to save job');
         }
     };
@@ -125,7 +125,7 @@ const Jobs = () => {
             await deleteGymJob(id);
             toast.success('Job deleted');
             fetchJobs();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to delete job');
         }
     };
@@ -151,7 +151,7 @@ const Jobs = () => {
         if (editingJob) {
             setEditingJob({
                 ...editingJob,
-                requirements: editingJob.requirements.filter((_: any, i: number) => i !== index)
+                requirements: editingJob.requirements.filter((_: SafeAny, i: number) => i !== index)
             });
         }
     };
@@ -347,7 +347,7 @@ const Jobs = () => {
                                         <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1 italic">Position Type</label>
                                         <select
                                             value={editingJob?.type}
-                                            onChange={(e) => setEditingJob({ ...editingJob!, type: e.target.value as any })}
+                                            onChange={(e) => setEditingJob({ ...editingJob!, type: e.target.value as SafeAny })}
                                             className="w-full bg-[#0a0a0a] border border-white/10 h-12 rounded-xl px-4 outline-none focus:ring-1 focus:ring-primary/30 text-white text-sm font-bold uppercase tracking-tight"
                                         >
                                             <option value="Trainer">Trainer</option>
@@ -359,7 +359,7 @@ const Jobs = () => {
                                         <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1 italic">Location</label>
                                         <select
                                             value={editingJob?.location}
-                                            onChange={(e) => setEditingJob({ ...editingJob!, location: e.target.value as any })}
+                                            onChange={(e) => setEditingJob({ ...editingJob!, location: e.target.value as SafeAny })}
                                             className="w-full bg-[#0a0a0a] border border-white/10 h-12 rounded-xl px-4 outline-none focus:ring-1 focus:ring-primary/30 text-white text-sm font-bold uppercase tracking-tight"
                                         >
                                             <option value="On-site">On-site</option>

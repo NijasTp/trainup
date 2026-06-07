@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Canvas, useFrame, type ThreeElements } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 
+/* eslint-disable @typescript-eslint/no-namespace, @typescript-eslint/no-empty-object-type */
 declare global {
     namespace React {
         namespace JSX {
@@ -13,6 +14,7 @@ declare global {
         interface IntrinsicElements extends ThreeElements {}
     }
 }
+/* eslint-enable @typescript-eslint/no-namespace, @typescript-eslint/no-empty-object-type */
 
 type UniformValue = THREE.IUniform<unknown> | unknown;
 

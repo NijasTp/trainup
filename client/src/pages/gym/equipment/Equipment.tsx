@@ -42,8 +42,8 @@ import {
 import ImageCropModal from '../register/components/ImageCropModal';
 
 const Equipment = () => {
-    const [equipments, setEquipments] = useState<any[]>([]);
-    const [categories, setCategories] = useState<any[]>([]);
+    const [equipments, setEquipments] = useState<SafeAny[]>([]);
+    const [categories, setCategories] = useState<SafeAny[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,7 +77,7 @@ const Equipment = () => {
             ]);
             setEquipments(equipmentData.equipments || []);
             setCategories(categoryData.categories || []);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to load equipment data');
         } finally {
             setLoading(false);
@@ -131,14 +131,14 @@ const Equipment = () => {
             setIsModalOpen(false);
             resetForm();
             fetchData();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to save equipment');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const handleEdit = (item: any) => {
+    const handleEdit = (item: SafeAny) => {
         setEditingId(item._id);
         setFormData({
             name: item.name,
@@ -155,7 +155,7 @@ const Equipment = () => {
                 await deleteEquipment(id);
                 toast.success('Equipment deleted');
                 fetchData();
-            } catch (error) {
+            } catch (_error) {
                 toast.error('Failed to delete equipment');
             }
         }
@@ -167,7 +167,7 @@ const Equipment = () => {
             setEquipments(prev => prev.map(item =>
                 item._id === id ? { ...item, available: !item.available } : item
             ));
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to toggle availability');
         }
     };
@@ -180,7 +180,7 @@ const Equipment = () => {
             setNewCategoryName('');
             setIsCategoryModalOpen(false);
             fetchData();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to create category');
         }
     };

@@ -131,11 +131,11 @@ export default function EditProfile() {
   // Cropping State
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<SafeAny>(null)
   const [isCropping, setIsCropping] = useState(false)
   const [tempImage, setTempImage] = useState<string | null>(null)
 
-  const onCropComplete = (_: any, croppedAreaPixels: any) => {
+  const onCropComplete = (_: SafeAny, croppedAreaPixels: SafeAny) => {
     setCroppedAreaPixels(croppedAreaPixels)
   }
 
@@ -152,7 +152,7 @@ export default function EditProfile() {
         setIsCropping(false)
         setTempImage(null)
       }
-    } catch (e) {
+    } catch (eVal) { const e = eVal as SafeAny;
       console.error(e)
       toast.error("Failed to crop image")
     }
@@ -177,7 +177,7 @@ export default function EditProfile() {
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.message || "Failed to change password")
     } finally {
       setLoading(false)
@@ -210,7 +210,7 @@ export default function EditProfile() {
         dietaryPreferences: userProfile.dietaryPreferences === "haven't given" ? "" : (userProfile.dietaryPreferences || "")
       });
       setProfileImagePreview(userProfile.profileImage || "");
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("API error:", err);
       toast.error("Error loading profile");
       navigate("/profile");
@@ -290,7 +290,7 @@ export default function EditProfile() {
 
       toast.success("Profile updated successfully!");
       navigate("/profile");
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       if (err instanceof z.ZodError) {
         const newErrors: Partial<Record<keyof ProfileFormData, string>> = {};
         err.issues.forEach((error) => {
@@ -309,7 +309,7 @@ export default function EditProfile() {
     }
   };
 
-  const handleInputChange = (field: keyof ProfileFormData, value: any) => {
+  const handleInputChange = (field: keyof ProfileFormData, value: SafeAny) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));

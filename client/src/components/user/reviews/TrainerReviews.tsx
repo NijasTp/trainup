@@ -59,7 +59,7 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
             setReviews(response.data.reviews);
             setTotalPages(response.data.pages);
             setTotalReviews(response.data.total);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch reviews:", error);
         } finally {
             setIsLoading(false);
@@ -74,7 +74,7 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
             } else {
                 setUserReview(null);
             }
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch my review:", error);
         }
     };
@@ -117,7 +117,7 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
             }
             setRating(0);
             setMessage("");
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.error || error.response?.data?.message || "Failed to submit review");
         } finally {
             setIsSubmitting(false);
@@ -145,7 +145,7 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
                 setUserReview(null);
             }
             toast.success("Review deleted successfully");
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.error || error.response?.data?.message || "Failed to delete review");
         }
     }

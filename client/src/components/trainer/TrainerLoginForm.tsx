@@ -26,7 +26,7 @@ export default function TrainerLoginForm() {
             dispatch(loginTrainer({ trainer: res.trainer }))
             toast.success("You've Logged in")
             navigate('/trainer/dashboard', { state: { email } })
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.error || error.message)
             console.log('Error:', error)
         } finally {

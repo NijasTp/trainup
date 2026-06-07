@@ -32,7 +32,7 @@ export default function UserGymAnnouncements() {
       const res = await getUserGymAnnouncements(page, 10, searchTerm);
       setAnnouncements(res.announcements || []);
       setTotalPages(res.totalPages || 1);
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error("Failed to fetch announcements:", error);
       toast.error("Failed to load announcements");
     } finally {

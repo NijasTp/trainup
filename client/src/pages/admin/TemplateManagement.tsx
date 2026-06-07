@@ -40,7 +40,7 @@ const TemplateManagement = () => {
           page: apiResponse.data.page,
           totalPages: apiResponse.data.totalPages,
         });
-      } catch (error: any) {
+      } catch (errorVal) { const error = errorVal as SafeAny;
         console.error("Error fetching templates:", error);
         setResponse({ templates: [], total: 0, page: 1, totalPages: 1 });
       } finally {
@@ -74,14 +74,14 @@ const TemplateManagement = () => {
     navigate(`/admin/templates/${template._id}/${templateType}/edit`);
   };
 
-  const handleDeleteTemplate = async (id: string | any) => {
+  const handleDeleteTemplate = async (id: string | SafeAny) => {
     if (!window.confirm("Are you sure you want to delete this template?")) return;
     try {
       const endpoint = templateType === "workout" ? `/template/workout/${id}` : `/template/diet/${id}`;
       await API.delete(endpoint);
       setSearchQuery(""); // Trigger refetch
       setCurrentPage(1);
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error("Error deleting template:", error);
     }
   };
@@ -143,8 +143,8 @@ const TemplateManagement = () => {
                 className="group flex flex-col bg-black/40 border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-cyan-500/30 transition-all duration-500 shadow-2xl"
               >
                 <div className="relative aspect-video overflow-hidden">
-                  {(template as any).image ? (
-                    <img src={(template as any).image} alt={template.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  {(template as SafeAny).image ? (
+                    <img src={(template as SafeAny).image} alt={template.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-cyan-900/20 to-black flex items-center justify-center">
                       <Dumbbell size={40} className="text-cyan-500/20" />
@@ -154,11 +154,11 @@ const TemplateManagement = () => {
 
                   {/* Difficulty Badge */}
                   <div className="absolute top-6 left-6">
-                    <Badge className={`font-black italic uppercase text-[8px] tracking-[0.2em] px-4 py-1.5 rounded-full border-0 ${(template as any).difficultyLevel === 'beginner' ? 'bg-green-500/10 text-green-400' :
-                        (template as any).difficultyLevel === 'intermediate' ? 'bg-cyan-500/10 text-cyan-400' :
+                    <Badge className={`font-black italic uppercase text-[8px] tracking-[0.2em] px-4 py-1.5 rounded-full border-0 ${(template as SafeAny).difficultyLevel === 'beginner' ? 'bg-green-500/10 text-green-400' :
+                        (template as SafeAny).difficultyLevel === 'intermediate' ? 'bg-cyan-500/10 text-cyan-400' :
                           'bg-rose-500/10 text-rose-400'
                       }`}>
-                      {(template as any).difficultyLevel || 'STANDARD'}
+                      {(template as SafeAny).difficultyLevel || 'STANDARD'}
                     </Badge>
                   </div>
 
@@ -175,11 +175,11 @@ const TemplateManagement = () => {
                     <div className="flex items-center gap-6">
                       <div className="flex items-center gap-2 text-gray-500">
                         <Clock size={12} className="text-cyan-500" />
-                        <span className="text-[10px] font-black uppercase italic tracking-widest">{(template as any).durationDays || (template as any).duration} DAYS</span>
+                        <span className="text-[10px] font-black uppercase italic tracking-widest">{(template as SafeAny).durationDays || (template as SafeAny).duration} DAYS</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-500">
                         <Trophy size={12} className="text-cyan-500" />
-                        <span className="text-[10px] font-black uppercase italic tracking-widest">{(template as any).type || 'SESSION'}</span>
+                        <span className="text-[10px] font-black uppercase italic tracking-widest">{(template as SafeAny).type || 'SESSION'}</span>
                       </div>
                     </div>
                   </div>
@@ -188,7 +188,7 @@ const TemplateManagement = () => {
                 <div className="px-8 py-6 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
                   <div className="flex items-center gap-2">
                     <Users size={12} className="text-cyan-500/50" />
-                    <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{(template as any).popularityCount || 0} OPERATORS</span>
+                    <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{(template as SafeAny).popularityCount || 0} OPERATORS</span>
                   </div>
                   <span className="text-[9px] font-black text-gray-600 uppercase italic">REF: {template._id?.toString().slice(-6).toUpperCase()}</span>
                 </div>
@@ -222,24 +222,24 @@ const TemplateManagement = () => {
       <Dialog open={!!selectedTemplate} onOpenChange={() => setSelectedTemplate(null)}>
         <DialogContent className="max-w-4xl bg-black border-white/10 text-white rounded-[2.5rem] p-0 overflow-hidden shadow-2xl">
           <div className="aspect-video relative">
-            <img src={(selectedTemplate as any)?.image} className="w-full h-full object-cover" alt="" />
+            <img src={(selectedTemplate as SafeAny)?.image} className="w-full h-full object-cover" alt="" />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
             <div className="absolute bottom-10 left-10 space-y-2">
-              <Badge className="bg-cyan-500 text-black font-black italic rounded-full px-4 py-1 uppercase text-[10px]">{(selectedTemplate as any)?.difficultyLevel || 'ELITE'}</Badge>
-              <h2 className="text-5xl font-black italic uppercase tracking-tighter">{(selectedTemplate as any)?.title}</h2>
+              <Badge className="bg-cyan-500 text-black font-black italic rounded-full px-4 py-1 uppercase text-[10px]">{(selectedTemplate as SafeAny)?.difficultyLevel || 'ELITE'}</Badge>
+              <h2 className="text-5xl font-black italic uppercase tracking-tighter">{(selectedTemplate as SafeAny)?.title}</h2>
             </div>
           </div>
           <div className="p-10 space-y-8">
-            <p className="text-gray-400 font-medium italic leading-relaxed">{(selectedTemplate as any)?.description}</p>
+            <p className="text-gray-400 font-medium italic leading-relaxed">{(selectedTemplate as SafeAny)?.description}</p>
             <div className="flex justify-between items-center pt-8 border-t border-white/10">
               <div className="flex gap-10">
                 <div>
                   <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Duration</p>
-                  <p className="text-xl font-black italic text-cyan-400 uppercase">{(selectedTemplate as any)?.durationDays || (selectedTemplate as any)?.duration} Days</p>
+                  <p className="text-xl font-black italic text-cyan-400 uppercase">{(selectedTemplate as SafeAny)?.durationDays || (selectedTemplate as SafeAny)?.duration} Days</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Architecture</p>
-                  <p className="text-xl font-black italic text-cyan-400 uppercase">{(selectedTemplate as any)?.type || 'Series'}</p>
+                  <p className="text-xl font-black italic text-cyan-400 uppercase">{(selectedTemplate as SafeAny)?.type || 'Series'}</p>
                 </div>
               </div>
               <Button onClick={() => handleEditTemplate(selectedTemplate!)} className="bg-white text-black font-black italic rounded-2xl h-14 px-10 hover:bg-cyan-500 transition-colors uppercase">Enter Editor</Button>

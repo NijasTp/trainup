@@ -24,7 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
 export default function AdminTransactions() {
-    const [transactions, setTransactions] = useState<any[]>([]);
+    const [transactions, setTransactions] = useState<SafeAny[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const limit = 10;
@@ -39,7 +39,7 @@ export default function AdminTransactions() {
             const data = await getAdminTransactions(page, limit, search, status, sort);
             setTransactions(data.transactions);
             setTotalPages(data.totalPages);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch transactions", error);
         } finally {
             setLoading(false);
@@ -63,7 +63,7 @@ export default function AdminTransactions() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to download report", error);
         }
     };

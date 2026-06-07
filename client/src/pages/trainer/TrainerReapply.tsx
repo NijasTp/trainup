@@ -57,7 +57,7 @@ const TrainerReapply: React.FC = () => {
             pro: trainer.price?.pro || '',
           },
         }));
-      } catch (error: any) {
+      } catch (errorVal) { const error = errorVal as SafeAny;
         toast.error(error.response?.data?.error || error.message || 'Failed to fetch trainer details');
         console.error('Error fetching trainer details:', error);
       } finally {
@@ -119,7 +119,7 @@ const TrainerReapply: React.FC = () => {
       await reapplyTrainer(data);
       toast.success("Application resubmitted successfully");
       navigate("/trainer/waitlist");
-    } catch (error: any) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       toast.error(
         error.response?.data?.error || error.message || "Failed to submit application"
       );

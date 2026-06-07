@@ -34,7 +34,7 @@ export default function NewPasswordPage() {
         toast.error("Passwords don't match")
         return
       }
-      let isValid = passwordValidation(password)
+      const isValid = passwordValidation(password)
       if (!isValid) {
         toast.error('Password should have at least 8 chars, one uppercase, one lowercase, one number, one special char.')
         return
@@ -43,7 +43,7 @@ export default function NewPasswordPage() {
       await resetPassword(state.email, password)
       toast.success("Password reset successful")
       navigate('/login')
-    } catch (error: any) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       toast.error(error.response?.data?.error || 'Error updating password')
     } finally {
       setIsLoading(false)

@@ -115,9 +115,9 @@ const handleForcedLogout = (force: boolean = false) => {
 };
 
 let isRefreshing = false;
-let failedQueue: any[] = [];
+let failedQueue: SafeAny[] = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: SafeAny, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -128,7 +128,7 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-const handleTokenRefresh = async (originalRequest: any) => {
+const handleTokenRefresh = async (originalRequest: SafeAny) => {
   if (isRefreshing) {
     return new Promise((resolve, reject) => {
       failedQueue.push({ resolve, reject });
@@ -146,7 +146,7 @@ const handleTokenRefresh = async (originalRequest: any) => {
 
   const state = store.getState();
   let refreshUrl: string | null = null;
-  let logoutAction: any = null;
+  let logoutAction: SafeAny = null;
   let loginPath: string = ROUTES.USER_LOGIN;
 
   if (state.userAuth.user) {
@@ -173,7 +173,7 @@ const handleTokenRefresh = async (originalRequest: any) => {
       processQueue(null);
       isRefreshing = false;
       return api(originalRequest);
-    } catch (refreshError) {
+    } catch (refreshErrorVal) { const refreshError = refreshErrorVal as SafeAny;
       processQueue(refreshError);
       isRefreshing = false;
       if (logoutAction) store.dispatch(logoutAction());

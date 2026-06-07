@@ -26,36 +26,36 @@ export default function ProfileCompletionModal({ open, onOpenChange }: ProfileCo
   const [missingFields, setMissingFields] = useState<string[]>([]);
 
   useEffect(() => {
+    const calculateCompletion = () => {
+      if (!user) return;
+
+      const fields = [
+        { key: 'name', label: 'Full Name', value: user.name },
+        { key: 'phone', label: 'Phone Number', value: user.phone },
+        { key: 'age', label: 'Age', value: user.age },
+        { key: 'gender', label: 'Gender', value: user.gender },
+        { key: 'height', label: 'Height', value: user.height },
+        { key: 'weight', label: 'Current Weight', value: user.weight },
+        { key: 'goals', label: 'Fitness Goals', value: (user.goals?.length ?? 0) > 0 },
+        { key: 'activityLevel', label: 'Activity Level', value: user.activityLevel },
+      ];
+
+      const completedFields = fields.filter(field => field.value && field.value !== "").length;
+      const totalFields = fields.length;
+      const percentage = Math.round((completedFields / totalFields) * 100);
+      
+      const missing = fields
+        .filter(field => !field.value || field.value === "")
+        .map(field => field.label);
+
+      setCompletionPercentage(percentage);
+      setMissingFields(missing);
+    };
+
     if (user) {
       calculateCompletion();
     }
   }, [user]);
-
-  const calculateCompletion = () => {
-    if (!user) return;
-
-    const fields = [
-      { key: 'name', label: 'Full Name', value: user.name },
-      { key: 'phone', label: 'Phone Number', value: user.phone },
-      { key: 'age', label: 'Age', value: user.age },
-      { key: 'gender', label: 'Gender', value: user.gender },
-      { key: 'height', label: 'Height', value: user.height },
-      { key: 'weight', label: 'Current Weight', value: user.weight },
-      { key: 'goals', label: 'Fitness Goals', value: user.goals?.length! > 0 },
-      { key: 'activityLevel', label: 'Activity Level', value: user.activityLevel },
-    ];
-
-    const completedFields = fields.filter(field => field.value && field.value !== "").length;
-    const totalFields = fields.length;
-    const percentage = Math.round((completedFields / totalFields) * 100);
-    
-    const missing = fields
-      .filter(field => !field.value || field.value === "")
-      .map(field => field.label);
-
-    setCompletionPercentage(percentage);
-    setMissingFields(missing);
-  };
 
   const handleCompleteProfile = () => {
     onOpenChange(false);

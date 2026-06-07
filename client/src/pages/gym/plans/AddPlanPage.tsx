@@ -57,7 +57,7 @@ const AddPlanPage = () => {
                 description: plan.description || '',
                 features: plan.features || []
             });
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to load plan details');
             navigate(ROUTES.GYM_PLANS);
         } finally {
@@ -94,7 +94,7 @@ const AddPlanPage = () => {
                 toast.success('New plan launched successfully');
             }
             navigate(ROUTES.GYM_PLANS);
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.message || 'Failed to save plan');
         } finally {
             setSubmitting(false);
@@ -185,7 +185,7 @@ const AddPlanPage = () => {
                                     </div>
                                     <select
                                         value={formData.durationUnit}
-                                        onChange={(e) => setFormData({ ...formData, durationUnit: e.target.value as any })}
+                                        onChange={(e) => setFormData({ ...formData, durationUnit: e.target.value as SafeAny })}
                                         className="h-14 px-4 bg-white/5 border border-white/10 rounded-2xl text-white font-black uppercase text-[10px] tracking-widest outline-none focus:border-primary/50 appearance-none cursor-pointer hover:bg-white/10 transition-colors"
                                     >
                                         <option value="day">Days</option>

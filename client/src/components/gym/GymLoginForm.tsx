@@ -27,7 +27,7 @@ export default function GymLoginForm() {
             dispatch(loginGym(res.gym))
             toast.success("Gym portal logged in")
             navigate(ROUTES.GYM_DASHBOARD)
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.error || "Login failed")
             console.log('Error:', error)
         } finally {

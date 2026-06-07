@@ -53,7 +53,7 @@ const IndividualTrainer = () => {
         try {
           const res = await getTrainerById(trainerId);
           setTrainer(res);
-        } catch (err) {
+        } catch (errVal) { const err = errVal as SafeAny;
           console.error("Error fetching trainer:", err);
           setError("Failed to load specialist intelligence.");
         } finally {
@@ -71,7 +71,7 @@ const IndividualTrainer = () => {
       await toggleTrainerBan(trainer._id, !trainer.isBanned);
       setTrainer({ ...trainer, isBanned: !trainer.isBanned });
       toast.success(`Specialist status updated: ${!trainer.isBanned ? 'Restricted' : 'Active'}`);
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Error updating trainer ban status:", err);
       toast.error("Failed to update security protocols.");
     } finally {
@@ -85,7 +85,7 @@ const IndividualTrainer = () => {
       const res = await getTrainerApplication(trainer._id);
       const application = res
       navigate(`/admin/trainers/${trainerId}/application`, { state: { application } });
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.log("Error fetching trainer application:", error);
       toast.error("Could not retrieve application records.");
     }
@@ -98,7 +98,7 @@ const IndividualTrainer = () => {
       await verifyTrainer(trainer._id);
       setTrainer({ ...trainer, profileStatus: 'approved' });
       toast.success("Specialist credentials authenticated successfully.");
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Error verifying trainer:", err);
       toast.error("Authentication protocol failed.");
     } finally {

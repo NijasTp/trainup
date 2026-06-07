@@ -31,7 +31,7 @@ import type { Notification, NotificationsResponse } from "@/interfaces/trainer/I
 const PAGE_SIZE = 10;
 
 export default function TrainerNotifications() {
-    const trainer = useSelector((state: any) => state.trainerAuth.trainer);
+    const trainer = useSelector((state: SafeAny) => state.trainerAuth.trainer);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [page, setPage] = useState(1);

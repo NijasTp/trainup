@@ -18,7 +18,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 interface StreakCalendarProps {
-    sessions: any[]; // Workout sessions from API
+    sessions: SafeAny[]; // Workout sessions from API
 }
 
 export const StreakCalendar: React.FC<StreakCalendarProps> = ({ sessions }) => {

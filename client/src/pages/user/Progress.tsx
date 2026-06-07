@@ -31,10 +31,10 @@ const ProgressPage = () => {
         try {
             const data = await getProgress();
             if (data && data.progress && Array.isArray(data.progress)) {
-                const dates = data.progress.map((p: any) => new Date(p.date));
+                const dates = data.progress.map((p: SafeAny) => new Date(p.date));
                 setMarkedDates(dates);
             }
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch progress history:", error);
         }
     };
@@ -53,7 +53,7 @@ const ProgressPage = () => {
                 setExistingPhotos([]);
             }
             setNewPhotos([]);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch progress:", error);
             setNotes("");
             setExistingPhotos([]);
@@ -85,7 +85,7 @@ const ProgressPage = () => {
             await addProgress(formData);
             toast.success("Progress saved successfully!");
             fetchProgress(selectedDate);
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Save error:", error);
             toast.error(error.response?.data?.error || "Failed to save progress");
         } finally {

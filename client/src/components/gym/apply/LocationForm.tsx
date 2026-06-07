@@ -9,7 +9,7 @@ interface GeoLocation {
 interface LocationFormProps {
   formData: { geoLocation: GeoLocation };
   errors: { [key: string]: string };
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  setFormData: React.Dispatch<React.SetStateAction<SafeAny>>;
 }
 
 const LocationForm: React.FC<LocationFormProps> = ({
@@ -61,7 +61,7 @@ const LocationForm: React.FC<LocationFormProps> = ({
             coordinates: [longitude, latitude],
           };
 
-          setFormData((prev: any) => ({ ...prev, geoLocation }));
+          setFormData((prev: SafeAny) => ({ ...prev, geoLocation }));
           setLoading(false); 
           setShowPreview(true);
         } catch {

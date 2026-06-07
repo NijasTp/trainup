@@ -72,7 +72,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ image, onCropComplete, onCa
                 const croppedBlob = await getCroppedImg(image, croppedAreaPixels);
                 onCropComplete(croppedBlob);
             }
-        } catch (e) {
+        } catch (eVal) { const e = eVal as SafeAny;
             console.error(e);
         }
     };

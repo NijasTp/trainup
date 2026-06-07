@@ -34,7 +34,7 @@ export default function BundlePaymentSuccess() {
             if (response.data.status === 'complete' || response.data.status === 'paid') {
                 toast.success("Your sessions have been added!");
             }
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Verification error:", error);
         } finally {
             setIsVerifying(false);

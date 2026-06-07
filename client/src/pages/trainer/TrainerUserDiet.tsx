@@ -162,7 +162,7 @@ export default function TrainerUserDietPage() {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
     const itemsPerPage = 5;
-    const [userPlan, setUserPlan] = useState<any>(null);
+    const [userPlan, setUserPlan] = useState<SafeAny>(null);
     const isExpired = userPlan ? new Date(userPlan.expiryDate) < new Date() : false;
 
     useEffect(() => {
@@ -176,7 +176,7 @@ export default function TrainerUserDietPage() {
         try {
             const response = await API.get(`/trainer/user-plan/${clientId}`);
             setUserPlan(response.data.plan);
-        } catch (err) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to fetch user plan:", err);
         }
     }
@@ -191,7 +191,7 @@ export default function TrainerUserDietPage() {
             const day: IDietDay = response.data;
             console.log('rseponse', response);
             setMeals(day.meals?.filter((m) => m.source === "trainer") || []);
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             if (err.response?.status === 404) {
                 try {
                     await API.post(`/diet`, { date, userId: clientId }, { params: { userId: clientId } });
@@ -199,7 +199,7 @@ export default function TrainerUserDietPage() {
                         params: { userId: clientId },
                     });
                     setMeals(retryResponse.data.meals?.filter((m: Meal) => m.source === "trainer") || []);
-                } catch (createErr: any) {
+                } catch (createErrVal) { const createErr = createErrVal as SafeAny;
                     setError("Failed to create diet day");
                     toast.error("Failed to create diet day", { description: createErr.message });
                 }
@@ -232,7 +232,7 @@ export default function TrainerUserDietPage() {
             if (!data.foods.length) {
                 toast.error("No meals found. Try adding a meal manually below.");
             }
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             setError("Failed to fetch USDA food data");
             toast.error("Failed to fetch USDA food data", { description: err.message });
         } finally {
@@ -285,7 +285,7 @@ export default function TrainerUserDietPage() {
                 description: "",
             });
             toast.success("Meal added successfully");
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             toast.error("Failed to add meal", { description: err.message });
         } finally {
             setLoading(false);
@@ -305,7 +305,7 @@ export default function TrainerUserDietPage() {
             setMeals(meals.map((m) => (m._id === editMeal._id ? { ...editMeal } : m)));
             setEditMeal(null);
             toast.success("Meal updated successfully");
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             toast.error("Failed to update meal", { description: err.message });
         } finally {
             setLoading(false);
@@ -339,7 +339,7 @@ export default function TrainerUserDietPage() {
             setSelectedFood(null);
             setUsdaMealTime("12:00");
             toast.success("Meal added successfully");
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             toast.error("Failed to add meal", { description: err.message });
         } finally {
             setLoading(false);
@@ -358,7 +358,7 @@ export default function TrainerUserDietPage() {
             });
             setMeals(meals.filter((_, i) => i !== index));
             toast.success("Meal removed successfully");
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             toast.error("Failed to remove meal", { description: err.message });
         } finally {
             setLoading(false);
@@ -619,7 +619,7 @@ export default function TrainerUserDietPage() {
                             <div className="space-y-4">
                                 {selectedFood.foodAttributes?.find((attr) => attr.name === "Package Image")?.value && (
                                     <img
-                                        src={selectedFood.foodAttributes.find((attr: any) => attr.name === "Package Image")?.value}
+                                        src={selectedFood.foodAttributes.find((attr: SafeAny) => attr.name === "Package Image")?.value}
                                         alt={selectedFood.description}
                                         className="w-full h-32 object-cover rounded-md"
                                     />

@@ -1,0 +1,36 @@
+name: Deploy Trainup Backend
+
+on:
+  push:
+    branches:
+      - main # Change this if your default branch is 'master'
+    paths:
+      - 'server/**' # This tells GitHub to ONLY run this if backend files change
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # 1. Navigate to your project folder on the AWS server
+            # UPDATE 'trainup' TO MATCH YOUR ACTUAL FOLDER NAME ON THE SERVER
+            cd ~/trainup
+            
+            # 2. Pull the newest code from GitHub
+            git pull origin main
+            
+            # 3. Go into your backend directory
+            cd server
+            
+            # 4. Install any new packages
+            npm install
+            
+            # 5. Restart the server (assuming you use PM2)
+            pm2 restart all

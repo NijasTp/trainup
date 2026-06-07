@@ -1,7 +1,7 @@
 
 import { Users } from 'lucide-react';
 
-const GymDetailsForm = ({ formData, handleInputChange }:any) => {
+const GymDetailsForm = ({ formData, handleInputChange }: SafeAny) => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold text-white flex items-center gap-2">

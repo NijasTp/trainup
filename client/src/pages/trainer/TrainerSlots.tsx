@@ -48,7 +48,7 @@ export default function TrainerSlots() {
             const response = await API.get("/trainer/slots");
             setSlots(response.data.slots);
             setIsLoading(false);
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to fetch slots:", err);
             setError("Failed to load slots");
             toast.error("Failed to load slots");
@@ -77,7 +77,7 @@ export default function TrainerSlots() {
             setShowCreateModal(false);
             setNewSlot({ date: '', startTime: '', endTime: '' });
             fetchSlots();
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to create slot:", err);
             toast.error(err.response?.data?.message || "Failed to create slot");
         } finally {
@@ -90,7 +90,7 @@ export default function TrainerSlots() {
             await API.delete(`/trainer/slots/${slotId}`);
             toast.success("Slot deleted successfully!");
             fetchSlots();
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to delete slot:", err);
             toast.error("Failed to delete slot");
         }
@@ -103,7 +103,7 @@ export default function TrainerSlots() {
             const roomId = response.data.videoCall.roomId;
             console.log('Navigating to roomId:', roomId);
             navigate(`/trainer/video-call/${roomId}`);
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error('Error joining video call:', error);
             toast.error(error.response?.data?.message || 'Failed to join video call');
         }

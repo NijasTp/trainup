@@ -30,7 +30,7 @@ const TrainerApplication = () => {
   const { trainerId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [application, setApplication] = useState<any>(location.state?.application || null);
+  const [application, setApplication] = useState<SafeAny>(location.state?.application || null);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(!location.state?.application);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -43,7 +43,7 @@ const TrainerApplication = () => {
         try {
           const data = await getTrainerApplication(trainerId);
           setApplication(data);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
           console.error("Error fetching trainer application:", error);
         } finally {
           setFetching(false);
@@ -58,7 +58,7 @@ const TrainerApplication = () => {
     try {
       await verifyTrainer(trainerId!);
       navigate('/admin/trainers');
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Error verifying trainer:", err);
     } finally {
       setLoading(false);
@@ -73,7 +73,7 @@ const TrainerApplication = () => {
     try {
       await rejectTrainer(trainerId!, rejectReason);
       navigate('/admin/trainers');
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Error rejecting trainer:", err);
     } finally {
       setLoading(false);

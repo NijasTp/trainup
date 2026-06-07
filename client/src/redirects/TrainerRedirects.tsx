@@ -54,7 +54,7 @@ export const TrainerProtectedRoute: React.FC<{ children: JSX.Element }> = ({ chi
     try {
       const res = await api.get("/trainer/get-details");
       dispatch(loginTrainer(res.data));
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Failed to fetch trainer profile", err);
     }
   };

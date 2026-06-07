@@ -64,7 +64,7 @@ export const BundlePurchaseModal: React.FC<BundlePurchaseModalProps> = ({
       } else {
         throw new Error("Stripe session URL not found");
       }
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Purchase error:", err);
       toast.error(err.response?.data?.message || "Payment initialization failed");
     } finally {

@@ -44,10 +44,10 @@ export default function UserSessions() {
     const [selectedDate, setSelectedDate] = useState<string>("");
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
-    const [selectedFeedback, setSelectedFeedback] = useState<any>(null);
-    const [userPlan, setUserPlan] = useState<any | null>(null);
+    const [selectedFeedback, setSelectedFeedback] = useState<SafeAny>(null);
+    const [userPlan, setUserPlan] = useState<SafeAny | null>(null);
     const [isBundleModalOpen, setIsBundleModalOpen] = useState(false);
-    const [activeTrainer, setActiveTrainer] = useState<{ id: string; name: string; bundles: any[] } | null>(null);
+    const [activeTrainer, setActiveTrainer] = useState<{ id: string; name: string; bundles: SafeAny[] } | null>(null);
     const limit = 8;
     
     const user = useSelector((state: RootState) => state.userAuth.user);
@@ -72,7 +72,7 @@ export default function UserSessions() {
             });
             setSessions(response.data.sessions || []);
             setTotal(response.data.total || 0);
-        } catch (err: any) {
+        } catch (_err) {
             // Error handled by UI toast
             toast.error("Could not load sessions. Check your connection.");
         } finally {
@@ -84,7 +84,7 @@ export default function UserSessions() {
         try {
             const response = await API.get("/user/plan");
             setUserPlan(response.data.plan);
-        } catch (err) {
+        } catch (_err) {
             // Error handled silently
         }
     };
@@ -96,7 +96,7 @@ export default function UserSessions() {
     const canJoinSession = (session: Session) => {
         if (!currentUserId) return false;
         const userRequest = session.requestedBy.find(req => 
-            (typeof req.userId === 'string' ? req.userId : (req.userId as any)._id) === currentUserId
+            (typeof req.userId === 'string' ? req.userId : (req.userId as SafeAny)._id) === currentUserId
         );
         if (!userRequest || userRequest.status !== 'approved' || !session.isBooked) return false;
 
@@ -118,7 +118,7 @@ export default function UserSessions() {
             const response = await API.get(`/video-call/slot/${slotId}`);
             const roomId = response.data.videoCall.roomId;
             navigate(`/video-call/${roomId}`);
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.message || 'Connection failed. Please try again.');
         }
     };
@@ -128,7 +128,7 @@ export default function UserSessions() {
             await API.post("/user/cancel-session-booking", { slotId });
             toast.success("Booking cancelled successfully");
             fetchSessions();
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.message || "Failed to cancel booking");
         }
     };
@@ -256,7 +256,7 @@ export default function UserSessions() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <AnimatePresence mode="popLayout">
                             {sessions.map((session, index) => {
-                                const userReq = session.requestedBy.find(req => (typeof req.userId === 'string' ? req.userId : (req.userId as any)._id) === currentUserId);
+                                const userReq = session.requestedBy.find(req => (typeof req.userId === 'string' ? req.userId : (req.userId as SafeAny)._id) === currentUserId);
                                 const status = userReq?.status || 'pending';
                                 const statusInfo = getStatusInfo(status);
                                 const StatusIcon = statusInfo.icon;

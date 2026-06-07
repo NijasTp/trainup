@@ -8,5 +8,5 @@ export interface IExerciseDb {
     equipments: string[];
     instructions: string[];
     description: string;
-    exerciseData?: any;
+    exerciseData?: SafeAny;
 }

@@ -47,7 +47,7 @@ export default function UserGymEquipment() {
       // Extract unique categories
       const cats = Array.from(new Set(items.map((e: IGymEquipment) => e.categoryName || "Uncategorized"))) as string[];
       setCategories(cats);
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error("Fetch equipment error:", error);
     } finally {
       setIsLoading(false);

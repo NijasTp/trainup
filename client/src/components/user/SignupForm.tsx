@@ -39,7 +39,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       const response = await API.post("/user/check-username", { username });
       setIsUsernameTaken(response.data.isAvailable);
       console.log(response.data);
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Username check failed:", err);
     }
   }, 500);
@@ -47,6 +47,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
   useEffect(() => {
     checkUsername(name);
     return () => checkUsername.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name]);
 
   async function handleSignup(e: React.FormEvent) {
@@ -94,7 +95,8 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       navigate("/verify-otp", {
         state: { name, email, password },
       });
-    } catch (err: any) {
+    } catch (_err) {
+      // ignore
     }
   }
 
@@ -103,7 +105,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     navigate("/complete-profile");
   };
 
-  const handleGoogleError = (error: any) => {
+  const handleGoogleError = (error: SafeAny) => {
     console.error("Google login error:", error);
     alert("Google login failed. Please try again.");
   };

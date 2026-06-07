@@ -67,7 +67,7 @@ export default function TrainerDashboard() {
       const response = await API.get("/trainer/dashboard");
       setStats(response.data);
       setIsLoading(false);
-    } catch (err: unknown) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Failed to fetch dashboard stats:", err);
       setError("Failed to load dashboard data");
       toast.error("Failed to load dashboard data");
@@ -438,7 +438,7 @@ export default function TrainerDashboard() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="space-y-4">
-                  {stats.recentActivity.map((activity: any, index: number) => {
+                  {stats.recentActivity.map((activity: SafeAny, index: number) => {
                     const isRefund = activity.isRefund;
                     const amount = activity.amount;
 

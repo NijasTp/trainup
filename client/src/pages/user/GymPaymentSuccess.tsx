@@ -35,7 +35,7 @@ export default function GymPaymentSuccess() {
                     dispatch(updateUser(profileRes.data.user));
                 }
             }
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Verification error:", error);
         } finally {
             setIsVerifying(false);

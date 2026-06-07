@@ -9,7 +9,7 @@ import { getIndividualTrainer } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import Aurora from "@/components/ui/Aurora";
-import type { Trainer } from "@/interfaces/user/iIndividualTrainer";
+import type { Trainer } from "@/interfaces/user/IIndividualTrainer";
 
 export default function TrainerPricingPage() {
     const { id } = useParams<{ id: string }>();
@@ -34,13 +34,13 @@ export default function TrainerPricingPage() {
             if (trainerData && typeof trainerData.price === "string") {
                 try {
                     trainerData.price = JSON.parse(trainerData.price);
-                } catch (e) {
+                } catch (eVal) { const e = eVal as SafeAny;
                     console.error("Failed to parse price:", e);
                 }
             }
 
             setTrainer(trainerData);
-        } catch (err) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to fetch trainer:", err);
             toast.error("Failed to load trainer details");
         } finally {
@@ -69,7 +69,7 @@ export default function TrainerPricingPage() {
             } else {
                 throw new Error("No checkout URL received");
             }
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to initiate payment:", err);
             const errorMessage = err.response?.data?.message || err.message || "Failed to initiate payment";
             toast.error(errorMessage);

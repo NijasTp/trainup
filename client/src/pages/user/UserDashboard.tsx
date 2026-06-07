@@ -44,7 +44,7 @@ interface BentoTileProps {
   children: React.ReactNode;
   className?: string;
   title?: string;
-  icon: any;
+  icon: SafeAny;
   delay?: number;
 }
 
@@ -181,7 +181,7 @@ const UserDashboard: React.FC = () => {
         dailyMetrics: profile.dailyMetrics
       }));
 
-    } catch (err: unknown) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Dashboard error:", err);
       toast.error("Failed to sync some dashboard data.");
     } finally {
@@ -213,7 +213,7 @@ const UserDashboard: React.FC = () => {
     try {
       await updateDailyMetrics({ water: newVal });
       toast.success("Hydration updated");
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to update hydration");
     }
   };
@@ -223,7 +223,7 @@ const UserDashboard: React.FC = () => {
     try {
       await updateDailyMetrics({ sleep: newVal });
       toast.success("Recovery updated");
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to update recovery");
     }
   };
@@ -232,7 +232,7 @@ const UserDashboard: React.FC = () => {
     setSteps(newVal);
     try {
       await updateDailyMetrics({ steps: newVal });
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to sync steps");
     }
   };
@@ -241,7 +241,7 @@ const UserDashboard: React.FC = () => {
     setMindfulnessMinutes(newVal);
     try {
       await updateDailyMetrics({ mindfulness: newVal });
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to sync mindfulness");
     }
   };

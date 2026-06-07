@@ -46,7 +46,7 @@ export default function ProfileCompletion() {
     const [isSaving, setIsSaving] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const user = useSelector((state: any) => state.userAuth.user);
+    const user = useSelector((state: SafeAny) => state.userAuth.user);
 
     useEffect(() => {
         if (!user) {
@@ -54,7 +54,7 @@ export default function ProfileCompletion() {
         }
     }, [user, navigate]);
 
-    const handleInputChange = (field: string, value: any) => {
+    const handleInputChange = (field: string, value: SafeAny) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
@@ -102,7 +102,7 @@ export default function ProfileCompletion() {
 
             toast.success("Profile completed! Now choose your workout plan.");
             navigate("/workout-templates");
-        } catch (err: any) {
+        } catch (_err) {
             toast.error("Failed to save profile. Please try again.");
         } finally {
             setIsSaving(false);

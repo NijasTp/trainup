@@ -192,7 +192,7 @@ function ExerciseSearchModal({
         data: ex,
       }));
       setSuggestions(mapped);
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       setError(err.message || "Error fetching exercise suggestions");
       toast.error("Failed to load suggestions", { description: err.message });
     } finally {
@@ -243,7 +243,7 @@ function ExerciseSearchModal({
         setSelectedExercise(null);
         setShowConfig(false);
         setSearchQuery("pushup");
-      } catch (err: any) {
+      } catch (_err) {
         toast.error("Failed to add exercise");
       }
     }
@@ -489,7 +489,7 @@ export default function TrainerAddWorkoutPage() {
   const [dailyWorkouts, setDailyWorkouts] = useState<WorkoutDay[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userPlan, setUserPlan] = useState<any>(null);
+  const [userPlan, setUserPlan] = useState<SafeAny>(null);
   const isExpired = userPlan ? new Date(userPlan.expiryDate) < new Date() : false;
 
   useEffect(() => {
@@ -507,7 +507,7 @@ export default function TrainerAddWorkoutPage() {
     try {
       const response = await API.get(`/trainer/user-plan/${clientId}`);
       setUserPlan(response.data.plan);
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Failed to fetch user plan:", err);
     }
   }
@@ -523,7 +523,7 @@ export default function TrainerAddWorkoutPage() {
         ? [response.data]
         : [{ _id: "", userId: clientId!, date: selectedDate!, sessions: [] }];
       setDailyWorkouts(workoutDay);
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       setError("Failed to fetch workouts");
       toast.error("Failed to load workouts", { description: err.message });
       setDailyWorkouts([]);

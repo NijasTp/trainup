@@ -28,7 +28,7 @@ export default function PaymentSuccessPage() {
             if (response.data.status === 'complete' || response.data.status === 'paid') {
                 toast.success("Payment verified successfully!");
             }
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Verification error:", error);
             // Don't show error to user as webhook might still be processing
         } finally {

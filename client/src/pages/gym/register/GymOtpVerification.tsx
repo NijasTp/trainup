@@ -43,7 +43,7 @@ const GymOtpVerification = () => {
             toast.success("OTP sent to your email");
             setStep(2);
             setResendTimer(60);
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.error || "Failed to send OTP");
         } finally {
             setLoading(false);
@@ -65,7 +65,7 @@ const GymOtpVerification = () => {
             // Store verified email in session storage to use in Register page
             sessionStorage.setItem('verifiedGymEmail', normalizedEmail);
             navigate(ROUTES.GYM_ONBOARDING);
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.message || "Invalid OTP");
         } finally {
             setLoading(false);
@@ -78,7 +78,7 @@ const GymOtpVerification = () => {
             await requestGymAuthOtp(email.trim().toLowerCase());
             toast.success("OTP resent successfully");
             setResendTimer(60);
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.message || "Failed to resend OTP");
         } finally {
             setLoading(false);

@@ -27,8 +27,8 @@ import type { IActivityData } from "@/interfaces/user/IUserDashboard";
 import API from "@/lib/axios";
 
 export default function UserGymDashboard() {
-    const [gymData, setGymData] = useState<any>(null);
-    const [announcements, setAnnouncements] = useState<any[]>([]);
+    const [gymData, setGymData] = useState<SafeAny>(null);
+    const [announcements, setAnnouncements] = useState<SafeAny[]>([]);
     const [activityData, setActivityData] = useState<IActivityData>({});
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
@@ -44,7 +44,7 @@ export default function UserGymDashboard() {
             setGymData(myGym);
             setAnnouncements(announces.announcements || []);
             setActivityData(activityRes.data.activityData);
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Dashboard error:", error);
             if (error.response?.status === 404) {
                 toast.error("No active gym membership found.");
@@ -69,7 +69,7 @@ export default function UserGymDashboard() {
             await cancelGymMembership(gymData.userSubscription._id);
             toast.success("Membership cancelled successfully");
             navigate(ROUTES.USER_GYMS);
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to cancel membership");
         }
     };

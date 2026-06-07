@@ -37,11 +37,10 @@ app.use(cookieParser());
 
 app.use(express.json());
 
-
 const httpServer = new HttpServer(app);
 const io = new SocketServer(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://trainup.nijas.site",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -73,6 +72,6 @@ app.use(BASE_ROUTE.SUBSCRIPTION, subscriptionRoutes);
 
 
 app.use(errorHandler);
-
+console.log('checking the working of CI/CD')
 export { httpServer, io };
 export default app;

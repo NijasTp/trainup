@@ -145,7 +145,7 @@ function App() {
       if (res.data.user) {
         dispatch(updateUser(res.data.user));
       }
-    } catch (e) {
+    } catch (eVal) { const e = eVal as SafeAny;
       console.error("Auto-refresh profile failed", e);
     }
   }, [dispatch]);

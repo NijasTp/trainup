@@ -16,7 +16,7 @@ export default function GymPaymentCancel() {
             try {
                 await API.post("/payment/cleanup-pending-gym");
                 toast.error("Payment was cancelled.");
-            } catch (error) {
+            } catch (errorVal) { const error = errorVal as SafeAny;
                 console.error("Cleanup error:", error);
             }
         };

@@ -15,10 +15,10 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
 
   const [revenueFilter, setRevenueFilter] = useState<'day' | 'week' | 'month' | 'year'>('month')
-  const [revenueData, setRevenueData] = useState<any[]>([])
+  const [revenueData, setRevenueData] = useState<SafeAny[]>([])
 
   const [userFilter, setUserFilter] = useState<'day' | 'week' | 'month' | 'year'>('day')
-  const [userData, setUserData] = useState<any[]>([])
+  const [userData, setUserData] = useState<SafeAny[]>([])
 
   const [trainers, setTrainers] = useState<ITrainer[]>([])
   const [selectedTrainer, setSelectedTrainer] = useState<ITrainer | null>(null)
@@ -36,7 +36,7 @@ const AdminDashboard = () => {
         if (trainerList.length > 0) {
           setSelectedTrainer(trainerList[0])
         }
-      } catch (error: unknown) {
+      } catch (errorVal) { const error = errorVal as SafeAny;
         console.error("Failed to fetch dashboard data", error)
       } finally {
         setLoading(false)
@@ -51,7 +51,7 @@ const AdminDashboard = () => {
         try {
           const data = await getTrainerReviews(selectedTrainer._id)
           setTrainerReviews(data.reviews || [])
-        } catch (error: unknown) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
           console.error("Failed to fetch reviews", error)
         }
       }
@@ -64,7 +64,7 @@ const AdminDashboard = () => {
       try {
         const data = await getDashboardGraphData(revenueFilter, 'revenue')
         setRevenueData(data.map((d: IGraphData) => ({ date: d.name, amount: d.value })))
-      } catch (error: unknown) {
+      } catch (errorVal) { const error = errorVal as SafeAny;
         console.error("Failed to fetch revenue data", error)
       }
     }
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
       try {
         const data = await getDashboardGraphData(userFilter, 'users')
         setUserData(data.map((d: IGraphData) => ({ date: d.name, count: d.value })))
-      } catch (error: unknown) {
+      } catch (errorVal) { const error = errorVal as SafeAny;
         console.error("Failed to fetch user data", error)
       }
     }

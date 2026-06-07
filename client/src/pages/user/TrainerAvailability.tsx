@@ -39,9 +39,9 @@ export default function TrainerAvailability() {
     const [isLoading, setIsLoading] = useState(true);
     const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-    const [userPlan, setUserPlan] = useState<any | null>(null);
+    const [userPlan, setUserPlan] = useState<SafeAny | null>(null);
     const [isBundleModalOpen, setIsBundleModalOpen] = useState(false);
-    const [activeTrainer, setActiveTrainer] = useState<{ id: string; name: string; bundles: any[] } | null>(null);
+    const [activeTrainer, setActiveTrainer] = useState<{ id: string; name: string; bundles: SafeAny[] } | null>(null);
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -62,7 +62,7 @@ export default function TrainerAvailability() {
         try {
             const response = await API.get("/user/trainer-availability");
             setSlots(response.data.slots);
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to fetch availability:", err);
             toast.error("Failed to load availability");
         } finally {
@@ -74,7 +74,7 @@ export default function TrainerAvailability() {
         try {
             const response = await API.get("/user/plan");
             setUserPlan(response.data.plan);
-        } catch (err) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to fetch user plan:", err);
         }
     };
@@ -85,7 +85,7 @@ export default function TrainerAvailability() {
             await API.post("/user/book-session", { slotId });
             toast.success("Session request sent successfully!");
             fetchAvailability();
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to book slot:", err);
             toast.error(err.response?.data?.error || "Failed to book session");
         } finally {

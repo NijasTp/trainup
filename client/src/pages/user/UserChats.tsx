@@ -24,7 +24,7 @@ export default function UserChats() {
         try {
             const response = await API.get("/user/chats");
             setConversations(response.data.conversations);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch conversations:", error);
         } finally {
             setIsLoading(false);

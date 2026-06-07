@@ -47,7 +47,7 @@ export default function LiquidEther({
   autoRampDuration = 0.6
 }: LiquidEtherProps): React.ReactElement {
   const mountRef = useRef<HTMLDivElement | null>(null);
-  const webglRef = useRef<any>(null);
+  const webglRef = useRef<SafeAny>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const rafRef = useRef<number | null>(null);
   const intersectionObserverRef = useRef<IntersectionObserver | null>(null);

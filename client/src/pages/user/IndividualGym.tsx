@@ -26,8 +26,8 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function IndividualGym() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [gym, setGym] = useState<any>(null);
-    const [plans, setPlans] = useState<any[]>([]);
+    const [gym, setGym] = useState<SafeAny>(null);
+    const [plans, setPlans] = useState<SafeAny[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState(0);
 
@@ -36,7 +36,7 @@ export default function IndividualGym() {
             const response = await getGymForUser(id!);
             setGym(response.gym);
             document.title = `${response.gym.name} | TrainUp`;
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to load gym details");
             navigate("/gyms");
         } finally {
@@ -48,7 +48,7 @@ export default function IndividualGym() {
         try {
             const response = await getActiveSubscriptionPlans(id!);
             setPlans(response.plans || []);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch plans", error);
         }
     }, [id]);
@@ -190,7 +190,7 @@ export default function IndividualGym() {
                                     {Array.isArray(gym.openingHours) && gym.openingHours.length > 0
                                         ? (() => {
                                             const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-                                            const todayHours = gym.openingHours.find((h: any) => h.day.toLowerCase() === today) || gym.openingHours[0];
+                                            const todayHours = gym.openingHours.find((h: SafeAny) => h.day.toLowerCase() === today) || gym.openingHours[0];
                                             return todayHours.isClosed ? "Closed Today" : `${todayHours.open} - ${todayHours.close}`;
                                         })()
                                         : (gym.openingHours || "06:00 AM - 10:00 PM")}

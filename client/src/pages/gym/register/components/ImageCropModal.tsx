@@ -16,12 +16,12 @@ interface ImageCropModalProps {
 const ImageCropModal = ({ isOpen, onClose, image, onCropComplete, aspectRatio = 1, title = "Crop Image" }: ImageCropModalProps) => {
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<SafeAny>(null);
 
     const onCropChange = (crop: { x: number, y: number }) => setCrop(crop);
     const onZoomChange = (zoom: number) => setZoom(zoom);
 
-    const onCropCompleteCallback = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
+    const onCropCompleteCallback = useCallback((_croppedArea: SafeAny, croppedAreaPixels: SafeAny) => {
         setCroppedAreaPixels(croppedAreaPixels);
     }, []);
 
@@ -34,7 +34,7 @@ const ImageCropModal = ({ isOpen, onClose, image, onCropComplete, aspectRatio = 
             image.src = url;
         });
 
-    const getCroppedImg = async (imageSrc: string, pixelCrop: any): Promise<Blob> => {
+    const getCroppedImg = async (imageSrc: string, pixelCrop: SafeAny): Promise<Blob> => {
         const image = await createImage(imageSrc);
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -72,7 +72,7 @@ const ImageCropModal = ({ isOpen, onClose, image, onCropComplete, aspectRatio = 
             const croppedImage = await getCroppedImg(image, croppedAreaPixels);
             onCropComplete(croppedImage);
             onClose();
-        } catch (e) {
+        } catch (eVal) { const e = eVal as SafeAny;
             console.error(e);
         }
     };

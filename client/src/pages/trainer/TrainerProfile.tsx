@@ -40,7 +40,7 @@ export default function TrainerProfile() {
     try {
       const response = await API.get("/trainer/get-details");
       setProfile(response.data.trainer);
-    } catch (err: any) {
+    } catch (_err) {
       toast.error("Failed to load profile");
     } finally {
       setIsLoading(false);
@@ -51,7 +51,7 @@ export default function TrainerProfile() {
     try {
       const response = await API.get("/trainer/transactions", { params: { limit: 10 } });
       setTransactions(response.data);
-    } catch (err: any) {
+    } catch (_err) {
       toast.error("Failed to load records");
     }
   }, []);
@@ -341,7 +341,7 @@ export default function TrainerProfile() {
                           Archive Empty / No Recorded Subscriptions
                         </div>
                       ) : (
-                        transactions.transactions.map((tx: any, idx) => (
+                        transactions.transactions.map((tx: SafeAny, idx) => (
                           <div key={idx} className="p-8 hover:bg-white/[0.02] transition-colors flex items-center justify-between group">
                             <div className="flex items-center gap-6">
                               <Avatar className="h-14 w-14 border border-white/10 group-hover:border-cyan-500/50 transition-all">

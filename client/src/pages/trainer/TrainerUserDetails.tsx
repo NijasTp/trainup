@@ -104,7 +104,7 @@ export default function TrainerUserDetails() {
             const response = await API.get(`/trainer/client/${id}/sessions?page=${sessionPage}&limit=${sessionLimit}`);
             setSessions(response.data.sessions);
             setSessionTotal(response.data.total);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch sessions:", error);
         } finally {
             setIsSessionsLoading(false);

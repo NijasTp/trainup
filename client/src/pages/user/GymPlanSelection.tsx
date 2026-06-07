@@ -30,8 +30,8 @@ export default function GymPlanSelection() {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const [gym, setGym] = useState<any>(null);
-    const [plans, setPlans] = useState<any[]>([]);
+    const [gym, setGym] = useState<SafeAny>(null);
+    const [plans, setPlans] = useState<SafeAny[]>([]);
     const [selectedPlanId, setSelectedPlanId] = useState<string>(location.state?.selectedPlanId || "");
     const [preferredTime, setPreferredTime] = useState<string>("");
     const [isLoading, setIsLoading] = useState(true);
@@ -54,7 +54,7 @@ export default function GymPlanSelection() {
             if (!selectedPlanId && plansRes.plans?.length > 0) {
                 setSelectedPlanId(plansRes.plans[0]._id);
             }
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to load details");
             navigate("/gyms");
         } finally {
@@ -81,7 +81,7 @@ export default function GymPlanSelection() {
             } else {
                 throw new Error("No checkout URL received");
             }
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to initiate payment:", error);
             const errorMessage = error.response?.data?.message || error.message || "Something went wrong. Please try again.";
             toast.error(errorMessage);

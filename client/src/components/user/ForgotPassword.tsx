@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
       const response = await forgotPassword(email)
       toast.success(response)
       setShowOTP(true)
-    } catch (error: any) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       toast.error(error.response?.data?.error || 'Failed to send OTP')
     } finally {
       setIsLoading(false)
@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
       toast.success("Verification Successful")
       setShowOTP(false)
       navigate('/new-password', { state: { email } })
-    } catch (error: any) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       toast.error(error.response?.data?.error || "Invalid OTP. Please try again.")
     }
   }
@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
     try {
       const response = await forgotPassword(email)
       toast.success(response)
-    } catch (error: any) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       toast.error(error.response?.data?.error || 'Failed to resend OTP')
       throw error
     }

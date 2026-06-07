@@ -28,7 +28,7 @@ import { formatDistanceToNow } from "date-fns";
 
 export default function WorkoutTemplates() {
   const [templates, setTemplates] = useState<IWorkoutTemplate[]>([]);
-  const [recentHistory, setRecentHistory] = useState<any[]>([]);
+  const [recentHistory, setRecentHistory] = useState<SafeAny[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -55,7 +55,7 @@ export default function WorkoutTemplates() {
     try {
       const res = await fetchWorkoutHistory(1, 4);
       setRecentHistory(res.sessions || []);
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Failed to fetch history", err);
     }
   }, []);
@@ -300,7 +300,7 @@ export default function WorkoutTemplates() {
   );
 }
 
-function HistoryShowcaseCard({ session, index }: { session: any, index: number }) {
+function HistoryShowcaseCard({ session, index }: { session: SafeAny, index: number }) {
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}

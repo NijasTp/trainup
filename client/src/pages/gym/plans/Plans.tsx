@@ -22,7 +22,7 @@ import { ROUTES } from '@/constants/routes';
 
 const Plans = () => {
     const navigate = useNavigate();
-    const [plans, setPlans] = useState<any[]>([]);
+    const [plans, setPlans] = useState<SafeAny[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchPlans = async () => {
@@ -30,7 +30,7 @@ const Plans = () => {
             setLoading(true);
             const data = await listSubscriptionPlans({ limit: 100 });
             setPlans(data.items || []);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to load plans');
         } finally {
             setLoading(false);
@@ -41,7 +41,7 @@ const Plans = () => {
         fetchPlans();
     }, []);
 
-    const handleEdit = (plan: any) => {
+    const handleEdit = (plan: SafeAny) => {
         navigate(ROUTES.GYM_PLANS_EDIT.replace(':id', plan._id));
     };
 
@@ -51,18 +51,18 @@ const Plans = () => {
                 await deleteSubscriptionPlan(id);
                 toast.success('Plan deleted');
                 fetchPlans();
-            } catch (error) {
+            } catch (_error) {
                 toast.error('Failed to delete plan');
             }
         }
     };
 
-    const toggleStatus = async (plan: any) => {
+    const toggleStatus = async (plan: SafeAny) => {
         try {
             await updateSubscriptionPlan(plan._id, { isActive: !plan.isActive });
             setPlans(plans.map(p => p._id === plan._id ? { ...p, isActive: !p.isActive } : p));
             toast.success(`Plan ${!plan.isActive ? 'activated' : 'deactivated'}`);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to update status');
         }
     };

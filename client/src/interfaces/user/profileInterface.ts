@@ -22,7 +22,7 @@ export interface UserProfile {
     gender?: string;
     medicalConditions?: string;
     dietaryPreferences?: string;
-    activeSubscriptions?: any[];
+    activeSubscriptions?: SafeAny[];
     createdAt: string;
     updatedAt: string;
 }

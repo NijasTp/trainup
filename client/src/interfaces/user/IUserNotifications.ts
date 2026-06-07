@@ -7,7 +7,7 @@ export interface Notification {
     priority: "low" | "medium" | "high" | "urgent";
     category: "info" | "warning" | "success" | "error";
     createdAt: string;
-    data?: Record<string, any>;
+    data?: Record<string, SafeAny>;
 }
 
 export interface NotificationsResponse {

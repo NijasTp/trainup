@@ -38,8 +38,8 @@ import { cn } from "@/lib/utils";
 
 export default function AttendancePage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [gymAttendance, setGymAttendance] = useState<any[]>([]);
-  const [workoutSessions, setWorkoutSessions] = useState<any[]>([]);
+  const [gymAttendance, setGymAttendance] = useState<SafeAny[]>([]);
+  const [workoutSessions, setWorkoutSessions] = useState<SafeAny[]>([]);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,7 +70,7 @@ export default function AttendancePage() {
       setGymAttendance(history.attendance || []);
       setWorkoutSessions(sessions.workoutSessions || sessions.sessions || []);
       setJoinDate(gymData.userSubscription?.subscribedAt ? new Date(gymData.userSubscription.subscribedAt) : null);
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error("Fetch logs error:", error);
     } finally {
       setIsLoading(false);

@@ -360,7 +360,7 @@ const PrismaticBurst = ({
             const sm = mouseSmoothRef.current;
             sm[0] += (tgt[0] - sm[0]) * alpha;
             sm[1] += (tgt[1] - sm[1]) * alpha;
-            program.uniforms.uMouse.value = sm as any;
+            program.uniforms.uMouse.value = sm as SafeAny;
             program.uniforms.uTime.value = accumTime;
             renderer.render({ scene: meshRef.current! });
             raf = requestAnimationFrame(update);
@@ -376,7 +376,7 @@ const PrismaticBurst = ({
             document.removeEventListener('visibilitychange', onVis);
             try {
                 container.removeChild(gl.canvas);
-            } catch (e) {
+            } catch (eVal) { const e = eVal as SafeAny;
                 void e;
             }
             meshRef.current = null;
@@ -385,12 +385,13 @@ const PrismaticBurst = ({
             try {
                 const glCtx = rendererRef.current?.gl;
                 if (glCtx && gradTexRef.current?.texture) glCtx.deleteTexture(gradTexRef.current.texture);
-            } catch (e) {
+            } catch (eVal) { const e = eVal as SafeAny;
                 void e;
             }
             rendererRef.current = null;
             gradTexRef.current = null;
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {

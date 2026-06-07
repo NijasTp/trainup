@@ -27,7 +27,7 @@ export default function TrainerAssignWorkouts() {
   const [templates, setTemplates] = useState<Template[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState("")
-  const [client, setClient] = useState<any>(null)
+  const [client, setClient] = useState<SafeAny>(null)
   const [isAssigning, setIsAssigning] = useState<string | null>(null)
 
   const fetchTemplates = useCallback(async () => {
@@ -38,7 +38,7 @@ export default function TrainerAssignWorkouts() {
         params: { limit: 100 }
       })
       setTemplates(response.data.templates)
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to load templates")
     } finally {
       setIsLoading(false)
@@ -49,7 +49,7 @@ export default function TrainerAssignWorkouts() {
     try {
       const response = await API.get(`/trainer/get-client/${userId}`)
       setClient(response.data.user)
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to load client details")
     }
   }, [userId])
@@ -65,7 +65,7 @@ export default function TrainerAssignWorkouts() {
       await API.post("/template/workout/assign", { userId, templateId })
       toast.success("Workout blueprint assigned successfully!")
       navigate("/trainer/clients")
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.message || "Assignment failed")
     } finally {
       setIsAssigning(null)

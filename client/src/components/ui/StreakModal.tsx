@@ -12,7 +12,7 @@ interface StreakModalProps {
 }
 
 export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, streak }) => {
-    const [sessions, setSessions] = useState<any[]>([]);
+    const [sessions, setSessions] = useState<SafeAny[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -24,7 +24,7 @@ export const StreakModal: React.FC<StreakModalProps> = ({ isOpen, onClose, strea
                     // Fix: extract the sessions array from the response object
                     const sessionsArray = data.sessions || data.workouts || (Array.isArray(data) ? data : []);
                     setSessions(sessionsArray);
-                } catch (error) {
+                } catch (errorVal) { const error = errorVal as SafeAny;
                     console.error("Failed to fetch sessions for streak calendar", error);
                 } finally {
                     setLoading(false);

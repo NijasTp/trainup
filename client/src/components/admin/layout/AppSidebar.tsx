@@ -93,7 +93,7 @@ const AppSidebar: React.FC<{ isOpen: boolean; setIsOpen: (val: boolean) => void 
             dispatch(logoutAction());
             toast.success("Logged out successfully");
             navigate("/admin/login");
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Logout failed:", error);
             // Even if API fails, we should clear local state
             dispatch(logoutAction());

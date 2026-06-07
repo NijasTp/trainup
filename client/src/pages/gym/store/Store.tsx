@@ -26,9 +26,9 @@ import { toast } from 'react-hot-toast';
 
 const Store = () => {
     const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
-    const [products, setProducts] = useState<any[]>([]);
+    const [products, setProducts] = useState<SafeAny[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editingProduct, setEditingProduct] = useState<any | null>(null);
+    const [editingProduct, setEditingProduct] = useState<SafeAny | null>(null);
     const [category, setCategory] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
@@ -48,7 +48,7 @@ const Store = () => {
             const data = await getGymProducts(page, 10, searchTerm, category);
             setProducts(data.products);
             setTotalPages(data.totalPages);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to load products');
         } finally {
             setLoading(false);
@@ -75,7 +75,7 @@ const Store = () => {
         setPreviewUrls(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleEdit = (product: any) => {
+    const handleEdit = (product: SafeAny) => {
         setEditingProduct({ ...product, existingImages: product.images });
         setPreviewUrls([]);
         setImageFiles([]);
@@ -88,7 +88,7 @@ const Store = () => {
             await deleteGymProduct(id);
             toast.success('Product deleted');
             fetchProducts();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to delete product');
         }
     };
@@ -126,7 +126,7 @@ const Store = () => {
             setEditingProduct(null);
             setImageFiles([]);
             setPreviewUrls([]);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to save product');
         }
     };
@@ -338,7 +338,7 @@ const Store = () => {
                                         <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1 italic">Category</label>
                                         <select
                                             value={editingProduct?.category}
-                                            onChange={(e) => setEditingProduct({ ...editingProduct!, category: e.target.value as any })}
+                                            onChange={(e) => setEditingProduct({ ...editingProduct!, category: e.target.value as SafeAny })}
                                             className="w-full bg-[#0a0a0a] border border-white/10 h-12 rounded-xl px-4 outline-none focus:ring-1 focus:ring-primary/30 text-white text-sm font-bold uppercase tracking-tight"
                                         >
                                             <option value="supplements">Supplements</option>

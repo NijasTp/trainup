@@ -15,7 +15,7 @@ export interface Exercise {
     equipments?: string[];
     instructions?: string[];
     description?: string;
-    exerciseData?: any;
+    exerciseData?: SafeAny;
 }
 
 export interface WgerExercise {

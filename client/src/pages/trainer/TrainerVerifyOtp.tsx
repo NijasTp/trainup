@@ -36,6 +36,7 @@ const TrainerVerifyOtp: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('otp:',otp)
     setLoading(true)
     const otpCode = otp.join("");
     if (otpCode.length !== 6) {
@@ -73,7 +74,7 @@ const TrainerVerifyOtp: React.FC = () => {
       setLoading(false)
       toast.success("OTP verified successfully");
       navigate("/trainer/dashboard", { state: { formData, email } });
-    } catch (error: any) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       toast.error(error.response?.data?.error || "OTP verification failed");
       console.log('Application submission error:', {
         message: error.message,
@@ -101,7 +102,7 @@ const TrainerVerifyOtp: React.FC = () => {
       setOtp(["", "", "", "", "", ""]);
       setResendTimer(30);
       setIsResendDisabled(true);
-    } catch (error: any) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       toast.error(error.response?.data?.message || "Failed to resend OTP");
     }
   };

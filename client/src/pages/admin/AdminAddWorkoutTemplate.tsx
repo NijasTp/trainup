@@ -37,7 +37,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
         isPublic: true,
         days: [{ dayNumber: 1, exercises: [] }],
         targetBodyParts: []
-    } as any);
+    } as SafeAny);
 
     const [saving, setSaving] = useState(false);
     const [tempImage, setTempImage] = useState<string | null>(null);
@@ -46,11 +46,11 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
     // Search and Suggestions States
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedQuery] = useDebounce(searchQuery, 300);
-    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [suggestions, setSuggestions] = useState<SafeAny[]>([]);
     const [searching, setSearching] = useState(false);
     
     // Exercise Config Modal States
-    const [selectedExercise, setSelectedExercise] = useState<any | null>(null);
+    const [selectedExercise, setSelectedExercise] = useState<SafeAny | null>(null);
     const [showConfigModal, setShowConfigModal] = useState(false);
     const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
 
@@ -79,7 +79,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                         data.targetBodyParts = [];
                     }
                     setFormData(data);
-                } catch (error: unknown) {
+                } catch (errorVal) { const error = errorVal as SafeAny;
                     console.error("Error fetching template:", error);
                     toast.error("Failed to load template");
                 }
@@ -95,7 +95,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                 try {
                     const results = await searchExercises(debouncedQuery);
                     setSuggestions(results || []);
-                } catch (err) {
+                } catch (errVal) { const err = errVal as SafeAny;
                     console.error(err);
                 } finally {
                     setSearching(false);
@@ -243,7 +243,7 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                 toast.success("New blueprint forged");
             }
             navigate(mode === 'trainer' ? "/trainer/templates" : "/admin/templates");
-        } catch (error: unknown) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error("Process failed in the forge");
             console.log(error);
         } finally {

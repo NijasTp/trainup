@@ -52,7 +52,7 @@ export default function TrainerForgotPasswordVerifyOtp() {
       await trainerForgotPasswordVerifyOtpApi(email, otp)
       toast.success('OTP Verified Successfully')
       navigate('/trainer/reset-password', { state: { email } })
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.error || "Invalid OTP. Please try again.")
     } finally {
       setIsLoading(false)
@@ -68,7 +68,7 @@ export default function TrainerForgotPasswordVerifyOtp() {
       toast.success('OTP Resent Successfully')
       setResendTimer(60)
       setCanResend(false)
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.error || 'Failed to resend OTP. Please try again.')
     } finally {
       setIsResending(false)

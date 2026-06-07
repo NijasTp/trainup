@@ -61,7 +61,7 @@ export default function Trainers() {
       transports: ["websocket"]
     });
 
-    socketRef.current.on("notification", (data: any) => {
+    socketRef.current.on("notification", (data: SafeAny) => {
       if (data.type === "SESSION_REJECTED" || data.title === "Subscription Cancelled") {
         toast.error(data.message || "Your subscription has been cancelled.");
         fetchTrainers(); // Refresh trainers list
@@ -102,11 +102,11 @@ export default function Trainers() {
         minPrice,
         maxPrice
       );
-      const trainersData = (response?.trainers?.trainers || []).map((t: any) => {
+      const trainersData = (response?.trainers?.trainers || []).map((t: SafeAny) => {
         if (t.price && typeof t.price === "string") {
           try {
             t.price = JSON.parse(t.price);
-          } catch (e) {
+          } catch (eVal) { const e = eVal as SafeAny;
             console.error("Failed to parse trainer price:", e);
           }
         }
@@ -115,7 +115,7 @@ export default function Trainers() {
       setTrainers(trainersData);
       console.log("Fetched trainers:", response);
       setTotalPages(response?.trainers?.totalPages || 1); // Ensure at least 1 page
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       setError("Failed to fetch trainers");
       console.error("API error:", err);
     } finally {

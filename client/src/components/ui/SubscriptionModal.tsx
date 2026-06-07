@@ -114,7 +114,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
       if (isOpen) {
         await API.post("/payment/cleanup-pending");
       }
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error("Failed to cleanup pending transactions:", error);
     }
     onClose();

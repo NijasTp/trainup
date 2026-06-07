@@ -74,7 +74,7 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
             await dispatch(logoutGymThunk()).unwrap();
             toast.success('Logged out successfully');
             navigate(ROUTES.GYM_LOGIN);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error('Logout failed:', error);
             navigate(ROUTES.GYM_LOGIN);
         }

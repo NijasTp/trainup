@@ -44,7 +44,7 @@ const TrainerManagement = () => {
         ""
       );
       setResponse(res as TrainerResponse);
-    } catch (err: any) {
+    } catch (_err) {
       setResponse({ trainers: [], total: 0, page: 1, totalPages: 1 });
     } finally {
       setLoading(false);
@@ -82,7 +82,7 @@ const TrainerManagement = () => {
         )
       }));
       toast.success(`Trainer ${trainerName} ${!currentBanStatus ? 'banned' : 'unbanned'} successfully`);
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.message || "Failed to update ban status.");
     } finally {
       setActionLoading(null);
@@ -95,7 +95,7 @@ const TrainerManagement = () => {
       const res = await getTrainerById(trainerId);
       const trainer = res as ITrainer;
       navigate(ROUTES.ADMIN_TRAINER_DETAILS.replace(':trainerId', trainerId), { state: { trainer } });
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.message || "Failed to fetch trainer details.");
     }
   };
@@ -105,7 +105,7 @@ const TrainerManagement = () => {
       const res = await getTrainerApplication(trainerId);
       const application = res;
       navigate(ROUTES.ADMIN_TRAINER_APPLICATION.replace(':trainerId', trainerId), { state: { application } });
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.message || "Failed to fetch application.");
     }
   };

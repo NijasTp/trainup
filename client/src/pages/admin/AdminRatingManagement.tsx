@@ -25,7 +25,7 @@ const ReviewList = ({ trainerId }: { trainerId: string }) => {
         try {
             const res = await getTrainerReviews(trainerId, page, limit, search);
             setReviewsResponse(res as PaginatedReviews);
-        } catch (error: unknown) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Error fetching reviews:", error);
             toast.error("Failed to fetch reviews");
         } finally {
@@ -184,7 +184,7 @@ const AdminRatingManagement = () => {
                     "all"
                 );
                 setResponse(res as TrainerResponse);
-            } catch (error: unknown) {
+            } catch (errorVal) { const error = errorVal as SafeAny;
                 console.error("Error fetching trainers:", error);
                 toast.error("Failed to fetch trainers");
             } finally {

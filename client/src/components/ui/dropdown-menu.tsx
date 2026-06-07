@@ -95,6 +95,6 @@ export const DropdownMenuSubTrigger =
 export const DropdownMenuSubContent =
   DropdownMenuPrimitive.SubContent;
 
-export const DropdownMenuShortcut = ({ className, ...props }: any) => (
+export const DropdownMenuShortcut = ({ className, ...props }: SafeAny) => (
   <span className={cn("ml-auto text-xs text-muted-foreground", className)} {...props} />
 );

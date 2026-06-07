@@ -14,7 +14,7 @@ export default function PaymentCancelPage() {
         const cleanup = async () => {
             try {
                 await API.post("/payment/cleanup-pending");
-            } catch (error) {
+            } catch (errorVal) { const error = errorVal as SafeAny;
                 console.error("Cleanup error:", error);
             }
         };

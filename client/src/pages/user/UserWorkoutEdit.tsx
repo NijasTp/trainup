@@ -193,7 +193,7 @@ export default function EditSessionPage() {
         setSessionTime(sessionData.time || "");
         setSessionGoal(sessionData.goal || "");
         setAddedExercises(sessionData.exercises || []);
-      } catch (err: any) {
+      } catch (errVal) { const err = errVal as SafeAny;
         setError(err.message || "Failed to fetch session");
         toast.error("Failed to load session", { description: err.message });
       } finally {
@@ -221,7 +221,7 @@ export default function EditSessionPage() {
         data: ex,
       }));
       setSuggestions(mapped);
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       setError(err.message || "Error fetching exercise suggestions");
       toast.error("Failed to load suggestions", { description: err.message });
     } finally {
@@ -290,7 +290,7 @@ export default function EditSessionPage() {
       await updateWorkoutSession(id!, payload);
       toast.success("Session updated!", { description: "Your changes have been saved." });
       navigate("/workouts");
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       setError(err.message || "Failed to update session");
       console.log("Error updating session:", err);
       toast.error("Failed to update session", { description: err.message });

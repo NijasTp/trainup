@@ -58,7 +58,7 @@ export default function TrainerEditProfile() {
     // Crop State
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<SafeAny>(null);
     const [isCropping, setIsCropping] = useState(false);
     const [tempImage, setTempImage] = useState<string | null>(null);
 
@@ -107,7 +107,7 @@ export default function TrainerEditProfile() {
             if (trainer.price && typeof trainer.price === "string") {
                 try {
                     trainer.price = JSON.parse(trainer.price);
-                } catch (e) {
+                } catch (eVal) { const e = eVal as SafeAny;
                     console.error("Failed to parse price:", e);
                 }
             }
@@ -141,7 +141,7 @@ export default function TrainerEditProfile() {
                 setProfileImagePreview(trainer.profileImage);
             }
             setIsLoading(false);
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to load profile details");
             setIsLoading(false);
         }
@@ -173,7 +173,7 @@ export default function TrainerEditProfile() {
                 setIsCropping(false);
                 setTempImage(null);
             }
-        } catch (e) {
+        } catch (_e) {
             toast.error("Image processing failed");
         }
     };
@@ -202,7 +202,7 @@ export default function TrainerEditProfile() {
             await updateTrainerProfile(formData);
             toast.success("Profile Updated Successfully");
             navigate("/trainer/profile");
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.message || "Failed to save changes");
         } finally {
             setIsSaving(false);
@@ -223,7 +223,7 @@ export default function TrainerEditProfile() {
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.error || "Failed to change password");
         } finally {
             setIsChangingPassword(false);
@@ -381,7 +381,7 @@ export default function TrainerEditProfile() {
                                     {["basic", "premium", "pro"].map((tier) => (
                                         <div key={tier} className="space-y-1">
                                             <Label className="text-[8px] font-black text-gray-500 uppercase tracking-widest ml-1 italic">{tier}</Label>
-                                            <Input {...register(`price.${tier}` as any)} type="number" className="bg-black/40 border-white/10 h-12 rounded-lg text-white font-black italic text-xs focus:ring-1 focus:ring-cyan-500/50" />
+                                            <Input {...register(`price.${tier}` as SafeAny)} type="number" className="bg-black/40 border-white/10 h-12 rounded-lg text-white font-black italic text-xs focus:ring-1 focus:ring-cyan-500/50" />
                                         </div>
                                     ))}
                                 </div>

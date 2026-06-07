@@ -16,7 +16,7 @@ export const searchExercises = async (query: string): Promise<IExerciseDb[]> => 
         const res = await exerciseApi.get<{ success: boolean; data: IExerciseDb[] }>(url);
         console.log(`[ExerciseDB API Response] Success: ${res.data.success}, Count: ${res.data.data?.length || 0}`, res.data.data);
         return res.data.data || [];
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
         console.error("[ExerciseDB API Error] Failed to fetch exercises directly:", error);
         throw error;
     }
@@ -29,7 +29,7 @@ export const getAllMuscles = async (): Promise<string[]> => {
         const res = await exerciseApi.get<{ success: boolean; data: string[] }>(url);
         console.log(`[ExerciseDB API Response] Success: ${res.data.success}, Count: ${res.data.data?.length || 0}`);
         return res.data.data || [];
-    } catch (error) {
+    } catch (_error) {
         console.warn("[ExerciseDB API Warning] Direct muscles call failed, using high-fidelity local static fallback.");
         return ["biceps", "triceps", "pectorals", "lats", "quadriceps", "hamstrings", "glutes", "calves", "shoulders", "abs"];
     }
@@ -42,7 +42,7 @@ export const getAllEquipments = async (): Promise<string[]> => {
         const res = await exerciseApi.get<{ success: boolean; data: string[] }>(url);
         console.log(`[ExerciseDB API Response] Success: ${res.data.success}, Count: ${res.data.data?.length || 0}`);
         return res.data.data || [];
-    } catch (error) {
+    } catch (_error) {
         console.warn("[ExerciseDB API Warning] Direct equipments call failed, using high-fidelity local static fallback.");
         return ["barbell", "dumbbell", "kettlebell", "cables", "machine", "body weight", "stability ball", "band"];
     }

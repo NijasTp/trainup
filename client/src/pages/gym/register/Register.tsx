@@ -131,7 +131,7 @@ const Register = () => {
                             address: data.display_name
                         }));
                     }
-                } catch (error) {
+                } catch (errorVal) { const error = errorVal as SafeAny;
                     console.error('Reverse geocoding error:', error);
                     // Silently fail geocoding, we already have coordinates
                 }
@@ -166,7 +166,7 @@ const Register = () => {
             await registerGym(data);
             toast.success('Registration submitted! waiting for admin approval.');
             navigate('/gym/login');
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.message || 'Registration failed');
         } finally {
             setLoading(false);

@@ -3,7 +3,7 @@ export interface IDashboardStats {
   totalTrainers: number;
   totalRevenue: number;
   totalTemplates: number;
-  recentTransactions: any[];
+  recentTransactions: SafeAny[];
 }
 
 export interface IGraphData {

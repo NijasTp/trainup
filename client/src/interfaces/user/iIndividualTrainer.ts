@@ -21,8 +21,8 @@ export interface Trainer {
     profileImage: string;
     certificate: string;
     isVerified: boolean;
-    clients: any[];
-    reviews?: any[];
+    clients: SafeAny[];
+    reviews?: SafeAny[];
 }
 
 export interface User {

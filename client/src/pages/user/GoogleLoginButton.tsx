@@ -6,7 +6,7 @@ import type { GoogleLoginButtonProps } from "@/interfaces/user/IGoogleLogin";
 
 declare global {
   interface Window {
-    google: any;
+    google: SafeAny;
   }
 }
 
@@ -40,7 +40,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     );
   };
 
-  const handleCredentialResponse = async (response: any) => {
+  const handleCredentialResponse = async (response: SafeAny) => {
     try {
       const idToken = response.credential;
       const res = await api.post('/user/google-login', { idToken });
@@ -50,7 +50,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       } else {
         throw new Error(data.message || 'Login failed');
       }
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error(error);
       if (onLoginError) onLoginError(error);
     }

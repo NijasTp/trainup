@@ -1,7 +1,7 @@
 
 import { Image, Award, Camera, X } from 'lucide-react';
 
-const FileUploadForm = ({ formData, handleFileChange, handleMultipleImages, removeImage, errors }:any) => {
+const FileUploadForm = ({ formData, handleFileChange, handleMultipleImages, removeImage, errors }: SafeAny) => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
@@ -83,7 +83,7 @@ const FileUploadForm = ({ formData, handleFileChange, handleMultipleImages, remo
         {/* Preview Gallery Images */}
         {formData.images.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-4">
-            {formData.images.map((image:any, index:any) => (
+            {formData.images.map((image: SafeAny, index: SafeAny) => (
               <div key={index} className="relative group">
                 <img
                   src={URL.createObjectURL(image)}

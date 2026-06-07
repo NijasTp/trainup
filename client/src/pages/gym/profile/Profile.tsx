@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 const Profile = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [gymData, setGymData] = useState<any>({
+    const [gymData, setGymData] = useState<SafeAny>({
         name: '',
         email: '',
         phone: '',
@@ -49,7 +49,7 @@ const Profile = () => {
             setLoading(true);
             const data = await getGymDetails();
             setGymData(data.gymDetails || data.gym || data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to fetch profile details');
         } finally {
             setLoading(false);
@@ -69,7 +69,7 @@ const Profile = () => {
         });
     };
 
-    const handleOpeningHoursChange = (index: number, field: string, value: any) => {
+    const handleOpeningHoursChange = (index: number, field: string, value: SafeAny) => {
         const newHours = [...gymData.openingHours];
         newHours[index] = { ...newHours[index], [field]: value };
         setGymData({ ...gymData, openingHours: newHours });
@@ -101,7 +101,7 @@ const Profile = () => {
             const result = await updateGymProfile(formData);
             setGymData(result.gym);
             toast.success(`${type} updated`, { toasterId: 'upload' });
-        } catch (error) {
+        } catch (_error) {
             toast.error(`Failed to upload ${type}`, { toasterId: 'upload' });
         }
     };
@@ -120,7 +120,7 @@ const Profile = () => {
 
             await updateGymProfile(formData);
             toast.success('Profile updated successfully');
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to save changes');
         } finally {
             setSaving(false);
@@ -141,14 +141,14 @@ const Profile = () => {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
                     const data = await res.json();
 
-                    setGymData((prev: any) => ({
+                    setGymData((prev: SafeAny) => ({
                         ...prev,
                         address: data.display_name,
                         geoLocation: { type: 'Point', coordinates: [longitude, latitude] }
                     }));
                     toast.success("Location detected", { toasterId: 'geo' });
-                } catch (err) {
-                    setGymData((prev: any) => ({
+                } catch (_err) {
+                    setGymData((prev: SafeAny) => ({
                         ...prev,
                         geoLocation: { type: 'Point', coordinates: [longitude, latitude] }
                     }));
@@ -170,7 +170,7 @@ const Profile = () => {
             setGymData({ ...gymData, [type]: updatedList });
             await updateGymProfile(formData);
             toast.success('Removed successfully');
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to remove');
         }
     };
@@ -401,7 +401,7 @@ const Profile = () => {
                             Opening Hours
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {gymData.openingHours?.map((oh: any, i: number) => (
+                            {gymData.openingHours?.map((oh: SafeAny, i: number) => (
                                 <div key={i} className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">{oh.day}</span>

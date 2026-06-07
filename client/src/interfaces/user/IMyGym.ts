@@ -29,7 +29,7 @@ export interface Gym {
     memberCount?: number;
     phone?: string;
     images?: string[];
-    reviews?: any[];
+    reviews?: SafeAny[];
     profileImage?: string;
     geoLocation?: { type: string; coordinates: [number, number] };
     address?: string;

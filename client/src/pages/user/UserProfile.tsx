@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<SafeAny[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTransactionsLoading, setIsTransactionsLoading] = useState(false);
   const navigate = useNavigate()
@@ -44,7 +44,7 @@ export default function Profile() {
     try {
       const response = await getProfilePageData();
       setProfile(response.user);
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("API error:", err);
       toast.error("Error loading profile", {
         description: "Please try again later",
@@ -59,7 +59,7 @@ export default function Profile() {
     try {
       const response = await API.get('/payment/transactions?limit=2');
       setTransactions(response.data.transactions || []);
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Failed to fetch transactions:", err);
     } finally {
       setIsTransactionsLoading(false);
@@ -83,7 +83,7 @@ export default function Profile() {
     });
   };
 
-  const MetricCard = ({ icon: Icon, title, value, label }: any) => (
+  const MetricCard = ({ icon: Icon, title, value, label }: SafeAny) => (
     <div className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col gap-2 hover:bg-white/10 transition-all group">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-primary/20 rounded-xl group-hover:scale-110 transition-transform">
@@ -224,7 +224,7 @@ export default function Profile() {
                 </div>
                 <div className="space-y-4">
                   {profile && profile.activeSubscriptions && profile.activeSubscriptions.length > 0 ? (
-                    profile.activeSubscriptions.map((sub: any, idx: number) => (
+                    profile.activeSubscriptions.map((sub: SafeAny, idx: number) => (
                       <div key={idx} className="p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-primary/30 transition-all group">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-black italic uppercase text-white group-hover:text-primary transition-colors">
@@ -267,7 +267,7 @@ export default function Profile() {
                   {isTransactionsLoading ? (
                     <div className="flex justify-center py-4"><div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" /></div>
                   ) : transactions.length > 0 ? (
-                    transactions.map((tx: any) => (
+                    transactions.map((tx: SafeAny) => (
                       <div key={tx._id} className="flex flex-col gap-2 p-4 bg-white/5 rounded-2xl border border-white/5 group hover:border-white/10 transition-colors">
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">

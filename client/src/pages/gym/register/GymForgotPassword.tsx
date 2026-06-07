@@ -25,7 +25,7 @@ export default function GymForgotPassword() {
       await gymForgotPassword(email)
       toast.success("OTP sent to your gym email successfully")
       setShowOTP(true)
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.error || "Failed to send OTP. Please check your email and try again.")
     } finally {
       setIsLoading(false)
@@ -42,7 +42,7 @@ export default function GymForgotPassword() {
     try {
       await gymForgotPassword(email)
       toast.success("OTP Resent Successfully")
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.error || "Failed to resend OTP. Please try again.")
       throw err
     }

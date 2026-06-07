@@ -43,7 +43,7 @@ const TrainerTemplateManagement = () => {
                 page: apiResponse.data.page,
                 totalPages: apiResponse.data.totalPages,
             });
-        } catch (err: unknown) {
+        } catch (errVal) { const err = errVal as SafeAny;
             const errorMessage = err instanceof Error ? err.message : "Error fetching trainer templates";
             console.error(errorMessage, err);
             setResponse({ templates: [], total: 0, page: 1, totalPages: 1 });
@@ -160,8 +160,8 @@ const TrainerTemplateManagement = () => {
                                         <div className="flex items-center gap-2 text-gray-500 font-bold italic text-[10px]">
                                             <Clock size={12} className="text-primary" />
                                             {('repetitions' in template && 'days' in template) 
-                                                ? `${(template.days as any[]).length * (template.repetitions as number)} DAYS` 
-                                                : `${(template as any).durationDays || (template as any).duration || 0} DAYS`}
+                                                ? `${(template.days as SafeAny[]).length * (template.repetitions as number)} DAYS` 
+                                                : `${(template as SafeAny).durationDays || (template as SafeAny).duration || 0} DAYS`}
                                         </div>
                                     </div>
                                     <p className="text-gray-500 text-[10px] font-bold line-clamp-2 uppercase italic leading-relaxed">{template.description}</p>
@@ -179,17 +179,17 @@ const TrainerTemplateManagement = () => {
 
             <Dialog open={!!selectedTemplate} onOpenChange={() => setSelectedTemplate(null)}>
                 <DialogContent className="max-w-4xl bg-black border-white/10 text-white rounded-[2.5rem] p-0 overflow-hidden shadow-2xl">
-                    {(selectedTemplate as any)?.image && (
+                    {(selectedTemplate as SafeAny)?.image && (
                         <div className="aspect-video relative">
-                            <img src={(selectedTemplate as any).image} className="w-full h-full object-cover" alt="" />
+                            <img src={(selectedTemplate as SafeAny).image} className="w-full h-full object-cover" alt="" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
                             <div className="absolute bottom-10 left-10">
-                                <h2 className="text-5xl font-black italic uppercase tracking-tighter">{(selectedTemplate as any).title}</h2>
+                                <h2 className="text-5xl font-black italic uppercase tracking-tighter">{(selectedTemplate as SafeAny).title}</h2>
                             </div>
                         </div>
                     )}
                     <div className="p-10 space-y-8">
-                        <p className="text-gray-400 font-medium italic leading-relaxed">{(selectedTemplate as any)?.description}</p>
+                        <p className="text-gray-400 font-medium italic leading-relaxed">{(selectedTemplate as SafeAny)?.description}</p>
                         <div className="flex justify-between items-center pt-8 border-t border-white/10">
                             <Button onClick={() => handleEditTemplate(selectedTemplate!)} className="bg-primary text-black font-black italic rounded-2xl h-14 px-10 hover:shadow-lg transition-all uppercase">Edit Architecture</Button>
                             <Button variant="ghost" onClick={() => setSelectedTemplate(null)} className="text-zinc-500 font-black italic">CLOSE ARCHIVE</Button>

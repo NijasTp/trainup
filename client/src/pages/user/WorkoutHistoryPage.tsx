@@ -30,8 +30,8 @@ import { motion } from "framer-motion";
 import { StreakCalendar } from "@/components/ui/StreakCalendar";
 
 export default function WorkoutHistoryPage() {
-  const [history, setHistory] = useState<any[]>([]);
-  const [allHistoryForCalendar, setAllHistoryForCalendar] = useState<any[]>([]);
+  const [history, setHistory] = useState<SafeAny[]>([]);
+  const [allHistoryForCalendar, setAllHistoryForCalendar] = useState<SafeAny[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [source, setSource] = useState<string | undefined>(undefined);
@@ -49,7 +49,7 @@ export default function WorkoutHistoryPage() {
       const res = await fetchWorkoutHistory(page, 6, source);
       setHistory(res.sessions || []);
       setTotalPages(res.totalPages || 1);
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Failed to load history", err);
     } finally {
       setIsLoading(false);
@@ -60,7 +60,7 @@ export default function WorkoutHistoryPage() {
     try {
       const res = await fetchWorkoutHistory(1, 1000, source);
       setAllHistoryForCalendar(res.sessions || []);
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Failed to load full history for calendar", err);
     }
   }
@@ -106,7 +106,7 @@ export default function WorkoutHistoryPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-[#0c0c0c] border-white/10 rounded-2xl w-56 p-2 backdrop-blur-2xl">
-                {sources.map((s: any) => (
+                {sources.map((s: SafeAny) => (
                   <DropdownMenuItem 
                     key={s.label} 
                     onClick={() => { setSource(s.value); setPage(1); }}
@@ -215,8 +215,8 @@ export default function WorkoutHistoryPage() {
   );
 }
 
-function HistoryCard({ session, index }: { session: any, index: number }) {
-  const sourceColors: any = {
+function HistoryCard({ session, index }: { session: SafeAny, index: number }) {
+  const sourceColors: SafeAny = {
     template: { bg: "bg-blue-500/10", text: "text-blue-400", border: "border-blue-500/20", icon: <Target className="h-3 w-3" /> },
     admin: { bg: "bg-blue-500/10", text: "text-blue-400", border: "border-blue-500/20", icon: <Target className="h-3 w-3" /> },
     trainer: { bg: "bg-purple-500/10", text: "text-purple-400", border: "border-purple-500/20", icon: <Dumbbell className="h-3 w-3" /> },

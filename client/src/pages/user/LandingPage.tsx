@@ -9,8 +9,8 @@ import { Activity } from 'lucide-react'
 import { useEffect } from 'react'
 
 export default function LandingPage() {
-  const { user } = useSelector((state: any) => state.userAuth)
-  const { trainer } = useSelector((state: any) => state.trainerAuth)
+  const { user } = useSelector((state: SafeAny) => state.userAuth)
+  const { trainer } = useSelector((state: SafeAny) => state.trainerAuth)
   const navigate = useNavigate()
 
   useEffect(() => {

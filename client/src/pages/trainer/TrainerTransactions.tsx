@@ -52,7 +52,7 @@ export default function TrainerTransactions() {
         },
       });
       setTransactions(response.data);
-    } catch (err: unknown) {
+    } catch {
       toast.error("Failed to load transactions");
     } finally {
       setIsLoading(false);

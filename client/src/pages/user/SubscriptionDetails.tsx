@@ -36,7 +36,7 @@ const SubscriptionDetails = () => {
                 const { data } = await API.get('/subscription');
                 setGymSubscriptions(data.data.gymSubscriptions || []);
                 setTrainerSubscriptions(data.data.trainerSubscriptions || []);
-            } catch (error) {
+            } catch (_error) {
                 toast.error('Failed to load subscription details');
             } finally {
                 setLoading(false);
@@ -187,7 +187,7 @@ const SubscriptionDetails = () => {
                                             <h3 className="text-xl font-black text-white italic group-hover:text-purple-400 transition-colors uppercase tracking-tight">
                                                 {sub.trainerNameSnapshot || sub.trainerId?.name || "Personal Trainer"}
                                             </h3>
-                                            <p className="text-xs text-gray-500 font-black uppercase tracking-widest mt-1">{sub.planNameSnapshot || (sub as any).planType + " Plan"}</p>
+                                            <p className="text-xs text-gray-500 font-black uppercase tracking-widest mt-1">{sub.planNameSnapshot || (sub as SafeAny).planType + " Plan"}</p>
                                         </div>
                                     </div>
                                     {getStatusBadge(sub.status || 'Active')}
@@ -202,7 +202,7 @@ const SubscriptionDetails = () => {
                                         <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 opacity-50">Expires On</p>
                                         <div className="flex items-center gap-2 text-gray-300 font-black text-[11px] uppercase italic">
                                             <Calendar size={14} className="text-purple-500" />
-                                            <span>{formatDate((sub as any).expiryDate || sub.subscriptionEndDate)}</span>
+                                            <span>{formatDate((sub as SafeAny).expiryDate || sub.subscriptionEndDate)}</span>
                                         </div>
                                     </div>
                                 </div>

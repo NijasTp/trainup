@@ -72,7 +72,7 @@ export default function TrainerApplyPage() {
           email: formData.email,
         },
       });
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       setError(err.response?.data?.error || "Failed to request OTP");
     } finally {
       setLoading(false);

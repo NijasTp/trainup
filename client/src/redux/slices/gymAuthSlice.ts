@@ -109,7 +109,7 @@ export const checkGymSessionThunk = createAsyncThunk(
       const data = await checkGymSession();
       dispatch(loginGym(data));
       return data;
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       dispatch(logoutGym());
       throw error;
     } finally {

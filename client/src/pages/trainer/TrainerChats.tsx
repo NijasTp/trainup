@@ -41,7 +41,7 @@ export default function TrainerChats() {
         try {
             const response = await API.get("/trainer/chats");
             setConversations(response.data.conversations);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch conversations:", error);
         } finally {
             setIsLoading(false);

@@ -40,7 +40,7 @@ export default function WorkoutPreviewPage() {
         try {
             const response = await getWorkoutTemplateById(id!);
             setTemplate(response.template || response);
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             toast.error(err.response?.data?.error || "Failed to load template details");
         } finally {
             setIsLoading(false);
@@ -66,7 +66,7 @@ export default function WorkoutPreviewPage() {
 
             // Series templates open the scheduler
             setIsScheduleOpen(true);
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             toast.error(err.response?.data?.error || "Failed to start workout");
         }
     };
@@ -81,7 +81,7 @@ export default function WorkoutPreviewPage() {
             await startWorkoutTemplate(template._id, scheduleType, weeklyDays);
             setIsScheduleOpen(false);
             setIsSuccessOpen(true);
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             toast.error(err.response?.data?.error || "Failed to start workout program schedule");
         }
     };

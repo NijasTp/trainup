@@ -23,7 +23,7 @@ export default function UserDropdown() {
             dispatch(logout());
             await logoutAdmin();
             navigate("/admin/login");
-        } catch (error: unknown) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.log('error logout:', error);
         }
     };

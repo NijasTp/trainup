@@ -35,7 +35,7 @@ const WishlistPage: React.FC = () => {
         try {
             const res = await getUserWishlist();
             setWishlist(res.products || []);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Wishlist error:", error);
             toast.error("Failed to load wishlist");
         } finally {
@@ -49,7 +49,7 @@ const WishlistPage: React.FC = () => {
             await toggleWishlist(productId);
             setWishlist(prev => prev.filter(p => p._id !== productId));
             toast.success("Item removed from wishlist");
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to remove item");
         } finally {
             setDeletingId(null);

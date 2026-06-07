@@ -68,7 +68,7 @@ export default function StartSessionPage() {
           ...response,
           exercises: response.exercises.map((ex: IExercise) => ({ ...ex, isDone: false })),
         });
-      } catch (err: any) {
+      } catch (errVal) { const err = errVal as SafeAny;
         setError(err.message || "Failed to fetch session");
         toast.error("Failed to load session", { description: err.message });
       } finally {
@@ -264,7 +264,7 @@ export default function StartSessionPage() {
       setIsLoading(true);
       const response = await updateWorkoutSession(id!, {
         isDone: true,
-        exercises: updatedExercises as any
+        exercises: updatedExercises as SafeAny
       });
       toast.success("Workout completed! Amazing effort!");
       navigate(`/workouts/${id}/success`, { 
@@ -279,7 +279,7 @@ export default function StartSessionPage() {
           streak: response?.streak
         } 
       });
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to complete workout session on server.");
     } finally {
       setIsLoading(false);
@@ -339,7 +339,7 @@ export default function StartSessionPage() {
       setIsLoading(true);
       updateWorkoutSession(id!, {
         isDone: true,
-        exercises: updatedExercises as any
+        exercises: updatedExercises as SafeAny
       }).then(() => {
         toast.success("Workout completed!");
         navigate(`/workouts/${id}/success`, { 

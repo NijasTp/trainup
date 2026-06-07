@@ -81,7 +81,7 @@ export const SiteHeader: React.FC = () => {
       }>("/notifications?page=1&limit=10")
       setNotifications(data.notifications)
       setUnreadCount(data.unreadCount)
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       // toast.error("Failed to load notifications") // Removed to avoid spam on 401
       console.error("Failed to load notifications", err)
     } finally {

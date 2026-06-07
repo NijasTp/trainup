@@ -37,9 +37,9 @@ import { cn } from '@/lib/utils';
 
 const WorkoutTemplates = () => {
     const [view, setView] = useState<'list' | 'builder'>('list');
-    const [templates, setTemplates] = useState<any[]>([]);
+    const [templates, setTemplates] = useState<SafeAny[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editingTemplate, setEditingTemplate] = useState<any | null>(null);
+    const [editingTemplate, setEditingTemplate] = useState<SafeAny | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -47,11 +47,11 @@ const WorkoutTemplates = () => {
     // Search and Suggestions States
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedQuery] = useDebounce(searchQuery, 300);
-    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [suggestions, setSuggestions] = useState<SafeAny[]>([]);
     const [searching, setSearching] = useState(false);
 
     // Exercise Config Dialog States
-    const [selectedExercise, setSelectedExercise] = useState<any | null>(null);
+    const [selectedExercise, setSelectedExercise] = useState<SafeAny | null>(null);
     const [showExerciseModal, setShowExerciseModal] = useState(false);
     const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
 
@@ -74,7 +74,7 @@ const WorkoutTemplates = () => {
                 try {
                     const results = await searchExercises(debouncedQuery);
                     setSuggestions(results || []);
-                } catch (err) {
+                } catch (errVal) { const err = errVal as SafeAny;
                     console.error(err);
                 } finally {
                     setSearching(false);
@@ -92,7 +92,7 @@ const WorkoutTemplates = () => {
             const data = await getGymWorkoutTemplates(page, 9, searchTerm);
             setTemplates(data.templates || []);
             setTotalPages(data.totalPages || 1);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to load templates');
         } finally {
             setLoading(false);
@@ -105,7 +105,7 @@ const WorkoutTemplates = () => {
         fetchTemplates();
     };
 
-    const startEditing = (template: any) => {
+    const startEditing = (template: SafeAny) => {
         const compatible = { ...template };
         compatible.type = 'one-time';
         compatible.repetitions = 1;
@@ -159,7 +159,7 @@ const WorkoutTemplates = () => {
                 setView('list');
                 setEditingTemplate(null);
             }
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to save template');
         }
     };
@@ -170,7 +170,7 @@ const WorkoutTemplates = () => {
             await deleteGymWorkoutTemplate(id);
             toast.success('Template deleted');
             fetchTemplates();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to delete template');
         }
     };
@@ -205,7 +205,7 @@ const WorkoutTemplates = () => {
         const newDays = [...editingTemplate.days];
         const exercises = [...(newDays[0].exercises || [])];
 
-        const payload: any = {
+        const payload: SafeAny = {
             exerciseId: selectedExercise.exerciseId || selectedExercise.id,
             name: selectedExercise.name,
             image: selectedExercise.gifUrl || selectedExercise.image || 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800',
@@ -242,7 +242,7 @@ const WorkoutTemplates = () => {
     const removeExercise = (exIndex: number) => {
         if (editingTemplate) {
             const newDays = [...editingTemplate.days];
-            newDays[0].exercises = newDays[0].exercises.filter((_: any, i: number) => i !== exIndex);
+            newDays[0].exercises = newDays[0].exercises.filter((_: SafeAny, i: number) => i !== exIndex);
             setEditingTemplate({ ...editingTemplate, days: newDays });
             toast.success('Exercise module removed');
         }
@@ -355,13 +355,13 @@ const WorkoutTemplates = () => {
                                             </h3>
 
                                             <div className="space-y-4 mb-8 relative z-10">
-                                                {(template.days || []).slice(0, 1).map((day: any, i: number) => (
+                                                {(template.days || []).slice(0, 1).map((day: SafeAny, i: number) => (
                                                     <div key={i} className="bg-white/5 p-4 rounded-2xl border border-white/5 backdrop-blur-sm">
                                                         <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
                                                             <Calendar size={12} /> DAY {day.dayNumber}
                                                         </p>
                                                         <div className="space-y-2">
-                                                            {(day.exercises || []).slice(0, 3).map((ex: any, j: number) => (
+                                                            {(day.exercises || []).slice(0, 3).map((ex: SafeAny, j: number) => (
                                                                 <div key={j} className="flex items-center gap-2 text-xs text-zinc-400 font-bold">
                                                                     <div className="w-1.5 h-1.5 bg-zinc-700 rounded-full" />
                                                                     <span>{ex.name}</span>
@@ -531,13 +531,13 @@ const WorkoutTemplates = () => {
                                             {(editingTemplate?.requiredEquipment || []).map((eq: string, i: number) => (
                                                 <Badge key={i} className="bg-primary/10 text-primary border-primary/25 gap-1.5 pr-1.5 font-black italic uppercase text-[9px] tracking-widest rounded-lg h-7">
                                                     {eq}
-                                                    <X size={10} className="cursor-pointer hover:text-white transition-colors" onClick={() => setEditingTemplate({ ...editingTemplate, requiredEquipment: editingTemplate.requiredEquipment.filter((_: any, j: number) => i !== j) })} />
+                                                    <X size={10} className="cursor-pointer hover:text-white transition-colors" onClick={() => setEditingTemplate({ ...editingTemplate, requiredEquipment: editingTemplate.requiredEquipment.filter((_: SafeAny, j: number) => i !== j) })} />
                                                 </Badge>
                                             ))}
                                             <Input
                                                 placeholder="+ ADD EQUIPMENT (ENTER)"
                                                 className="flex-1 bg-transparent border-0 h-6 text-[9px] font-black italic uppercase text-white focus-visible:ring-0 p-0 placeholder:text-zinc-700"
-                                                onKeyDown={(e: any) => {
+                                                onKeyDown={(e: SafeAny) => {
                                                     if (e.key === 'Enter') {
                                                         const val = (e.currentTarget.value).trim();
                                                         if (val && !editingTemplate.requiredEquipment.includes(val)) {
@@ -586,7 +586,7 @@ const WorkoutTemplates = () => {
                                     </div>
 
                                     <div className="space-y-4">
-                                        {((editingTemplate?.days?.[0]?.exercises) || []).map((ex: any, eIndex: number) => (
+                                        {((editingTemplate?.days?.[0]?.exercises) || []).map((ex: SafeAny, eIndex: number) => (
                                             <div key={eIndex} className="flex flex-col md:flex-row gap-4 items-start md:items-center bg-zinc-900/50 p-6 rounded-[2rem] border border-white/5 group shadow-lg">
                                                 <div className="flex items-center gap-4 flex-1 w-full min-w-0">
                                                     <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 bg-black shrink-0">

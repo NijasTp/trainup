@@ -36,7 +36,7 @@ export interface Meal {
   sourceId: string;
   createdAt: string;
   updatedAt: string;
-  nutritions: any[] | [];
+  nutritions: SafeAny[] | [];
   eatenTime?: string;
   image?: string;
   description?: string;

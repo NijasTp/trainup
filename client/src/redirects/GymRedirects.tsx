@@ -55,7 +55,7 @@ export const GymProtectedRoute: React.FC<{ children: JSX.Element }> = ({ childre
             try {
                 const res = await api.get("/gym/session");
                 dispatch(loginGym(res.data));
-            } catch (err) {
+            } catch (errVal) { const err = errVal as SafeAny;
                 console.error("Failed to fetch gym profile", err);
             }
         };

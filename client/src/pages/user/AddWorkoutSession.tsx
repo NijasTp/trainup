@@ -261,7 +261,7 @@ export default function AddSessionPage() {
                 data: ex,
             }));
             setAllSuggestions(mapped);
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             setError(err.message || "Error fetching exercise suggestions");
             toast.error("Failed to load suggestions");
         } finally {
@@ -354,7 +354,7 @@ export default function AddSessionPage() {
             await createWorkoutSession(result.data);
             toast.success("Workout session created!");
             navigate("/workouts");
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             setError(err.message || "Error creating workout session");
             toast.error("Failed to create session");
         } finally {

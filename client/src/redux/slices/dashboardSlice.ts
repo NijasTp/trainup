@@ -2,7 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { IActivityData } from '@/interfaces/user/IUserDashboard';
 
 interface DashboardState {
-    data: any | null;
+    data: SafeAny | null;
     activityData: IActivityData | null;
     lastFetched: number | null;
     loading: boolean;
@@ -19,7 +19,7 @@ export const dashboardSlice = createSlice({
     name: 'dashboard',
     initialState,
     reducers: {
-        setDashboardData: (state, action: PayloadAction<any>) => {
+        setDashboardData: (state, action: PayloadAction<SafeAny>) => {
             state.data = action.payload;
             state.lastFetched = Date.now();
         },

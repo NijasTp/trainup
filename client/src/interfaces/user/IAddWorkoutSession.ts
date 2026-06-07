@@ -23,7 +23,7 @@ export interface AddedExercise {
     equipments?: string[];
     instructions?: string[];
     description?: string;
-    exerciseData?: any;
+    exerciseData?: SafeAny;
 }
 
 export interface Exercise {
@@ -42,7 +42,7 @@ export interface Exercise {
     equipments?: string[];
     instructions?: string[];
     description?: string;
-    exerciseData?: any;
+    exerciseData?: SafeAny;
 }
 
 export interface WorkoutSessionPayload {

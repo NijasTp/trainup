@@ -52,7 +52,7 @@ const OtpForm = ({ userState, setError }: OtpFormProps) => {
 
       toast.success("OTP verified successfully");
       navigate("/complete-profile");
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       setError(err.response?.data?.message || "OTP verification failed");
     }
   }
@@ -64,7 +64,7 @@ const OtpForm = ({ userState, setError }: OtpFormProps) => {
       toast.success(res.data.message);
       setCountdown(60);
       setResendDisabled(true);
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.error || "Failed to resend OTP");
     }
   };

@@ -19,7 +19,7 @@ import { format } from 'date-fns';
 
 const Members = () => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [members, setMembers] = useState<any[]>([]);
+    const [members, setMembers] = useState<SafeAny[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -35,7 +35,7 @@ const Members = () => {
             const data = await getGymMembers(page, limit, searchTerm);
             setMembers(data.members);
             setTotalPages(data.totalPages);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to load members');
         } finally {
             setLoading(false);

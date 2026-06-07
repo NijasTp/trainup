@@ -64,7 +64,7 @@ export default function TrainerSiteHeader() {
             const sorted = (data.notifications || []).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
             setNotifications(sorted);
             setUnreadCount(sorted.filter(n => !n.read).length);
-        } catch (err) {
+        } catch (_err) {
             console.error("Failed to load notifications");
         } finally {
             setLoading(false);

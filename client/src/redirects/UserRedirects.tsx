@@ -13,7 +13,7 @@ import { ROUTES } from "@/constants/routes";
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.userAuth);
   const location = useLocation();
-  const dispatch = useDispatch<any>();
+  const dispatch = useDispatch<SafeAny>();
   const [checking, setChecking] = useState(true);
   const [sessionChecked, setSessionChecked] = useState(false);
   const navigate = useNavigate();
@@ -45,7 +45,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           // Only dispatch if data is different or on initial check
           dispatch(login(userWithRole));
         }
-      } catch (error: unknown) {
+      } catch (errorVal) { const error = errorVal as SafeAny;
         console.error("Session check failed:", error);
         const err = error as { response?: { status: number; data?: { error?: string } } };
         if (err.response?.status === 403 && err.response.data?.error === 'Banned') {

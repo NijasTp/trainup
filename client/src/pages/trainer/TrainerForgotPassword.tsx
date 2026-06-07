@@ -22,7 +22,7 @@ export default function TrainerForgotPassword() {
       await trainerForgotPasswordApi(email)
       toast.success("OTP sent to your email successfully")
       navigate('/trainer/forgot-password/verify', { state: { email } })
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.error || "Failed to send OTP. Please check your email and try again.")
     } finally {
       setIsLoading(false)

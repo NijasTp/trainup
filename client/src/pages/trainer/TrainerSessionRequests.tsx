@@ -44,7 +44,7 @@ export default function TrainerSessionRequests() {
             setRequests(response.data.requests);
             console.log("Fetched requests:", response.data.requests);
             setIsLoading(false);
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to fetch requests:", err);
             setError("Failed to load session requests");
             toast.error("Failed to load session requests");
@@ -58,7 +58,7 @@ export default function TrainerSessionRequests() {
             await API.post(`/trainer/session-requests/${requestId}/approve/${userId}`);
             toast.success("Session request approved!");
             fetchRequests();
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to approve request:", err);
             toast.error("Failed to approve request");
         } finally {
@@ -83,7 +83,7 @@ export default function TrainerSessionRequests() {
             setSelectedRequestId(null);
             setSelectedUserId(null);
             fetchRequests();
-        } catch (err: any) {
+        } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to reject request:", err);
             toast.error("Failed to reject request");
         } finally {

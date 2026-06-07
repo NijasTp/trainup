@@ -30,7 +30,7 @@ const TrainerWaitlist: React.FC = () => {
           toast.success("Your application has been approved!");
           navigate("/trainer/dashboard");
         }
-      } catch (error) {
+      } catch (errorVal) { const error = errorVal as SafeAny;
         console.error("Error polling trainer status:", error);
       }
     };
@@ -45,7 +45,7 @@ const TrainerWaitlist: React.FC = () => {
       dispatch(logoutTrainer())
       toast.success('Logged out Successfully');
       navigate('/trainer/login')
-    } catch (error: any) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       toast.error(error.response.data.error || error.message || 'Failed to logout');
       console.log('Error logging out:', error.response || error.message);
     }
@@ -57,7 +57,7 @@ const TrainerWaitlist: React.FC = () => {
       const res = await getTrainerDetails();
       setTrainerData(res.trainer);
       setShowApplication(true);
-    } catch (error: any) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error('Error fetching trainer details:', error);
       toast.error(error.response.data.error || error.message || 'Failed to fetch trainer details');
     } finally {

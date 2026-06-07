@@ -45,7 +45,7 @@ const AdminGymManagement = () => {
     const [search, setSearch] = useState('');
     const [verifyStatus, setVerifyStatus] = useState('all');
     const [loading, setLoading] = useState(true);
-    const [selectedGym, setSelectedGym] = useState<any>(null); // Keeping any for now as it has many nested operational fields
+    const [selectedGym, setSelectedGym] = useState<SafeAny>(null); // Keeping any for now as it has many nested operational fields
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
     const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
@@ -353,7 +353,7 @@ const AdminGymManagement = () => {
                                     OPERATIONAL LIFECYCLE (HOURS)
                                 </h4>
                                 <div className="space-y-4">
-                                    {(selectedGym?.openingHours || []).map((oh: any, i: number) => (
+                                    {(selectedGym?.openingHours || []).map((oh: SafeAny, i: number) => (
                                         <div key={i} className="flex items-center justify-between p-5 rounded-3xl bg-white/5 border border-white/10 hover:border-primary/20 hover:bg-white/[0.08] transition-all group">
                                             <div className="flex items-center gap-4">
                                                 <div className="h-12 w-12 flex items-center justify-center rounded-[1.25rem] bg-black/40 border border-white/10 font-black text-primary text-xs italic group-hover:scale-110 transition-transform">

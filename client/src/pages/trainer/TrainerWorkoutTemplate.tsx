@@ -48,7 +48,7 @@ export default function TrainerWorkoutTemplateForm() {
             data: ex,
           }));
           setSearchResults(mapped);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
           console.error("Error fetching exercises:", error);
           toast.error("Failed to search exercises");
         } finally {
@@ -68,7 +68,7 @@ export default function TrainerWorkoutTemplateForm() {
     try {
       const response = await API.get(`/workout/trainer/workout-templates/${id}`);
       setFormData(response.data);
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error("Error fetching template:", error);
       toast.error("Failed to load template");
     } finally {
@@ -144,7 +144,7 @@ export default function TrainerWorkoutTemplateForm() {
         toast.success("Template created successfully");
       }
       navigate("/trainer/templates");
-    } catch (error) {
+    } catch (errorVal) { const error = errorVal as SafeAny;
       console.error("Error saving template:", error);
       toast.error("Failed to save template");
     } finally {

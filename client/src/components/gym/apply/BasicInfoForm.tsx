@@ -2,8 +2,8 @@
 import { Building, Mail, Lock } from 'lucide-react';
 
 interface BasicInfoFormProps {
-  formData: any;
-  errors: any;
+  formData: SafeAny;
+  errors: SafeAny;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 

@@ -36,7 +36,7 @@ export default function TrainerJobs() {
             const data = await getTrainerJobs(page, 9, searchTerm);
             setJobs(data.jobs);
             setTotalPages(data.totalPages);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to load job opportunities');
         } finally {
             setLoading(false);
@@ -65,7 +65,7 @@ export default function TrainerJobs() {
             } else {
                 toast.success('Your interest registration has been removed.');
             }
-        } catch (error: any) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             toast.error(error.response?.data?.message || 'Failed to update interest status');
         } finally {
             setTogglingInterestId(null);

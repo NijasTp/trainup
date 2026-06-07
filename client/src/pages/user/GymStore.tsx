@@ -30,7 +30,7 @@ import { API_ROUTES } from "@/constants/api.constants";
 
 export default function UserGymStore() {
     const [products, setProducts] = useState<Product[]>([]);
-    const [gym, setGym] = useState<any>(null);
+    const [gym, setGym] = useState<SafeAny>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [category, setCategory] = useState("all");
@@ -50,7 +50,7 @@ export default function UserGymStore() {
             ]);
             setGym(gymResponse.gym);
             setProducts(productsResponse.products);
-        } catch (error) {
+        } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Store error:", error);
             toast.error("Failed to load store data");
         } finally {
@@ -74,7 +74,7 @@ export default function UserGymStore() {
             ));
             
             toast.success(isAdded ? "Tactical Priority Assigned" : "Wishlist Target Neutralized");
-        } catch (error) {
+        } catch (_error) {
             toast.error("Wishlist sync error");
         } finally {
             setWishlistLoading(null);

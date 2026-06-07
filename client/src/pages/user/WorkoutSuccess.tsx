@@ -90,7 +90,7 @@ export default function SuccessPage() {
             });
           }
         }
-      } catch (err: any) {
+      } catch (errVal) { const err = errVal as SafeAny;
         didUpdate.current = false;
         toast.error("Failed to update workout status", {
           description: err.message || "An error occurred",

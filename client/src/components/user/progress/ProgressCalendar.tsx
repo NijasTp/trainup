@@ -12,7 +12,7 @@ export type ProgressCalendarProps = React.ComponentProps<typeof DayPicker> & {
 function ProgressCalendar({
     className,
     classNames,
-    showOutsideDays = true,
+    showOutsideDays: _showOutsideDays = true,
     markedDates = [],
     ...props
 }: ProgressCalendarProps) {

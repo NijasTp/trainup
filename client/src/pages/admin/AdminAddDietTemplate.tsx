@@ -78,7 +78,7 @@ export default function NewDietTemplate({ mode = "admin" }: { mode?: "admin" | "
         `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${import.meta.env.VITE_USDA_API_KEY}&query=${encodeURIComponent(query)}&pageSize=${itemsPerPage}&pageNumber=${page}`
       );
       setUsdaFoods(response.data.foods || []);
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to fetch USDA food data");
     } finally {
       setLoading(false);
@@ -203,7 +203,7 @@ export default function NewDietTemplate({ mode = "admin" }: { mode?: "admin" | "
         toast.success("Diet template created successfully");
       }
       navigate(mode === 'trainer' ? "/trainer/templates" : "/admin/templates");
-    } catch (err: any) {
+    } catch (errVal) { const err = errVal as SafeAny;
       toast.error(err.response?.data?.error || "Failed to save diet template");
     } finally {
       setSaving(false);
@@ -583,7 +583,7 @@ export default function NewDietTemplate({ mode = "admin" }: { mode?: "admin" | "
                 <Input type="time" value={usdaMealTime} onChange={e => setUsdaMealTime(e.target.value)} className="bg-black border-white/10 h-16 px-6 rounded-2xl text-white font-black italic uppercase text-sm" />
               </div>
               <Button className="w-full bg-orange-500 hover:bg-orange-400 h-16 rounded-2xl font-black italic uppercase text-black shadow-lg shadow-orange-500/20" onClick={() => addUsdaMeal(selectedFood)}>
-                Link to Protocol Phase {(template.days?.[activeDayIndex || 0] as any)?.dayNumber}
+                Link to Protocol Phase {(template.days?.[activeDayIndex || 0] as SafeAny)?.dayNumber}
               </Button>
             </div>
           </DialogContent>

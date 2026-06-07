@@ -35,7 +35,7 @@ export default function TrainerClients() {
       })
       setClients(response.data)
       setIsLoading(false)
-    } catch (err) {
+    } catch (errVal) { const err = errVal as SafeAny;
       console.error("Failed to fetch clients:", err)
       setError("Failed to load clients")
       toast.error("Failed to load clients")

@@ -23,11 +23,9 @@ export function TrainerCarousel() {
       try {
         const response = await getTrainers(1,5,'');
         setTrainers(response.trainers.trainers);
-      } catch (err: any) {
+      } catch (errVal) { const err = errVal as SafeAny;
         setError(err.response.data.error || 'failed to fetch trainers. Please try again.');
         toast.error(err.response.data.error || 'failed to fetch trainers. Please try again.');
-      } finally {
-       
       }
     }
     fetchTrainers();

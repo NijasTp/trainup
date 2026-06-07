@@ -69,7 +69,7 @@ const GymReapply = () => {
                 if (data.logo) {
                     setCroppedLogo(data.logo);
                 }
-            } catch (error) {
+            } catch (errorVal) { const error = errorVal as SafeAny;
                 console.error("Failed to pre-fill data", error);
             }
         };
@@ -128,7 +128,7 @@ const GymReapply = () => {
                     } else {
                         toast.success("Location detected!", { id: 'geo' });
                     }
-                } catch (error) {
+                } catch (errorVal) { const error = errorVal as SafeAny;
                     console.error("Reverse geocoding failed", error);
                     toast.success("Location detected!", { id: 'geo' });
                 }
@@ -161,7 +161,7 @@ const GymReapply = () => {
             dispatch(updateGymDetails(response.gym));
             toast.success("Application resubmitted successfully! Please wait for approval.");
             navigate(ROUTES.GYM_STATUS);
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to resubmit application.");
         } finally {
             setIsSubmitting(false);
