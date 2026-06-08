@@ -40,7 +40,7 @@ app.use(express.json());
 const httpServer = new HttpServer(app);
 const io = new SocketServer(httpServer, {
   cors: {
-    origin: "https://trainup.nijas.site",
+    origin: process.env.CLIENT_URL,
     methods: ["GET", "POST"],
     credentials: true,
   },
