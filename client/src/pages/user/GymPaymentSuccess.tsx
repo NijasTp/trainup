@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { CheckCircle2, Loader2, ArrowRight, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,15 +15,7 @@ export default function GymPaymentSuccess() {
     const [isVerifying, setIsVerifying] = useState(true);
     const sessionId = searchParams.get("session_id");
 
-    useEffect(() => {
-        if (sessionId) {
-            verifyPayment();
-        } else {
-            setIsVerifying(false);
-        }
-    }, [sessionId]);
-
-    const verifyPayment = async () => {
+    const verifyPayment = useCallback(async () => {
         try {
             const response = await API.get(`/payment/gym-session-status/${sessionId}`);
             if (response.data.status === 'complete' || response.data.status === 'paid') {
@@ -40,7 +32,15 @@ export default function GymPaymentSuccess() {
         } finally {
             setIsVerifying(false);
         }
-    };
+    }, [sessionId, dispatch]);
+
+    useEffect(() => {
+        if (sessionId) {
+            verifyPayment();
+        } else {
+            setIsVerifying(false);
+        }
+    }, [sessionId, verifyPayment]);
 
     return (
         <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-[#030303] text-white font-outfit overflow-hidden">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -158,29 +158,7 @@ export default function TrainerAddSessionPage() {
   const [page, setPage] = useState<number>(1);
   const [perPage] = useState<number>(8);
 
-  useEffect(() => {
-    if (sessionId) {
-      fetchSession();
-    }
-  }, [sessionId]);
-
-  useEffect(() => {
-    if (debouncedQuery && showExerciseSearch && !selectedExercise) {
-      fetchSuggestions(debouncedQuery);
-      setPage(1);
-    } else {
-      setAllSuggestions([]);
-      setDisplayedSuggestions([]);
-    }
-  }, [debouncedQuery, showExerciseSearch, selectedExercise]);
-
-  useEffect(() => {
-    const start = (page - 1) * perPage;
-    const end = start + perPage;
-    setDisplayedSuggestions(allSuggestions.slice(start, end));
-  }, [page, allSuggestions]);
-
-  async function fetchSession() {
+  const fetchSession = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -199,9 +177,9 @@ export default function TrainerAddSessionPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [sessionId]);
 
-  async function fetchSuggestions(term: string) {
+  const fetchSuggestions = useCallback(async (term: string) => {
     setIsSuggestionsLoading(true);
     setError(null);
     try {
@@ -219,7 +197,29 @@ export default function TrainerAddSessionPage() {
     } finally {
       setIsSuggestionsLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (sessionId) {
+      fetchSession();
+    }
+  }, [sessionId, fetchSession]);
+
+  useEffect(() => {
+    if (debouncedQuery && showExerciseSearch && !selectedExercise) {
+      fetchSuggestions(debouncedQuery);
+      setPage(1);
+    } else {
+      setAllSuggestions([]);
+      setDisplayedSuggestions([]);
+    }
+  }, [debouncedQuery, showExerciseSearch, selectedExercise, fetchSuggestions]);
+
+  useEffect(() => {
+    const start = (page - 1) * perPage;
+    const end = start + perPage;
+    setDisplayedSuggestions(allSuggestions.slice(start, end));
+  }, [page, allSuggestions, perPage]);
 
   function handleSelectExercise(exerciseId: string) {
     const foundSug = allSuggestions.find((sug) => sug.data.exerciseId === exerciseId);

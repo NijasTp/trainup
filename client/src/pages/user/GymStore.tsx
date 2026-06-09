@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,20 +33,16 @@ export default function UserGymStore() {
     const [gym, setGym] = useState<SafeAny>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeSearchTerm, setActiveSearchTerm] = useState("");
     const [category, setCategory] = useState("all");
     const [wishlistLoading, setWishlistLoading] = useState<string | null>(null);
 
-    useEffect(() => {
-        document.title = "TrainUp | Gym Store";
-        fetchStoreData();
-    }, [category]);
-
-    const fetchStoreData = async () => {
+    const fetchStoreData = useCallback(async () => {
         setIsLoading(true);
         try {
             const [gymResponse, productsResponse] = await Promise.all([
                 getMyGym(),
-                getUserGymProducts(1, 20, searchTerm, category)
+                getUserGymProducts(1, 20, activeSearchTerm, category)
             ]);
             setGym(gymResponse.gym);
             setProducts(productsResponse.products);
@@ -56,11 +52,16 @@ export default function UserGymStore() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [activeSearchTerm, category]);
+
+    useEffect(() => {
+        document.title = "TrainUp | Gym Store";
+        fetchStoreData();
+    }, [category, fetchStoreData]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        fetchStoreData();
+        setActiveSearchTerm(searchTerm);
     };
 
     const toggleWishlist = async (productId: string) => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,13 +82,7 @@ export default function TrainerDietTemplateForm() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const itemsPerPage = 5;
 
-  useEffect(() => {
-    if (isEdit) {
-      fetchTemplate();
-    }
-  }, [id, isEdit]);
-
-  const fetchTemplate = async () => {
+  const fetchTemplate = useCallback(async () => {
     setLoading(true);
     try {
       const response = await API.get(`/diet/trainer/diet-templates/${id}`);
@@ -99,7 +93,13 @@ export default function TrainerDietTemplateForm() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEdit) {
+      fetchTemplate();
+    }
+  }, [id, isEdit, fetchTemplate]);
 
   const fetchUsdaFoods = async (query: string, page: number = 1) => {
     if (!query) return;

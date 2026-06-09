@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import Aurora from "@/components/ui/Aurora";
@@ -37,13 +37,7 @@ export default function WorkoutHistoryPage() {
   const [source, setSource] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    document.title = "TrainUp - Workout History";
-    loadHistory();
-    loadAllHistoryForCalendar();
-  }, [page, source]);
-
-  async function loadHistory() {
+  const loadHistory = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await fetchWorkoutHistory(page, 6, source);
@@ -54,16 +48,22 @@ export default function WorkoutHistoryPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [page, source]);
 
-  async function loadAllHistoryForCalendar() {
+  const loadAllHistoryForCalendar = useCallback(async () => {
     try {
       const res = await fetchWorkoutHistory(1, 1000, source);
       setAllHistoryForCalendar(res.sessions || []);
     } catch (errVal) { const err = errVal as SafeAny;
       console.error("Failed to load full history for calendar", err);
     }
-  }
+  }, [source]);
+
+  useEffect(() => {
+    document.title = "TrainUp - Workout History";
+    loadHistory();
+    loadAllHistoryForCalendar();
+  }, [loadHistory, loadAllHistoryForCalendar]);
 
   const sources = [
     { label: "All Sources", value: undefined, icon: <History className="h-4 w-4" /> },

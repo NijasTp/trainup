@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus,
@@ -75,13 +75,7 @@ const Jobs = () => {
         }
     };
 
-    useEffect(() => {
-        if (view === 'list') {
-            fetchJobs();
-        }
-    }, [page, view]);
-
-    const fetchJobs = async () => {
+    const fetchJobs = useCallback(async () => {
         try {
             setLoading(true);
             const data = await getGymJobs(page, 10, searchTerm);
@@ -92,7 +86,13 @@ const Jobs = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, searchTerm]);
+
+    useEffect(() => {
+        if (view === 'list') {
+            fetchJobs();
+        }
+    }, [page, view, fetchJobs]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();

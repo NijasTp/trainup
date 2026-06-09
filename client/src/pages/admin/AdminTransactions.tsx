@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import {
     Table,
@@ -33,7 +33,7 @@ export default function AdminTransactions() {
     const [sort, setSort] = useState("newest");
     const [totalPages, setTotalPages] = useState(1);
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = useCallback(async () => {
         setLoading(true);
         try {
             const data = await getAdminTransactions(page, limit, search, status, sort);
@@ -44,11 +44,11 @@ export default function AdminTransactions() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, limit, search, status, sort]);
 
     useEffect(() => {
         fetchTransactions();
-    }, [page, limit, search, status, sort]);
+    }, [fetchTransactions]);
 
     const handleDownloadReport = async () => {
         try {

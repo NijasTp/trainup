@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { format, isToday, addDays } from "date-fns";
 import ActivityMatrix from "@/components/user/dashboard/ActivityMatrix";
 import { cn } from "@/lib/utils";
@@ -96,7 +96,7 @@ const UserDashboard: React.FC = () => {
   const dispatch = useDispatch();
   const { data: cachedData, activityData: cachedActivity, lastFetched } = useSelector((state: RootState) => state.dashboard);
 
-  const fetchDashboardData = async (force = false) => {
+  const fetchDashboardData = useCallback(async (force = false) => {
     // If we have cached data and it's less than 5 minutes old, don't fetch unless forced
     if (!force && cachedData && lastFetched && (Date.now() - lastFetched < 5 * 60 * 1000)) {
       setUserData(cachedData.user);
@@ -188,10 +188,15 @@ const UserDashboard: React.FC = () => {
       setIsLoading(false);
       dispatch(setReduxLoading(false));
     }
-  };
+  }, [cachedData, lastFetched, cachedActivity, dispatch]);
+
+  const fetchDashboardDataRef = useRef(fetchDashboardData);
+  useEffect(() => {
+    fetchDashboardDataRef.current = fetchDashboardData;
+  }, [fetchDashboardData]);
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardDataRef.current();
   }, []);
 
   const handleAddWeight = async (val: string) => {

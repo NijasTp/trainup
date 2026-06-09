@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,12 +26,7 @@ export default function Transactions() {
   const navigate = useNavigate();
   const limit = 10;
 
-  useEffect(() => {
-    document.title = "TrainUp - Transaction History";
-    fetchTransactions();
-  }, [currentPage, searchQuery, statusFilter, sortBy]);
-
-  async function fetchTransactions() {
+  const fetchTransactions = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
@@ -52,7 +47,12 @@ export default function Transactions() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [currentPage, searchQuery, statusFilter, sortBy]);
+
+  useEffect(() => {
+    document.title = "TrainUp - Transaction History";
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

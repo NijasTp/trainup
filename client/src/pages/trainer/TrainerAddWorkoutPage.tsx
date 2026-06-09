@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -492,27 +492,16 @@ export default function TrainerAddWorkoutPage() {
   const [userPlan, setUserPlan] = useState<SafeAny>(null);
   const isExpired = userPlan ? new Date(userPlan.expiryDate) < new Date() : false;
 
-  useEffect(() => {
-    if (selectedDate && clientId) {
-      fetchWorkouts();
-    } else {
-      setDailyWorkouts([]);
-    }
-    if (clientId) {
-      fetchUserPlan();
-    }
-  }, [selectedDate, clientId]);
-
-  async function fetchUserPlan() {
+  const fetchUserPlan = useCallback(async () => {
     try {
       const response = await API.get(`/trainer/user-plan/${clientId}`);
       setUserPlan(response.data.plan);
     } catch (errVal) { const err = errVal as SafeAny;
       console.error("Failed to fetch user plan:", err);
     }
-  }
+  }, [clientId]);
 
-  async function fetchWorkouts() {
+  const fetchWorkouts = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -530,7 +519,18 @@ export default function TrainerAddWorkoutPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [clientId, selectedDate]);
+
+  useEffect(() => {
+    if (selectedDate && clientId) {
+      fetchWorkouts();
+    } else {
+      setDailyWorkouts([]);
+    }
+    if (clientId) {
+      fetchUserPlan();
+    }
+  }, [selectedDate, clientId, fetchWorkouts, fetchUserPlan]);
 
   const sessionsForDate = dailyWorkouts
     .find((dw) => dw.date === selectedDate)

@@ -199,6 +199,7 @@ export default function Aurora(props: AuroraProps) {
             }
             gl.getExtension('WEBGL_lose_context')?.loseContext();
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return <div ref={ctnDom} className="w-full h-full" />;

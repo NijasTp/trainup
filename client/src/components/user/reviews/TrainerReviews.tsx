@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Star, User, ChevronLeft, ChevronRight, Loader2, Pencil, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,7 +51,7 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
     const [userReview, setUserReview] = useState<Review | null>(null);
     const [filterRating, setFilterRating] = useState<number>(0);
 
-    const fetchReviews = async () => {
+    const fetchReviews = useCallback(async () => {
         setIsLoading(true);
         try {
             const url = `/user/trainer/ratings/${trainerId}?page=${page}&limit=5${filterRating > 0 ? `&rating=${filterRating}` : ''}`;
@@ -64,9 +64,9 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [trainerId, page, filterRating]);
 
-    const fetchMyReview = async () => {
+    const fetchMyReview = useCallback(async () => {
         try {
             const response = await API.get(`/user/trainer/rating/me/${trainerId}`);
             if (response.data.review) {
@@ -77,7 +77,7 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
         } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch my review:", error);
         }
-    };
+    }, [trainerId]);
 
     useEffect(() => {
         if (trainerId) {
@@ -86,7 +86,7 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
                 fetchMyReview();
             }
         }
-    }, [trainerId, page, filterRating]);
+    }, [trainerId, page, filterRating, canReview, fetchMyReview, fetchReviews]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

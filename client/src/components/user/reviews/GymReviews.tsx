@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Star, User, ChevronLeft, ChevronRight, Loader2, Pencil, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,7 +52,7 @@ export default function GymReviews({ gymId, onReviewAdded, canReview = false, cu
     const [userReview, setUserReview] = useState<Review | null>(null);
     const [filterRating, setFilterRating] = useState<number>(0);
 
-    const fetchReviews = async () => {
+    const fetchReviews = useCallback(async () => {
         setIsLoading(true);
         try {
             const url = `/user/gym/ratings/${gymId}?page=${page}&limit=5${filterRating > 0 ? `&rating=${filterRating}` : ''}`;
@@ -65,9 +65,9 @@ export default function GymReviews({ gymId, onReviewAdded, canReview = false, cu
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [gymId, page, filterRating]);
 
-    const fetchMyReview = async () => {
+    const fetchMyReview = useCallback(async () => {
         try {
             const response = await API.get(`/user/gym/rating/me/${gymId}`);
             if (response.data.review) {
@@ -78,7 +78,7 @@ export default function GymReviews({ gymId, onReviewAdded, canReview = false, cu
         } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch my review:", error);
         }
-    };
+    }, [gymId]);
 
     useEffect(() => {
         if (gymId) {
@@ -87,7 +87,7 @@ export default function GymReviews({ gymId, onReviewAdded, canReview = false, cu
                 fetchMyReview();
             }
         }
-    }, [gymId, page, filterRating]);
+    }, [gymId, page, filterRating, canReview, fetchMyReview, fetchReviews]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

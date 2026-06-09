@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
     Search,
@@ -25,11 +25,7 @@ const Members = () => {
     const [totalPages, setTotalPages] = useState(1);
     const limit = 10;
 
-    useEffect(() => {
-        fetchMembers();
-    }, [page, searchTerm]);
-
-    const fetchMembers = async () => {
+    const fetchMembers = useCallback(async () => {
         try {
             setLoading(true);
             const data = await getGymMembers(page, limit, searchTerm);
@@ -40,7 +36,11 @@ const Members = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, searchTerm]);
+
+    useEffect(() => {
+        fetchMembers();
+    }, [fetchMembers]);
 
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {

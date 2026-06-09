@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dumbbell, Plus, Target } from "lucide-react";
@@ -130,15 +130,7 @@ export default function AddWorkoutPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (selectedDate) {
-      fetchWorkouts();
-    } else {
-      setDailyWorkouts([]);
-    }
-  }, [selectedDate]);
-
-  async function fetchWorkouts() {
+  const fetchWorkouts = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -156,7 +148,15 @@ export default function AddWorkoutPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (selectedDate) {
+      fetchWorkouts();
+    } else {
+      setDailyWorkouts([]);
+    }
+  }, [selectedDate, fetchWorkouts]);
 
   const sessionsForDate = dailyWorkouts
     .find((dw) => dw.date === selectedDate)

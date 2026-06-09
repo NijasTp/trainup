@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -90,11 +90,7 @@ export default function TrainerEditProfile() {
     const [isOtherSpecialization, setIsOtherSpecialization] = useState(false);
     const [otherSpecializationValue, setOtherSpecializationValue] = useState("");
 
-    useEffect(() => {
-        fetchProfile();
-    }, []);
-
-    const fetchProfile = async () => {
+    const fetchProfile = useCallback(async () => {
         try {
             const data = await getTrainerDetails();
             const trainer = data.trainer;
@@ -145,7 +141,11 @@ export default function TrainerEditProfile() {
             toast.error("Failed to load profile details");
             setIsLoading(false);
         }
-    };
+    }, [reset, setValue]);
+
+    useEffect(() => {
+        fetchProfile();
+    }, [fetchProfile]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

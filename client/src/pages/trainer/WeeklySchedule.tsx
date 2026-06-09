@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -133,18 +133,7 @@ export default function WeeklySchedule() {
         end: addDays(startOfToday(), 60)
     });
 
-    useEffect(() => {
-        fetchSlots();
-        fetchRequests();
-    }, []);
-
-    useEffect(() => {
-        if (activeTab === 'past') {
-            fetchPastSessions();
-        }
-    }, [activeTab, pastPage]);
-
-    const fetchSlots = async () => {
+    const fetchSlots = useCallback(async () => {
         try {
             setIsLoading(true);
             const response = await API.get("/trainer/slots");
@@ -154,9 +143,9 @@ export default function WeeklySchedule() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
-    const fetchRequests = async () => {
+    const fetchRequests = useCallback(async () => {
         try {
             setIsRequestsLoading(true);
             const response = await API.get("/trainer/session-requests");
@@ -166,9 +155,9 @@ export default function WeeklySchedule() {
         } finally {
             setIsRequestsLoading(false);
         }
-    };
+    }, []);
 
-    const fetchPastSessions = async () => {
+    const fetchPastSessions = useCallback(async () => {
         try {
             setIsPastLoading(true);
             const response = await API.get(`/trainer/past-sessions?page=${pastPage}&limit=${pastLimit}`);
@@ -179,7 +168,18 @@ export default function WeeklySchedule() {
         } finally {
             setIsPastLoading(false);
         }
-    };
+    }, [pastPage]);
+
+    useEffect(() => {
+        fetchSlots();
+        fetchRequests();
+    }, [fetchSlots, fetchRequests]);
+
+    useEffect(() => {
+        if (activeTab === 'past') {
+            fetchPastSessions();
+        }
+    }, [activeTab, fetchPastSessions]);
 
     const handleAddSlot = async () => {
         try {

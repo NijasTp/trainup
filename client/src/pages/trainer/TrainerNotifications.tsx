@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { useSelector } from "react-redux";
 import API from "@/lib/axios";
@@ -42,7 +42,7 @@ export default function TrainerNotifications() {
     const [filterType, setFilterType] = useState("");
     const [filterPriority, setFilterPriority] = useState("");
 
-    const fetchNotifications = async (pageNum: number = 1) => {
+    const fetchNotifications = useCallback(async (pageNum: number = 1) => {
         if (!trainer?._id) return;
         setLoading(true);
         try {
@@ -57,16 +57,19 @@ export default function TrainerNotifications() {
             setNotifications(data.notifications);
             setUnreadCount(data.unreadCount);
             setTotal(data.total);
-            if (pageNum !== page) setPage(pageNum);
         } catch {
             toast.error("Failed to load notifications");
         } finally {
             setLoading(false);
         }
-    };
+    }, [trainer?._id, search, filterType, filterPriority]);
 
     useEffect(() => {
-        fetchNotifications(1);
+        fetchNotifications(page);
+    }, [page, fetchNotifications]);
+
+    useEffect(() => {
+        setPage(1);
     }, [search, filterType, filterPriority]);
 
     const markAsRead = async (id: string) => {

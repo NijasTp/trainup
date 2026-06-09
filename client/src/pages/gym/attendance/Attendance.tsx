@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
     TrendingUp,
@@ -26,11 +26,7 @@ const Attendance = () => {
         peakHour: 'N/A'
     });
 
-    useEffect(() => {
-        fetchAttendance();
-    }, [selectedDate]);
-
-    const fetchAttendance = async () => {
+    const fetchAttendance = useCallback(async () => {
         try {
             setLoading(true);
             const data = await getGymAttendance(selectedDate);
@@ -41,7 +37,11 @@ const Attendance = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedDate]);
+
+    useEffect(() => {
+        fetchAttendance();
+    }, [fetchAttendance]);
 
     const filteredRecords = records.filter(r =>
         r.userId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

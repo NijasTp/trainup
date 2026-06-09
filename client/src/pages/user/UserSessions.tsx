@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -54,12 +54,7 @@ export default function UserSessions() {
     const currentUserId = user?._id;
     const navigate = useNavigate();
 
-    useEffect(() => {
-        document.title = "TrainUp - Training Sessions";
-        fetchSessions();
-    }, [activeTab, page, selectedDate]);
-
-    const fetchSessions = async () => {
+    const fetchSessions = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await API.get("/user/sessions", {
@@ -78,7 +73,12 @@ export default function UserSessions() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [activeTab, page, selectedDate]);
+
+    useEffect(() => {
+        document.title = "TrainUp - Training Sessions";
+        fetchSessions();
+    }, [fetchSessions]);
 
     const fetchUserPlan = async () => {
         try {

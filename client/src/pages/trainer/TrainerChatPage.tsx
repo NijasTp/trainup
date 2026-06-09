@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,26 +74,7 @@ export default function TrainerChatPage() {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const shouldSendRef = useRef(false);
 
-    useEffect(() => {
-        document.title = "TrainUp - Chat with Client";
-        initializeChat();
-        return () => {
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-            }
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-            }
-        };
-    }, [clientId]);
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages, isOtherUserTyping]);
-
-
-
-    const initializeChat = async () => {
+    const initializeChat = useCallback(async () => {
         try {
             const clientResponse = await API.get(`/trainer/client/${clientId}`);
             const clientData = clientResponse.data.client;
@@ -171,7 +152,29 @@ export default function TrainerChatPage() {
             setError(err.response?.data?.message || "Failed to load chat");
             setIsLoading(false);
         }
-    };
+    }, [clientId]);
+
+    useEffect(() => {
+        document.title = "TrainUp - Chat with Client";
+        initializeChat();
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+        };
+    }, [clientId, initializeChat]);
+
+    useEffect(() => {
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, [previewUrl]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, isOtherUserTyping]);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

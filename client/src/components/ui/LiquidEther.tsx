@@ -62,10 +62,14 @@ export default function LiquidEther({
     // For brevity in this response, the full THREE.js simulation code is assumed to be here.
     // In your project, copy the entire implementation from your original message.
 
+    const currentRaf = rafRef.current;
+    const currentResizeObserver = resizeObserverRef.current;
+    const currentIntersectionObserver = intersectionObserverRef.current;
+
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (resizeObserverRef.current) resizeObserverRef.current.disconnect();
-      if (intersectionObserverRef.current) intersectionObserverRef.current.disconnect();
+      if (currentRaf) cancelAnimationFrame(currentRaf);
+      if (currentResizeObserver) currentResizeObserver.disconnect();
+      if (currentIntersectionObserver) currentIntersectionObserver.disconnect();
       if (webglRef.current) webglRef.current.dispose();
       webglRef.current = null;
     };

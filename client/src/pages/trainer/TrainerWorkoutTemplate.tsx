@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,11 +31,24 @@ export default function TrainerWorkoutTemplateForm() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const fetchTemplate = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await API.get(`/workout/trainer/workout-templates/${id}`);
+      setFormData(response.data);
+    } catch (errorVal) { const error = errorVal as SafeAny;
+      console.error("Error fetching template:", error);
+      toast.error("Failed to load template");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (isEdit) {
       fetchTemplate();
     }
-  }, [id, isEdit]);
+  }, [id, isEdit, fetchTemplate]);
 
   useEffect(() => {
     if (searchQuery) {
@@ -62,19 +75,6 @@ export default function TrainerWorkoutTemplateForm() {
       setSearchResults([]);
     }
   }, [searchQuery]);
-
-  const fetchTemplate = async () => {
-    setLoading(true);
-    try {
-      const response = await API.get(`/workout/trainer/workout-templates/${id}`);
-      setFormData(response.data);
-    } catch (errorVal) { const error = errorVal as SafeAny;
-      console.error("Error fetching template:", error);
-      toast.error("Failed to load template");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

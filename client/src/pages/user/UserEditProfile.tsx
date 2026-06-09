@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -183,12 +183,7 @@ export default function EditProfile() {
       setLoading(false)
     }
   }
-  useEffect(() => {
-    document.title = "TrainUp - Edit Profile";
-    fetchProfile();
-  }, []);
-
-  async function fetchProfile() {
+  const fetchProfile = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await getProfile();
@@ -217,7 +212,12 @@ export default function EditProfile() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [navigate]);
+
+  useEffect(() => {
+    document.title = "TrainUp - Edit Profile";
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

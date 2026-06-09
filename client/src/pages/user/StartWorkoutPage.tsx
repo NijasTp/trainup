@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -76,7 +76,7 @@ export default function StartSessionPage() {
       }
     }
     if (id) fetchSession();
-  }, [id]);
+  }, [id, navigate]);
 
   // Countdown logic with sound
   useEffect(() => {
@@ -110,7 +110,7 @@ export default function StartSessionPage() {
     } else if (phase === "exercise" && timer === 0) {
       handleSetComplete();
     }
-  }, [timer, phase, isPaused]);
+  }, [timer, phase, isPaused, handleSetComplete]);
 
   // Current set elapsed time tracker (excluding pauses)
   useEffect(() => {
@@ -138,7 +138,7 @@ export default function StartSessionPage() {
     } else if (phase === "preview" && previewCountdown === 0) {
       handleRestPhaseEnd();
     }
-  }, [phase, previewCountdown]);
+  }, [phase, previewCountdown, handleRestPhaseEnd]);
 
   function togglePause() {
     if (isPaused) {
@@ -156,77 +156,7 @@ export default function StartSessionPage() {
     setIsPaused(!isPaused);
   }
 
-  const handleSetComplete = () => {
-    if (!session) return;
-    const currentExercise = session.exercises[currentExerciseIndex];
-    const duration = currentExerciseTime;
-
-    // Record set duration
-    setSetDurationsMap(prev => ({
-      ...prev,
-      [currentExerciseIndex]: [...(prev[currentExerciseIndex] || []), duration]
-    }));
-
-    if (currentSetIndex + 1 < currentExercise.sets) {
-      // Go to rest phase between sets of same exercise
-      const restTime = currentExercise.rest ? parseInt(currentExercise.rest) || 30 : 30;
-      setPhase("preview");
-      setTimer(null);
-      setIsPaused(false);
-      setPreviewCountdown(restTime);
-      setInitialPreviewRest(restTime);
-    } else {
-      // All sets of this exercise are finished!
-      if (currentExerciseIndex + 1 < session.exercises.length) {
-        // Rest before transitioning to the next exercise
-        const restTime = currentExercise.rest ? parseInt(currentExercise.rest) || 30 : 30;
-        setPhase("preview");
-        setTimer(null);
-        setIsPaused(false);
-        setPreviewCountdown(restTime);
-        setInitialPreviewRest(restTime);
-      } else {
-        // Last set of last exercise completed! Finish the workout!
-        handleWorkoutComplete(duration);
-      }
-    }
-  };
-
-  const handleRestPhaseEnd = () => {
-    if (!session) return;
-    const currentExercise = session.exercises[currentExerciseIndex];
-    const restTaken = initialPreviewRest - previewCountdown;
-
-    // Record rest time taken
-    setRestDurationsMap(prev => ({
-      ...prev,
-      [currentExerciseIndex]: [...(prev[currentExerciseIndex] || []), restTaken]
-    }));
-
-    if (currentSetIndex + 1 < currentExercise.sets) {
-      // Next set of SAME exercise
-      setCurrentSetIndex(prev => prev + 1);
-      setPhase("exercise");
-      if (currentExercise.time) {
-        const timeStr = currentExercise.time || "0 min";
-        const timeInSeconds = parseInt(timeStr) * 60;
-        setTimer(timeInSeconds);
-      } else {
-        setTimer(null);
-      }
-      setAccumulatedTime(0);
-      setCurrentExerciseTime(0);
-      lastStartRef.current = Date.now();
-    } else {
-      // Next exercise countdown
-      setCurrentExerciseIndex(prev => prev + 1);
-      setCurrentSetIndex(0);
-      setPhase("countdown");
-      setCountdown(3);
-    }
-  };
-
-  const handleWorkoutComplete = async (lastSetDuration: number) => {
+  const handleWorkoutComplete = useCallback(async (lastSetDuration: number) => {
     if (!session) return;
 
     // Combine setDurations async state safely
@@ -284,7 +214,77 @@ export default function StartSessionPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session, currentExerciseIndex, setDurationsMap, restDurationsMap, id, navigate]);
+
+  const handleSetComplete = useCallback(() => {
+    if (!session) return;
+    const currentExercise = session.exercises[currentExerciseIndex];
+    const duration = currentExerciseTime;
+
+    // Record set duration
+    setSetDurationsMap(prev => ({
+      ...prev,
+      [currentExerciseIndex]: [...(prev[currentExerciseIndex] || []), duration]
+    }));
+
+    if (currentSetIndex + 1 < currentExercise.sets) {
+      // Go to rest phase between sets of same exercise
+      const restTime = currentExercise.rest ? parseInt(currentExercise.rest) || 30 : 30;
+      setPhase("preview");
+      setTimer(null);
+      setIsPaused(false);
+      setPreviewCountdown(restTime);
+      setInitialPreviewRest(restTime);
+    } else {
+      // All sets of this exercise are finished!
+      if (currentExerciseIndex + 1 < session.exercises.length) {
+        // Rest before transitioning to the next exercise
+        const restTime = currentExercise.rest ? parseInt(currentExercise.rest) || 30 : 30;
+        setPhase("preview");
+        setTimer(null);
+        setIsPaused(false);
+        setPreviewCountdown(restTime);
+        setInitialPreviewRest(restTime);
+      } else {
+        // Last set of last exercise completed! Finish the workout!
+        handleWorkoutComplete(duration);
+      }
+    }
+  }, [session, currentExerciseIndex, currentExerciseTime, currentSetIndex, handleWorkoutComplete]);
+
+  const handleRestPhaseEnd = useCallback(() => {
+    if (!session) return;
+    const currentExercise = session.exercises[currentExerciseIndex];
+    const restTaken = initialPreviewRest - previewCountdown;
+
+    // Record rest time taken
+    setRestDurationsMap(prev => ({
+      ...prev,
+      [currentExerciseIndex]: [...(prev[currentExerciseIndex] || []), restTaken]
+    }));
+
+    if (currentSetIndex + 1 < currentExercise.sets) {
+      // Next set of SAME exercise
+      setCurrentSetIndex(prev => prev + 1);
+      setPhase("exercise");
+      if (currentExercise.time) {
+        const timeStr = currentExercise.time || "0 min";
+        const timeInSeconds = parseInt(timeStr) * 60;
+        setTimer(timeInSeconds);
+      } else {
+        setTimer(null);
+      }
+      setAccumulatedTime(0);
+      setCurrentExerciseTime(0);
+      lastStartRef.current = Date.now();
+    } else {
+      // Next exercise countdown
+      setCurrentExerciseIndex(prev => prev + 1);
+      setCurrentSetIndex(0);
+      setPhase("countdown");
+      setCountdown(3);
+    }
+  }, [session, currentExerciseIndex, initialPreviewRest, previewCountdown, currentSetIndex]);
 
   function handleSkipExercise() {
     if (!session) return;

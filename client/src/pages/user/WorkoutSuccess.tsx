@@ -103,7 +103,7 @@ export default function SuccessPage() {
     if (id && state.isDone) markSessionAsDone();
 
     return () => clearInterval(interval);
-  }, [id, state, navigate]);
+  }, [id, state, navigate, dispatch]);
 
 
   const exerciseTimes = state?.exerciseTimes || [];

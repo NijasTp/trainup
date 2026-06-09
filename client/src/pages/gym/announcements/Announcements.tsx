@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus,
@@ -36,13 +36,7 @@ const Announcements = () => {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (view === 'list') {
-            fetchAnnouncements();
-        }
-    }, [page, view]);
-
-    const fetchAnnouncements = async () => {
+    const fetchAnnouncements = useCallback(async () => {
         try {
             setLoading(true);
             const data = await getGymAnnouncements(page, 10, searchTerm);
@@ -53,7 +47,13 @@ const Announcements = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, searchTerm]);
+
+    useEffect(() => {
+        if (view === 'list') {
+            fetchAnnouncements();
+        }
+    }, [page, view, fetchAnnouncements]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();

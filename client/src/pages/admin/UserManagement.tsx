@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Search, Eye, ChevronLeft, ChevronRight, Loader2, Calendar, UserX, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +22,7 @@ const UserManagement = () => {
   const usersPerPage = 5;
   const navigate = useNavigate();
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const { users, total, totalPages } = await getUsers(
@@ -43,9 +43,11 @@ const UserManagement = () => {
     } finally {
       setLoading(false);
     }
-  };  useEffect(() => {
-    fetchUsers();
   }, [currentPage, searchQuery, isBannedFilter, startDate]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleSearch = () => {
     setSearchQuery(searchInput);

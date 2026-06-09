@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Search, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, FileText, Star, Mail, Phone, Users, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getTrainerApplication, getTrainerById, getTrainers, toggleTrainerBan } from "@/services/adminService";
@@ -31,7 +31,7 @@ const TrainerManagement = () => {
   const trainersPerPage = 5;
   const navigate = useNavigate();
 
-  const fetchTrainers = async () => {
+  const fetchTrainers = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getTrainers(
@@ -49,11 +49,11 @@ const TrainerManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchQuery, isBannedFilter]);
 
   useEffect(() => {
     fetchTrainers();
-  }, [currentPage, searchQuery, isBannedFilter]);
+  }, [fetchTrainers]);
 
   const handleSearch = () => {
     setSearchQuery(searchInput);

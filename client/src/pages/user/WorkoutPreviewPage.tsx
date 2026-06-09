@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,13 +29,7 @@ export default function WorkoutPreviewPage() {
     const [weeklyDays, setWeeklyDays] = useState<number[]>([]);
     const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
-    useEffect(() => {
-        if (id) {
-            fetchTemplateDetails();
-        }
-    }, [id]);
-
-    async function fetchTemplateDetails() {
+    const fetchTemplateDetails = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await getWorkoutTemplateById(id!);
@@ -45,7 +39,13 @@ export default function WorkoutPreviewPage() {
         } finally {
             setIsLoading(false);
         }
-    }
+    }, [id]);
+
+    useEffect(() => {
+        if (id) {
+            fetchTemplateDetails();
+        }
+    }, [id, fetchTemplateDetails]);
 
     const handleStartWorkout = async () => {
         if (!template) return;

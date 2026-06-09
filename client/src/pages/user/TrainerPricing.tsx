@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,13 +19,7 @@ export default function TrainerPricingPage() {
     const [duration, setDuration] = useState<number>(1);
     const [processingPayment, setProcessingPayment] = useState(false);
 
-    useEffect(() => {
-        if (id) {
-            fetchTrainer();
-        }
-    }, [id]);
-
-    const fetchTrainer = async () => {
+    const fetchTrainer = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await getIndividualTrainer(id!);
@@ -46,7 +40,13 @@ export default function TrainerPricingPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [id]);
+
+    useEffect(() => {
+        if (id) {
+            fetchTrainer();
+        }
+    }, [id, fetchTrainer]);
 
     const handleSubscribe = async (planType: string) => {
         if (!trainer) return;

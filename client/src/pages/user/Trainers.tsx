@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,40 +55,7 @@ export default function Trainers() {
 
   console.log("Current filters:", { search, specialization, experience, minRating, minPrice, maxPrice });
 
-  useEffect(() => {
-    socketRef.current = io(import.meta.env.VITE_API_URL, {
-      withCredentials: true,
-      transports: ["websocket"]
-    });
-
-    socketRef.current.on("notification", (data: SafeAny) => {
-      if (data.type === "SESSION_REJECTED" || data.title === "Subscription Cancelled") {
-        toast.error(data.message || "Your subscription has been cancelled.");
-        fetchTrainers(); // Refresh trainers list
-      }
-    });
-
-    return () => {
-      socketRef.current?.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    document.title = "TrainUp - Find Your Perfect Trainer";
-    if (user?.assignedTrainer) {
-      navigate("/my-trainer/profile");
-    }
-  }, [user, navigate]);
-
-  useEffect(() => {
-    const debounce = setTimeout(() => {
-      fetchTrainers();
-    }, 300);
-
-    return () => clearTimeout(debounce);
-  }, [page, search, specialization, experience, minRating, minPrice, maxPrice]);
-
-  async function fetchTrainers() {
+  const fetchTrainers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -121,7 +88,45 @@ export default function Trainers() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [page, search, specialization, experience, minRating, minPrice, maxPrice]);
+
+  const fetchTrainersRef = useRef(fetchTrainers);
+  useEffect(() => {
+    fetchTrainersRef.current = fetchTrainers;
+  }, [fetchTrainers]);
+
+  useEffect(() => {
+    socketRef.current = io(import.meta.env.VITE_API_URL, {
+      withCredentials: true,
+      transports: ["websocket"]
+    });
+
+    socketRef.current.on("notification", (data: SafeAny) => {
+      if (data.type === "SESSION_REJECTED" || data.title === "Subscription Cancelled") {
+        toast.error(data.message || "Your subscription has been cancelled.");
+        fetchTrainersRef.current(); // Refresh trainers list
+      }
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    document.title = "TrainUp - Find Your Perfect Trainer";
+    if (user?.assignedTrainer) {
+      navigate("/my-trainer/profile");
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      fetchTrainers();
+    }, 300);
+
+    return () => clearTimeout(debounce);
+  }, [fetchTrainers]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);

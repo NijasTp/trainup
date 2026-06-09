@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,32 +63,7 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
   const [searching, setSearching] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<SafeAny | null>(null);
 
-  useEffect(() => {
-    if (id && templateType) {
-      fetchTemplate();
-    }
-  }, [id, templateType]);
-
-  useEffect(() => {
-    if (debouncedQuery) {
-      const fetchSuggestions = async () => {
-        setSearching(true);
-        try {
-          const results = await searchExercises(debouncedQuery);
-          setSuggestions(results || []);
-        } catch (errVal) { const err = errVal as SafeAny;
-          console.error(err);
-        } finally {
-          setSearching(false);
-        }
-      };
-      fetchSuggestions();
-    } else {
-      setSuggestions([]);
-    }
-  }, [debouncedQuery]);
-
-  const fetchTemplate = async () => {
+  const fetchTemplate = useCallback(async () => {
     try {
       setLoading(true);
       const endpoint = templateType === "workout" ? `/template/workout/${id}` : `/template/diet/${id}`;
@@ -118,7 +93,32 @@ const EditAdminTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer" }) =
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, templateType, navigate, mode]);
+
+  useEffect(() => {
+    if (id && templateType) {
+      fetchTemplate();
+    }
+  }, [id, templateType, fetchTemplate]);
+
+  useEffect(() => {
+    if (debouncedQuery) {
+      const fetchSuggestions = async () => {
+        setSearching(true);
+        try {
+          const results = await searchExercises(debouncedQuery);
+          setSuggestions(results || []);
+        } catch (errVal) { const err = errVal as SafeAny;
+          console.error(err);
+        } finally {
+          setSearching(false);
+        }
+      };
+      fetchSuggestions();
+    } else {
+      setSuggestions([]);
+    }
+  }, [debouncedQuery]);
 
   const handleSave = async () => {
     if (!template) return;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { CheckCircle2, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,19 @@ export default function BundlePaymentSuccess() {
     const [isVerifying, setIsVerifying] = useState(true);
     const sessionId = searchParams.get("session_id");
 
+    const verifyPayment = useCallback(async () => {
+        try {
+            const response = await API.get(`/payment/session-status/${sessionId}`);
+            if (response.data.status === 'complete' || response.data.status === 'paid') {
+                toast.success("Your sessions have been added!");
+            }
+        } catch (errorVal) { const error = errorVal as SafeAny;
+            console.error("Verification error:", error);
+        } finally {
+            setIsVerifying(false);
+        }
+    }, [sessionId]);
+
     useEffect(() => {
         if (sessionId) {
             verifyPayment();
@@ -26,20 +39,7 @@ export default function BundlePaymentSuccess() {
         }, 5000);
 
         return () => clearTimeout(timer);
-    }, [sessionId, navigate]);
-
-    const verifyPayment = async () => {
-        try {
-            const response = await API.get(`/payment/session-status/${sessionId}`);
-            if (response.data.status === 'complete' || response.data.status === 'paid') {
-                toast.success("Your sessions have been added!");
-            }
-        } catch (errorVal) { const error = errorVal as SafeAny;
-            console.error("Verification error:", error);
-        } finally {
-            setIsVerifying(false);
-        }
-    };
+    }, [sessionId, navigate, verifyPayment]);
 
     return (
         <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-site-bg text-foreground font-outfit overflow-hidden">

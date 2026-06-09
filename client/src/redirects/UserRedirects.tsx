@@ -20,19 +20,14 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const checkSession = async () => {
-      // If already authenticated and we've checked once in this mount, or if no reason to check
       if (sessionChecked || !isAuthenticated) {
         setChecking(false);
         return;
       }
 
-      // If we have a user and were already authenticated, assume it's valid for now 
-      // to avoid rapid API calls on every route change. 
-      // The axios interceptor will handle it if a request fails later.
       if (isAuthenticated && user) {
         setChecking(false);
         setSessionChecked(true);
-        // Silently sync subscription status in the background
         dispatch(syncSubscriptionStatus());
         return;
       }
@@ -62,7 +57,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     };
 
     checkSession();
-  }, [isAuthenticated, location.pathname, dispatch, navigate]);
+  }, [isAuthenticated, location.pathname, dispatch, navigate, sessionChecked, user]);
 
   if (checking) return <LoadingSpinner />;
 

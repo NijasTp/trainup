@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -37,13 +37,7 @@ export default function GymPlanSelection() {
     const [isLoading, setIsLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    useEffect(() => {
-        if (id) {
-            fetchData();
-        }
-    }, [id]);
-
-    async function fetchData() {
+    const fetchData = useCallback(async () => {
         try {
             const [gymRes, plansRes] = await Promise.all([
                 getGymForUser(id!),
@@ -51,16 +45,25 @@ export default function GymPlanSelection() {
             ]);
             setGym(gymRes.gym);
             setPlans(plansRes.plans || []);
-            if (!selectedPlanId && plansRes.plans?.length > 0) {
-                setSelectedPlanId(plansRes.plans[0]._id);
-            }
+            setSelectedPlanId(prev => {
+                if (!prev && plansRes.plans?.length > 0) {
+                    return plansRes.plans[0]._id;
+                }
+                return prev;
+            });
         } catch (_error) {
             toast.error("Failed to load details");
             navigate("/gyms");
         } finally {
             setIsLoading(false);
         }
-    }
+    }, [id, navigate]);
+
+    useEffect(() => {
+        if (id) {
+            fetchData();
+        }
+    }, [id, fetchData]);
 
     const handleSubscribe = async () => {
         if (!selectedPlanId || !preferredTime) {

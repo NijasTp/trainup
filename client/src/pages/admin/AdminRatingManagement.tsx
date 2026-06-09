@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useEffect, type ChangeEvent } from "react";
+import React, { useState, useEffect, useCallback, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, ChevronLeft, ChevronRight, Loader2, Star, Users, ChevronDown, Activity, Sparkles, ShieldCheck, Quote } from "lucide-react";
@@ -20,7 +19,7 @@ const ReviewList = ({ trainerId }: { trainerId: string }) => {
     const [searchInput, setSearchInput] = useState("");
     const limit = 6;
 
-    const fetchReviews = async () => {
+    const fetchReviews = useCallback(async () => {
         setLoading(true);
         try {
             const res = await getTrainerReviews(trainerId, page, limit, search);
@@ -31,11 +30,11 @@ const ReviewList = ({ trainerId }: { trainerId: string }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [trainerId, page, search]);
 
     useEffect(() => {
         fetchReviews();
-    }, [page, search]);
+    }, [fetchReviews]);
 
     const handleSearch = () => {
         setSearch(searchInput);

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -165,23 +165,16 @@ export default function TrainerUserDietPage() {
     const [userPlan, setUserPlan] = useState<SafeAny>(null);
     const isExpired = userPlan ? new Date(userPlan.expiryDate) < new Date() : false;
 
-    useEffect(() => {
-        fetchMeals();
-        if (clientId) {
-            fetchUserPlan();
-        }
-    }, [date, clientId]);
-
-    async function fetchUserPlan() {
+    const fetchUserPlan = useCallback(async () => {
         try {
             const response = await API.get(`/trainer/user-plan/${clientId}`);
             setUserPlan(response.data.plan);
         } catch (errVal) { const err = errVal as SafeAny;
             console.error("Failed to fetch user plan:", err);
         }
-    }
+    }, [clientId]);
 
-    async function fetchMeals() {
+    const fetchMeals = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -210,7 +203,14 @@ export default function TrainerUserDietPage() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [date, clientId]);
+
+    useEffect(() => {
+        fetchMeals();
+        if (clientId) {
+            fetchUserPlan();
+        }
+    }, [date, clientId, fetchMeals, fetchUserPlan]);
 
     /* createDietSession was unused and removed */
 

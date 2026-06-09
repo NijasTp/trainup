@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Trash2,
@@ -61,11 +61,24 @@ const WorkoutTemplates = () => {
     const [rest, setRest] = useState<string>("60s");
     const [notes, setNotes] = useState<string>("");
 
+    const fetchTemplates = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await getGymWorkoutTemplates(page, 9, searchTerm);
+            setTemplates(data.templates || []);
+            setTotalPages(data.totalPages || 1);
+        } catch (_error) {
+            toast.error('Failed to load templates');
+        } finally {
+            setLoading(false);
+        }
+    }, [page, searchTerm]);
+
     useEffect(() => {
         if (view === 'list') {
             fetchTemplates();
         }
-    }, [page, view]);
+    }, [view, fetchTemplates]);
 
     useEffect(() => {
         if (debouncedQuery) {
@@ -86,18 +99,7 @@ const WorkoutTemplates = () => {
         }
     }, [debouncedQuery]);
 
-    const fetchTemplates = async () => {
-        try {
-            setLoading(true);
-            const data = await getGymWorkoutTemplates(page, 9, searchTerm);
-            setTemplates(data.templates || []);
-            setTotalPages(data.totalPages || 1);
-        } catch (_error) {
-            toast.error('Failed to load templates');
-        } finally {
-            setLoading(false);
-        }
-    };
+
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();

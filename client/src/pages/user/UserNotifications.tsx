@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import API from "@/lib/axios";
 import { useSelector } from "react-redux";
@@ -44,12 +44,12 @@ export default function UserNotifications() {
     const [filterType, setFilterType] = useState("");
     const [filterPriority, setFilterPriority] = useState("");
 
-    const fetchNotifications = async (pageNum: number = 1) => {
+    const fetchNotifications = useCallback(async () => {
         if (!user?._id) return;
         setLoading(true);
         try {
             const params = new URLSearchParams({
-                page: pageNum.toString(),
+                page: page.toString(),
                 limit: PAGE_SIZE.toString(),
                 ...(search && { search }),
                 ...(filterType && { type: filterType }),
@@ -61,13 +61,12 @@ export default function UserNotifications() {
             setNotifications(data.notifications);
             setUnreadCount(data.unreadCount);
             setTotal(data.total);
-            if (pageNum !== page) setPage(pageNum);
         } catch {
             toast.error("Failed to load notifications");
         } finally {
             setLoading(false);
         }
-    };
+    }, [user?._id, page, search, filterType, filterPriority]);
 
     const markAsRead = async (id: string) => {
         setLoadingAction(id);
@@ -115,8 +114,11 @@ export default function UserNotifications() {
 
     useEffect(() => {
         setPage(1);
-        fetchNotifications(1);
-    }, [search, filterType, filterPriority, user]);
+    }, [search, filterType, filterPriority, user?._id]);
+
+    useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
 
     const getIcon = (type: string) => {
         if (type.includes("workout") || type.includes("session"))

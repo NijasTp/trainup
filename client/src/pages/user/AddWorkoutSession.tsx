@@ -249,7 +249,7 @@ export default function AddSessionPage() {
         const start = (page - 1) * perPage;
         const end = start + perPage;
         setDisplayedSuggestions(allSuggestions.slice(start, end));
-    }, [page, allSuggestions]);
+    }, [page, allSuggestions, perPage]);
 
     async function fetchSuggestions(term: string) {
         setIsSuggestionsLoading(true);

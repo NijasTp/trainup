@@ -120,7 +120,7 @@ export default function MyGym() {
     } finally {
       setIsLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, dispatch]);
 
   useEffect(() => {
     document.title = "TrainUp - Dashboard";

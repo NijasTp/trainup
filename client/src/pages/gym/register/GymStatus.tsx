@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@/redux/store';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
     Clock,
@@ -24,7 +24,7 @@ const GymStatus = () => {
     const dispatch = useDispatch<AppDispatch>();
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const handleRefresh = async () => {
+    const handleRefresh = useCallback(async () => {
         setIsRefreshing(true);
         try {
             await dispatch(checkGymSessionThunk()).unwrap();
@@ -34,11 +34,11 @@ const GymStatus = () => {
         } finally {
             setIsRefreshing(false);
         }
-    };
+    }, [dispatch]);
 
     useEffect(() => {
         handleRefresh();
-    }, []);
+    }, [handleRefresh]);
 
     useEffect(() => {
         if (gym?.verifyStatus === 'approved') {

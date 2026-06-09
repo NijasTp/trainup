@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus,
@@ -36,13 +36,7 @@ const Store = () => {
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
-    useEffect(() => {
-        if (view === 'list') {
-            fetchProducts();
-        }
-    }, [category, page, view]);
-
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         try {
             setLoading(true);
             const data = await getGymProducts(page, 10, searchTerm, category);
@@ -53,7 +47,15 @@ const Store = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, searchTerm, category]);
+
+    useEffect(() => {
+        if (view === 'list') {
+            fetchProducts();
+        }
+    }, [view, fetchProducts]);
+
+
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();

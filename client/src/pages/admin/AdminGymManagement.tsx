@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import {
     Search,
@@ -50,7 +50,7 @@ const AdminGymManagement = () => {
     const [rejectReason, setRejectReason] = useState('');
     const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
 
-    const fetchGyms = async () => {
+    const fetchGyms = useCallback(async () => {
         try {
             setLoading(true);
             const data = await getGyms(page, 5, search, undefined, verifyStatus);
@@ -61,11 +61,11 @@ const AdminGymManagement = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, search, verifyStatus]);
 
     useEffect(() => {
         fetchGyms();
-    }, [verifyStatus, search, page]);
+    }, [fetchGyms]);
 
     const handleStatusUpdate = async (gymId: string, status: string, reason?: string) => {
         try {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -40,13 +40,7 @@ const AddPlanPage = () => {
         features: [] as string[]
     });
 
-    useEffect(() => {
-        if (isEditing) {
-            fetchPlan();
-        }
-    }, [id]);
-
-    const fetchPlan = async () => {
+    const fetchPlan = useCallback(async () => {
         try {
             const plan = await getSubscriptionPlan(id!);
             setFormData({
@@ -63,7 +57,13 @@ const AddPlanPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id, navigate]);
+
+    useEffect(() => {
+        if (isEditing) {
+            fetchPlan();
+        }
+    }, [isEditing, fetchPlan]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();

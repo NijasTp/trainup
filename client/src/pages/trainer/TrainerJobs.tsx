@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     MapPin,
@@ -22,18 +22,15 @@ export default function TrainerJobs() {
     const [jobs, setJobs] = useState<IGymJob[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeSearchTerm, setActiveSearchTerm] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [togglingInterestId, setTogglingInterestId] = useState<string | null>(null);
 
-    useEffect(() => {
-        fetchJobs();
-    }, [page]);
-
-    const fetchJobs = async () => {
+    const fetchJobs = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await getTrainerJobs(page, 9, searchTerm);
+            const data = await getTrainerJobs(page, 9, activeSearchTerm);
             setJobs(data.jobs);
             setTotalPages(data.totalPages);
         } catch (_error) {
@@ -41,12 +38,16 @@ export default function TrainerJobs() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, activeSearchTerm]);
+
+    useEffect(() => {
+        fetchJobs();
+    }, [fetchJobs]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         setPage(1);
-        fetchJobs();
+        setActiveSearchTerm(searchTerm);
     };
 
     const handleToggleInterest = async (jobId: string) => {

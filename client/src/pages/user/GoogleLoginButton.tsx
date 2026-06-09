@@ -1,6 +1,6 @@
 
 import api from '@/lib/axios';
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 
 import type { GoogleLoginButtonProps } from "@/interfaces/user/IGoogleLogin";
 
@@ -16,31 +16,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   onLoginSuccess,
   onLoginError,
 }) => {
-  useEffect(() => {
-    if (!window.google) {
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-      script.onload = initializeGoogleSignIn;
-    } else {
-      initializeGoogleSignIn();
-    }
-  }, []);
-
-  const initializeGoogleSignIn = () => {
-    window.google.accounts.id.initialize({
-      client_id: CLIENT_ID,
-      callback: handleCredentialResponse,
-    });
-    window.google.accounts.id.renderButton(
-      document.getElementById('googleSignInDiv'),
-      { theme: 'outline', size: 'large' }
-    );
-  };
-
-  const handleCredentialResponse = async (response: SafeAny) => {
+  const handleCredentialResponse = useCallback(async (response: SafeAny) => {
     try {
       const idToken = response.credential;
       const res = await api.post('/user/google-login', { idToken });
@@ -54,7 +30,31 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       console.error(error);
       if (onLoginError) onLoginError(error);
     }
-  };
+  }, [onLoginSuccess, onLoginError]);
+
+  const initializeGoogleSignIn = useCallback(() => {
+    window.google.accounts.id.initialize({
+      client_id: CLIENT_ID,
+      callback: handleCredentialResponse,
+    });
+    window.google.accounts.id.renderButton(
+      document.getElementById('googleSignInDiv'),
+      { theme: 'outline', size: 'large' }
+    );
+  }, [handleCredentialResponse]);
+
+  useEffect(() => {
+    if (!window.google) {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+      script.onload = initializeGoogleSignIn;
+    } else {
+      initializeGoogleSignIn();
+    }
+  }, [initializeGoogleSignIn]);
 
   return <div id="googleSignInDiv"></div>;
 };
