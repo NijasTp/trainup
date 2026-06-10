@@ -1,7 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, User, Mail, Phone, MapPin, FileText, Lock } from "lucide-react";
+import { ArrowLeft, Upload, User, Mail, Phone, MapPin, FileText, Lock, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { trainerRequestOtp } from "@/services/authService";
 import { FaRupeeSign } from "react-icons/fa";
 import ColorBends from "@/components/ui/ColorBends";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import Cropper from "react-easy-crop";
+import getCroppedImg from "@/lib/cropImage";
+import { TrainerPlanDetailsModal } from "@/components/trainer/TrainerPlanDetailsModal";
 
 export default function TrainerApplyPage() {
   const [formData, setFormData] = useState({
@@ -34,6 +46,14 @@ export default function TrainerApplyPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Crop State
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<SafeAny>(null);
+  const [isCropping, setIsCropping] = useState(false);
+  const [tempImage, setTempImage] = useState<string | null>(null);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
@@ -50,10 +70,74 @@ export default function TrainerApplyPage() {
     }
   };
 
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Invalid image format. Please select an image.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTempImage(reader.result as string);
+        setIsCropping(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const showCroppedImage = async () => {
+    try {
+      if (!tempImage || !croppedAreaPixels) return;
+      const croppedImage = await getCroppedImg(tempImage, croppedAreaPixels);
+      if (croppedImage) {
+        setFormData(prev => ({
+          ...prev,
+          profileImage: croppedImage
+        }));
+        setIsCropping(false);
+        setTempImage(null);
+      }
+    } catch (_e) {
+      setError("Image processing failed");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    if (!formData.profileImage) {
+      setError("Profile picture is required");
+      setLoading(false);
+      return;
+    }
+    if (!formData.certificate) {
+      setError("Certification/License document is required");
+      setLoading(false);
+      return;
+    }
+
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      setError("Phone number must be a 10-digit number");
+      setLoading(false);
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      setError("Password must be at least 8 characters long, and contain uppercase, lowercase, number, and special character");
+      setLoading(false);
+      return;
+    }
+
+    if (Number(formData.price.basic) <= 0 || Number(formData.price.premium) <= 0 || Number(formData.price.pro) <= 0) {
+      setError("Subscription prices must be positive numbers");
+      setLoading(false);
+      return;
+    }
 
     try {
       if (formData.password !== confirmPassword) {
@@ -228,7 +312,16 @@ export default function TrainerApplyPage() {
                 </div>
                 
                 <div className="md:col-span-2 space-y-4 pt-2">
-                  <Label className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">Monthly Subscriptions Pricing (₹)</Label>
+                  <div className="flex justify-between items-center ml-1">
+                    <Label className="text-gray-300 font-bold uppercase tracking-wider text-xs">Monthly Subscriptions Pricing (₹)</Label>
+                    <button
+                      type="button"
+                      onClick={() => setIsPlanModalOpen(true)}
+                      className="text-cyan-400 hover:text-cyan-300 text-[10px] font-black uppercase tracking-wider underline cursor-pointer"
+                    >
+                      What's included?
+                    </button>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="price-basic" className="text-gray-400 text-[10px] font-bold uppercase tracking-widest ml-1">Basic Plan</Label>
@@ -370,9 +463,8 @@ export default function TrainerApplyPage() {
                     name="profileImage"
                     type="file"
                     accept="image/*"
-                    onChange={handleFileChange}
+                    onChange={handleProfileImageChange}
                     className="hidden"
-                    required
                   />
                   <p className="text-gray-500 text-xs mt-1">
                     Upload your profile picture (JPG, PNG)
@@ -415,7 +507,6 @@ export default function TrainerApplyPage() {
                     accept="image/*,.pdf"
                     onChange={handleFileChange}
                     className="hidden"
-                    required
                   />
                   <p className="text-gray-500 text-xs mt-1">
                     Upload your fitness certification or license (JPG, PNG, PDF)
@@ -435,6 +526,28 @@ export default function TrainerApplyPage() {
           </CardContent>
         </Card>
       </div>
+      {/* Crop Dialog */}
+      <Dialog open={isCropping} onOpenChange={(open) => !open && setTempImage(null)}>
+        <DialogContent className="bg-black/95 backdrop-blur-2xl border-white/10 rounded-[2.5rem] max-w-xl p-8 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-white italic uppercase tracking-tighter">Crop Photo</DialogTitle>
+            <DialogDescription className="text-gray-500 font-bold uppercase italic text-[10px] tracking-widest">Adjust your photo for the best fit.</DialogDescription>
+          </DialogHeader>
+          <div className="relative w-full h-[400px] rounded-3xl overflow-hidden my-6 border border-white/5 shadow-inner">
+            {tempImage && <Cropper image={tempImage} crop={crop} zoom={zoom} aspect={1} onCropChange={setCrop} onCropComplete={(_, p) => setCroppedAreaPixels(p)} onZoomChange={setZoom} showGrid={false} />}
+          </div>
+          <div className="flex items-center gap-6 px-4 mb-8">
+            <ZoomOut className="h-4 w-4 text-gray-500" />
+            <Slider value={[zoom]} min={1} max={3} step={0.1} onValueChange={(v) => setZoom(v[0])} className="flex-1" />
+            <ZoomIn className="h-4 w-4 text-[#176B87]" />
+          </div>
+          <DialogFooter className="flex gap-4">
+            <Button variant="ghost" className="flex-1 text-gray-500 hover:text-white font-black italic uppercase text-xs" onClick={() => setIsCropping(false)}>Cancel</Button>
+            <Button onClick={showCroppedImage} className="flex-1 bg-[#176B87] hover:bg-[#64CCC5] text-white font-black italic uppercase text-xs rounded-xl h-12">Save Crop</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <TrainerPlanDetailsModal isOpen={isPlanModalOpen} onClose={() => setIsPlanModalOpen(false)} />
     </div>
   );
 }

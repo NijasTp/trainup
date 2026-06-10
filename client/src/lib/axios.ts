@@ -72,11 +72,20 @@ api.interceptors.response.use(
             // Do not force logout for regular forbidden errors (cross-role access)
         }
         break;
-      case 401:
-        if (!originalRequest._retry) {
+      case 401: {
+        const isAuthRequest = originalRequest.url && (
+          originalRequest.url.includes("/login") || 
+          originalRequest.url.includes("/signup") || 
+          originalRequest.url.includes("/register") || 
+          originalRequest.url.includes("/verify-otp") || 
+          originalRequest.url.includes("/forgot-password")
+        );
+
+        if (!originalRequest._retry && !isAuthRequest) {
           return handleTokenRefresh(originalRequest);
         }
         break;
+      }
       default:
         if (status >= 400 && status < 500) {
           // generic logging
@@ -169,7 +178,7 @@ const handleTokenRefresh = async (originalRequest: SafeAny) => {
 
   if (refreshUrl) {
     try {
-      await axios.post(refreshUrl, {}, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_URL}${refreshUrl}`, {}, { withCredentials: true });
       processQueue(null);
       isRefreshing = false;
       return api(originalRequest);

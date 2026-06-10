@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Search, Eye, ChevronLeft, ChevronRight, Loader2, Calendar, UserX, RefreshCw } from "lucide-react";
+import { Search, X, Eye, ChevronLeft, ChevronRight, Loader2, Calendar, UserX, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getUsers } from "@/services/adminService";
 import type { IUser } from "@/interfaces/admin/IUserManagement";
@@ -98,8 +98,21 @@ const UserManagement = () => {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="bg-white/5 border-white/10 h-12 pl-12 rounded-xl text-white outline-none focus:ring-0"
+                className="bg-white/5 border-white/10 h-12 pl-12 pr-10 rounded-xl text-white outline-none focus:ring-0"
               />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchInput("");
+                    setSearchQuery("");
+                    setCurrentPage(1);
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
             <div className="flex gap-2 w-full md:w-auto">
               <select

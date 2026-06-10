@@ -98,7 +98,7 @@ export default function Trainers() {
   useEffect(() => {
     socketRef.current = io(import.meta.env.VITE_API_URL, {
       withCredentials: true,
-      transports: ["websocket"]
+      transports: ["websocket", "polling"]
     });
 
     socketRef.current.on("notification", (data: SafeAny) => {

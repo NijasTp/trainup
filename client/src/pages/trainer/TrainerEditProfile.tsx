@@ -30,6 +30,7 @@ import getCroppedImg from "@/lib/cropImage";
 import { getTrainerDetails, updateTrainerProfile, changeTrainerPassword } from "@/services/trainerService";
 import { TrainerLayout } from "@/components/trainer/TrainerLayout";
 import { SessionMonetization } from "@/components/trainer/SessionMonetization";
+import { TrainerPlanDetailsModal } from "@/components/trainer/TrainerPlanDetailsModal";
 
 // Schema for Profile Update
 const profileSchema = z.object({
@@ -60,6 +61,7 @@ export default function TrainerEditProfile() {
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<SafeAny>(null);
     const [isCropping, setIsCropping] = useState(false);
+    const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
     const [tempImage, setTempImage] = useState<string | null>(null);
 
     // Password Change State
@@ -370,11 +372,20 @@ export default function TrainerEditProfile() {
                             </Card>
 
                             <Card className="bg-white/5 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-8 space-y-6">
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                        <DollarSign size={20} />
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                            <DollarSign size={20} />
+                                        </div>
+                                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Pricing Plans</h3>
                                     </div>
-                                    <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Pricing Plans</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPlanModalOpen(true)}
+                                        className="text-cyan-400 hover:text-cyan-300 text-[10px] font-black uppercase tracking-wider underline cursor-pointer"
+                                    >
+                                        What's included?
+                                    </button>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-2">
@@ -449,6 +460,7 @@ export default function TrainerEditProfile() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+                <TrainerPlanDetailsModal isOpen={isPlanModalOpen} onClose={() => setIsPlanModalOpen(false)} />
             </div>
         </TrainerLayout>
     );

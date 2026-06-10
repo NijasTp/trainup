@@ -1,19 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { reapplyTrainer, getTrainerDetails } from '@/services/trainerService';
-import { Logo } from '@/components/ui/logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, Upload, User, Mail, Phone, MapPin, FileText, ZoomIn, ZoomOut } from 'lucide-react';
+import { FaRupeeSign } from "react-icons/fa";
+import ColorBends from "@/components/ui/ColorBends";
+import { useSelector, useDispatch } from 'react-redux';
+import { loginTrainer } from '@/redux/slices/trainerAuthSlice';
+import type { RootState } from '@/redux/store';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import Cropper from "react-easy-crop";
+import getCroppedImg from "@/lib/cropImage";
+import { TrainerPlanDetailsModal } from "@/components/trainer/TrainerPlanDetailsModal";
 
 import type { TrainerDetails } from "@/interfaces/trainer/ITrainerReapply";
 
 const TrainerReapply: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { trainer } = useSelector((state: RootState) => state.trainerAuth);
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -34,27 +53,34 @@ const TrainerReapply: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
+  // Crop State
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<SafeAny>(null);
+  const [isCropping, setIsCropping] = useState(false);
+  const [tempImage, setTempImage] = useState<string | null>(null);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchTrainerDetails = async () => {
       setFetching(true);
       try {
         const res = await getTrainerDetails();
-        const trainer = res.trainer as TrainerDetails;
-        setRejectReason(trainer.rejectReason);
+        const trainerData = res.trainer as TrainerDetails;
+        setRejectReason(trainerData.rejectReason || '');
         setFormData((prev) => ({
           ...prev,
-          fullName: trainer.name || '',
-          email: trainer.email || '',
-          phone: trainer.phone || '',
-          location: trainer.location || '',
-          experience: trainer.experience || '',
-          specialization: trainer.specialization || '',
-          bio: trainer.bio || '',
+          fullName: trainerData.name || '',
+          email: trainerData.email || '',
+          phone: trainerData.phone || '',
+          location: trainerData.location || '',
+          experience: trainerData.experience || '',
+          specialization: trainerData.specialization || '',
+          bio: trainerData.bio || '',
           price: {
-            basic: trainer.price?.basic || '',
-            premium: trainer.price?.premium || '',
-            pro: trainer.price?.pro || '',
+            basic: trainerData.price?.basic || '',
+            premium: trainerData.price?.premium || '',
+            pro: trainerData.price?.pro || '',
           },
         }));
       } catch (errorVal) { const error = errorVal as SafeAny;
@@ -86,11 +112,61 @@ const TrainerReapply: React.FC = () => {
       }));
     }
   };
+
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Invalid image format. Please select an image.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTempImage(reader.result as string);
+        setIsCropping(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const showCroppedImage = async () => {
+    try {
+      if (!tempImage || !croppedAreaPixels) return;
+      const croppedImage = await getCroppedImg(tempImage, croppedAreaPixels);
+      if (croppedImage) {
+        setFormData(prev => ({
+          ...prev,
+          profileImage: croppedImage
+        }));
+        setIsCropping(false);
+        setTempImage(null);
+      }
+    } catch (_e) {
+      toast.error("Image processing failed");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.fullName || !formData.email || !formData.phone || !formData.specialization) {
+    if (!formData.fullName || !formData.phone || !formData.specialization) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (!formData.certificate) {
+      toast.error("Certification document is required for re-verification");
+      return;
+    }
+
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      toast.error("Phone number must be a 10-digit number");
+      return;
+    }
+
+    if (Number(formData.price.basic) <= 0 || Number(formData.price.premium) <= 0 || Number(formData.price.pro) <= 0) {
+      toast.error("Subscription prices must be positive numbers");
       return;
     }
 
@@ -117,6 +193,9 @@ const TrainerReapply: React.FC = () => {
     setLoading(true);
     try {
       await reapplyTrainer(data);
+      if (trainer) {
+        dispatch(loginTrainer({ trainer: { ...trainer, profileStatus: 'pending' } }));
+      }
       toast.success("Application resubmitted successfully");
       navigate("/trainer/waitlist");
     } catch (errorVal) { const error = errorVal as SafeAny;
@@ -129,142 +208,233 @@ const TrainerReapply: React.FC = () => {
     }
   };
 
-
   const handleBack = () => {
     navigate('/trainer/waitlist');
   };
 
   return (
-    <div className="min-h-screen bg-[#1F2A44] flex items-center justify-center p-4">
-      <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
-          body {
-            font-family: 'Poppins', sans-serif;
-          }
-          .animate-fade-in {
-            animation: fadeIn 0.5s ease-out;
-          }
-          @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-          }
-        `}
-      </style>
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden py-12 px-4 font-outfit">
+      {/* ColorBends Background Layer */}
+      <div className="absolute inset-0 z-0">
+        <ColorBends
+          colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
+          rotation={0}
+          speed={0.2}
+          scale={1}
+          frequency={1}
+          warpStrength={1}
+          mouseInfluence={1}
+          parallax={0.5}
+          noise={0.1}
+          transparent
+          autoRotate={0}
+          className="pointer-events-none"
+          style={{ pointerEvents: 'none' }}
+        />
+        <div className="absolute inset-0 bg-black/60"></div>
+      </div>
 
-      <div className="w-full max-w-2xl animate-fade-in">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="relative z-10 w-full max-w-2xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={handleBack}
-            className="text-white hover:text-[#4B8B9B] hover:bg-[#4B8B9B]/10"
+            className="text-white hover:text-[#176B87] hover:bg-white/5 border border-transparent hover:border-white/10 rounded-xl px-4 py-2 transition-all font-bold text-xs"
           >
-            <ArrowLeft className="h-5 w-5 mr-2" />
+            <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Waitlist
           </Button>
-          <Logo />
+          <div className="text-right">
+            <h1 className="text-2xl font-black tracking-tighter text-white">
+              TRAIN<span className="text-[#176B87]">UP</span>
+            </h1>
+            <p className="text-gray-400 text-[9px] font-black uppercase tracking-widest">
+              Re-verification System
+            </p>
+          </div>
         </div>
 
-        <Card className="bg-[#111827] border border-[#4B8B9B]/30 shadow-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-white text-3xl font-bold tracking-tight">
-              Reapply as Trainer
+        <Card className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl text-white">
+          <CardHeader className="border-b border-white/10 pb-6">
+            <CardTitle className="text-white text-2xl font-black italic uppercase tracking-tighter">
+              Reapply as <span className="text-[#176B87]">Trainer</span>
             </CardTitle>
-            <CardDescription className="text-[#4B8B9B] text-lg">
-              The last application was rejected because of the following reason:
-              <span className='text-red-700'> {rejectReason} </span>
-            </CardDescription>
+            {rejectReason && (
+              <CardDescription className="text-red-400 font-bold uppercase tracking-wider text-xs bg-red-500/10 border border-red-500/20 p-4 rounded-2xl mt-4">
+                REJECTION REASON: <span className="text-white font-medium capitalize tracking-normal italic normal-case block mt-1">"{rejectReason}"</span>
+              </CardDescription>
+            )}
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="pt-6">
             {fetching ? (
-              <div className="flex justify-center items-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-[#4B8B9B]" />
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-[#176B87]" />
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <Label htmlFor="fullName" className="text-white">
-                    Full Name
-                  </Label>
-                  <Input
-                    id="fullName"
-                    name="fullName"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    className="bg-gray-700 border-gray-600 text-white mt-2"
-                    required
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="fullName" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
+                      Full Name
+                    </Label>
+                    <div className="relative mt-2">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="fullName"
+                        name="fullName"
+                        type="text"
+                        placeholder="Enter your full name"
+                        value={formData.fullName}
+                        onChange={handleInputChange}
+                        className="bg-white/5 border-white/10 text-white pl-12 h-12 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
+                      Email Address
+                    </Label>
+                    <div className="relative mt-2">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        className="bg-white/5 border-white/10 text-gray-500 pl-12 h-12 rounded-xl cursor-not-allowed opacity-60"
+                        disabled
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phone" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
+                      Phone Number
+                    </Label>
+                    <div className="relative mt-2">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        placeholder="Enter your phone number"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="bg-white/5 border-white/10 text-white pl-12 h-12 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-4 pt-2">
+                    <div className="flex justify-between items-center ml-1">
+                      <Label className="text-gray-300 font-bold uppercase tracking-wider text-xs">Monthly Subscriptions Pricing (₹)</Label>
+                      <button
+                        type="button"
+                        onClick={() => setIsPlanModalOpen(true)}
+                        className="text-cyan-400 hover:text-cyan-300 text-[10px] font-black uppercase tracking-wider underline cursor-pointer"
+                      >
+                        What's included?
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="price-basic" className="text-gray-400 text-[10px] font-bold uppercase tracking-widest ml-1">Basic Plan</Label>
+                        <div className="relative mt-1">
+                          <FaRupeeSign className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                          <Input
+                            id="price-basic"
+                            name="price-basic"
+                            type="number"
+                            placeholder="Basic"
+                            value={formData.price.basic}
+                            onChange={(e) => setFormData({ ...formData, price: { ...formData.price, basic: e.target.value } })}
+                            className="bg-white/5 border-white/10 text-white pl-10 h-11 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="price-premium" className="text-gray-400 text-[10px] font-bold uppercase tracking-widest ml-1">Premium Plan</Label>
+                        <div className="relative mt-1">
+                          <FaRupeeSign className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                          <Input
+                            id="price-premium"
+                            name="price-premium"
+                            type="number"
+                            placeholder="Premium"
+                            value={formData.price.premium}
+                            onChange={(e) => setFormData({ ...formData, price: { ...formData.price, premium: e.target.value } })}
+                            className="bg-white/5 border-white/10 text-white pl-10 h-11 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="price-pro" className="text-gray-400 text-[10px] font-bold uppercase tracking-widest ml-1">Pro Plan</Label>
+                        <div className="relative mt-1">
+                          <FaRupeeSign className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                          <Input
+                            id="price-pro"
+                            name="price-pro"
+                            type="number"
+                            placeholder="Pro"
+                            value={formData.price.pro}
+                            onChange={(e) => setFormData({ ...formData, price: { ...formData.price, pro: e.target.value } })}
+                            className="bg-white/5 border-white/10 text-white pl-10 h-11 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="location" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
+                      Location
+                    </Label>
+                    <div className="relative mt-2">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="location"
+                        name="location"
+                        type="text"
+                        placeholder="City, State"
+                        value={formData.location}
+                        onChange={handleInputChange}
+                        className="bg-white/5 border-white/10 text-white pl-12 h-12 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="experience" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
+                      Years of Experience
+                    </Label>
+                    <Input
+                      id="experience"
+                      name="experience"
+                      type="number"
+                      placeholder="e.g., 5"
+                      value={formData.experience}
+                      onChange={handleInputChange}
+                      className="bg-white/5 border-white/10 text-white mt-2 h-12 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="email" className="text-white">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="bg-gray-700 border-gray-600 text-white mt-2"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="phone" className="text-white">
-                    Phone
-                  </Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="Enter your phone number"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="bg-gray-700 border-gray-600 text-white mt-2"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="location" className="text-white">
-                    Location
-                  </Label>
-                  <Input
-                    id="location"
-                    name="location"
-                    type="text"
-                    placeholder="Enter your location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    className="bg-gray-700 border-gray-600 text-white mt-2"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="experience" className="text-white">
-                    Experience
-                  </Label>
-                  <Input
-                    id="experience"
-                    name="experience"
-                    type="text"
-                    placeholder="e.g., 5 years"
-                    value={formData.experience}
-                    onChange={handleInputChange}
-                    className="bg-gray-700 border-gray-600 text-white mt-2"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="specialization" className="text-white">
+                  <Label htmlFor="specialization" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
                     Specialization
                   </Label>
                   <select
@@ -272,121 +442,98 @@ const TrainerReapply: React.FC = () => {
                     name="specialization"
                     value={formData.specialization}
                     onChange={handleInputChange}
-                    className="bg-gray-700 border-gray-600 text-white mt-2 block w-full p-2 rounded-md"
+                    className="bg-white/5 border border-white/10 text-white mt-2 block w-full p-3 h-12 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50 transition-all cursor-pointer"
+                    style={{ colorScheme: 'dark' }}
                     required
                   >
-                    <option value="" disabled>
-                      Select a specialization
-                    </option>
-                    <option value="Weight Training">Weight Training</option>
-                    <option value="Yoga">Yoga</option>
-                    <option value="Pilates">Pilates</option>
-                    <option value="Cardio">Cardio</option>
-                    <option value="CrossFit">CrossFit</option>
-                    <option value="Martial Arts">Martial Arts</option>
-                    <option value="Zumba">Zumba</option>
-                    <option value="Other">Other</option>
+                    <option value="" disabled className="bg-neutral-900">Select a specialization</option>
+                    <option value="Weight Training" className="bg-neutral-900">Weight Training</option>
+                    <option value="Yoga" className="bg-neutral-900">Yoga</option>
+                    <option value="Pilates" className="bg-neutral-900">Pilates</option>
+                    <option value="Cardio" className="bg-neutral-900">Cardio</option>
+                    <option value="CrossFit" className="bg-neutral-900">CrossFit</option>
+                    <option value="Martial Arts" className="bg-neutral-900">Martial Arts</option>
+                    <option value="Zumba" className="bg-neutral-900">Zumba</option>
+                    <option value="Other" className="bg-neutral-900">Other</option>
                   </select>
-                  {formData.specialization === 'Other' && (
+                  {formData.specialization === "Other" && (
                     <Input
                       id="specialization"
                       name="specialization"
                       type="text"
                       placeholder="Enter your specialization"
-                      value={formData.specialization === 'Other' ? '' : formData.specialization}
+                      value={formData.specialization === "Other" ? "" : formData.specialization}
                       onChange={handleInputChange}
-                      className="bg-gray-700 border-gray-600 text-white mt-2"
+                      className="bg-white/5 border-white/10 text-white mt-2 h-12 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
                       required
                     />
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="bio" className="text-white">
-                    Bio
+                  <Label htmlFor="profileImage" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
+                    Profile Picture
                   </Label>
-                  <Textarea
-                    id="bio"
-                    name="bio"
-                    placeholder="Tell us about yourself"
-                    value={formData.bio}
-                    onChange={handleInputChange}
-                    className="bg-gray-700 border-gray-600 text-white mt-2"
-                    rows={4}
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <Label className="text-white font-semibold">Monthly Subscription Prices (₹)</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="price-basic" className="text-gray-400 text-xs">Basic Plan</Label>
-                      <Input
-                        id="price-basic"
-                        name="price-basic"
-                        type="number"
-                        placeholder="Basic"
-                        value={formData.price.basic}
-                        onChange={(e) => setFormData({ ...formData, price: { ...formData.price, basic: e.target.value } })}
-                        className="bg-gray-700 border-gray-600 text-white mt-1"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="price-premium" className="text-gray-400 text-xs">Premium Plan</Label>
-                      <Input
-                        id="price-premium"
-                        name="price-premium"
-                        type="number"
-                        placeholder="Premium"
-                        value={formData.price.premium}
-                        onChange={(e) => setFormData({ ...formData, price: { ...formData.price, premium: e.target.value } })}
-                        className="bg-gray-700 border-gray-600 text-white mt-1"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="price-pro" className="text-gray-400 text-xs">Pro Plan</Label>
-                      <Input
-                        id="price-pro"
-                        name="price-pro"
-                        type="number"
-                        placeholder="Pro"
-                        value={formData.price.pro}
-                        onChange={(e) => setFormData({ ...formData, price: { ...formData.price, pro: e.target.value } })}
-                        className="bg-gray-700 border-gray-600 text-white mt-1"
-                        required
-                      />
-                    </div>
+                  <div className="mt-2 border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#176B87]/50 rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 relative">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <Label htmlFor="profileImage" className="cursor-pointer block text-sm font-medium text-gray-300 hover:text-white transition-colors">
+                      Click to upload new profile picture
+                    </Label>
+                    <Input
+                      id="profileImage"
+                      name="profileImage"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfileImageChange}
+                      className="hidden"
+                    />
+                    <p className="text-gray-500 text-xs mt-1">
+                      Upload profile picture (JPG, PNG) - Optional
+                    </p>
+                    {formData.profileImage && <p className="text-[#00ffd1] text-xs font-bold mt-2">✓ {formData.profileImage.name}</p>}
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="certificate" className="text-white">
-                    Certificate
+                  <Label htmlFor="bio" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
+                    Bio
                   </Label>
-                  <Input
-                    id="certificate"
-                    name="certificate"
-                    type="file"
-                    accept=".pdf,.jpg,.png"
-                    onChange={handleFileChange}
-                    className="bg-gray-700 border-gray-600 text-white mt-2"
-                  />
+                  <div className="relative mt-2">
+                    <FileText className="absolute left-4 top-4 h-4 w-4 text-gray-400" />
+                    <Textarea
+                      id="bio"
+                      name="bio"
+                      placeholder="Tell us about yourself..."
+                      value={formData.bio}
+                      onChange={handleInputChange}
+                      className="bg-white/5 border-white/10 text-white pl-12 min-h-[100px] rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="profileImage" className="text-white">
-                    Profile Image
+                  <Label htmlFor="certificate" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
+                    Certification/License <span className="text-[#176B87]">(Required)</span>
                   </Label>
-                  <Input
-                    id="profileImage"
-                    name="profileImage"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="bg-gray-700 border-gray-600 text-white mt-2"
-                  />
+                  <div className="mt-2 border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#176B87]/50 rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 relative">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <Label htmlFor="certificate" className="cursor-pointer block text-sm font-medium text-gray-300 hover:text-white transition-colors">
+                      Click to upload certificate
+                    </Label>
+                    <Input
+                      id="certificate"
+                      name="certificate"
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <p className="text-gray-500 text-xs mt-1">
+                      Upload your fitness certification or license (JPG, PNG, PDF)
+                    </p>
+                    {formData.certificate && <p className="text-[#00ffd1] text-xs font-bold mt-2">✓ {formData.certificate.name}</p>}
+                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-4">
@@ -394,18 +541,18 @@ const TrainerReapply: React.FC = () => {
                     type="button"
                     variant="outline"
                     onClick={handleBack}
-                    className="text-gray-400 border-gray-600 hover:bg-gray-700/50 hover:text-white"
+                    className="text-gray-400 border-white/10 hover:bg-white/5 hover:text-white rounded-xl"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
                     disabled={loading || fetching}
-                    className="bg-[#001C30] text-white hover:bg-gradient-to-r hover:from-[#001C30] hover:to-[#1F2A44] transition duration-300"
+                    className="bg-[#176B87] hover:bg-[#64CCC5] text-white font-black rounded-xl transition-all duration-300 cursor-pointer px-6"
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Submitting...
                       </>
                     ) : (
@@ -418,6 +565,29 @@ const TrainerReapply: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Crop Dialog */}
+      <Dialog open={isCropping} onOpenChange={(open) => !open && setTempImage(null)}>
+        <DialogContent className="bg-black/95 backdrop-blur-2xl border-white/10 rounded-[2.5rem] max-w-xl p-8 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-white italic uppercase tracking-tighter">Crop Photo</DialogTitle>
+            <DialogDescription className="text-gray-500 font-bold uppercase italic text-[10px] tracking-widest">Adjust your photo for the best fit.</DialogDescription>
+          </DialogHeader>
+          <div className="relative w-full h-[400px] rounded-3xl overflow-hidden my-6 border border-white/5 shadow-inner">
+            {tempImage && <Cropper image={tempImage} crop={crop} zoom={zoom} aspect={1} onCropChange={setCrop} onCropComplete={(_, p) => setCroppedAreaPixels(p)} onZoomChange={setZoom} showGrid={false} />}
+          </div>
+          <div className="flex items-center gap-6 px-4 mb-8">
+            <ZoomOut className="h-4 w-4 text-gray-500" />
+            <Slider value={[zoom]} min={1} max={3} step={0.1} onValueChange={(v) => setZoom(v[0])} className="flex-1" />
+            <ZoomIn className="h-4 w-4 text-[#176B87]" />
+          </div>
+          <DialogFooter className="flex gap-4">
+            <Button variant="ghost" className="flex-1 text-gray-500 hover:text-white font-black italic uppercase text-xs" onClick={() => setIsCropping(false)}>Cancel</Button>
+            <Button onClick={showCroppedImage} className="flex-1 bg-[#176B87] hover:bg-[#64CCC5] text-white font-black italic uppercase text-xs rounded-xl h-12">Save Crop</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <TrainerPlanDetailsModal isOpen={isPlanModalOpen} onClose={() => setIsPlanModalOpen(false)} />
     </div>
   );
 };

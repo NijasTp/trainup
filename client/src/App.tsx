@@ -170,8 +170,8 @@ function App() {
         <Route path={ROUTES.PAYMENT_GYM_CANCEL} element={<ProtectedRoute><GymPaymentCancel /></ProtectedRoute>} />
         <Route path={ROUTES.PAYMENT_BUNDLE_SUCCESS} element={<ProtectedRoute><BundlePaymentSuccess /></ProtectedRoute>} />
         <Route path={ROUTES.PAYMENT_BUNDLE_CANCEL} element={<ProtectedRoute><BundlePaymentCancel /></ProtectedRoute>} />
-        <Route path={ROUTES.USER_LOGIN} element={<Login initialRole={Role.USER} />} />
-        <Route path="/user/login" element={<Login initialRole={Role.USER} />} />
+        <Route path={ROUTES.USER_LOGIN} element={<PreventLoggedIn><Login initialRole={Role.USER} /></PreventLoggedIn>} />
+        <Route path="/user/login" element={<PreventLoggedIn><Login initialRole={Role.USER} /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_FORGOT_PASSWORD} element={<PreventLoggedIn><ForgotPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_NEW_PASSWORD} element={<PreventLoggedIn><NewPasswordPage /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_SIGNUP} element={<PreventLoggedIn><Signup /></PreventLoggedIn>} />
@@ -224,7 +224,7 @@ function App() {
 
 
         {/* Trainer Routes */}
-        <Route path={ROUTES.TRAINER_LOGIN} element={<Login initialRole={Role.TRAINER} />} />
+        <Route path={ROUTES.TRAINER_LOGIN} element={<TrainerPreventLoggedIn><Login initialRole={Role.TRAINER} /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_FORGOT_PASSWORD} element={<TrainerPreventLoggedIn><TrainerForgotPassword /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_FORGOT_PASSWORD_VERIFY_OTP} element={<TrainerPreventLoggedIn><TrainerForgotPasswordVerifyOtp /></TrainerPreventLoggedIn>} />
         <Route path={ROUTES.TRAINER_RESET_PASSWORD} element={<TrainerPreventLoggedIn><TrainerResetPassword /></TrainerPreventLoggedIn>} />
@@ -276,7 +276,7 @@ function App() {
         <Route path={ROUTES.ADMIN_EDIT_TEMPLATE} element={<AdminProtectedRoute><EditTemplate /></AdminProtectedRoute>} />
 
         {/* Gym Management Routes */}
-        <Route path={ROUTES.GYM_LOGIN} element={<Login initialRole={Role.GYM} />} />
+        <Route path={ROUTES.GYM_LOGIN} element={<GymPreventLoggedIn><Login initialRole={Role.GYM} /></GymPreventLoggedIn>} />
         <Route path={ROUTES.GYM_REGISTER} element={<GymOtpVerification />} />
         <Route path={ROUTES.GYM_ONBOARDING} element={<GymRegister />} />
         <Route path={ROUTES.GYM_STATUS} element={<GymProtectedRoute><GymStatus /></GymProtectedRoute>} />

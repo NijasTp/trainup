@@ -193,6 +193,16 @@ const Register = () => {
                 toast.error('Passwords do not match');
                 return;
             }
+        } else if (step === 2) {
+            if (!logo) {
+                toast.error('Please upload a brand logo');
+                return;
+            }
+        } else if (step === 3) {
+            if (certifications.length === 0) {
+                toast.error('Please upload at least one certification document');
+                return;
+            }
         }
         setStep(step + 1);
     };

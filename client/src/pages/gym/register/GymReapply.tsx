@@ -168,6 +168,34 @@ const GymReapply = () => {
         }
     };
 
+    const nextStep = () => {
+        if (step === 1) {
+            if (!formData.name.trim()) {
+                toast.error('Please enter the gym name');
+                return;
+            }
+            if (!formData.description.trim()) {
+                toast.error('Please enter a description');
+                return;
+            }
+        } else if (step === 2) {
+            if (!formData.address.trim() || !formData.lat || !formData.lng) {
+                toast.error('Please provide a valid address and coordinates');
+                return;
+            }
+        } else if (step === 3) {
+            if (!logo && !croppedLogo) {
+                toast.error('Please upload a business logo');
+                return;
+            }
+            if (certifications.length === 0) {
+                toast.error('Please upload at least one certification document');
+                return;
+            }
+        }
+        setStep(step + 1);
+    };
+
     return (
         <div className="min-h-screen bg-[#030303] text-white font-outfit relative py-20 px-4">
             {/* aurora background */}
@@ -292,7 +320,7 @@ const GymReapply = () => {
                         <Button
                             className={`h-14 flex-[2] rounded-2xl bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-widest group shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]`}
                             disabled={isSubmitting}
-                            onClick={() => step === 4 ? handleSubmit() : setStep(step + 1)}
+                            onClick={() => step === 4 ? handleSubmit() : nextStep()}
                         >
                             {isSubmitting ? 'Resubmitting...' : (step === 4 ? 'Complete Resubmission' : 'Continue')}
                             {step < 4 && <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />}
@@ -306,8 +334,9 @@ const GymReapply = () => {
                 onClose={() => setIsCropModalOpen(false)}
                 image={imageToCrop || ''}
                 onCropComplete={(croppedImage) => {
+                    const file = new File([croppedImage], 'logo.jpg', { type: 'image/jpeg' });
+                    setLogo(file);
                     setCroppedLogo(URL.createObjectURL(croppedImage));
-                    // Handle cropped image
                     setIsCropModalOpen(false);
                 }}
             />

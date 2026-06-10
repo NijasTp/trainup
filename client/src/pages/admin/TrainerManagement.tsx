@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, FileText, Star, Mail, Phone, Users, RefreshCw } from "lucide-react";
+import { Search, X, Eye, ChevronLeft, ChevronRight, Loader2, UserCheck, Ban, FileText, Star, Mail, Phone, Users, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getTrainerApplication, getTrainerById, getTrainers, toggleTrainerBan } from "@/services/adminService";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -138,8 +138,21 @@ const TrainerManagement = () => {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="bg-white/5 border-white/10 h-12 pl-12 rounded-xl text-white outline-none focus:ring-0"
+                className="bg-white/5 border-white/10 h-12 pl-12 pr-10 rounded-xl text-white outline-none focus:ring-0"
               />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchInput("");
+                    setSearchQuery("");
+                    setCurrentPage(1);
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
             <div className="flex gap-2 w-full md:w-auto">
               <select
@@ -230,7 +243,13 @@ const TrainerManagement = () => {
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <Badge className={`${trainer.isBanned ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'} border-0 font-black text-[10px]`}>
+                        <Badge className={`${
+                          trainer.isBanned || trainer.profileStatus === 'rejected'
+                            ? 'bg-red-500/20 text-red-500' 
+                            : trainer.profileStatus === 'pending'
+                            ? 'bg-yellow-500/20 text-yellow-500'
+                            : 'bg-green-500/20 text-green-500'
+                        } border-0 font-black text-[10px]`}>
                           {trainer.isBanned ? "BANNED" : (trainer.profileStatus === 'approved' ? 'VERIFIED' : (trainer.profileStatus?.toUpperCase() || "PENDING"))}
                         </Badge>
                       </td>

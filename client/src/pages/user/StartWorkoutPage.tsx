@@ -53,109 +53,6 @@ export default function StartSessionPage() {
   const lastStartRef = useRef<number | null>(null);
   const whistleSoundRef = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize sounds and load session
-  useEffect(() => {
-    whistleSoundRef.current = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_5b76f6521b.mp3");
-    async function fetchSession() {
-      setIsLoading(true);
-      try {
-        const response = await getWorkoutSession(id!);
-        if (response.isDone) {
-          toast.info("This session is already completed!");
-          return navigate("/workouts");
-        }
-        setSession({
-          ...response,
-          exercises: response.exercises.map((ex: IExercise) => ({ ...ex, isDone: false })),
-        });
-      } catch (errVal) { const err = errVal as SafeAny;
-        setError(err.message || "Failed to fetch session");
-        toast.error("Failed to load session", { description: err.message });
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    if (id) fetchSession();
-  }, [id, navigate]);
-
-  // Countdown logic with sound
-  useEffect(() => {
-    if (phase === "countdown" && countdown > 0) {
-      const timerId = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timerId);
-    } else if (phase === "countdown" && countdown === 0) {
-      setPhase("exercise");
-      const currentExercise = session?.exercises[currentExerciseIndex];
-      if (currentExercise?.time) {
-        const timeStr = currentExercise.time || "0 min";
-        const timeInSeconds = parseInt(timeStr) * 60;
-        setTimer(timeInSeconds);
-      } else {
-        setTimer(null);
-      }
-      setAccumulatedTime(0);
-      lastStartRef.current = Date.now();
-      setCurrentExerciseTime(0);
-      if (whistleSoundRef.current) {
-        whistleSoundRef.current.play().catch(() => console.log("Sound playback blocked by browser"));
-      }
-    }
-  }, [phase, countdown, session, currentExerciseIndex]);
-
-  // Exercise set timer (for timed exercises)
-  useEffect(() => {
-    if (phase === "exercise" && timer !== null && timer > 0 && !isPaused) {
-      const timerId = setTimeout(() => setTimer(timer - 1), 1000);
-      return () => clearTimeout(timerId);
-    } else if (phase === "exercise" && timer === 0) {
-      handleSetComplete();
-    }
-  }, [timer, phase, isPaused, handleSetComplete]);
-
-  // Current set elapsed time tracker (excluding pauses)
-  useEffect(() => {
-    if (phase === "exercise") {
-      const interval = setInterval(() => {
-        if (!isPaused && lastStartRef.current) {
-          const now = Date.now();
-          const delta = Math.floor((now - lastStartRef.current) / 1000);
-          setCurrentExerciseTime(accumulatedTime + delta);
-        }
-      }, 1000);
-      return () => clearInterval(interval);
-    } else {
-      setAccumulatedTime(0);
-      lastStartRef.current = null;
-      setCurrentExerciseTime(0);
-    }
-  }, [phase, isPaused, accumulatedTime]);
-
-  // Preview timer (rest between sets/exercises)
-  useEffect(() => {
-    if (phase === "preview" && previewCountdown > 0) {
-      const previewTimer = setTimeout(() => setPreviewCountdown(previewCountdown - 1), 1000);
-      return () => clearTimeout(previewTimer);
-    } else if (phase === "preview" && previewCountdown === 0) {
-      handleRestPhaseEnd();
-    }
-  }, [phase, previewCountdown, handleRestPhaseEnd]);
-
-  function togglePause() {
-    if (isPaused) {
-      // Resume
-      lastStartRef.current = Date.now();
-    } else {
-      // Pause
-      if (lastStartRef.current) {
-        const now = Date.now();
-        const delta = Math.floor((now - lastStartRef.current) / 1000);
-        setAccumulatedTime((prev) => prev + delta);
-        lastStartRef.current = null;
-      }
-    }
-    setIsPaused(!isPaused);
-  }
-
   const handleWorkoutComplete = useCallback(async (lastSetDuration: number) => {
     if (!session) return;
 
@@ -285,6 +182,111 @@ export default function StartSessionPage() {
       setCountdown(3);
     }
   }, [session, currentExerciseIndex, initialPreviewRest, previewCountdown, currentSetIndex]);
+
+  // Initialize sounds and load session
+  useEffect(() => {
+    whistleSoundRef.current = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_5b76f6521b.mp3");
+    async function fetchSession() {
+      setIsLoading(true);
+      try {
+        const response = await getWorkoutSession(id!);
+        if (response.isDone) {
+          toast.info("This session is already completed!");
+          return navigate("/workouts");
+        }
+        setSession({
+          ...response,
+          exercises: response.exercises.map((ex: IExercise) => ({ ...ex, isDone: false })),
+        });
+      } catch (errVal) { const err = errVal as SafeAny;
+        setError(err.message || "Failed to fetch session");
+        toast.error("Failed to load session", { description: err.message });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    if (id) fetchSession();
+  }, [id, navigate]);
+
+  // Countdown logic with sound
+  useEffect(() => {
+    if (phase === "countdown" && countdown > 0) {
+      const timerId = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timerId);
+    } else if (phase === "countdown" && countdown === 0) {
+      setPhase("exercise");
+      const currentExercise = session?.exercises[currentExerciseIndex];
+      if (currentExercise?.time) {
+        const timeStr = currentExercise.time || "0 min";
+        const timeInSeconds = parseInt(timeStr) * 60;
+        setTimer(timeInSeconds);
+      } else {
+        setTimer(null);
+      }
+      setAccumulatedTime(0);
+      lastStartRef.current = Date.now();
+      setCurrentExerciseTime(0);
+      if (whistleSoundRef.current) {
+        whistleSoundRef.current.play().catch(() => console.log("Sound playback blocked by browser"));
+      }
+    }
+  }, [phase, countdown, session, currentExerciseIndex]);
+
+  // Exercise set timer (for timed exercises)
+  useEffect(() => {
+    if (phase === "exercise" && timer !== null && timer > 0 && !isPaused) {
+      const timerId = setTimeout(() => setTimer(timer - 1), 1000);
+      return () => clearTimeout(timerId);
+    } else if (phase === "exercise" && timer === 0) {
+      handleSetComplete();
+    }
+  }, [timer, phase, isPaused, handleSetComplete]);
+
+  // Current set elapsed time tracker (excluding pauses)
+  useEffect(() => {
+    if (phase === "exercise") {
+      const interval = setInterval(() => {
+        if (!isPaused && lastStartRef.current) {
+          const now = Date.now();
+          const delta = Math.floor((now - lastStartRef.current) / 1000);
+          setCurrentExerciseTime(accumulatedTime + delta);
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setAccumulatedTime(0);
+      lastStartRef.current = null;
+      setCurrentExerciseTime(0);
+    }
+  }, [phase, isPaused, accumulatedTime]);
+
+  // Preview timer (rest between sets/exercises)
+  useEffect(() => {
+    if (phase === "preview" && previewCountdown > 0) {
+      const previewTimer = setTimeout(() => setPreviewCountdown(previewCountdown - 1), 1000);
+      return () => clearTimeout(previewTimer);
+    } else if (phase === "preview" && previewCountdown === 0) {
+      handleRestPhaseEnd();
+    }
+  }, [phase, previewCountdown, handleRestPhaseEnd]);
+
+  function togglePause() {
+    if (isPaused) {
+      // Resume
+      lastStartRef.current = Date.now();
+    } else {
+      // Pause
+      if (lastStartRef.current) {
+        const now = Date.now();
+        const delta = Math.floor((now - lastStartRef.current) / 1000);
+        setAccumulatedTime((prev) => prev + delta);
+        lastStartRef.current = null;
+      }
+    }
+    setIsPaused(!isPaused);
+  }
+
+
 
   function handleSkipExercise() {
     if (!session) return;

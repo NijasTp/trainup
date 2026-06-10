@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../../redux/store';
 import type { LoginPageProps } from "@/interfaces/user/ILogin";
 import ColorBends from '@/components/ui/ColorBends';
+import { toast } from 'sonner';
 
 
 const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
@@ -15,6 +16,7 @@ const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
   const { user } = useSelector((state: RootState) => state.userAuth);
   const { trainer } = useSelector((state: RootState) => state.trainerAuth);
   const { gym } = useSelector((state: RootState) => state.gymAuth);
+  const { admin } = useSelector((state: RootState) => state.adminAuth);
 
   useEffect(() => {
     if (activeRole === 'user' && window.location.pathname !== '/user/login') {
@@ -39,8 +41,11 @@ const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
       }
     } else if (gym) {
       navigate('/gym/dashboard', { replace: true });
+    } else if (admin) {
+      toast.error("You are already logged in as Admin. Please logout first.");
+      navigate('/admin/dashboard', { replace: true });
     }
-  }, [user, trainer, gym, navigate]);
+  }, [user, trainer, gym, admin, navigate]);
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
