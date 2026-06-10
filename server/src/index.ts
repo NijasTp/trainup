@@ -26,6 +26,6 @@ connectDB().then(() => {
   new NotificationWorker();
 
   httpServer.listen(PORT, () => {
-    logger.info(` Server running on http://localhost:${PORT}`);
+    logger.info(` Server running on ${process.env.PROJECT_URL_BACKEND}`);
   });
 });
