@@ -22,7 +22,7 @@ import {
     updateAnnouncement,
     deleteAnnouncement
 } from '@/services/gymService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 const Announcements = () => {
@@ -253,9 +253,13 @@ const Announcements = () => {
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black text-zinc-600 uppercase tracking-widest pl-1 italic">Broadcast Headline</label>
+                                    <div className="flex justify-between items-center pl-1 mb-1">
+                                        <label className="text-xs font-black text-zinc-600 uppercase tracking-widest italic">Broadcast Headline</label>
+                                        <span className="text-[10px] font-bold text-zinc-600">{(editingAnn?.title?.length || 0)}/100</span>
+                                    </div>
                                     <Input
                                         required
+                                        maxLength={100}
                                         value={editingAnn?.title}
                                         onChange={(e) => setEditingAnn({ ...editingAnn!, title: e.target.value })}
                                         className="bg-white/5 border-white/5 h-14 rounded-2xl text-white outline-none focus:ring-1 focus:ring-primary/40 font-bold italic"
@@ -308,9 +312,13 @@ const Announcements = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-zinc-600 uppercase tracking-widest pl-1 italic">Broadcast Payload (Message)</label>
+                                <div className="flex justify-between items-center pl-1 mb-1">
+                                    <label className="text-xs font-black text-zinc-600 uppercase tracking-widest italic">Broadcast Payload (Message)</label>
+                                    <span className="text-[10px] font-bold text-zinc-600">{(editingAnn?.description?.length || 0)}/500</span>
+                                </div>
                                 <textarea
                                     required
+                                    maxLength={500}
                                     value={editingAnn?.description}
                                     onChange={(e) => setEditingAnn({ ...editingAnn!, description: e.target.value })}
                                     className="w-full bg-white/5 border border-white/5 rounded-[2rem] p-6 min-h-[200px] outline-none focus:ring-1 focus:ring-primary/40 text-white text-sm font-medium resize-none shadow-xl italic"
