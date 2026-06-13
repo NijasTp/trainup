@@ -108,7 +108,6 @@ import GymAttendancePage from './pages/gym/attendance/Attendance';
 import GymStorePage from './pages/gym/store/Store';
 import GymAnnouncementsPage from './pages/gym/announcements/Announcements';
 import GymJobsPage from './pages/gym/jobs/Jobs';
-import GymWorkoutsPage from './pages/gym/workouts/Workouts';
 import GymOtpVerification from './pages/gym/register/GymOtpVerification';
 import GymStatus from './pages/gym/register/GymStatus';
 import GymReapply from './pages/gym/register/GymReapply';
@@ -304,9 +303,6 @@ function App() {
           <Route path="jobs" element={<GymJobsPage />} />
           <Route path="jobs/create" element={<GymJobsPage />} />
           <Route path="jobs/edit/:id" element={<GymJobsPage />} />
-          <Route path="workouts" element={<GymWorkoutsPage />} />
-          <Route path="workouts/create" element={<GymWorkoutsPage />} />
-          <Route path="workouts/edit/:id" element={<GymWorkoutsPage />} />
         </Routes></GymLayout></GymProtectedRoute>} />
 
         <Route path={ROUTES.USER_NOT_FOUND} element={<ProtectedRoute><NotFound /></ProtectedRoute>} />

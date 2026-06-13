@@ -11,7 +11,6 @@ import {
     Store,
     Megaphone,
     Briefcase,
-    Flame,
     Menu,
     X,
     LogOut,
@@ -90,7 +89,6 @@ const GymLayout = ({ children }: { children: React.ReactNode }) => {
         { icon: Store, label: 'Store', path: '/gym/store' },
         { icon: Megaphone, label: 'Announcements', path: '/gym/announcements' },
         { icon: Briefcase, label: 'Jobs', path: '/gym/jobs' },
-        { icon: Flame, label: 'Workout Templates', path: '/gym/workouts' },
     ];
 
     return (

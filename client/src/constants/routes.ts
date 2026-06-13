@@ -143,7 +143,4 @@ export const ROUTES = {
   GYM_JOBS: "/gym/jobs",
   GYM_JOBS_CREATE: "/gym/jobs/create",
   GYM_JOBS_EDIT: "/gym/jobs/edit/:id",
-  GYM_WORKOUTS: "/gym/workouts",
-  GYM_WORKOUTS_CREATE: "/gym/workouts/create",
-  GYM_WORKOUTS_EDIT: "/gym/workouts/edit/:id",
 };
