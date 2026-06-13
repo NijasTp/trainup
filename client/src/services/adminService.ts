@@ -149,7 +149,7 @@ export const getGyms = async (
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
-    search,
+    searchQuery: search,
   });
   if (isBanned && isBanned !== "all") params.append("isBanned", isBanned);
   if (verifyStatus && verifyStatus !== "all" && verifyStatus !== undefined) params.append("verifyStatus", verifyStatus);

@@ -14,7 +14,8 @@ export interface IGymRepository {
   findGyms(
     page: number,
     limit: number,
-    searchQuery: string
+    searchQuery: string,
+    verifyStatus?: string
   ): Promise<{
     gyms: GymResponseDto[];
     total: number;

@@ -38,16 +38,20 @@ export class GymRepository implements IGymRepository {
   async findGyms(
     page: number,
     limit: number,
-    searchQuery: string
+    searchQuery: string,
+    verifyStatus?: string
   ): Promise<{
     gyms: GymResponseDto[]
     total: number
     page: number
     totalPages: number
   }> {
-    const query: { name?: { $regex: string; $options: string } } = {}
+    const query: any = {}
     if (searchQuery) {
       query.name = { $regex: searchQuery, $options: 'i' }
+    }
+    if (verifyStatus && verifyStatus !== 'all') {
+      query.verifyStatus = verifyStatus
     }
 
     const total = await GymModel.countDocuments(query)

@@ -187,8 +187,9 @@ export class AdminController {
       const page = parseInt(String(dto.page)) || 1;
       const limit = parseInt(String(dto.limit)) || 10;
       const searchQuery = String(dto.searchQuery || '');
+      const verifyStatus = dto.verifyStatus ? String(dto.verifyStatus) : undefined;
 
-      const result = await this._gymService.getAllGyms(page, limit, searchQuery);
+      const result = await this._gymService.getAllGyms(page, limit, searchQuery, verifyStatus);
       res.status(STATUS_CODE.OK).json(result);
     } catch (err) {
       next(err);

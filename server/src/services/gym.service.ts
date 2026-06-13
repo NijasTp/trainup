@@ -243,9 +243,10 @@ export class GymService implements IGymService {
   async getAllGyms(
     page: number,
     limit: number,
-    searchQuery: string
+    searchQuery: string,
+    verifyStatus?: string
   ): Promise<{ gyms: GymResponseDto[]; total: number; page: number; totalPages: number }> {
-    return await this._gymRepo.findGyms(page, limit, searchQuery)
+    return await this._gymRepo.findGyms(page, limit, searchQuery, verifyStatus)
   }
 
   async updateGymStatus(

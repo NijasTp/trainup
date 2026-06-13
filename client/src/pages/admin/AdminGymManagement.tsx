@@ -25,7 +25,7 @@ import {
     getGyms,
     updateGymStatus
 } from '@/services/adminService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import {
     Dialog,
     DialogContent,
@@ -42,7 +42,8 @@ const AdminGymManagement = () => {
     const [gyms, setGyms] = useState<IGym[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [search, setSearch] = useState('');
+    const [searchInput, setSearchInput] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
     const [verifyStatus, setVerifyStatus] = useState('all');
     const [loading, setLoading] = useState(true);
     const [selectedGym, setSelectedGym] = useState<SafeAny>(null); // Keeping any for now as it has many nested operational fields
@@ -53,7 +54,7 @@ const AdminGymManagement = () => {
     const fetchGyms = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await getGyms(page, 5, search, undefined, verifyStatus);
+            const data = await getGyms(page, 5, searchQuery, undefined, verifyStatus);
             setGyms(data.gyms || []);
             setTotalPages(data.totalPages || 1);
         } catch (_err) {
@@ -61,7 +62,7 @@ const AdminGymManagement = () => {
         } finally {
             setLoading(false);
         }
-    }, [page, search, verifyStatus]);
+    }, [page, searchQuery, verifyStatus]);
 
     useEffect(() => {
         fetchGyms();
@@ -123,20 +124,37 @@ const AdminGymManagement = () => {
 
                 <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
                     <div className="p-6 border-b border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between">
-                        <div className="relative w-full md:w-96 group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
-                            <Input
-                                placeholder="Search gyms..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="bg-white/5 border-white/10 h-12 pl-12 rounded-xl text-white outline-none focus:ring-0"
-                            />
-                        </div>
+                        <form onSubmit={(e) => { e.preventDefault(); setSearchQuery(searchInput); setPage(1); }} className="flex gap-2 w-full md:w-auto items-center">
+                            <div className="relative w-full md:w-96 group">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors h-5 w-5" />
+                                <Input
+                                    placeholder="Search gyms..."
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    className="bg-white/5 border-white/10 h-12 pl-12 pr-10 rounded-xl text-white outline-none focus:ring-0"
+                                />
+                                {searchInput && (
+                                    <button
+                                        type="button"
+                                        onClick={() => { setSearchInput(''); setSearchQuery(''); setPage(1); }}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                                    >
+                                        <XCircle size={16} />
+                                    </button>
+                                )}
+                            </div>
+                            <Button
+                                type="submit"
+                                className="h-12 px-6 bg-primary hover:bg-primary/90 text-black font-bold rounded-xl"
+                            >
+                                Search
+                            </Button>
+                        </form>
                         <div className="flex gap-2 w-full md:w-auto">
                             <select
                                 className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-gray-300 outline-none focus:ring-1 focus:ring-primary/50"
                                 value={verifyStatus}
-                                onChange={(e) => setVerifyStatus(e.target.value)}
+                                onChange={(e) => { setVerifyStatus(e.target.value); setPage(1); }}
                             >
                                 <option value="all" className="bg-[#1a1a1a]">All Status</option>
                                 <option value="pending" className="bg-[#1a1a1a]">Pending</option>

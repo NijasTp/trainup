@@ -49,6 +49,7 @@ export class GetAllGymsQueryDto {
   page?: number;
   limit?: number;
   searchQuery?: string;
+  verifyStatus?: string;
 }
 
 export class UpdateGymStatusDto {

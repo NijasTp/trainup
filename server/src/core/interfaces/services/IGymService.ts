@@ -40,7 +40,7 @@ export interface IGymService {
     }
   ): Promise<GymLoginResponseDto>;
 
-  getAllGyms(page: number, limit: number, searchQuery: string): Promise<unknown>;
+  getAllGyms(page: number, limit: number, searchQuery: string, verifyStatus?: string): Promise<unknown>;
 
   updateGymStatus(id: string, updateData: Partial<IGym>): Promise<IGym | null>;
 
