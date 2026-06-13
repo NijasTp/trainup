@@ -9,6 +9,7 @@ import { PreventLoggedIn, ProtectedRoute } from './redirects/UserRedirects';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import { Toaster } from 'sonner';
+import { Toaster as HotToaster } from 'react-hot-toast';
 import AdminLogin from './pages/admin/AdminLogin';
 import { AdminProtectedRoute, AdminPreventLoggedIn } from './redirects/AdminRedirects';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -159,6 +160,7 @@ function App() {
     <ThemeProvider>
       <ToastContainer />
       <Toaster position='bottom-right' theme='dark' richColors duration={6000}/>
+      <HotToaster position='top-center' reverseOrder={false} />
       <Routes>
         <Route path={ROUTES.CHOOSE_LOGIN} element={<RoleSelectionPage />} />
         <Route path={ROUTES.GLOBAL_LOGIN} element={<RoleSelectionPage />} />
