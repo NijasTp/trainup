@@ -31,7 +31,7 @@ import {
     getJobApplicants,
     togglePinApplicant
 } from '@/services/gymService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const Jobs = () => {
     const [view, setView] = useState<'list' | 'editor'>('list');
@@ -102,8 +102,33 @@ const Jobs = () => {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!editingJob) return;
+
+        if (!editingJob.title || !editingJob.title.trim()) {
+            toast.error('Job title is required');
+            return;
+        }
+        if (!editingJob.description || !editingJob.description.trim()) {
+            toast.error('Job description is required');
+            return;
+        }
+        if (!editingJob.salary || !editingJob.salary.trim()) {
+            toast.error('Salary is required');
+            return;
+        }
+        
+        const reqs = editingJob.requirements || [];
+        if (reqs.length === 0) {
+            toast.error('At least one requirement is required');
+            return;
+        }
+        if (reqs.some((req: string) => !req || !req.trim())) {
+            toast.error('Requirement items cannot be empty');
+            return;
+        }
+
         try {
-            if (view === 'editor' && editingJob) {
+            if (view === 'editor') {
                 if (editingJob._id) {
                     await updateGymJob(editingJob._id, editingJob);
                     toast.success('Job updated');
@@ -132,9 +157,14 @@ const Jobs = () => {
 
     const addRequirement = () => {
         if (editingJob) {
+            const currentReqs = editingJob.requirements || [];
+            if (currentReqs.length >= 10) {
+                toast.error('Maximum of 10 requirements allowed');
+                return;
+            }
             setEditingJob({
                 ...editingJob,
-                requirements: [...(editingJob.requirements || []), '']
+                requirements: [...currentReqs, '']
             });
         }
     };
@@ -375,7 +405,7 @@ const Jobs = () => {
                                         value={editingJob?.salary}
                                         onChange={(e) => setEditingJob({ ...editingJob!, salary: e.target.value })}
                                         className="bg-white/5 border-white/10 h-12 rounded-xl text-white outline-none focus:ring-1 focus:ring-primary/30"
-                                        placeholder="e.g. $50k - $70k / Year"
+                                        placeholder="e.g. ₹50k - ₹70k / Year"
                                     />
                                 </div>
 
