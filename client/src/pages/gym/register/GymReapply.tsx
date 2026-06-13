@@ -54,7 +54,8 @@ const GymReapply = () => {
     useEffect(() => {
         const fetchExistingData = async () => {
             try {
-                const data = await getGymDetails();
+                const response = await getGymDetails();
+                const data = response.gymDetails || response;
                 setFormData({
                     name: data.name || '',
                     email: data.email || '',
