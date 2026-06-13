@@ -22,7 +22,7 @@ import {
     updateGymProduct,
     deleteGymProduct
 } from '@/services/gymService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const Store = () => {
     const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
@@ -35,6 +35,7 @@ const Store = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+    const [submitting, setSubmitting] = useState(false);
 
     const fetchProducts = useCallback(async () => {
         try {
@@ -97,6 +98,38 @@ const Store = () => {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!editingProduct.name || !editingProduct.name.trim()) {
+            toast.error('Product name is required');
+            return;
+        }
+        if (editingProduct.price === undefined || editingProduct.price === null || editingProduct.price === '' || isNaN(Number(editingProduct.price))) {
+            toast.error('Valid price is required');
+            return;
+        }
+        if (Number(editingProduct.price) < 0) {
+            toast.error('Price cannot be negative');
+            return;
+        }
+        if (!editingProduct.category || !editingProduct.category.trim()) {
+            toast.error('Category is required');
+            return;
+        }
+        if (!editingProduct.subcategory || !editingProduct.subcategory.trim()) {
+            toast.error('Subcategory is required');
+            return;
+        }
+        if (!editingProduct.description || !editingProduct.description.trim()) {
+            toast.error('Description is required');
+            return;
+        }
+        
+        const existingImagesCount = editingProduct.existingImages?.length || 0;
+        if (existingImagesCount + imageFiles.length === 0) {
+            toast.error('At least one product image is required');
+            return;
+        }
+
+        setSubmitting(true);
         try {
             const formData = new FormData();
             formData.append('name', editingProduct.name);
@@ -130,6 +163,8 @@ const Store = () => {
             setPreviewUrls([]);
         } catch (_error) {
             toast.error('Failed to save product');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -324,7 +359,7 @@ const Store = () => {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1 italic">Price ($)</label>
+                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1 italic">Price (₹)</label>
                                         <Input
                                             required
                                             type="number"
@@ -437,9 +472,14 @@ const Store = () => {
                                 </Button>
                                 <Button
                                     type="submit"
-                                    className="flex-[2] h-14 rounded-[1.25rem] bg-primary hover:bg-primary/90 text-black text-lg font-black uppercase italic tracking-widest shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]"
+                                    disabled={submitting}
+                                    className="flex-[2] h-14 rounded-[1.25rem] bg-primary hover:bg-primary/90 text-black text-lg font-black uppercase italic tracking-widest shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {view === 'create' ? 'Launch Product' : 'Save Changes'}
+                                    {submitting ? (
+                                        <Loader2 className="animate-spin h-5 w-5 mx-auto" />
+                                    ) : (
+                                        view === 'create' ? 'Launch Product' : 'Save Changes'
+                                    )}
                                 </Button>
                             </div>
                         </div>
