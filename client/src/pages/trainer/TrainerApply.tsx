@@ -399,16 +399,23 @@ export default function TrainerApplyPage() {
                   <Label htmlFor="experience" className="text-gray-300 font-bold uppercase tracking-wider text-xs ml-1">
                     Years of Experience
                   </Label>
-                  <Input
+                  <select
                     id="experience"
                     name="experience"
-                    type="number"
-                    placeholder="e.g., 5"
                     value={formData.experience}
                     onChange={handleInputChange}
-                    className="bg-white/5 border-white/10 text-white mt-2 h-12 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50"
+                    className="bg-white/5 border border-white/10 text-white mt-2 block w-full p-3 h-12 rounded-xl focus:border-[#176B87] focus:ring-2 focus:ring-[#176B87]/50 transition-all cursor-pointer text-sm"
+                    style={{ colorScheme: 'dark' }}
                     required
-                  />
+                  >
+                    <option value="" disabled className="bg-neutral-900">Select experience range</option>
+                    <option value="0-1 year" className="bg-neutral-900">0-1 year</option>
+                    <option value="1-2 years" className="bg-neutral-900">1-2 years</option>
+                    <option value="2-3 years" className="bg-neutral-900">2-3 years</option>
+                    <option value="3-5 years" className="bg-neutral-900">3-5 years</option>
+                    <option value="5-10 years" className="bg-neutral-900">5-10 years</option>
+                    <option value="10+ years" className="bg-neutral-900">10+ years</option>
+                  </select>
                 </div>
               </div>
 
