@@ -342,7 +342,7 @@ const IndividualTrainer = () => {
                   {trainer.clients.length > 0 ? (
                     trainer.clients.slice(0, 6).map((client, idx) => (
                       <motion.div
-                        key={client._id}
+                        key={client?._id || idx}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
@@ -351,14 +351,16 @@ const IndividualTrainer = () => {
                         <div className="flex items-center gap-4">
                           <Avatar className="h-12 w-12 border border-white/10">
                             <AvatarFallback className="bg-white/10 text-white font-black italic text-xs">
-                              {client.name.substring(0, 2).toUpperCase()}
+                              {client?.name?.substring(0, 2).toUpperCase() || "OP"}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-white font-black italic uppercase tracking-wider text-sm group-hover:text-primary transition-colors">{client.name}</p>
+                            <p className="text-white font-black italic uppercase tracking-wider text-sm group-hover:text-primary transition-colors">{client?.name || "Unknown Operative"}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               <Calendar className="h-3 w-3 text-white/20" />
-                              <span className="text-[10px] font-bold text-white/30 uppercase tracking-tighter italic">Joined {new Date(client.joinDate).toLocaleDateString()}</span>
+                              <span className="text-[10px] font-bold text-white/30 uppercase tracking-tighter italic">
+                                Joined {client?.joinDate ? new Date(client.joinDate).toLocaleDateString() : "N/A"}
+                              </span>
                             </div>
                           </div>
                         </div>
