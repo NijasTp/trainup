@@ -100,7 +100,7 @@ export class AdminService implements IAdminService {
     search: string,
     status: string,
     sort: string
-  ): Promise<{ transactions: unknown[]; totalPages: number }> {
+  ): Promise<{ transactions: unknown[]; totalPages: number; totalRevenue: number }> {
     return await this._transactionRepository.getAllTransactions(page, limit, search, status, sort);
   }
 

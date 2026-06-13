@@ -53,7 +53,7 @@ export interface ITransactionRepository {
     search: string,
     status: string,
     sort: string
-  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }>;
+  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number; totalRevenue: number }>;
   getAllTransactionsForExport(): Promise<ITransactionDTO[]>;
   getGraphData(filter: 'day' | 'week' | 'month' | 'year'): Promise<unknown[]>;
   getTotalPlatformRevenue(): Promise<number>;

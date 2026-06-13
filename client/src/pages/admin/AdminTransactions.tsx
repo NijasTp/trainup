@@ -30,8 +30,9 @@ export default function AdminTransactions() {
     const limit = 10;
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState("all");
-    const [sort, setSort] = useState("newest");
+    const [sort, setSort] = useState("oldest");
     const [totalPages, setTotalPages] = useState(1);
+    const [totalRevenue, setTotalRevenue] = useState(0);
 
     const fetchTransactions = useCallback(async () => {
         setLoading(true);
@@ -39,6 +40,7 @@ export default function AdminTransactions() {
             const data = await getAdminTransactions(page, limit, search, status, sort);
             setTransactions(data.transactions);
             setTotalPages(data.totalPages);
+            setTotalRevenue(data.totalRevenue || 0);
         } catch (errorVal) { const error = errorVal as SafeAny;
             console.error("Failed to fetch transactions", error);
         } finally {
@@ -105,6 +107,21 @@ export default function AdminTransactions() {
                     </div>
                 </div>
 
+                {/* Overall Earnings Card */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] backdrop-blur-md relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Wallet size={100} className="text-primary" />
+                        </div>
+                        <div className="space-y-2 relative z-10">
+                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1 italic">Total Earnings (10% Fee)</span>
+                            <h2 className="text-3xl font-black text-white italic tracking-tighter">
+                                ₹{totalRevenue.toLocaleString()}
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Filters Section */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-white/5 border border-white/10 p-6 rounded-[2rem] backdrop-blur-sm">
                     <div className="md:col-span-5 relative group">
@@ -143,9 +160,7 @@ export default function AdminTransactions() {
                                 </div>
                             </SelectTrigger>
                             <SelectContent className="bg-zinc-900 border-white/10 text-white rounded-2xl overflow-hidden">
-                                <SelectItem value="newest" className="font-black italic">NEWEST SESSIONS</SelectItem>
                                 <SelectItem value="oldest" className="font-black italic">LEGACY SESSIONS</SelectItem>
-                                <SelectItem value="amount_high" className="font-black italic">MAXIMUM CAPITAL</SelectItem>
                                 <SelectItem value="amount_low" className="font-black italic">MINIMUM CAPITAL</SelectItem>
                             </SelectContent>
                         </Select>

@@ -16,7 +16,7 @@ export interface IAdminService {
     search: string,
     status: string,
     sort: string
-  ): Promise<{ transactions: unknown[]; totalPages: number }>;
+  ): Promise<{ transactions: unknown[]; totalPages: number; totalRevenue: number }>;
   getExportTransactions(): Promise<unknown[]>;
   getGraphData(filter: 'day' | 'week' | 'month' | 'year', type: 'revenue' | 'users' | 'trainers'): Promise<unknown[]>;
 }

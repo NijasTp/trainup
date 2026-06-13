@@ -340,7 +340,7 @@ export class TransactionRepository implements ITransactionRepository {
     search: string,
     status: string,
     sort: string
-  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number }> {
+  ): Promise<{ transactions: ITransactionDTO[]; totalPages: number; totalRevenue: number }> {
     const skip = (page - 1) * limit;
 
     const trainerQuery: FilterQuery<any> = {};
@@ -389,8 +389,9 @@ export class TransactionRepository implements ITransactionRepository {
 
     const total = combined.length;
     const paginated = combined.slice(skip, skip + limit);
+    const totalRevenue = await this.getTotalPlatformRevenue();
 
-    return { transactions: paginated, totalPages: Math.ceil(total / limit) };
+    return { transactions: paginated, totalPages: Math.ceil(total / limit), totalRevenue };
   }
 
   async getAllTransactionsForExport(): Promise<ITransactionDTO[]> {
