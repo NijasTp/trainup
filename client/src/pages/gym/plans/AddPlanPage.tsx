@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import {
     createSubscriptionPlan,
     updateSubscriptionPlan,
@@ -188,9 +188,9 @@ const AddPlanPage = () => {
                                         onChange={(e) => setFormData({ ...formData, durationUnit: e.target.value as SafeAny })}
                                         className="h-14 px-4 bg-white/5 border border-white/10 rounded-2xl text-white font-black uppercase text-[10px] tracking-widest outline-none focus:border-primary/50 appearance-none cursor-pointer hover:bg-white/10 transition-colors"
                                     >
-                                        <option value="day">Days</option>
-                                        <option value="month">Months</option>
-                                        <option value="year">Years</option>
+                                        <option value="day" className="bg-zinc-950 text-white">Days</option>
+                                        <option value="month" className="bg-zinc-950 text-white">Months</option>
+                                        <option value="year" className="bg-zinc-950 text-white">Years</option>
                                     </select>
                                 </div>
                             </div>

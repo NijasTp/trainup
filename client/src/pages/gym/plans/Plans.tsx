@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import {
     listSubscriptionPlans,
     updateSubscriptionPlan,
@@ -74,11 +74,18 @@ const Plans = () => {
                     <h1 className="text-4xl font-black text-white italic tracking-tight uppercase">
                         Membership <span className="text-primary non-italic">Plans</span>
                     </h1>
-                    <p className="text-zinc-500 font-medium italic">Manage your gym's subscription offerings</p>
+                    <p className="text-zinc-500 font-medium italic">Manage your gym's subscription offerings ({plans.length}/5 plans launched)</p>
                 </div>
                 <Button
-                    onClick={() => { navigate(ROUTES.GYM_PLANS_CREATE); }}
-                    className="h-14 px-10 bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-widest rounded-2xl shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-105 active:scale-95"
+                    onClick={() => {
+                        if (plans.length >= 5) {
+                            toast.error('Maximum limit of 5 plans reached.');
+                            return;
+                        }
+                        navigate(ROUTES.GYM_PLANS_CREATE);
+                    }}
+                    disabled={plans.length >= 5}
+                    className="h-14 px-10 bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-widest rounded-2xl shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
                 >
                     <Plus size={20} className="mr-2" /> Create New Plan
                 </Button>
