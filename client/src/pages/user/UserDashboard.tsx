@@ -2,9 +2,6 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { format, isToday, addDays } from "date-fns";
 import ActivityMatrix from "@/components/user/dashboard/ActivityMatrix";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import {
@@ -24,7 +21,6 @@ import {
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import Aurora from "@/components/ui/Aurora";
 import { getProfile, getWeightHistory, getActivityData, addWeight as addWeightService } from "@/services/userService";
 import { compareProgress } from "@/services/progressService";
 import { ROUTES } from "@/constants/routes";
@@ -50,27 +46,26 @@ interface BentoTileProps {
 
 const BentoTile = ({ children, className, title, icon: Icon, delay = 0 }: BentoTileProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
+    initial={{ opacity: 0, y: 15 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay }}
+    transition={{ duration: 0.4, delay }}
     className={cn(
-      "relative overflow-hidden bg-glass-bg backdrop-blur-2xl border border-glass-border rounded-[2.5rem] p-8 hover:border-primary/30 transition-all group shadow-2xl",
+      "relative overflow-hidden bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-2xl p-6 transition-all duration-200 hover:-translate-y-1 hover:border-b-[6px] hover:border-b-[#262626] hover:border-[#404040] active:translate-y-1 active:border-b-[4px] active:border-b-[#1f1f1f] group flex flex-col justify-between",
       className
     )}
   >
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-    <div className="relative z-10 space-y-6 h-full flex flex-col">
+    <div className="space-y-4 h-full flex flex-col justify-between w-full">
       {title && (
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
-              <Icon className="h-5 w-5 text-primary" />
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-[#0d0d0e] border border-[#262626] rounded-xl text-[#22d3ee]">
+              <Icon className="h-4 w-4" />
             </div>
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 italic">{title}</h3>
+            <h3 className="text-[9px] font-mono font-bold uppercase tracking-wider text-neutral-500">{title}</h3>
           </div>
         </div>
       )}
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 w-full">{children}</div>
     </div>
   </motion.div>
 );
@@ -85,19 +80,16 @@ const UserDashboard: React.FC = () => {
   const [lastLoggedDate, setLastLoggedDate] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Local state for new tools
+  // Local state for daily trackers
   const [waterGlasses, setWaterGlasses] = useState(0);
   const [sleepHours, setSleepHours] = useState(0);
   const [steps, setSteps] = useState(0);
   const [mindfulnessMinutes, setMindfulnessMinutes] = useState(0);
-  
-  // Removed unused dispatch, navigate, reduxUser
 
   const dispatch = useDispatch();
   const { data: cachedData, activityData: cachedActivity, lastFetched } = useSelector((state: RootState) => state.dashboard);
 
   const fetchDashboardData = useCallback(async (force = false) => {
-    // If we have cached data and it's less than 5 minutes old, don't fetch unless forced
     if (!force && cachedData && lastFetched && (Date.now() - lastFetched < 5 * 60 * 1000)) {
       setUserData(cachedData.user);
       setWeightData(cachedData.weightData);
@@ -129,7 +121,6 @@ const UserDashboard: React.FC = () => {
       dispatch(setReduxActivityData(activity));
       setTransformation(transformRes);
 
-      // Handle Weight Data
       const history = weightRes.weightHistory || [];
       const sortedHistory = history
         .filter((e: WeightEntry) => e.weight && e.date)
@@ -158,9 +149,6 @@ const UserDashboard: React.FC = () => {
       };
       setUserData(dashboardUser);
 
-
-
-      // Daily Metrics
       const water = profile.dailyMetrics?.water || 0;
       const sleep = profile.dailyMetrics?.sleep || 0;
       const stepCount = profile.dailyMetrics?.steps || 0;
@@ -170,7 +158,6 @@ const UserDashboard: React.FC = () => {
       setSteps(stepCount);
       setMindfulnessMinutes(mindMinutes);
 
-      // Store in Redux
       dispatch(setDashboardData({
         user: dashboardUser,
         weightData: chartData,
@@ -206,7 +193,7 @@ const UserDashboard: React.FC = () => {
     try {
       await addWeightService(weight);
       toast.success("Weight logged successfully!");
-      fetchDashboardData(true); // Force refresh cache
+      fetchDashboardData(true);
       setNewWeight("");
     } catch (_err: unknown) {
       toast.error("Failed to log weight");
@@ -273,120 +260,137 @@ const UserDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground">
+      <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5]">
         <SiteHeader />
-        <div className="flex-1 flex flex-col items-center justify-center space-y-6">
-          <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          <p className="text-slate-500 font-black italic tracking-widest uppercase animate-pulse">Loading...</p>
+        <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+          <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-[#22d3ee] rounded-full animate-spin" />
+          <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest animate-pulse">Syncing quest progress...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-site-bg text-foreground overflow-hidden font-outfit">
-      <div className="absolute inset-0 z-0">
-        <Aurora colorStops={["var(--background)", "var(--site-bg)", "var(--background)"]} amplitude={1.1} blend={0.6} />
+    <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
+      {/* Background Visuals */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[35%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(34,211,238,0.03)_0%,transparent_75%)] rounded-full blur-[70px]" />
       </div>
 
       <SiteHeader />
 
-      <main className="relative z-10 flex-1 container mx-auto px-4 py-12 pb-32">
-        <div className="space-y-12">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                You're doing great!
+      <main className="relative z-10 flex-1 container mx-auto px-6 py-12 pb-32 max-w-6xl w-full">
+        <div className="space-y-10">
+          
+          {/* Dashboard Header Header */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 bg-[#171717] border border-[#262626] text-[#22d3ee] font-mono px-3 py-1 rounded-full text-[10px] tracking-wider uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                DAILY QUEST MATRIX ACTIVE
               </div>
-              <h1 className="text-5xl md:text-8xl font-black italic tracking-tight uppercase leading-[0.8] text-foreground">
-                Welcome <span className="text-primary not-italic">back,</span><br />
-                {userData.name.split(' ')[0]}
+              <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white font-mono uppercase">
+                CONTROL CENTER
               </h1>
             </div>
             
-            <div className="flex items-center gap-6 bg-glass-bg backdrop-blur-xl border border-glass-border p-6 rounded-[2.5rem] shadow-2xl">
-              <div className="text-center">
-                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1 italic">Current Streak</p>
-                <div className="flex items-center gap-2">
-                  <Flame className="h-6 w-6 text-orange-500 fill-orange-500" />
-                  <span className="text-3xl font-black italic text-foreground">{streak} DAYS</span>
+            <div className="flex items-center gap-4 bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] p-5 rounded-2xl">
+              <div className="text-center px-2">
+                <p className="text-[9px] text-neutral-500 font-mono font-bold uppercase tracking-wider mb-1">STREAK</p>
+                <div className="flex items-center gap-1.5">
+                  <Flame className="h-5 w-5 text-orange-500 fill-orange-500/10 animate-pulse" />
+                  <span className="text-xl font-extrabold font-mono text-white">{streak} DAYS</span>
                 </div>
               </div>
-              <div className="w-px h-12 bg-white/10" />
-              <div className="text-center">
-                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1 italic">Global Rank</p>
-                <div className="flex items-center gap-2">
-                  <Award className="h-6 w-6 text-primary" />
-                  <span className="text-3xl font-black italic text-foreground">ELITE</span>
+              <div className="w-px h-8 bg-[#262626]" />
+              <div className="text-center px-2">
+                <p className="text-[9px] text-neutral-500 font-mono font-bold uppercase tracking-wider mb-1">RANK TIER</p>
+                <div className="flex items-center gap-1.5">
+                  <Award className="h-5 w-5 text-[#22d3ee]" />
+                  <span className="text-xl font-extrabold font-mono text-white">RECRUIT</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Bento Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[250px]">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[250px] max-w-6xl mx-auto">
             
-            {/* Weight Summary (Span 4x2) */}
-            <BentoTile title="Weight Progress" icon={Scale} className="md:col-span-8 md:row-span-2">
-              <div className="flex flex-col md:flex-row gap-8 h-full">
-                <div className="w-full md:w-1/3 flex flex-col justify-center space-y-6">
+            {/* Weight Summary (Span 8x2) */}
+            <BentoTile title="Weight Vector" icon={Scale} className="md:col-span-8 md:row-span-2">
+              <div className="flex flex-col md:flex-row gap-6 h-full justify-between">
+                <div className="w-full md:w-2/5 flex flex-col justify-between py-1">
                   <div className="space-y-1">
-                    <p className="text-sm font-bold text-slate-500">Current Weight</p>
-                    <div className="text-6xl font-black text-foreground italic tracking-tighter">{userData.currentWeight}<span className="text-2xl not-italic ml-1 opacity-40 text-foreground">KG</span></div>
+                    <p className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Current Metric</p>
+                    <div className="text-5xl font-extrabold text-white font-mono leading-none">
+                      {userData.currentWeight}
+                      <span className="text-lg font-bold text-neutral-600 ml-1">KG</span>
+                    </div>
                     {lastLoggedDate && (
-                      <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2">
-                        Last Logged: {lastLoggedDate}
+                      <p className="text-[9px] text-neutral-500 font-mono font-bold uppercase tracking-wider pt-1">
+                        Updated: {lastLoggedDate}
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest">Goal</p>
-                      <p className="text-xl font-black italic text-primary">{userData.goalWeight} KG</p>
+                  
+                  <div className="flex items-center gap-4 py-2 border-t border-[#262626]">
+                    <div className="flex-1">
+                      <p className="text-[8px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Goal</p>
+                      <p className="text-sm font-extrabold font-mono text-[#22d3ee]">{userData.goalWeight} KG</p>
                     </div>
-                    <div className="flex-1 space-y-1">
-                      <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest">Diff</p>
-                      <p className={cn("text-xl font-black italic", userData.currentWeight > userData.goalWeight ? "text-orange-500" : "text-emerald-500")}>
+                    <div className="flex-1">
+                      <p className="text-[8px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Delta</p>
+                      <p className={cn("text-sm font-extrabold font-mono", userData.currentWeight > userData.goalWeight ? "text-orange-500" : "text-emerald-400")}>
                         {Math.abs(userData.currentWeight - userData.goalWeight).toFixed(1)} KG
                       </p>
                     </div>
                   </div>
+
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button className="w-full h-14 rounded-2xl bg-primary text-primary-foreground hover:opacity-90 font-black italic uppercase tracking-widest" disabled={isWeightLoggedToday}>
-                        {isWeightLoggedToday ? "LOGGED TODAY" : "LOG WEIGHT"}
-                      </Button>
+                      <button 
+                        className="duo-btn-cyan w-full py-3 text-xs font-mono font-bold uppercase tracking-wider disabled:opacity-50"
+                        disabled={isWeightLoggedToday}
+                      >
+                        {isWeightLoggedToday ? "LOGGED" : "LOG WEIGHT"}
+                      </button>
                     </DialogTrigger>
-                    <DialogContent className="bg-background border-border text-foreground rounded-3xl">
-                      <DialogHeader><DialogTitle className="text-2xl font-black italic uppercase">Log Weight</DialogTitle></DialogHeader>
-                      <div className="space-y-6 pt-4">
-                        <Input 
+                    <DialogContent className="bg-[#171717] border-2 border-[#262626] text-[#f5f5f5] rounded-2xl max-w-sm">
+                      <DialogHeader>
+                        <DialogTitle className="text-lg font-extrabold font-mono uppercase text-white">Log Today's Weight</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 pt-4">
+                        <input 
                           type="number" 
                           placeholder="00.0" 
-                          className="h-16 text-3xl font-black bg-muted border-border rounded-2xl focus:border-primary/50 text-foreground" 
+                          className="w-full h-14 text-2xl font-mono bg-[#0d0d0e] border-2 border-[#262626] rounded-xl px-4 text-white focus:outline-none focus:border-[#22d3ee]" 
                           value={newWeight}
                           onChange={(e) => setNewWeight(e.target.value)}
                         />
-                        <Button onClick={() => handleAddWeight(newWeight)} className="w-full h-14 bg-primary text-white font-black italic uppercase tracking-widest">Save Weight</Button>
+                        <button 
+                          onClick={() => handleAddWeight(newWeight)} 
+                          className="duo-btn-cyan w-full py-3.5 text-xs font-mono font-bold"
+                        >
+                          SUBMIT ENTRY
+                        </button>
                       </div>
                     </DialogContent>
                   </Dialog>
                 </div>
-                <div className="flex-1 h-full min-h-[200px]">
+                
+                <div className="flex-1 h-full min-h-[160px] bg-[#0d0d0e] border border-[#262626] rounded-xl p-3">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={weightData}>
                       <defs>
                         <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.15}/>
+                          <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
                       <XAxis dataKey="date" hide />
                       <YAxis domain={['dataMin - 2', 'dataMax + 2']} hide />
-                      <Area type="monotone" dataKey="weight" stroke="var(--primary)" strokeWidth={4} fillOpacity={1} fill="url(#colorWeight)" />
+                      <Area type="monotone" dataKey="weight" stroke="#22d3ee" strokeWidth={3} fillOpacity={1} fill="url(#colorWeight)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -394,116 +398,117 @@ const UserDashboard: React.FC = () => {
             </BentoTile>
 
             {/* BMI Tile (Span 4x1) */}
-            <BentoTile title="BMI" icon={Zap} className="md:col-span-4 md:row-span-1">
-              <div className="flex items-center justify-between h-full">
+            <BentoTile title="BMI Tier" icon={Zap} className="md:col-span-4 md:row-span-1">
+              <div className="flex items-center justify-between h-full py-1">
                 <div>
-                  <div className="text-5xl font-black italic text-foreground leading-none">
+                  <div className="text-4xl font-extrabold font-mono text-white leading-none">
                     {userData.height ? (userData.currentWeight / Math.pow(userData.height / 100, 2)).toFixed(1) : "---"}
                   </div>
-                  <Badge variant="outline" className="mt-4 border-emerald-500/20 bg-emerald-500/10 text-emerald-400 font-black uppercase italic text-[10px] tracking-widest">
-                    HEALTHY
-                  </Badge>
+                  <span className="inline-flex items-center text-[8px] font-mono font-bold text-emerald-400 bg-emerald-950/30 border border-emerald-900/40 px-2 py-0.5 rounded uppercase tracking-wider mt-3">
+                    Optimal
+                  </span>
                 </div>
-                <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-emerald-500 flex items-center justify-center">
-                  <Activity className="h-6 w-6 text-emerald-500" />
+                <div className="w-12 h-12 rounded-xl border border-[#262626] bg-[#0d0d0e] flex items-center justify-center text-emerald-500">
+                  <Activity className="h-5 w-5" />
                 </div>
               </div>
             </BentoTile>
 
             {/* Transformation (Span 4x1) */}
-            <BentoTile title="Before & After" icon={ImageIcon} className="md:col-span-4 md:row-span-1">
-               <div className="flex items-center gap-4 h-full">
-                  <div className="flex-1 h-full rounded-2xl overflow-hidden bg-white/5 border border-white/5">
-                    {transformation?.first?.photos?.[0] ? <img src={transformation.first.photos[0]} className="w-full h-full object-cover grayscale" /> : <div className="w-full h-full flex items-center justify-center opacity-20"><ImageIcon /></div>}
+            <BentoTile title="Visual Progression" icon={ImageIcon} className="md:col-span-4 md:row-span-1">
+               <div className="flex items-center gap-4 h-full py-1">
+                  <div className="flex-1 h-full rounded-xl overflow-hidden bg-[#0d0d0e] border border-[#262626]">
+                    {transformation?.first?.photos?.[0] ? <img src={transformation.first.photos[0]} className="w-full h-full object-cover grayscale opacity-50" /> : <div className="w-full h-full flex items-center justify-center text-neutral-700"><ImageIcon className="w-4 h-4" /></div>}
                   </div>
-                  <div className="flex-1 h-full rounded-2xl overflow-hidden bg-white/5 border border-white/5 shadow-xl ring-1 ring-primary/30">
-                    {transformation?.latest?.photos?.[0] ? <img src={transformation.latest.photos[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center opacity-20"><ImageIcon /></div>}
+                  <div className="flex-1 h-full rounded-xl overflow-hidden bg-[#0d0d0e] border-2 border-[#22d3ee]/20 shadow-md shadow-[#22d3ee]/5">
+                    {transformation?.latest?.photos?.[0] ? <img src={transformation.latest.photos[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-neutral-700"><ImageIcon className="w-4 h-4" /></div>}
                   </div>
-                  <Link to={ROUTES.USER_PROGRESS} className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
-                    <ChevronRight className="h-5 w-5 text-slate-500" />
+                  <Link to={ROUTES.USER_PROGRESS} className="p-2.5 bg-[#0d0d0e] border border-[#262626] rounded-xl hover:border-white/20 transition-all flex items-center justify-center">
+                    <ChevronRight className="h-4 w-4 text-[#a3a3a3]" />
                   </Link>
                </div>
             </BentoTile>
 
-            {/* Health Tools - Water & Sleep (Span 8x1) */}
-            <BentoTile title="Water Intake" icon={Droplets} className="md:col-span-4 md:row-span-1">
-                <div className="flex flex-col h-full justify-between">
+            {/* Water Tracker (Span 4x1) */}
+            <BentoTile title="Water Log" icon={Droplets} className="md:col-span-4 md:row-span-1">
+                <div className="flex flex-col h-full justify-between py-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-4xl font-black italic text-foreground leading-none">{waterGlasses}</div>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Glasses</p>
+                      <div className="text-3xl font-extrabold font-mono text-white leading-none">{waterGlasses}</div>
+                      <p className="text-[8px] font-mono font-bold text-neutral-500 uppercase tracking-widest mt-1">GLASSES DRUNK</p>
                     </div>
-                    <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-cyan-500 flex items-center justify-center bg-cyan-500/10 text-cyan-500">
-                      <Droplets className="h-6 w-6" />
+                    <div className="w-12 h-12 rounded-xl border border-[#262626] bg-[#0d0d0e] flex items-center justify-center text-[#22d3ee]">
+                      <Droplets className="h-5 w-5" />
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateWater(Math.max(0, waterGlasses - 1))}>-</Button>
-                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateWater(waterGlasses + 1)}>+</Button>
+                    <button className="duo-btn-gray flex-1 py-1.5 text-xs font-bold" onClick={() => handleUpdateWater(Math.max(0, waterGlasses - 1))}>-</button>
+                    <button className="duo-btn-gray flex-1 py-1.5 text-xs font-bold" onClick={() => handleUpdateWater(waterGlasses + 1)}>+</button>
                   </div>
                 </div>
             </BentoTile>
 
-            <BentoTile title="Sleep" icon={Moon} className="md:col-span-4 md:row-span-1">
-                <div className="flex flex-col h-full justify-between">
+            {/* Sleep Tracker (Span 4x1) */}
+            <BentoTile title="Recovery Log" icon={Moon} className="md:col-span-4 md:row-span-1">
+                <div className="flex flex-col h-full justify-between py-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-4xl font-black italic text-foreground leading-none">{sleepHours}</div>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Hours Logged</p>
+                      <div className="text-3xl font-extrabold font-mono text-white leading-none">{sleepHours}</div>
+                      <p className="text-[8px] font-mono font-bold text-neutral-500 uppercase tracking-widest mt-1">HOURS RESTED</p>
                     </div>
-                    <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-indigo-500 flex items-center justify-center bg-indigo-500/10 text-indigo-500">
-                      <Moon className="h-6 w-6" />
+                    <div className="w-12 h-12 rounded-xl border border-[#262626] bg-[#0d0d0e] flex items-center justify-center text-indigo-400">
+                      <Moon className="h-5 w-5" />
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateSleep(Math.max(0, sleepHours - 1))}>-</Button>
-                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateSleep(sleepHours + 1)}>+</Button>
+                    <button className="duo-btn-gray flex-1 py-1.5 text-xs font-bold" onClick={() => handleUpdateSleep(Math.max(0, sleepHours - 1))}>-</button>
+                    <button className="duo-btn-gray flex-1 py-1.5 text-xs font-bold" onClick={() => handleUpdateSleep(sleepHours + 1)}>+</button>
                   </div>
                 </div>
             </BentoTile>
 
-            <BentoTile title="Steps" icon={Footprints} className="md:col-span-4 md:row-span-1">
-                <div className="flex flex-col h-full justify-between">
+            {/* Steps Tracker (Span 4x1) */}
+            <BentoTile title="Steps Log" icon={Footprints} className="md:col-span-4 md:row-span-1">
+                <div className="flex flex-col h-full justify-between py-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-4xl font-black italic text-foreground leading-none">{(steps/1000).toFixed(1)}k</div>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Steps Today</p>
+                      <div className="text-3xl font-extrabold font-mono text-white leading-none">{(steps/1000).toFixed(1)}k</div>
+                      <p className="text-[8px] font-mono font-bold text-neutral-500 uppercase tracking-widest mt-1">STEPS COMPLETED</p>
                     </div>
-                    <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-orange-500 flex items-center justify-center bg-orange-500/10 text-orange-500">
-                      <Footprints className="h-6 w-6" />
+                    <div className="w-12 h-12 rounded-xl border border-[#262626] bg-[#0d0d0e] flex items-center justify-center text-orange-400">
+                      <Footprints className="h-5 w-5" />
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateSteps(Math.max(0, steps - 500))}>-500</Button>
-                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateSteps(steps + 500)}>+500</Button>
+                    <button className="duo-btn-gray flex-1 py-1.5 text-xs font-bold" onClick={() => handleUpdateSteps(Math.max(0, steps - 500))}>-500</button>
+                    <button className="duo-btn-gray flex-1 py-1.5 text-xs font-bold" onClick={() => handleUpdateSteps(steps + 500)}>+500</button>
                   </div>
                 </div>
             </BentoTile>
 
-            <BentoTile title="Mindfulness" icon={Brain} className="md:col-span-4 md:row-span-1">
-                <div className="flex flex-col h-full justify-between">
+            {/* Mindfulness Tracker (Span 4x1) */}
+            <BentoTile title="Mind Flow" icon={Brain} className="md:col-span-4 md:row-span-1">
+                <div className="flex flex-col h-full justify-between py-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-4xl font-black italic text-foreground leading-none">{mindfulnessMinutes}</div>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Minutes</p>
+                      <div className="text-3xl font-extrabold font-mono text-white leading-none">{mindfulnessMinutes}</div>
+                      <p className="text-[8px] font-mono font-bold text-neutral-500 uppercase tracking-widest mt-1">MINUTES FOCUS</p>
                     </div>
-                    <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-purple-500 flex items-center justify-center bg-purple-500/10 text-purple-500">
-                      <Brain className="h-6 w-6" />
+                    <div className="w-12 h-12 rounded-xl border border-[#262626] bg-[#0d0d0e] flex items-center justify-center text-purple-400">
+                      <Brain className="h-5 w-5" />
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateMindfulness(Math.max(0, mindfulnessMinutes - 5))}>-5m</Button>
-                    <Button variant="outline" className="flex-1 rounded-xl border-glass-border bg-glass-bg hover:bg-glass-hover" onClick={() => handleUpdateMindfulness(mindfulnessMinutes + 5)}>+5m</Button>
+                    <button className="duo-btn-gray flex-1 py-1.5 text-xs font-bold" onClick={() => handleUpdateMindfulness(Math.max(0, mindfulnessMinutes - 5))}>-5m</button>
+                    <button className="duo-btn-gray flex-1 py-1.5 text-xs font-bold" onClick={() => handleUpdateMindfulness(mindfulnessMinutes + 5)}>+5m</button>
                   </div>
                 </div>
             </BentoTile>
 
             {/* Activity Matrix (Span 12x1) */}
-            <BentoTile title="Activity" icon={Calendar} className="md:col-span-12 md:row-span-1 pb-4">
+            <BentoTile title="Quest Log Timeline" icon={Calendar} className="md:col-span-12 md:row-span-1 pb-4">
               <ActivityMatrix activityData={activityData} />
             </BentoTile>
-
-
 
           </div>
         </div>
@@ -513,8 +518,5 @@ const UserDashboard: React.FC = () => {
     </div>
   );
 };
-
-
-
 
 export default UserDashboard;

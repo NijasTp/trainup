@@ -1,15 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Zap, Check, Crown, Star, Shield, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import API from "@/lib/axios";
 import { getIndividualTrainer } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import Aurora from "@/components/ui/Aurora";
 import type { Trainer } from "@/interfaces/user/iIndividualTrainer";
+
+type SafeAny = any;
 
 export default function TrainerPricingPage() {
     const { id } = useParams<{ id: string }>();
@@ -28,13 +27,15 @@ export default function TrainerPricingPage() {
             if (trainerData && typeof trainerData.price === "string") {
                 try {
                     trainerData.price = JSON.parse(trainerData.price);
-                } catch (eVal) { const e = eVal as SafeAny;
+                } catch (eVal) {
+                    const e = eVal as SafeAny;
                     console.error("Failed to parse price:", e);
                 }
             }
 
             setTrainer(trainerData);
-        } catch (errVal) { const err = errVal as SafeAny;
+        } catch (errVal) {
+            const err = errVal as SafeAny;
             console.error("Failed to fetch trainer:", err);
             toast.error("Failed to load trainer details");
         } finally {
@@ -69,7 +70,8 @@ export default function TrainerPricingPage() {
             } else {
                 throw new Error("No checkout URL received");
             }
-        } catch (errVal) { const err = errVal as SafeAny;
+        } catch (errVal) {
+            const err = errVal as SafeAny;
             console.error("Failed to initiate payment:", err);
             const errorMessage = err.response?.data?.message || err.message || "Failed to initiate payment";
             toast.error(errorMessage);
@@ -89,17 +91,31 @@ export default function TrainerPricingPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-[#030303] flex items-center justify-center text-white">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
+                <SiteHeader />
+                <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+                    <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-[#22d3ee] rounded-full animate-spin" />
+                    <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest animate-pulse">Syncing session plans...</p>
+                </div>
+                <SiteFooter />
             </div>
         );
     }
 
     if (!trainer) {
         return (
-            <div className="min-h-screen bg-[#030303] flex flex-col items-center justify-center text-white space-y-4">
-                <h1 className="text-2xl font-bold">Trainer Not Found</h1>
-                <Button onClick={() => navigate(-1)} variant="outline">Go Back</Button>
+            <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
+                <SiteHeader />
+                <div className="flex-grow flex flex-col items-center justify-center text-center max-w-sm mx-auto p-6 space-y-4">
+                    <h1 className="text-xl font-extrabold font-mono text-white uppercase">Trainer Not Found</h1>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="duo-btn-cyan h-11 px-5 text-xs font-mono font-bold uppercase tracking-wider"
+                    >
+                        Go Back
+                    </button>
+                </div>
+                <SiteFooter />
             </div>
         );
     }
@@ -109,7 +125,7 @@ export default function TrainerPricingPage() {
             type: "basic",
             title: "Basic",
             subtitle: "Kickstart your journey",
-            icon: <Zap className="h-6 w-6 text-blue-500" />,
+            icon: <Zap className="h-5 w-5 text-cyan-400" />,
             basePrice: trainer.price?.basic || 0,
             features: [
                 "Personal workout plans",
@@ -118,13 +134,11 @@ export default function TrainerPricingPage() {
                 "Basic support"
             ],
             styles: {
-                border: "border-blue-500/50",
-                bg: "bg-blue-500/5",
-                iconBg: "bg-blue-500/10",
-                featureBg: "bg-blue-500/20",
-                checkColor: "text-blue-600",
-                button: "bg-blue-600 hover:bg-blue-700 shadow-blue-500/25",
-                badge: "bg-blue-500"
+                border: "border-[#262626] border-b-[#1f1f1f]",
+                bg: "bg-[#171717]",
+                iconBg: "bg-[#0d0d0e]",
+                checkColor: "text-[#22d3ee]",
+                button: "duo-btn-cyan"
             },
             popular: false
         },
@@ -132,7 +146,7 @@ export default function TrainerPricingPage() {
             type: "premium",
             title: "Premium",
             subtitle: "Most popular choice",
-            icon: <Crown className="h-6 w-6 text-amber-500" />,
+            icon: <Crown className="h-5 w-5 text-amber-500" />,
             basePrice: trainer.price?.premium || 0,
             features: [
                 "Everything in Basic",
@@ -141,13 +155,11 @@ export default function TrainerPricingPage() {
                 "Weekly check-ins"
             ],
             styles: {
-                border: "border-amber-500/50",
-                bg: "bg-amber-500/5",
-                iconBg: "bg-amber-500/10",
-                featureBg: "bg-amber-500/20",
-                checkColor: "text-amber-600",
-                button: "bg-amber-600 hover:bg-amber-700 shadow-amber-500/25",
-                badge: "bg-amber-500"
+                border: "border-[#22d3ee] border-b-[#06b6d4]",
+                bg: "bg-cyan-950/10",
+                iconBg: "bg-[#0d0d0e]",
+                checkColor: "text-[#22d3ee]",
+                button: "duo-btn-cyan"
             },
             popular: true
         },
@@ -155,7 +167,7 @@ export default function TrainerPricingPage() {
             type: "pro",
             title: "Pro",
             subtitle: "Ultimate experience",
-            icon: <Star className="h-6 w-6 text-purple-500" />,
+            icon: <Star className="h-5 w-5 text-purple-400" />,
             basePrice: trainer.price?.pro || 0,
             features: [
                 "Everything in Premium",
@@ -164,153 +176,129 @@ export default function TrainerPricingPage() {
                 "24/7 VIP support"
             ],
             styles: {
-                border: "border-purple-500/50",
-                bg: "bg-purple-500/5",
-                iconBg: "bg-purple-500/10",
-                featureBg: "bg-purple-500/20",
-                checkColor: "text-purple-600",
-                button: "bg-purple-600 hover:bg-purple-700 shadow-purple-500/25",
-                badge: "bg-purple-500"
+                border: "border-[#262626] border-b-[#1f1f1f]",
+                bg: "bg-[#171717]",
+                iconBg: "bg-[#0d0d0e]",
+                checkColor: "text-[#22d3ee]",
+                button: "duo-btn-cyan"
             },
             popular: false
         }
     ];
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white font-outfit overflow-x-hidden">
-            <div className="absolute inset-0 z-0 pointer-events-none">
-                <Aurora
-                    colorStops={["#020617", "#0f172a", "#020617"]}
-                    amplitude={1.1}
-                    blend={0.6}
-                />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)]" />
+        <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
+            {/* Background Visuals */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[35%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(34,211,238,0.03)_0%,transparent_75%)] rounded-full blur-[70px]" />
             </div>
 
             <SiteHeader />
 
-            <div className="relative z-10 flex-1 container mx-auto px-4 py-8">
-                <div className="mb-8">
-                    <Button
+            <main className="relative container mx-auto px-6 py-12 space-y-8 flex-1 z-10 max-w-5xl w-full">
+                <div className="flex justify-start">
+                    <button
                         onClick={() => navigate(-1)}
-                        variant="ghost"
-                        className="group hover:bg-white/5 text-muted-foreground hover:text-white mb-4 pl-0"
+                        className="duo-btn-gray h-10 px-5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5"
                     >
-                        <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                        Back to Profile
-                    </Button>
-                    <div className="text-center space-y-4">
-                        <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-primary to-white bg-clip-text text-transparent">
-                            Choose Your Plan
-                        </h1>
-                        <p className="text-xl text-muted-foreground">
-                            Start your journey with <span className="text-primary font-semibold">{trainer.name}</span>
-                        </p>
-                    </div>
+                        <ArrowLeft className="h-4 w-4" /> Back to Profile
+                    </button>
                 </div>
 
-                <div className="flex justify-center mb-12">
-                    <div className="bg-white/5 p-1 rounded-xl backdrop-blur-sm border border-white/10">
-                        <Tabs
-                            value={duration.toString()}
-                            onValueChange={(val) => setDuration(parseInt(val))}
-                            className="w-auto"
+                <div className="text-center space-y-3">
+                    <h1 className="text-2xl md:text-4xl font-extrabold font-mono text-white uppercase tracking-tight">
+                        COACH SUBSCRIPTION PLANS
+                    </h1>
+                    <p className="text-xs font-mono text-neutral-400 uppercase tracking-wide">
+                        Choose your training duration and package tier to start training with <span className="text-white font-bold">{trainer.name}</span>
+                    </p>
+                </div>
+
+                {/* Duration Pills */}
+                <div className="flex justify-center gap-3 mb-10 font-mono">
+                    {durations.map((d) => (
+                        <button
+                            key={d.value}
+                            onClick={() => setDuration(d.value)}
+                            className={`h-11 px-5 text-xs font-bold uppercase tracking-wider ${
+                                duration === d.value
+                                    ? "duo-btn-cyan"
+                                    : "duo-btn-outline"
+                            }`}
                         >
-                            <TabsList className="bg-transparent border-0 h-auto p-0 gap-1">
-                                {durations.map((d) => (
-                                    <TabsTrigger
-                                        key={d.value}
-                                        value={d.value.toString()}
-                                        className="px-6 py-2.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-muted-foreground hover:text-white transition-all font-medium"
-                                    >
-                                        {d.label}
-                                    </TabsTrigger>
-                                ))}
-                            </TabsList>
-                        </Tabs>
-                    </div>
+                            {d.label}
+                        </button>
+                    ))}
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
+                {/* Pricing Grid */}
+                <div className="grid md:grid-cols-3 gap-6 items-stretch font-mono">
                     {plans.map((plan) => (
                         <div
                             key={plan.type}
-                            className={`relative flex flex-col rounded-3xl border transition-all duration-500 group hover:-translate-y-2 ${plan.popular
-                                ? `${plan.styles.border} ${plan.styles.bg} shadow-[0_0_50px_-12px] shadow-amber-500/30 z-10 scale-105 md:scale-110`
-                                : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
-                                }`}
+                            className={`relative duo-card-3d border-2 border-b-[5px] rounded-2xl flex flex-col p-6 transition-all duration-300 ${plan.styles.border} ${plan.styles.bg}`}
                         >
                             {plan.popular && (
-                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-lg uppercase tracking-wide flex items-center gap-2 border border-amber-400/50">
-                                    <Crown className="h-4 w-4 fill-current" /> Most Popular
+                                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-black px-3.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest border border-amber-400">
+                                    Most Popular
                                 </div>
                             )}
 
-                            <div className="p-8 flex-1 flex flex-col">
-                                <div className="text-center mb-8">
-                                    <div className={`w-16 h-16 mx-auto rounded-2xl ${plan.styles.iconBg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                            <div className="flex-1 flex flex-col justify-between space-y-6">
+                                <div className="text-center border-b border-[#262626] pb-5">
+                                    <div className={`w-12 h-12 mx-auto rounded-xl ${plan.styles.iconBg} border border-[#262626] flex items-center justify-center mb-3`}>
                                         {plan.icon}
                                     </div>
-                                    <h3 className="font-bold text-2xl mb-2">{plan.title}</h3>
-                                    <p className="text-muted-foreground">{plan.subtitle}</p>
+                                    <h3 className="font-extrabold text-base text-white uppercase">{plan.title}</h3>
+                                    <p className="text-[10px] text-neutral-500 uppercase mt-0.5">{plan.subtitle}</p>
                                 </div>
 
-                                <div className="mb-8 text-center p-6 bg-black/20 rounded-2xl border border-white/5">
-                                    <div className="flex items-baseline justify-center gap-1">
-                                        <span className="text-4xl font-bold tracking-tight">
-                                            ₹{calculatePrice(plan.basePrice, duration).toLocaleString()}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-2">
+                                <div className="text-center p-4 bg-[#0d0d0e] border border-[#262626] rounded-xl">
+                                    <p className="text-xl font-extrabold text-[#22d3ee]">
+                                        ₹{calculatePrice(plan.basePrice, duration).toLocaleString()}
+                                    </p>
+                                    <p className="text-[8px] text-neutral-500 uppercase tracking-wider mt-1">
                                         {duration > 1 ? `Total for ${duration} months` : 'Per month'}
                                     </p>
                                     {duration > 1 && (
-                                        <p className="text-xs text-primary mt-1 font-medium bg-primary/10 inline-block px-2 py-0.5 rounded">
-                                            ₹{plan.basePrice.toLocaleString()}/mo equivalent
-                                        </p>
+                                        <span className="inline-block bg-cyan-950/20 text-[#22d3ee] border border-[#22d3ee]/20 text-[8px] font-bold px-2 py-0.5 rounded mt-2">
+                                            ₹{plan.basePrice.toLocaleString()}/MO EQUIVALENT
+                                        </span>
                                     )}
                                 </div>
 
-                                <div className="space-y-4 flex-1 mb-8">
+                                <div className="space-y-3 flex-1 text-xs text-neutral-300 uppercase">
                                     {plan.features.map((feature, idx) => (
-                                        <div key={idx} className="flex items-start gap-4 group/item">
-                                            <div className={`mt-0.5 rounded-full p-1 ${plan.styles.featureBg} group-hover/item:scale-110 transition-transform`}>
-                                                <Check className={`h-3 w-3 ${plan.styles.checkColor}`} strokeWidth={3} />
-                                            </div>
-                                            <span className="text-gray-300 text-sm">{feature}</span>
+                                        <div key={idx} className="flex items-start gap-2.5">
+                                            <Check className={`h-4 w-4 shrink-0 mt-0.5 ${plan.styles.checkColor}`} strokeWidth={3} />
+                                            <span>{feature}</span>
                                         </div>
                                     ))}
                                 </div>
 
-                                <Button
+                                <button
                                     onClick={() => handleSubscribe(plan.type)}
                                     disabled={processingPayment}
-                                    className={`w-full py-6 font-bold text-lg rounded-xl shadow-lg transition-all duration-300 ${plan.popular
-                                        ? `${plan.styles.button} text-white hover:shadow-amber-500/25`
-                                        : "bg-white text-black hover:bg-gray-200 hover:shadow-white/10"
-                                        }`}
+                                    className={`w-full h-12 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 ${plan.styles.button}`}
                                 >
                                     {processingPayment ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                            Processing...
-                                        </>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : (
                                         "Get Started"
                                     )}
-                                </Button>
+                                </button>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                <div className="mt-12 text-center pb-8">
-                    <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-                        <Shield className="h-4 w-4 text-green-500" />
-                        Secure payment processing via Stripe. Cancel anytime.
+                <div className="text-center pt-4">
+                    <p className="text-[9px] text-neutral-500 font-mono uppercase tracking-widest flex items-center justify-center gap-1.5">
+                        <Shield className="h-3.5 w-3.5 text-emerald-400" />
+                        Secure processing. Cancel/Manage subscriptions anytime.
                     </p>
                 </div>
-            </div>
+            </main>
 
             <SiteFooter />
         </div>
