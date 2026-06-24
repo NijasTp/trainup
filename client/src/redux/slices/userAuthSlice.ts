@@ -58,6 +58,13 @@ export interface UserType {
   weight?: number | null;
   goalWeight?: number | null;
   isBanned?: boolean;
+  onboardingCompleted?: boolean;
+  onboardingStep?: 'profile' | 'analysis' | 'challenge' | 'completed';
+  workoutExperience?: string;
+  weeklyAvailability?: number;
+  workoutDuration?: number;
+  availableEquipment?: string;
+  medicalConditions?: string;
   isPrivate?: boolean;
   assignedTrainer?: string;
   trainerPlan?: 'basic' | 'premium' | 'pro' | null;
@@ -111,6 +118,13 @@ export const userAuthSlice = createSlice({
         weight: payload.todaysWeight || null,
         goalWeight: payload.goalWeight || null,
         isBanned: payload.isBanned || false,
+        onboardingCompleted: payload.onboardingCompleted || false,
+        onboardingStep: payload.onboardingStep || 'profile',
+        workoutExperience: payload.workoutExperience || '',
+        weeklyAvailability: payload.weeklyAvailability || 0,
+        workoutDuration: payload.workoutDuration || 0,
+        availableEquipment: payload.availableEquipment || '',
+        medicalConditions: payload.medicalConditions || "haven't given",
         isPrivate: payload.isPrivate || false,
         isVerified: payload.isVerified || false,
         activeWorkoutTemplate: payload.activeWorkoutTemplate || null,

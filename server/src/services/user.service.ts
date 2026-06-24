@@ -511,6 +511,12 @@ export class UserService implements IUserService {
             gender: user.gender,
             medicalConditions: user.medicalConditions,
             dietaryPreferences: user.dietaryPreferences,
+            onboardingCompleted: user.onboardingCompleted || false,
+            onboardingStep: user.onboardingStep || 'profile',
+            workoutExperience: user.workoutExperience || '',
+            weeklyAvailability: user.weeklyAvailability || 0,
+            workoutDuration: user.workoutDuration || 0,
+            availableEquipment: user.availableEquipment || '',
             activeWorkoutTemplates: user.activeWorkoutTemplates?.map(t => ({
                 templateId: t.templateId.toString(),
                 startDate: t.startDate,

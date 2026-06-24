@@ -51,6 +51,12 @@ export interface IUser extends Document {
   gender?: string;
   medicalConditions?: string;
   dietaryPreferences?: string;
+  onboardingCompleted: boolean;
+  onboardingStep?: 'profile' | 'analysis' | 'challenge' | 'completed';
+  workoutExperience?: string;
+  weeklyAvailability?: number;
+  workoutDuration?: number;
+  availableEquipment?: string;
   profileImage?: string;
   activeWorkoutTemplates: IActiveTemplate[];
   activeWorkoutTemplate?: Types.ObjectId | string | null; 
@@ -112,6 +118,12 @@ const userSchema: Schema<IUser> = new Schema(
     gender: { type: String, enum: ["male", "female", "other"] },
     medicalConditions: { type: String, default: "haven't given" },
     dietaryPreferences: { type: String, default: "haven't given" },
+    onboardingCompleted: { type: Boolean, default: false },
+    onboardingStep: { type: String, enum: ['profile', 'analysis', 'challenge', 'completed'], default: 'profile' },
+    workoutExperience: { type: String, default: '' },
+    weeklyAvailability: { type: Number, default: 0 },
+    workoutDuration: { type: Number, default: 0 },
+    availableEquipment: { type: String, default: '' },
     profileImage: { type: String },
     activeWorkoutTemplates: {
       type: [{

@@ -1,7 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Flame,
   TrendingUp,
@@ -27,7 +25,6 @@ import { getMealsByDate as getDiet } from "@/services/dietServices";
 import { getGymsForUser, type IGym } from "@/services/gymService";
 import { ROUTES } from "@/constants/routes";
 import type { DietResponse, Trainer, WorkoutSession } from "@/interfaces/user/IHomePage";
-import Aurora from "@/components/ui/Aurora";
 import { getWorkoutTemplates } from "@/services/templateService";
 import type { IWorkoutTemplate } from "@/interfaces/template/IWorkoutTemplate";
 
@@ -35,36 +32,35 @@ import { useSelector } from "react-redux";
 import type { UserType } from "@/redux/slices/userAuthSlice";
 import ProfileCompletionModal from "@/components/user/general/ProfileCompletionModal";
 import api from "@/lib/axios";
-// import API from "@/lib/axios";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.08,
     },
   },
 };
 
 const itemVariants: Variants = {
-  hidden: { y: 20, opacity: 0 },
+  hidden: { y: 15, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
     transition: {
       type: "spring",
-      stiffness: 100,
+      stiffness: 90,
+      damping: 15
     },
   },
 };
 
-const GlassCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+const CyberCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <motion.div
     variants={itemVariants}
-    className={`relative group overflow-hidden bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors duration-500 ${className}`}
+    className={`bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-2xl p-6 transition-all duration-200 hover:-translate-y-1 hover:border-b-[6px] hover:border-b-[#262626] hover:border-[#404040] active:translate-y-1.5 active:border-b-[3.5px] active:border-b-[#1f1f1f] ${className}`}
   >
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     {children}
   </motion.div>
 );
@@ -77,7 +73,7 @@ const AnimatedNumber = ({ value }: { value: number }) => {
     const end = value;
     if (start === end) return;
 
-    const totalDuration = 1000;
+    const totalDuration = 800;
     const increment = end / (totalDuration / 16);
 
     const timer = setInterval(() => {
@@ -205,7 +201,7 @@ export default function HomePage() {
     document.title = "TrainUp - Your Fitness Journey";
     fetchHomeData();
     checkProfileCompletion();
-  }, [fetchHomeData, checkProfileCompletion]); // Correctly using initialized variables
+  }, [fetchHomeData, checkProfileCompletion]);
 
   const calculateDietProgress = () => {
     const manualMeals = diet?.meals || [];
@@ -213,7 +209,6 @@ export default function HomePage() {
 
     const consumed = manualMeals.reduce((sum, meal) => sum + (meal.isEaten ? meal.calories : 0), 0);
 
-    // If we have manual meals, use them for total. Otherwise use template total.
     let total = manualMeals.reduce((sum, meal) => sum + meal.calories, 0);
     if (total === 0 && templateMeals.length > 0) {
       total = templateMeals.reduce((sum, meal) => sum + meal.calories, 0);
@@ -238,15 +233,11 @@ export default function HomePage() {
   const workoutProgress = calculateWorkoutProgress();
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-      {/* Background Visuals */}
-      <div className="absolute inset-0 z-0">
-        <Aurora
-          colorStops={["#020617", "#0f172a", "#020617"]}
-          amplitude={1.1}
-          blend={0.6}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+    <div className="min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-x-hidden font-sans">
+      
+      {/* Vercel-like subtle background highlight */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[20%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[radial-gradient(circle,rgba(34,211,238,0.015)_0%,transparent_70%)] rounded-full blur-[90px]"></div>
       </div>
 
       <SiteHeader />
@@ -260,366 +251,355 @@ export default function HomePage() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16 z-10 flex-1"
+        className="relative max-w-6xl mx-auto px-6 py-16 space-y-20 z-10 flex-1 w-full"
       >
         {/* Hero Section */}
-        <section className="relative text-center space-y-8 pt-8">
-
-
+        <section className="text-center space-y-8 pt-6">
           <div className="space-y-4">
             <motion.h1
               variants={itemVariants}
-              className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.1]"
+              className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight text-white font-mono uppercase"
             >
               Transform Your Body.<br />
-              <span className="bg-gradient-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent animate-gradient-x px-2">
-                One Day at a Time.
-              </span>
+              <span className="text-[#22d3ee] italic">One Day at a Time.</span>
             </motion.h1>
 
             <motion.p
               variants={itemVariants}
-              className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto font-light leading-relaxed"
+              className="text-[#a3a3a3] text-base max-w-2xl mx-auto leading-relaxed font-medium"
             >
-              Master your fitness with <span className="text-white font-medium">AI-powered workouts</span>,
-              <span className="text-white font-medium"> personalized nutrition</span>, and
-              <span className="text-white font-medium"> elite coaching</span>.
+              Master your fitness with <strong className="text-white font-bold">AI-powered workouts</strong>,
+              <strong className="text-white font-bold"> personalized nutrition</strong>, and
+              <strong className="text-white font-bold"> elite coaching</strong>.
             </motion.p>
           </div>
 
-          <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-4">
-            <Button
-              size="lg"
-              className="h-14 px-8 bg-primary hover:bg-primary/90 text-lg font-bold rounded-full transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)] group relative overflow-hidden"
+          <motion.div variants={itemVariants} className="flex justify-center gap-4 pt-2">
+            <button
               onClick={() => navigate("/workouts")}
+              className="duo-btn-cyan px-8 py-3.5 text-sm"
             >
-              <span className="relative z-10 flex items-center gap-2">
-                Start Today <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 px-8 border-white/10 bg-white/5 hover:bg-white/10 text-lg font-bold rounded-full transition-all"
+              Start Today
+            </button>
+            <button
               onClick={() => navigate("/trainers")}
+              className="duo-btn-outline px-8 py-3.5 text-sm"
             >
               Browse Trainers
-            </Button>
+            </button>
           </motion.div>
         </section>
 
-        {/* Stats Overview - Bento Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          <GlassCard className="md:col-span-2 lg:col-span-2 flex flex-col justify-between min-h-[200px] border-primary/20 bg-primary/5">
+        {/* Stats Bento Box Grid */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Card 1: Streak */}
+          <CyberCard className="flex flex-col justify-between h-[200px]">
             <div className="flex justify-between items-start">
-              <div className="p-3 bg-primary/20 rounded-2xl">
-                <Flame className="h-6 w-6 text-orange-500" />
+              <div className="p-2.5 bg-[#0d0d0e] border border-[#262626] rounded-xl text-[#22d3ee]">
+                <Flame className="h-5 w-5 fill-[#22d3ee]/10" />
               </div>
-              <Badge variant="outline" className="border-primary/20 text-primary bg-primary/10">Active</Badge>
+              <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold tracking-wider bg-cyan-950/40 text-[#22d3ee] border border-cyan-900/30 uppercase">
+                ACTIVE STREAK
+              </span>
             </div>
             <div>
-              <h3 className="text-gray-400 text-sm font-medium mb-1">Current Streak</h3>
-              <div className="text-5xl font-black text-white flex items-baseline gap-2">
+              <h3 className="text-[#a3a3a3] text-xs font-mono font-bold uppercase tracking-wider">Current Streak</h3>
+              <div className="text-4xl font-extrabold text-white font-mono flex items-baseline gap-1 mt-1">
                 <AnimatedNumber value={streak} />
-                <span className="text-xl font-medium text-gray-500">days</span>
+                <span className="text-sm font-bold text-[#a3a3a3]">days</span>
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-2 text-green-500 text-sm">
-              <TrendingUp className="h-4 w-4" />
-              <span>Top 5% this week</span>
+            <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-mono font-bold">
+              <TrendingUp className="h-3.5 w-3.5" />
+              <span>TOP 5% THIS WEEK</span>
             </div>
-          </GlassCard>
+          </CyberCard>
 
-          <GlassCard className="md:col-span-2 lg:col-span-2 flex flex-col justify-between min-h-[200px] border-green-500/20 bg-green-500/5">
+          {/* Card 2: Calories */}
+          <CyberCard className="flex flex-col justify-between h-[200px]">
             <div className="flex justify-between items-start">
-              <div className="p-3 bg-green-500/20 rounded-2xl">
-                <Apple className="h-6 w-6 text-green-500" />
+              <div className="p-2.5 bg-[#0d0d0e] border border-[#262626] rounded-xl text-[#22d3ee]">
+                <Apple className="h-5 w-5" />
               </div>
-              <span className="text-xs font-bold text-green-500">{Math.round(dietProgress.percentage)}%</span>
+              <span className="text-[10px] font-mono font-bold text-[#22d3ee]">
+                {Math.round(dietProgress.percentage)}%
+              </span>
             </div>
             <div>
-              <h3 className="text-gray-400 text-sm font-medium mb-1">Calories Consumed</h3>
-              <div className="text-4xl font-black text-white flex items-baseline gap-2">
+              <h3 className="text-[#a3a3a3] text-xs font-mono font-bold uppercase tracking-wider">Calories Consumed</h3>
+              <div className="text-3xl font-extrabold text-white font-mono flex items-baseline gap-1 mt-1">
                 <AnimatedNumber value={dietProgress.consumed} />
-                <span className="text-lg font-medium text-gray-500">/ {dietProgress.total}</span>
+                <span className="text-sm font-bold text-[#a3a3a3]">/ {dietProgress.total} kcal</span>
               </div>
-              <div className="w-full h-1.5 bg-white/5 rounded-full mt-4 overflow-hidden">
+              <div className="w-full h-2 bg-[#0d0d0e] rounded-full mt-3 overflow-hidden border border-[#262626]">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${dietProgress.percentage}%` }}
-                  className="h-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                  animate={{ width: `${Math.min(dietProgress.percentage, 100)}%` }}
+                  className="h-full bg-cyan-500 rounded-full"
                 />
               </div>
             </div>
-          </GlassCard>
+          </CyberCard>
 
-          <GlassCard className="md:col-span-4 lg:col-span-2 flex flex-col justify-between min-h-[200px] border-blue-500/20 bg-blue-500/5">
+          {/* Card 3: Workouts */}
+          <CyberCard className="flex flex-col justify-between h-[200px]">
             <div className="flex justify-between items-start">
-              <div className="p-3 bg-blue-500/20 rounded-2xl">
-                <Dumbbell className="h-6 w-6 text-blue-500" />
+              <div className="p-2.5 bg-[#0d0d0e] border border-[#262626] rounded-xl text-[#22d3ee]">
+                <Dumbbell className="h-5 w-5" />
               </div>
-              <Activity className="h-5 w-5 text-blue-500/50" />
+              <Activity className="h-4 w-4 text-neutral-600" />
             </div>
             <div>
-              <h3 className="text-gray-400 text-sm font-medium mb-1">Workout Progress</h3>
-              <div className="text-4xl font-black text-white flex items-baseline gap-2">
+              <h3 className="text-[#a3a3a3] text-xs font-mono font-bold uppercase tracking-wider">Workout Progress</h3>
+              <div className="text-3xl font-extrabold text-white font-mono flex items-baseline gap-1 mt-1">
                 <AnimatedNumber value={workoutProgress.completed} />
-                <span className="text-lg font-medium text-gray-500">/ {workoutProgress.total}</span>
+                <span className="text-sm font-bold text-[#a3a3a3]">/ {workoutProgress.total} sessions</span>
               </div>
-              <p className="text-xs text-blue-400 mt-2 font-medium uppercase tracking-wider">
-                {workoutProgress.total - workoutProgress.completed} sessions remaining today
+              <p className="text-[10px] text-[#22d3ee] mt-3 font-mono font-bold uppercase tracking-widest leading-none">
+                {workoutProgress.total - workoutProgress.completed} REMAINING TODAY
               </p>
             </div>
-          </GlassCard>
+          </CyberCard>
         </section>
 
         {/* Active Programs Section */}
         {activeTemplates.length > 0 && (
           <section className="space-y-6">
-            <div className="flex items-end justify-between px-2">
-              <div className="space-y-1">
-                <h2 className="text-3xl font-black tracking-tight uppercase italic">Your <span className="text-primary">Daily Programs</span></h2>
-                <p className="text-gray-500 font-medium">Currently active training protocols from your coach</p>
-              </div>
+            <div className="px-2">
+              <h2 className="text-2xl font-extrabold tracking-tight text-white font-mono uppercase">
+                Active Programs
+              </h2>
+              <p className="text-[#a3a3a3] text-xs font-medium">Currently active training protocols from your coach</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {activeTemplates.map((prog) => (
-                <motion.div
+                <div
                   key={prog._id}
-                  whileHover={{ y: -10 }}
-                  className="group relative h-72 rounded-[2.5rem] overflow-hidden border border-white/10 bg-white/5 cursor-pointer shadow-2xl"
                   onClick={() => navigate(`/workouts/template/${prog._id}`)}
+                  className="group duo-selection-card overflow-hidden h-64 flex flex-col justify-between p-6 relative cursor-pointer"
                 >
                   <img
                     src={prog.image || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop"}
                     alt={prog.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-30"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0e] via-[#0d0d0e]/60 to-transparent" />
                   
-                  <div className="absolute bottom-6 left-6 right-6 space-y-2">
-                     <Badge className="bg-primary text-black font-black uppercase italic text-[8px] px-2 py-0.5 rounded-full mb-2">
-                        Active Protocol
-                     </Badge>
-                     <h3 className="text-xl font-black italic tracking-tighter text-white uppercase line-clamp-1 group-hover:text-primary transition-colors">
-                        {prog.title}
-                     </h3>
-                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">By {prog.createdByType || 'Coach'}</p>
+                  <div className="relative z-10">
+                    <span className="inline-block text-[9px] px-2 py-0.5 rounded font-mono font-bold tracking-wider bg-cyan-950/40 text-[#22d3ee] border border-cyan-900/30 uppercase">
+                      ACTIVE
+                    </span>
                   </div>
-                  
-                  <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Target className="h-5 w-5 text-primary" />
+
+                  <div className="relative z-10 space-y-1">
+                    <h3 className="text-lg font-bold text-white uppercase font-mono group-hover:text-[#22d3ee] transition-colors line-clamp-1">
+                      {prog.title}
+                    </h3>
+                    <p className="text-[9px] font-mono font-bold text-[#a3a3a3] tracking-widest uppercase">
+                      BY {prog.createdByType?.toUpperCase() || 'COACH'}
+                    </p>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </section>
         )}
 
         {/* Popular Templates Carousel */}
-        <section className="space-y-6 pt-4">
+        <section className="space-y-6">
           <div className="flex items-end justify-between px-2">
-            <div className="space-y-1">
-              <h2 className="text-3xl font-black tracking-tight uppercase italic">Popular <span className="text-primary">Workout Plans</span></h2>
-              <p className="text-gray-500 font-medium">Expert training templates for every goal</p>
+            <div className="space-y-0.5">
+              <h2 className="text-2xl font-extrabold tracking-tight text-white font-mono uppercase">
+                Popular Workout Plans
+              </h2>
+              <p className="text-[#a3a3a3] text-xs font-medium">Expert training templates for every goal</p>
             </div>
             <Link to={ROUTES.USER_ADMIN_WORKOUT_TEMPLATES}>
-              <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all">
-                See More <ChevronRight className="h-4 w-4" />
-              </Button>
+              <button className="text-xs font-mono font-bold text-[#22d3ee] hover:underline flex items-center gap-1">
+                SEE MORE <ChevronRight className="h-3.5 w-3.5" />
+              </button>
             </Link>
           </div>
 
-          <div className="relative group">
-            {/* Carousel Container */}
-            <div className="flex overflow-x-auto pb-8 gap-6 scrollbar-hide snap-x snap-mandatory">
-              {isLoading ? (
-                [1, 2, 3].map((i) => (
-                  <div key={i} className="min-w-[300px] md:min-w-[400px] h-64 rounded-3xl bg-white/5 animate-pulse border border-white/10" />
-                ))
-              ) : templates.length === 0 ? (
-                <div className="w-full py-20 text-center bg-white/5 rounded-3xl border border-white/10">
-                  <Dumbbell className="h-12 w-12 mx-auto text-white/10 mb-4" />
-                  <p className="text-gray-500 text-lg font-medium">No templates found.</p>
+          <div className="flex overflow-x-auto pb-4 gap-6 scrollbar-hide snap-x snap-mandatory">
+            {isLoading ? (
+              [1, 2, 3].map((i) => (
+                <div key={i} className="min-w-[300px] h-60 rounded-2xl bg-[#171717] border-2 border-[#262626] animate-pulse flex-shrink-0" />
+              ))
+            ) : templates.length === 0 ? (
+              <div className="w-full py-16 text-center bg-[#171717] border-2 border-[#262626] rounded-2xl">
+                <Dumbbell className="h-10 w-10 mx-auto text-neutral-600 mb-3" />
+                <p className="text-[#a3a3a3] text-sm font-medium font-mono">NO PLANS FOUND</p>
+              </div>
+            ) : (
+              templates.map((template) => (
+                <div
+                  key={template._id}
+                  onClick={() => navigate(ROUTES.USER_TEMPLATE_DETAILS.replace(":id", template._id))}
+                  className="min-w-[300px] group duo-selection-card h-60 overflow-hidden flex flex-col justify-between p-6 relative cursor-pointer snap-start flex-shrink-0"
+                >
+                  <img
+                    src={template.image || "https://images.unsplash.com/photo-1541534741688-6078c64b52d3?q=80&w=800&auto=format&fit=crop"}
+                    alt={template.title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-30"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0e] via-[#0d0d0e]/60 to-transparent" />
+
+                  <div className="relative z-10 flex justify-end">
+                    <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold bg-[#171717] border border-[#262626] text-[#22d3ee]">
+                      {template.difficultyLevel?.toUpperCase() || "PRO"}
+                    </span>
+                  </div>
+
+                  <div className="relative z-10 space-y-2">
+                    <h3 className="text-xl font-bold text-white uppercase font-mono group-hover:text-[#22d3ee] transition-colors line-clamp-1">
+                      {template.title}
+                    </h3>
+                    <div className="flex items-center gap-4 text-[9px] font-mono font-bold text-[#a3a3a3]">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-[#22d3ee]" /> {template.days?.length || 0} SESSIONS
+                      </span>
+                      <span className="flex items-center gap-1 uppercase tracking-wider">
+                        <Target className="h-3 w-3 text-[#22d3ee]" /> {template.goal || 'GENERAL'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                templates.map((template) => (
-                  <motion.div
-                    key={template._id}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => navigate(ROUTES.USER_TEMPLATE_DETAILS.replace(":id", template._id))}
-                    className="min-w-[300px] md:min-w-[400px] group relative h-64 rounded-[2.5rem] overflow-hidden border border-white/10 bg-slate-900 cursor-pointer snap-start flex-shrink-0"
-                  >
-                    <img
-                      src={template.image || "https://images.unsplash.com/photo-1541534741688-6078c64b52d3?q=80&w=800&auto=format&fit=crop"}
-                      alt={template.title}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-
-                    <div className="absolute top-6 right-6">
-                      <Badge className="bg-primary/20 backdrop-blur-md text-primary border-primary/20 text-[10px] font-black tracking-widest px-3 py-1 uppercase italic">
-                        {template.difficultyLevel || "Pro"}
-                      </Badge>
-                    </div>
-
-                    <div className="absolute bottom-6 left-6 right-6 space-y-2">
-                      <h3 className="text-2xl font-black italic tracking-tighter text-white uppercase line-clamp-1 group-hover:text-primary transition-colors">
-                        {template.title}
-                      </h3>
-                      <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-                        <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> {template.days?.length || 0} SESSIONS</span>
-                        <span className="flex items-center gap-1.5 uppercase tracking-wider"><Target className="h-4 w-4 text-primary" /> {template.goal || 'General Fitness'}</span>
-                      </div>
-                    </div>
-
-                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                  </motion.div>
-                ))
-              )}
-            </div>
+              ))
+            )}
           </div>
         </section>
 
         {/* Featured Trainers */}
         <section className="space-y-6">
-          <div className="flex items-end justify-between px-2">
-            <div className="space-y-1">
-              <h2 className="text-3xl font-black tracking-tight uppercase italic">Elite <span className="text-primary">Coaches</span></h2>
-              <p className="text-gray-500 font-medium">Learn from the best in the industry</p>
-            </div>
+          <div className="px-2">
+            <h2 className="text-2xl font-extrabold tracking-tight text-white font-mono uppercase">
+              Elite Coaches
+            </h2>
+            <p className="text-[#a3a3a3] text-xs font-medium">Learn from the best in the industry</p>
           </div>
 
           {user?.assignedTrainerDetails && (
-            <motion.div 
-              variants={itemVariants}
+            <div 
               onClick={() => navigate(ROUTES.MY_TRAINER_PROFILE)}
-              className="group relative bg-white/5 border border-primary/30 rounded-[3rem] p-8 md:p-12 overflow-hidden cursor-pointer hover:bg-white/10 transition-all mb-12 shadow-2xl"
+              className="duo-card-3d bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-3xl p-8 relative overflow-hidden cursor-pointer"
             >
-              <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-700">
-                <Users className="h-64 w-64" />
-              </div>
-              
-              <div className="flex flex-col md:flex-row gap-10 items-center relative z-10">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
+              <div className="flex flex-col md:flex-row gap-8 items-center relative z-10">
+                <div className="relative flex-shrink-0">
                   <img 
                     src={user.assignedTrainerDetails.profileImage || "/placeholder.svg"} 
                     alt={user.assignedTrainerDetails.name}
-                    className="relative w-48 h-48 md:w-56 md:h-56 rounded-[2.5rem] object-cover border-2 border-primary/50 shadow-2xl transform group-hover:scale-105 transition-transform duration-500"
+                    className="w-36 h-36 rounded-2xl object-cover border-2 border-[#262626] shadow-xl"
                   />
-                  <Badge className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-primary text-white px-6 py-2 rounded-full font-black uppercase tracking-widest text-[10px] shadow-xl">
+                  <span className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 bg-cyan-500 text-black px-4 py-1 rounded-full font-mono font-bold tracking-widest text-[9px] uppercase">
                     My Coach
-                  </Badge>
+                  </span>
                 </div>
                 
                 <div className="flex-1 text-center md:text-left space-y-4">
-                  <div>
-                    <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white">
+                  <div className="space-y-1">
+                    <h2 className="text-3xl font-extrabold text-white font-mono uppercase">
                       {user.assignedTrainerDetails.name}
                     </h2>
-                    <p className="text-primary font-bold uppercase tracking-widest text-sm mt-1">
-                      {user.assignedTrainerDetails.specialization} • PROFESSIONAL COACH
+                    <p className="text-[#22d3ee] font-mono font-bold uppercase tracking-widest text-[10px]">
+                      {user.assignedTrainerDetails.specialization?.toUpperCase()} • PROFESSIONAL COACH
                     </p>
                   </div>
                   
-                  <p className="text-gray-400 max-w-xl text-lg leading-relaxed">
-                    You are currently training under {user.assignedTrainerDetails.name}. Access your personalized workout plans, diet regimes, and chat directly for guidance.
+                  <p className="text-[#a3a3a3] text-sm leading-relaxed max-w-xl font-medium">
+                    You are currently training under {user.assignedTrainerDetails.name}. Access active plans, logs, and messaging channels directly.
                   </p>
                   
-                  <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-4">
-                    <Button onClick={(e) => { e.stopPropagation(); navigate(ROUTES.MY_TRAINER_PROFILE); }} className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 font-black uppercase italic tracking-widest text-xs">
-                      Trainer Dashboard
-                    </Button>
-                    <Button onClick={(e) => { e.stopPropagation(); navigate(ROUTES.USER_CHATS); }} variant="outline" className="h-12 px-8 rounded-2xl border-white/10 bg-white/5 font-black uppercase italic tracking-widest text-xs">
+                  <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); navigate(ROUTES.MY_TRAINER_PROFILE); }} 
+                      className="duo-btn-cyan px-5 py-2.5 text-xs"
+                    >
+                      Dashboard
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); navigate(ROUTES.USER_CHATS); }} 
+                      className="duo-btn-outline px-5 py-2.5 text-xs"
+                    >
                       Chat Now
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </div>
-              <div className="mt-8 flex justify-center md:justify-start">
-                <Link to="/trainers">
-                  <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all p-0">
-                    See All Trainers <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </motion.div>
-          )}
-
-          {!user?.assignedTrainerDetails && (
-            <div className="flex justify-end pr-4 -mt-4 mb-4">
-               <Link to="/trainers">
-                  <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all">
-                    View All Trainers <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </Link>
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {!user?.assignedTrainerDetails && (
+            <div className="flex justify-end pr-2 -mt-4">
+              <Link to="/trainers">
+                <button className="text-xs font-mono font-bold text-[#22d3ee] hover:underline flex items-center gap-1">
+                  SEE ALL TRAINERS <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </Link>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {isLoading ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className="h-[400px] rounded-3xl bg-white/5 animate-pulse border border-white/10" />
+                <div key={i} className="h-96 rounded-2xl bg-[#171717] border-2 border-[#262626] animate-pulse" />
               ))
             ) : trainers.length === 0 ? (
-              <div className="col-span-full py-20 text-center space-y-4">
-                <Users className="h-16 w-16 mx-auto text-white/10" />
-                <p className="text-gray-500 text-xl font-medium">No trainers available right now.</p>
+              <div className="col-span-full py-16 text-center space-y-2 bg-[#171717] border-2 border-[#262626] rounded-2xl">
+                <Users className="h-10 w-10 mx-auto text-neutral-600" />
+                <p className="text-[#a3a3a3] text-sm font-mono font-bold uppercase tracking-wider">NO TRAINERS AVAILABLE</p>
               </div>
             ) : (
               trainers.slice(0, 3).map((trainer) => (
-                <motion.div
+                <div
                   key={trainer._id}
-                  variants={itemVariants}
-                  whileHover={{ y: -10 }}
-                  className="group relative h-[450px] rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
+                  className="group duo-card-3d bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-3xl overflow-hidden flex flex-col justify-between h-[420px]"
                 >
-                  <img
-                    src={trainer.profileImage || "/placeholder.svg"}
-                    alt={trainer.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                  <div className="relative h-48 bg-[#0d0d0e] overflow-hidden">
+                    <img
+                      src={trainer.profileImage || "/placeholder.svg"}
+                      alt={trainer.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 left-3">
+                      <span className="bg-[#171717] border border-[#262626] text-[#22d3ee] text-[9px] font-mono font-bold py-1 px-3 rounded-full uppercase">
+                        {trainer.specialty || "Fitness"}
+                      </span>
+                    </div>
 
-                  <div className="absolute top-4 left-4">
-                    <Badge className="bg-primary/90 backdrop-blur-md text-white border-0 py-1.5 px-4 rounded-full font-bold shadow-xl">
-                      {trainer.specialty}
-                    </Badge>
+                    <div className="absolute top-3 right-3 h-8 px-2.5 bg-black/40 border border-[#262626] backdrop-blur-md rounded-full flex items-center justify-center">
+                      <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                      <span className="ml-1 text-[10px] font-mono font-bold text-white">{trainer.rating}</span>
+                    </div>
                   </div>
 
-                  <div className="absolute top-4 right-4 h-10 w-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10">
-                    <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                    <span className="ml-1 text-xs font-bold">{trainer.rating}</span>
-                  </div>
-
-                  <div className="absolute bottom-0 left-0 right-0 p-8 space-y-4">
-                    <div>
-                      <h4 className="text-2xl font-black text-white">{trainer.name}</h4>
-                      <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
-                        <MapPin className="h-4 w-4 text-primary" />
-                        <span>{trainer.location}</span>
+                  <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-1">
+                      <h4 className="text-xl font-bold text-white uppercase font-mono tracking-tight leading-none truncate">{trainer.name}</h4>
+                      <div className="flex items-center gap-1.5 text-[#a3a3a3] text-xs font-medium">
+                        <MapPin className="h-3.5 w-3.5 text-[#22d3ee]" />
+                        <span className="truncate">{trainer.location}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                    <div className="flex items-center justify-between pt-3 border-t border-[#262626]">
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">Starting from</p>
-                        <p className="text-xl font-black text-primary">
+                        <p className="text-[8px] text-[#a3a3a3] uppercase font-mono font-bold tracking-widest">Rate Starts At</p>
+                        <p className="text-lg font-extrabold text-[#22d3ee] font-mono">
                           {typeof trainer.price === 'object' ? `₹${trainer.price.basic}` : trainer.price}
                         </p>
                       </div>
-                      <Button
+                      <button
                         onClick={() => navigate(`/trainers/${trainer._id}`)}
-                        className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-6"
+                        className="duo-btn-outline px-4 py-2 text-xs"
                       >
                         Profile
-                      </Button>
+                      </button>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))
             )}
           </div>
@@ -627,297 +607,294 @@ export default function HomePage() {
 
         {/* Elite Gyms Section */}
         <section className="space-y-6">
-          <div className="flex items-end justify-between px-2">
-            <div className="space-y-1">
-              <h2 className="text-3xl font-black tracking-tight uppercase italic">Elite <span className="text-cyan-500">Gyms</span></h2>
-              <p className="text-gray-500 font-medium">Top-rated fitness centers near you</p>
-            </div>
+          <div className="px-2">
+            <h2 className="text-2xl font-extrabold tracking-tight text-white font-mono uppercase">
+              Elite Gyms
+            </h2>
+            <p className="text-[#a3a3a3] text-xs font-medium">Top-rated fitness centers near you</p>
           </div>
 
           {user?.activeGymDetails && (
-            <motion.div 
-              variants={itemVariants}
+            <div 
               onClick={() => navigate(ROUTES.USER_GYM_DASHBOARD)}
-              className="group relative bg-white/5 border border-cyan-500/30 rounded-[3rem] p-8 md:p-12 overflow-hidden cursor-pointer hover:bg-white/10 transition-all mb-12 shadow-2xl"
+              className="duo-card-3d bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-3xl p-8 relative overflow-hidden cursor-pointer"
             >
-              <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-700">
-                <Dumbbell className="h-64 w-64" />
-              </div>
-              
-              <div className="flex flex-col md:flex-row gap-10 items-center relative z-10">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-cyan-500/10 blur-2xl rounded-full" />
+              <div className="flex flex-col md:flex-row gap-8 items-center relative z-10">
+                <div className="relative flex-shrink-0">
                   <img 
                     src={user.activeGymDetails.profileImage || "/placeholder.svg"} 
                     alt={user.activeGymDetails.name}
-                    className="relative w-48 h-48 md:w-56 md:h-56 rounded-[2.5rem] object-cover border-2 border-cyan-500/30 shadow-2xl transform group-hover:scale-105 transition-transform duration-500"
+                    className="w-36 h-36 rounded-2xl object-cover border-2 border-[#262626] shadow-xl"
                   />
-                  <Badge className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-white px-6 py-2 rounded-full font-black uppercase tracking-widest text-[10px] shadow-xl">
+                  <span className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 bg-cyan-500 text-black px-4 py-1 rounded-full font-mono font-bold tracking-widest text-[9px] uppercase">
                     Active Gym
-                  </Badge>
+                  </span>
                 </div>
                 
                 <div className="flex-1 text-center md:text-left space-y-4">
-                  <div>
-                    <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white">
+                  <div className="space-y-1">
+                    <h2 className="text-3xl font-extrabold text-white font-mono uppercase">
                       {user.activeGymDetails.name}
                     </h2>
-                    <div className="flex items-center justify-center md:justify-start gap-2 text-cyan-400 font-bold uppercase tracking-widest text-sm mt-1">
-                      <MapPin className="h-4 w-4" /> {user.activeGymDetails.address || "Main Branch"}
+                    <div className="flex items-center justify-center md:justify-start gap-1.5 text-[#22d3ee] font-mono font-bold text-xs">
+                      <MapPin className="h-3.5 w-3.5" /> {user.activeGymDetails.address || "Main Branch"}
                     </div>
                   </div>
                   
-                  <p className="text-gray-400 max-w-xl text-lg leading-relaxed">
-                    You are an active member of {user.activeGymDetails.name}. Track your attendance, see upcoming gym announcements, and check available equipment.
+                  <p className="text-[#a3a3a3] text-sm leading-relaxed max-w-xl font-medium">
+                    You are an active member of {user.activeGymDetails.name}. Track your attendance splits, notifications, and equipment lists.
                   </p>
                   
-                  <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-4">
-                    <Button onClick={(e) => { e.stopPropagation(); navigate(ROUTES.USER_GYM_DASHBOARD); }} className="h-12 px-8 rounded-2xl bg-cyan-500 hover:bg-cyan-500/90 text-white font-black uppercase italic tracking-widest text-xs border-0">
+                  <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); navigate(ROUTES.USER_GYM_DASHBOARD); }} 
+                      className="duo-btn-cyan px-5 py-2.5 text-xs"
+                    >
                       Gym Dashboard
-                    </Button>
-                    <Button onClick={(e) => { e.stopPropagation(); navigate(ROUTES.USER_GYM_EQUIPMENT); }} variant="outline" className="h-12 px-8 rounded-2xl border-white/10 bg-white/5 font-black uppercase italic tracking-widest text-xs">
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); navigate(ROUTES.USER_GYM_EQUIPMENT); }} 
+                      className="duo-btn-outline px-5 py-2.5 text-xs"
+                    >
                       View Facilities
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </div>
-              <div className="mt-8 flex justify-center md:justify-start">
-                  <Link to={ROUTES.USER_GYMS}>
-                    <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all p-0">
-                      See All Gyms <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-              </div>
-            </motion.div>
-          )}
-
-          {!user?.activeGymDetails && (
-            <div className="flex justify-end pr-4 -mt-4 mb-4">
-               <Link to={ROUTES.USER_GYMS}>
-                  <Button variant="link" className="text-primary font-bold gap-1 hover:gap-2 transition-all">
-                    Explore All Gyms <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </Link>
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {!user?.activeGymDetails && (
+            <div className="flex justify-end pr-2 -mt-4">
+              <Link to={ROUTES.USER_GYMS}>
+                <button className="text-xs font-mono font-bold text-[#22d3ee] hover:underline flex items-center gap-1">
+                  EXPLORE ALL GYMS <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </Link>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {isLoading ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className="h-[400px] rounded-3xl bg-white/5 animate-pulse border border-white/10" />
+                <div key={i} className="h-96 rounded-2xl bg-[#171717] border-2 border-[#262626] animate-pulse" />
               ))
             ) : gyms.length === 0 ? (
-              <div className="col-span-full py-20 text-center space-y-4">
-                <Dumbbell className="h-16 w-16 mx-auto text-white/10" />
-                <p className="text-gray-500 text-xl font-medium">No gyms found in your area.</p>
+              <div className="col-span-full py-16 text-center space-y-2 bg-[#171717] border-2 border-[#262626] rounded-2xl">
+                <Dumbbell className="h-10 w-10 mx-auto text-neutral-600" />
+                <p className="text-[#a3a3a3] text-sm font-mono font-bold uppercase tracking-wider">NO GYMS REGISTERED</p>
               </div>
             ) : (
               gyms.slice(0, 3).map((gym: IGym & { avgRating?: number, minPlanPrice?: number }) => (
-                <motion.div
+                <div
                   key={gym._id}
-                  variants={itemVariants}
-                  whileHover={{ y: -10 }}
-                  className="group relative h-[450px] rounded-3xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
+                  className="group duo-card-3d bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-3xl overflow-hidden flex flex-col justify-between h-[420px]"
                 >
-                  <img
-                    src={gym.profileImage || "/placeholder.svg"}
-                    alt={gym.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-
-                  <div className="absolute top-4 right-4 h-10 w-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10">
-                    <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                    <span className="ml-1 text-xs font-bold">{gym.avgRating || 0}</span>
+                  <div className="relative h-48 bg-[#0d0d0e] overflow-hidden">
+                    <img
+                      src={gym.profileImage || "/placeholder.svg"}
+                      alt={gym.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 right-3 h-8 px-2.5 bg-black/40 border border-[#262626] backdrop-blur-md rounded-full flex items-center justify-center">
+                      <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+                      <span className="ml-1 text-[10px] font-mono font-bold text-white">{gym.avgRating || 0}</span>
+                    </div>
                   </div>
 
-                  <div className="absolute bottom-0 left-0 right-0 p-8 space-y-4">
-                    <div>
-                      <h4 className="text-2xl font-black text-white">{gym.name}</h4>
-                      <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
-                        <MapPin className="h-4 w-4 text-primary" />
-                        <span className="truncate">{gym.address || "Location Available"}</span>
+                  <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-1">
+                      <h4 className="text-xl font-bold text-white uppercase font-mono tracking-tight leading-none truncate">{gym.name}</h4>
+                      <div className="flex items-center gap-1.5 text-[#a3a3a3] text-xs font-medium">
+                        <MapPin className="h-3.5 w-3.5 text-[#22d3ee]" />
+                        <span className="truncate">{gym.address || "Main Address"}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                    <div className="flex items-center justify-between pt-3 border-t border-[#262626]">
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">Starting from</p>
-                        <p className="text-xl font-black text-primary">
+                        <p className="text-[8px] text-[#a3a3a3] uppercase font-mono font-bold tracking-widest">Starts At</p>
+                        <p className="text-lg font-extrabold text-[#22d3ee] font-mono">
                           ₹{gym.minPlanPrice || "---"}
                         </p>
                       </div>
-                      <Button
+                      <button
                         onClick={() => navigate(ROUTES.USER_INDIVIDUAL_GYM.replace(':id', gym._id))}
-                        className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-6"
+                        className="duo-btn-outline px-4 py-2 text-xs"
                       >
                         Explore
-                      </Button>
+                      </button>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))
             )}
           </div>
         </section>
 
-        {/* Today's Workouts & Diet Grid */}
+        {/* Schedule & Nutrition splits */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Workouts */}
-          <GlassCard className="space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+          
+          {/* Workout Schedule */}
+          <CyberCard className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-[#262626]">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/20 rounded-xl">
-                  <Dumbbell className="h-5 w-5 text-blue-500" />
+                <div className="p-2.5 bg-[#0d0d0e] border border-[#262626] rounded-xl text-[#22d3ee]">
+                  <Dumbbell className="h-4 w-4" />
                 </div>
-                <h3 className="text-xl font-bold">Today's Schedule</h3>
+                <h3 className="text-lg font-bold font-mono uppercase text-white">Today's Schedule</h3>
               </div>
               <Link to="/workouts">
-                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                  View Schedule
-                </Button>
+                <button className="text-xs font-mono font-bold text-[#a3a3a3] hover:text-[#22d3ee] transition-colors">
+                  VIEW FULL
+                </button>
               </Link>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {isLoading ? (
-                [1, 2].map((i) => <div key={i} className="h-20 bg-white/5 rounded-2xl animate-pulse" />)
+                [1, 2].map((i) => <div key={i} className="h-16 bg-[#0d0d0e] rounded-xl animate-pulse" />)
               ) : !Array.isArray(workouts) || workouts.length === 0 ? (
-                <div className="py-12 text-center space-y-4">
-                  <Activity className="h-12 w-12 mx-auto text-white/5" />
-                  <p className="text-gray-500">No sessions planned for today.</p>
-                  <Button onClick={() => navigate("/workouts/add")} variant="outline" className="rounded-full border-white/10">Add Session</Button>
+                <div className="py-10 text-center space-y-4 bg-[#0d0d0e]/30 rounded-xl border border-[#262626] border-dashed">
+                  <Activity className="h-8 w-8 mx-auto text-neutral-600" />
+                  <p className="text-xs text-[#a3a3a3] font-mono font-bold uppercase">NO WORKOUTS SCHEDULED</p>
+                  <button 
+                    onClick={() => navigate("/workouts/add")} 
+                    className="duo-btn-outline px-4 py-2 text-[10px]"
+                  >
+                    Add Session
+                  </button>
                 </div>
               ) : (
                 workouts.slice(0, 3).map((workout) => (
-                  <motion.div
+                  <div
                     key={workout._id}
-                    whileHover={{ x: 10 }}
-                    className={`flex items-center justify-between p-4 rounded-2xl border transition-colors ${workout.isDone
-                      ? "bg-green-500/10 border-green-500/20"
-                      : "bg-white/5 border-white/10 hover:bg-white/10"
-                      }`}
+                    className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${workout.isDone
+                      ? "bg-emerald-950/20 border-emerald-900/30"
+                      : "bg-[#0d0d0e] border-[#262626]"
+                    }`}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-3 h-3 rounded-full ${workout.isDone ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-yellow-500"}`} />
+                    <div className="flex items-center gap-3.5">
+                      <div className={`w-2.5 h-2.5 rounded-full ${workout.isDone ? "bg-emerald-400" : "bg-cyan-500"}`} />
                       <div>
-                        <h4 className={`font-bold ${workout.isDone ? "line-through text-gray-500" : "text-white"}`}>
+                        <h4 className={`text-sm font-bold ${workout.isDone ? "line-through text-neutral-500" : "text-white"}`}>
                           {workout.name}
                         </h4>
-                        <div className="flex items-center gap-4 text-xs text-gray-500 font-medium">
+                        <div className="flex items-center gap-3 text-[10px] text-[#a3a3a3] font-mono mt-0.5 font-bold">
                           <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {workout.time}</span>
-                          <span className="flex items-center gap-1"><Target className="h-3 w-3" /> {workout.exercises?.length} sets</span>
+                          <span className="flex items-center gap-1"><Target className="h-3 w-3" /> {workout.exercises?.length || 0} SETS</span>
                         </div>
                       </div>
                     </div>
                     {workout.isDone ? (
-                      <Badge className="bg-green-500/20 text-green-500 border-0">Done</Badge>
+                      <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold bg-emerald-950/40 text-emerald-400 border border-emerald-900/30 uppercase">
+                        DONE
+                      </span>
                     ) : (
-                      <Button size="sm" variant="ghost" className="rounded-full hover:bg-primary/20 hover:text-primary" onClick={() => navigate(ROUTES.USER_START_WORKOUT.replace(':id', workout._id))}>
+                      <button 
+                        onClick={() => navigate(ROUTES.USER_START_WORKOUT.replace(':id', workout._id))}
+                        className="duo-btn-cyan px-3 py-1.5 text-[10px]"
+                      >
                         Start
-                      </Button>
+                      </button>
                     )}
-                  </motion.div>
+                  </div>
                 ))
               )}
             </div>
-          </GlassCard>
+          </CyberCard>
 
-          {/* Diet */}
-          <GlassCard className="space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+          {/* Nutrition plan */}
+          <CyberCard className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-[#262626]">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-500/20 rounded-xl">
-                  <Apple className="h-5 w-5 text-orange-500" />
+                <div className="p-2.5 bg-[#0d0d0e] border border-[#262626] rounded-xl text-[#22d3ee]">
+                  <Apple className="h-4 w-4" />
                 </div>
-                <h3 className="text-xl font-bold">Nutrition Plan</h3>
+                <h3 className="text-lg font-bold font-mono uppercase text-white">Nutrition log</h3>
               </div>
               <Link to="/diets">
-                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                  Log Meal
-                </Button>
+                <button className="text-xs font-mono font-bold text-[#a3a3a3] hover:text-[#22d3ee] transition-colors">
+                  LOG MEAL
+                </button>
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {isLoading ? (
-                [1, 2, 3, 4].map((i) => <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse" />)
+                [1, 2, 3, 4].map((i) => <div key={i} className="h-20 bg-[#0d0d0e] rounded-xl animate-pulse" />)
               ) : !diet?.meals || diet.meals.length === 0 ? (
-                <div className="col-span-full py-12 text-center space-y-4">
-                  <Apple className="h-12 w-12 mx-auto text-white/5" />
-                  <p className="text-gray-500">No meals logged for today.</p>
+                <div className="col-span-full py-10 text-center bg-[#0d0d0e]/30 rounded-xl border border-[#262626] border-dashed">
+                  <Apple className="h-8 w-8 mx-auto text-neutral-600 mb-2" />
+                  <p className="text-xs text-[#a3a3a3] font-mono font-bold uppercase">NO MEALS LOGGED YET</p>
                 </div>
               ) : (
                 (diet.meals.length > 0 ? diet.meals : (diet.templateMeals || [])).slice(0, 4).map((meal) => (
-                  <motion.div
+                  <div
                     key={meal._id}
-                    whileHover={{ scale: 1.02 }}
-                    className={`p-4 rounded-2xl border ${meal.isEaten
-                      ? "bg-green-500/5 border-green-500/20"
-                      : "bg-white/5 border-white/10"
-                      }`}
+                    className={`p-4 rounded-xl border ${meal.isEaten
+                      ? "bg-emerald-950/20 border-emerald-900/30"
+                      : "bg-[#0d0d0e] border-[#262626]"
+                    }`}
                   >
-                    <div className="flex justify-between items-start mb-3">
-                      <h4 className="font-bold text-sm truncate pr-2">{meal.name}</h4>
-                      <div className={`w-2 h-2 rounded-full ${meal.isEaten ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-gray-600"}`} />
+                    <div className="flex justify-between items-start mb-2.5">
+                      <h4 className="font-bold text-xs truncate pr-2 text-white">{meal.name}</h4>
+                      <div className={`w-2 h-2 rounded-full ${meal.isEaten ? "bg-emerald-400" : "bg-neutral-600"}`} />
                     </div>
-                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter text-gray-500">
+                    <div className="flex items-center justify-between text-[8px] font-mono font-bold uppercase tracking-widest text-[#a3a3a3]">
                       <div className="flex flex-col">
-                        <span>Cals</span>
-                        <span className="text-white text-sm">{meal.calories}</span>
+                        <span>CALS</span>
+                        <span className="text-white text-xs mt-0.5">{meal.calories}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span>Prot</span>
-                        <span className="text-white text-sm">{meal.protein}g</span>
+                        <span>PROT</span>
+                        <span className="text-white text-xs mt-0.5">{meal.protein}g</span>
                       </div>
                       <div className="flex flex-col">
-                        <span>Time</span>
-                        <span className="text-white text-sm">{meal.time}</span>
+                        <span>TIME</span>
+                        <span className="text-white text-xs mt-0.5">{meal.time}</span>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 ))
               )}
             </div>
-          </GlassCard>
+          </CyberCard>
         </section>
 
-        {/* Quick Actions */}
+        {/* Quick Actions Grid */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-black px-2 tracking-tight">Quick Actions</h2>
+          <h2 className="text-2xl font-extrabold tracking-tight text-white font-mono uppercase px-2">
+            Quick Actions
+          </h2>
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { title: "Start Workout", desc: "Launch active session", icon: Dumbbell, color: "from-blue-600 to-cyan-500", path: "/workouts" },
-              { title: "Log Nutrition", desc: "Track daily intake", icon: Apple, color: "from-orange-600 to-amber-500", path: "/diets" },
-              { title: "Find Coaches", desc: "Expert personalized help", icon: Users, color: "from-purple-600 to-pink-500", path: "/trainers" },
-              { title: "Analytics", desc: "View detailed progress", icon: Award, color: "from-primary to-indigo-500", path: "/dashboard" },
+              { title: "Start Workout", desc: "Launch active session", icon: Dumbbell, path: "/workouts" },
+              { title: "Log Nutrition", desc: "Track daily intake", icon: Apple, path: "/diets" },
+              { title: "Find Coaches", desc: "Expert personalized help", icon: Users, path: "/trainers" },
+              { title: "Analytics", desc: "View detailed progress", icon: Award, path: "/dashboard" },
             ].map((action, i) => (
-              <motion.div
+              <div
                 key={i}
-                variants={itemVariants}
-                whileHover={{ y: -8, scale: 1.02 }}
                 onClick={() => navigate(action.path)}
-                className="group cursor-pointer relative overflow-hidden rounded-3xl p-1 bg-white/5 border border-white/10"
+                className="group cursor-pointer duo-card-3d bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-3xl p-6"
               >
-                <div className="relative z-10 p-6 flex flex-col gap-4">
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.color} p-0.5 shadow-lg group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-shadow`}>
-                    <div className="w-full h-full rounded-[14px] bg-black/20 backdrop-blur-sm flex items-center justify-center">
-                      <action.icon className="h-7 w-7 text-white fill-[#030303]" />
-                    </div>
+                <div className="flex flex-col gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-[#0d0d0e] border border-[#262626] flex items-center justify-center text-[#22d3ee] group-hover:text-white group-hover:bg-[#22d3ee] transition-colors">
+                    <action.icon className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-black">{action.title}</h4>
-                    <p className="text-gray-500 text-sm font-medium">{action.desc}</p>
+                    <h4 className="text-base font-bold text-white uppercase font-mono tracking-wide">{action.title}</h4>
+                    <p className="text-[#a3a3a3] text-xs font-medium mt-0.5">{action.desc}</p>
                   </div>
                 </div>
-                {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-              </motion.div>
+              </div>
             ))}
           </div>
         </section>
-      </motion.main >
+      </motion.main>
+      
       <SiteFooter />
-    </div >
+    </div>
   );
 }

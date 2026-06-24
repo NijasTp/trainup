@@ -65,6 +65,19 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to={ROUTES.USER_LOGIN} replace state={{ from: location }} />;
   }
 
+  if (user.role === 'user' && !user.onboardingCompleted) {
+    const onboardingStep = user.onboardingStep || 'profile';
+    const currentPath = location.pathname;
+
+    if (onboardingStep === 'profile' && currentPath !== ROUTES.USER_COMPLETE_PROFILE) {
+      return <Navigate to={ROUTES.USER_COMPLETE_PROFILE} replace />;
+    } else if (onboardingStep === 'analysis' && currentPath !== '/onboarding/analysis') {
+      return <Navigate to="/onboarding/analysis" replace />;
+    } else if (onboardingStep === 'challenge' && currentPath !== '/onboarding/challenge') {
+      return <Navigate to="/onboarding/challenge" replace />;
+    }
+  }
+
   return <>{children}</>;
 };
 
@@ -77,7 +90,18 @@ export const PreventLoggedIn = ({ children }: { children: React.ReactNode }) => 
 
   useEffect(() => {
     if (user) {
-      navigate(ROUTES.USER_HOME_ALT, { replace: true });
+      if (!user.onboardingCompleted) {
+        const onboardingStep = user.onboardingStep || 'profile';
+        if (onboardingStep === 'analysis') {
+          navigate('/onboarding/analysis', { replace: true });
+        } else if (onboardingStep === 'challenge') {
+          navigate('/onboarding/challenge', { replace: true });
+        } else {
+          navigate(ROUTES.USER_COMPLETE_PROFILE, { replace: true });
+        }
+      } else {
+        navigate(ROUTES.USER_HOME_ALT, { replace: true });
+      }
     } else if (admin) {
         toast.error("You are already logged in as Admin. Please logout first.");
         navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
