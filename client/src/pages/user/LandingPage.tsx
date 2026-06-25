@@ -7,11 +7,12 @@ import { ROUTES } from "@/constants/routes";
 
 // SVG Asset Imports
 import dietSvg from "@/assets/2dAnimation/diet-original.svg";
-import gymSvg from "@/assets/2dAnimation/gym-group-workout.svg";
+import gymNewSvg from "@/assets/2dAnimation/gym-new.svg";
 import trainerSvg from "@/assets/2dAnimation/personal-trainer.svg";
 import progressSvg from "@/assets/2dAnimation/progress-tracker.svg";
 import soloSvg from "@/assets/2dAnimation/solo-workout.svg";
 import videoCallSvg from "@/assets/2dAnimation/video-call.svg";
+import personalWorkoutSvg from "@/assets/2dAnimation/personal-workout.svg";
 
 interface FeatureBlockProps {
   title: string;
@@ -42,7 +43,7 @@ const FeatureBlock = ({ title, description, svgPath, buttonText, align = "left",
               <div className="inline-flex items-center gap-2 text-[#22d3ee] font-mono text-[9px] tracking-wider uppercase font-bold bg-[#22d3ee]/10 px-2.5 py-0.5 rounded border border-[#22d3ee]/20">
                 Quest Objective 0{index}
               </div>
-              <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-none uppercase font-bebas italic">
+              <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-none uppercase font-outfit">
                 {title}
               </h2>
             </div>
@@ -109,7 +110,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg bg-[#171717] border border-[#262626] flex items-center justify-center text-[#22d3ee] shadow-sm">
               <Activity className="w-4 h-4" />
             </div>
-            <span className="text-xl font-black tracking-tighter italic text-white font-bebas">TRAINUP</span>
+            <span className="text-xl font-black tracking-tight text-white font-outfit">TRAINUP</span>
           </Link>
           
           <div className="flex items-center gap-3">
@@ -135,7 +136,7 @@ export default function LandingPage() {
         <div className="container mx-auto max-w-6xl relative z-10">
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
             
-            {/* Hero Left Column (Illustration) */}
+            {/* Hero Left Column (Illustration - Personal Workout SVG) */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -143,7 +144,7 @@ export default function LandingPage() {
               className="flex-1 w-full max-w-md lg:max-w-none flex justify-center order-2 lg:order-1"
             >
               <img 
-                src={gymSvg} 
+                src={personalWorkoutSvg} 
                 alt="Gamified Fitness Training" 
                 className="w-full h-auto max-h-[380px] object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.7)] animate-pulse-cyan" 
               />
@@ -161,9 +162,9 @@ export default function LandingPage() {
                 Interactive Fitness Universe
               </div>
 
-              <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none text-white font-bebas uppercase italic">
+              <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none text-white font-outfit uppercase">
                 The gamified, motivating way to <br className="hidden md:inline" />
-                <span className="text-[#22d3ee] not-italic font-outfit">master</span> your fitness.
+                <span className="text-[#22d3ee] font-outfit">master</span> your fitness.
               </h1>
 
               <p className="text-base md:text-xl text-neutral-400 font-medium leading-relaxed max-w-lg font-inter">
@@ -220,7 +221,7 @@ export default function LandingPage() {
         <FeatureBlock
           title="Access Premium Gym Hubs"
           description="Locate verified local gyms and subscribe to memberships. View facility schedules, explore equipped arrays, and scan into clubs seamlessly."
-          svgPath={gymSvg}
+          svgPath={gymNewSvg}
           buttonText="DISCOVER FACILITY HUBS"
           align="right"
           index={4}
@@ -230,7 +231,7 @@ export default function LandingPage() {
           title="Document Physical Shifting"
           description="Upload daily progress photos to build side-by-side progression compare matrices. Watch your BMI metrics, weight vectors, and biometric history charts evolve over time."
           svgPath={progressSvg}
-          buttonText="LOG Snapshots"
+          buttonText="LOG SNAPSHOTS"
           align="left"
           index={5}
         />
@@ -239,7 +240,7 @@ export default function LandingPage() {
           title="Live Virtual Consultations"
           description="Schedule direct video check-ins and live sessions with your coach. Get instant adjustments on execution forms, workout intensities, and biometric reports."
           svgPath={videoCallSvg}
-          buttonText="START VIDEO CALLS"
+          buttonText="START VIRTUAL SESSIONS"
           align="right"
           index={6}
         />
@@ -251,9 +252,9 @@ export default function LandingPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#22d3ee]/2 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="container mx-auto max-w-4xl relative z-10 space-y-10">
-          <h2 className="text-4xl md:text-6xl font-black tracking-tight text-white font-bebas uppercase italic">
+          <h2 className="text-4xl md:text-6xl font-black tracking-tight text-white font-outfit uppercase">
             Boost your consistency <br className="hidden md:inline" />
-            <span className="text-[#22d3ee] not-italic font-outfit">starting today.</span>
+            <span className="text-[#22d3ee] font-outfit">starting today.</span>
           </h2>
           
           <p className="text-base md:text-lg text-neutral-400 font-medium max-w-xl mx-auto font-inter">
@@ -290,7 +291,7 @@ export default function LandingPage() {
                 <div className="w-7 h-7 rounded bg-[#171717] border border-[#262626] flex items-center justify-center text-[#22d3ee]">
                   <Activity className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-lg font-black tracking-tighter italic text-white font-bebas">TRAINUP</span>
+                <span className="text-lg font-black tracking-tight text-white font-outfit">TRAINUP</span>
               </div>
               <p className="text-xs text-neutral-500 max-w-xs font-mono leading-relaxed uppercase">
                 Level up your training consistency, coordinate nutrition vectors, and conquer fitness objectives with real-time feedback.
