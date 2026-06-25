@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import { Activity, Sparkles } from "lucide-react";
+import { Activity } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 
 // SVG Asset Imports
@@ -157,14 +157,8 @@ export default function LandingPage() {
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="flex-1 space-y-8 order-1 lg:order-2 text-center lg:text-left flex flex-col items-center lg:items-start"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#171717] border border-[#262626] text-[#22d3ee] font-mono text-[9px] tracking-wider uppercase font-bold">
-                <Sparkles className="w-3 h-3 text-[#22d3ee]" />
-                Interactive Fitness Universe
-              </div>
-
               <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none text-white font-outfit uppercase">
-                The gamified, motivating way to <br className="hidden md:inline" />
-                <span className="text-[#22d3ee] font-outfit">master</span> your fitness.
+              <span className="text-[#22d3ee] font-outfit">master</span> your fitness.
               </h1>
 
               <p className="text-base md:text-xl text-neutral-400 font-medium leading-relaxed max-w-lg font-inter">
