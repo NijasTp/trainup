@@ -7,7 +7,12 @@ import FeatureSection from './FeatureSection'
 import CTASection from './CTASection'
 import { Activity } from 'lucide-react'
 import { useEffect } from 'react'
+
 import dietTracking from "/src/assets/landing/diet_tracking.png"
+import trainerCoaching from "/src/assets/landing/trainer_coaching.png"
+import fitnessAnalytics from "/src/assets/landing/fitness_analytics.png"
+import workoutStreak from "/src/assets/landing/workout_streak.png"
+import workoutCalendar from "/src/assets/landing/workout_calendar.png"
 
 export default function LandingPage() {
   const { user } = useSelector((state: SafeAny) => state.userAuth)
@@ -71,7 +76,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Get Personalized Trainer"
               description="Connect with certified fitness professionals who craft custom programs tailored to your specific biomechanics and lifestyle."
-              imagePath="/src/assets/landing/trainer_coaching.png"
+              imagePath={trainerCoaching}
               bullets={[
                 "Direct 1-on-1 video coaching sessions",
                 "Daily chat support with your coach",
@@ -84,7 +89,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Track Your Progress"
               description="Visualize your journey with interactive charts and deep-dive metrics. Data-driven insights to optimize your training."
-              imagePath="/src/assets/landing/fitness_analytics.png"
+              imagePath={fitnessAnalytics}
               bullets={[
                 "Interactive performance trend charts",
                 "Body composition and photo logging",
@@ -97,7 +102,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Daily Streak Motivation"
               description="Consistency is the key to transformation. Our streak system gamifies your hard work and keeps you motivated every single day."
-              imagePath="/src/assets/landing/workout_streak.png"
+              imagePath={workoutStreak}
               bullets={[
                 "Visual streak tracking & milestones",
                 "Community leaderboard participation",
@@ -110,7 +115,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Workout Scheduling"
               description="Never guess what to do next. A seamless visual calendar that syncs directly with your trainer's assignments."
-              imagePath="/src/assets/landing/workout_calendar.png"
+              imagePath={workoutCalendar}
               bullets={[
                 "Intuitive drag-and-drop planning",
                 "Syncs with your mobile calendar",
