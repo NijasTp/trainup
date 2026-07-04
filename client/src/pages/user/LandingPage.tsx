@@ -7,6 +7,7 @@ import FeatureSection from './FeatureSection'
 import CTASection from './CTASection'
 import { Activity } from 'lucide-react'
 import { useEffect } from 'react'
+import dietTracking from "/src/assets/landing/diet_tracking.png"
 
 export default function LandingPage() {
   const { user } = useSelector((state: SafeAny) => state.userAuth)
@@ -57,7 +58,7 @@ export default function LandingPage() {
             <FeatureSection
               title="Track Your Food Records"
               description="Easily log your meals and track calories, macros, and hydration. Our intuitive interface makes nutrition management effortless."
-              imagePath="/src/assets/landing/diet_tracking.png"
+              imagePath={dietTracking}
               bullets={[
                 "Real-time calorie tracking",
                 "Detailed macro breakdown",
