@@ -8,7 +8,7 @@ import CTASection from './CTASection'
 import { Activity } from 'lucide-react'
 import { useEffect } from 'react'
 
-import dietTracking from "/src/assets/workouts/Pushups/0.jpg"
+import dietTracking from "/src/assets/landing/diet_tracking.png"
 import trainerCoaching from "/src/assets/landing/trainer_coaching.png"
 import fitnessAnalytics from "/src/assets/landing/fitness_analytics.png"
 import workoutStreak from "/src/assets/landing/workout_streak.png"
