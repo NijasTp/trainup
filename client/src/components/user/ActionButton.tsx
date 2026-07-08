@@ -9,7 +9,8 @@ type ActionButtonProps = {
 
 const ActionButton: React.FC<ActionButtonProps> = ({ type, text, onClick }) => {
   return (
-    <button 
+    <button
+    disabled={text.includes('...') } 
       type={type || 'button'} 
       className="relative w-full py-4 bg-[#001C30] hover:bg-[#176B87] text-white font-semibold tracking-wider rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 overflow-hidden"
       onClick={onClick}

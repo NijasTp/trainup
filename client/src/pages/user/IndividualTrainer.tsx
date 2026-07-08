@@ -1,9 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
     MapPin,
     Star,
@@ -21,7 +18,8 @@ import {
     Check,
     Crown,
     Target,
-    Trophy
+    Trophy,
+    ChevronRight
 } from "lucide-react";
 import { toast } from "sonner";
 import API from "@/lib/axios";
@@ -29,14 +27,15 @@ import { getIndividualTrainer } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import TrainerReviews from "@/components/user/reviews/TrainerReviews";
-import Aurora from "@/components/ui/Aurora";
 
 import type { Position, Trainer, User } from "@/interfaces/user/iIndividualTrainer";
+
+type SafeAny = any;
 
 const SpotlightCard = ({
     children,
     className = "",
-    spotlightColor = "rgba(255, 255, 255, 0.25)"
+    spotlightColor = "rgba(34, 211, 238, 0.08)"
 }: {
     children: React.ReactNode;
     className?: string;
@@ -80,10 +79,10 @@ const SpotlightCard = ({
             onBlur={handleBlur}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            className={`relative rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm overflow-hidden transition-all duration-500 ${className}`}
+            className={`relative rounded-2xl border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] bg-[#171717] overflow-hidden transition-all duration-300 ${className}`}
         >
             <div
-                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out"
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-in-out"
                 style={{
                     opacity,
                     background: `radial-gradient(circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 80%)`
@@ -119,14 +118,16 @@ export default function TrainerPage() {
             if (trainerData && typeof trainerData.price === "string") {
                 try {
                     trainerData.price = JSON.parse(trainerData.price);
-                } catch (eVal) { const e = eVal as SafeAny;
+                } catch (eVal) {
+                    const e = eVal as SafeAny;
                     console.error("Failed to parse price:", e);
                 }
             }
 
             setTrainer(trainerData);
             setIsLoading(false);
-        } catch (errVal) { const err = errVal as SafeAny;
+        } catch (errVal) {
+            const err = errVal as SafeAny;
             console.error("Failed to fetch trainer:", err);
             setError("Failed to load trainer details");
             toast.error("Failed to load trainer details");
@@ -138,7 +139,8 @@ export default function TrainerPage() {
         try {
             const response = await API.get("/user/get-profile");
             setUser(response.data.user);
-        } catch (errVal) { const err = errVal as SafeAny;
+        } catch (errVal) {
+            const err = errVal as SafeAny;
             console.error("Failed to fetch user:", err);
             toast.error("Failed to load user data");
         }
@@ -149,8 +151,6 @@ export default function TrainerPage() {
         fetchTrainer();
         fetchUser();
     }, [id, fetchTrainer, fetchUser]);
-
-
 
     const handleChat = () => {
         if (!user?.trainerPlan) {
@@ -185,8 +185,6 @@ export default function TrainerPage() {
             return;
         }
 
-
-
         if (trainer) {
             navigate(`/trainers/${trainer._id}/pricing`);
         }
@@ -194,207 +192,152 @@ export default function TrainerPage() {
 
     if (isLoading) {
         return (
-            <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-                {/* Background Visuals */}
-                <div className="absolute inset-0 z-0">
-                    <Aurora
-                        colorStops={["#020617", "#0f172a", "#020617"]}
-                        amplitude={1.1}
-                        blend={0.6}
-                    />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+            <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
+                <SiteHeader />
+                <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+                    <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-[#22d3ee] rounded-full animate-spin" />
+                    <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest animate-pulse">Syncing trainer profile...</p>
                 </div>
-                <div className="relative container mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-6">
-                    <div className="relative">
-                        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                        <div className="absolute inset-0 w-16 h-16 border-2 border-transparent border-t-accent rounded-full animate-pulse"></div>
-                    </div>
-                    <p className="text-muted-foreground font-medium text-lg">Loading trainer profile...</p>
-                </div>
+                <SiteFooter />
             </div>
         );
     }
 
     if (error || !trainer) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-                <div className="relative container mx-auto px-4 py-16 text-center space-y-6">
-                    <div className="w-24 h-24 mx-auto bg-muted/30 rounded-full flex items-center justify-center mb-6">
-                        <Users className="h-10 w-10 text-muted-foreground/50" />
+            <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
+                <SiteHeader />
+                <div className="relative container mx-auto px-6 py-12 text-center space-y-6 flex-grow flex flex-col items-center justify-center max-w-lg">
+                    <div className="w-20 h-20 bg-[#171717] border border-[#262626] rounded-full flex items-center justify-center mb-4 text-neutral-600">
+                        <Users className="h-8 w-8" />
                     </div>
-                    <h3 className="text-2xl font-bold text-foreground">Trainer Not Found</h3>
-                    <p className="text-muted-foreground text-lg">{error || "The trainer you're looking for doesn't exist"}</p>
+                    <h3 className="text-xl font-extrabold font-mono text-white uppercase">Trainer Not Found</h3>
+                    <p className="text-xs font-mono text-neutral-400 uppercase tracking-wide">{error || "The trainer profile you are seeking is offline."}</p>
                     <Link to="/trainers">
-                        <Button className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300">
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to Trainers
-                        </Button>
+                        <button className="duo-btn-cyan h-12 px-6 text-xs font-mono font-bold uppercase tracking-wider">
+                            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Trainers
+                        </button>
                     </Link>
                 </div>
+                <SiteFooter />
             </div>
         );
     }
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+        <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
             {/* Background Visuals */}
-            <div className="absolute inset-0 z-0">
-                <Aurora
-                    colorStops={["#020617", "#0f172a", "#020617"]}
-                    amplitude={1.1}
-                    blend={0.6}
-                />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[35%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(34,211,238,0.03)_0%,transparent_75%)] rounded-full blur-[70px]" />
             </div>
-
 
             <SiteHeader />
-            <div className="relative border-b border-border/50 bg-card/20 backdrop-blur-sm">
-                <div className="container mx-auto px-4 py-6">
+
+            <main className="relative container mx-auto px-6 py-12 space-y-10 flex-1 z-10 max-w-5xl w-full">
+                
+                <div className="flex justify-start">
                     <Link to="/trainers">
-                        <Button variant="ghost" className="group hover:bg-primary/5 transition-all duration-300">
-                            <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                            Back to Trainers
-                        </Button>
+                        <button className="duo-btn-gray h-10 px-5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <ArrowLeft className="h-4 w-4" /> Back to Trainers
+                        </button>
                     </Link>
                 </div>
-            </div>
 
-            <main className="relative container mx-auto px-4 py-12 space-y-12 flex-1">
-                        {hasTrainer && !isSameTrainer && (
-                <div className="relative bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-b border-amber-500/20 py-4 px-6">
-                    <div className="container mx-auto flex items-center justify-center gap-3 text-amber-600">
-                        <AlertTriangle className="h-5 w-5" />
-                        <span className="font-medium text-center">
+                {hasTrainer && !isSameTrainer && (
+                    <div className="p-4 bg-amber-950/20 border border-amber-900/30 rounded-xl flex items-center gap-3 text-amber-400 text-xs font-mono font-bold uppercase tracking-wider">
+                        <AlertTriangle className="h-5 w-5 shrink-0" />
+                        <span>
                             You already have a trainer assigned.{" "}
-                            <Link to="/my-trainer/profile" className="underline hover:text-amber-700 font-semibold">
-                                View your trainer's profile
+                            <Link to="/my-trainer/profile" className="text-[#22d3ee] underline">
+                                View current profile
                             </Link>{" "}
-                            or cancel your current subscription to book a new trainer.
+                            or cancel subscription to assign a new coach.
                         </span>
                     </div>
-                </div>
-            )}
-                {/* Hero Section */}
-                <SpotlightCard className="p-8 md:p-12">
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
-                        <div className="relative group/image">
-                            <div className="relative w-48 h-48 lg:w-64 lg:h-64 rounded-3xl overflow-hidden shadow-2xl">
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent z-10"></div>
+                )}
 
+                {/* Hero Section */}
+                <SpotlightCard className="p-8">
+                    <div className="flex flex-col md:flex-row items-center md:items-start lg:items-center gap-8">
+                        <div className="relative shrink-0">
+                            <div className="relative w-44 h-44 lg:w-56 lg:h-56 rounded-2xl overflow-hidden border-2 border-[#262626] bg-[#0d0d0e]">
                                 {!imageLoaded && (
-                                    <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted/30 animate-pulse flex items-center justify-center">
-                                        <Users className="h-16 w-16 text-muted-foreground/30" />
+                                    <div className="absolute inset-0 bg-[#0d0d0e] flex items-center justify-center">
+                                        <Users className="h-10 w-10 text-neutral-700 animate-pulse" />
                                     </div>
                                 )}
-
                                 <img
                                     src={trainer.profileImage || "/placeholder.svg"}
                                     alt={trainer.name}
-                                    className={`w-full h-full object-cover transition-all duration-700 group-hover/image:scale-110 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+                                    className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
                                     onLoad={() => setImageLoaded(true)}
                                 />
-
                                 {trainer.isVerified && (
-                                    <div className="absolute top-4 right-4 z-20">
-                                        <div className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 backdrop-blur-md rounded-full border border-white/20">
-                                            <Shield className="h-4 w-4 text-white" />
-                                            <span className="text-white text-sm font-semibold">Verified</span>
+                                    <div className="absolute top-3 right-3 z-20">
+                                        <div className="flex items-center gap-1 px-2.5 py-1 bg-emerald-950/80 border border-emerald-900/40 rounded-lg backdrop-blur-md">
+                                            <Shield className="h-3.5 w-3.5 text-emerald-400" />
+                                            <span className="text-emerald-400 text-[8px] font-mono font-bold uppercase tracking-wider">Verified</span>
                                         </div>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="flex-1 space-y-6">
-                            <div className="space-y-4">
-                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/10 to-primary/5 rounded-full border border-primary/20">
-                                    <Trophy className="h-4 w-4 text-primary" />
-                                    <span className="text-sm font-semibold text-primary">Elite Trainer</span>
+                        <div className="flex-1 space-y-4 text-center md:text-left">
+                            <div className="space-y-2">
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-500/5 border border-[#22d3ee]/20 rounded-lg">
+                                    <Trophy className="h-3.5 w-3.5 text-[#22d3ee]" />
+                                    <span className="text-[9px] font-mono font-bold text-[#22d3ee] uppercase tracking-wider">Elite Fitness Coach</span>
                                 </div>
-
-                                <div className="space-y-3">
-                                    <h1 className="font-display text-4xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent flex items-center gap-4">
-                                        {trainer.name}
-                                        {isSameTrainer && (
-                                            <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 font-black italic uppercase tracking-tighter text-xs h-fit">
-                                                Current Trainer
-                                            </Badge>
-                                        )}
-                                    </h1>
-
-                                    <div className="flex flex-wrap items-center gap-3">
-                                        <Badge
-                                            variant="secondary"
-                                            className="bg-primary/10 text-primary border-primary/20 font-medium px-4 py-2 text-base"
-                                        >
-                                            <Target className="h-4 w-4 mr-2" />
-                                            {trainer.specialization}
-                                        </Badge>
-                                        {trainer.isVerified && (
-                                            <Badge className="bg-green-500/10 text-green-600 border-green-500/20 font-medium px-4 py-2 text-base">
-                                                <Shield className="h-4 w-4 mr-1" />
-                                                Verified Professional
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex">
-                                            {[...Array(5)].map((_, i) => (
-                                                <Star
-                                                    key={i}
-                                                    className={`h-5 w-5 ${i < Math.floor(trainer.rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`}
-                                                />
-                                            ))}
-                                        </div>
-                                        <span className="font-bold text-foreground text-lg">{trainer.rating}</span>
-                                        <span className="text-sm">({trainer.clients?.length || 0} clients)</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="h-5 w-5 text-primary" />
-                                        <span className="font-medium">{trainer.location}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="h-5 w-5 text-accent" />
-                                        <span className="font-medium">{trainer.experience} years experience</span>
-                                    </div>
-                                </div>
+                                <h1 className="text-3xl lg:text-5xl font-extrabold font-mono text-white uppercase tracking-tight flex flex-wrap justify-center md:justify-start items-center gap-3">
+                                    {trainer.name}
+                                    {isSameTrainer && (
+                                        <span className="bg-cyan-500/10 text-[#22d3ee] border border-[#22d3ee]/20 py-0.5 px-2 rounded text-[9px] font-mono font-bold uppercase tracking-wider">
+                                            Active Coach
+                                        </span>
+                                    )}
+                                </h1>
                             </div>
 
-                            <div className="flex flex-wrap gap-4 pt-4">
+                            <div className="flex flex-wrap justify-center md:justify-start gap-2.5 font-mono text-[9px] font-bold uppercase">
+                                <span className="bg-cyan-500/5 text-[#22d3ee] border border-[#22d3ee]/20 px-2.5 py-1 rounded">
+                                    {trainer.specialization}
+                                </span>
+                                <span className="bg-neutral-800 text-neutral-400 border border-[#262626] px-2.5 py-1 rounded flex items-center gap-1">
+                                    <Star className="h-3 w-3 text-amber-500 fill-amber-500" /> {trainer.rating} ({trainer.clients?.length || 0} Clients)
+                                </span>
+                                <span className="bg-neutral-800 text-neutral-400 border border-[#262626] px-2.5 py-1 rounded flex items-center gap-1">
+                                    <MapPin className="h-3 w-3 text-[#22d3ee]" /> {trainer.location}
+                                </span>
+                                <span className="bg-neutral-800 text-neutral-400 border border-[#262626] px-2.5 py-1 rounded flex items-center gap-1">
+                                    <Clock className="h-3 w-3 text-[#22d3ee]" /> {trainer.experience} Yrs EXP
+                                </span>
+                            </div>
+
+                            <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-3">
                                 {isSameTrainer ? (
-                                    <Button
+                                    <button
                                         disabled
-                                        size="lg"
-                                        className="bg-gray-500/50 cursor-not-allowed font-semibold px-8 text-base"
+                                        className="duo-btn-outline h-12 px-6 text-xs font-mono font-bold uppercase tracking-wider opacity-60 cursor-not-allowed"
                                     >
-                                        <Check className="h-5 w-5 mr-2" />
-                                        Your Current Trainer
-                                    </Button>
+                                        <Check className="h-4 w-4 mr-1.5 inline-block" /> Your Active Coach
+                                    </button>
                                 ) : (
-                                    <Button
+                                    <button
                                         onClick={openSubscriptionModal}
-                                        size="lg"
                                         disabled={hasTrainer}
-                                        className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-2xl transition-all duration-300 font-semibold px-8 text-base"
+                                        className="duo-btn-cyan h-12 px-6 text-xs font-mono font-bold uppercase tracking-wider"
                                     >
-                                        <Calendar className="h-5 w-5 mr-2" />
-                                        Start Your Journey
-                                    </Button>
+                                        <Calendar className="h-4 w-4 mr-1.5 inline-block" /> Book Coach
+                                    </button>
                                 )}
                                 {isSameTrainer && (
                                     <Link to="/my-trainer/profile">
-                                        <Button
-                                            variant="outline"
-                                            size="lg"
-                                            className="border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300 font-medium px-8 bg-transparent text-base"
+                                        <button
+                                            className="duo-btn-outline h-12 px-6 text-xs font-mono font-bold uppercase tracking-wider"
                                         >
-                                            View Dashboard
-                                        </Button>
+                                            View Coach Dashboard
+                                        </button>
                                     </Link>
                                 )}
                             </div>
@@ -402,210 +345,164 @@ export default function TrainerPage() {
                     </div>
                 </SpotlightCard>
 
-                <div className="grid gap-8 lg:grid-cols-3">
-                    <div className="lg:col-span-2 space-y-8">
+                <div className="grid gap-6 lg:grid-cols-3">
+                    <div className="lg:col-span-2 space-y-6">
                         {/* About Section */}
-                        <SpotlightCard className="p-8">
-                            <div className="space-y-6">
-                                <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                                    <Award className="h-7 w-7 text-primary" />
-                                    About {trainer.name}
-                                </h2>
-                                <p className="text-muted-foreground leading-relaxed text-lg">{trainer.bio}</p>
+                        <div className="bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] p-6 rounded-2xl space-y-4">
+                            <h2 className="text-sm font-extrabold font-mono uppercase text-white tracking-wide flex items-center gap-2">
+                                <Award className="h-5 w-5 text-[#22d3ee]" />
+                                Bio & Coach Information
+                            </h2>
+                            <p className="text-xs font-mono text-neutral-400 leading-relaxed uppercase tracking-wide">{trainer.bio}</p>
 
-                                <div className="grid gap-6 sm:grid-cols-2 pt-4">
-                                    <div className="space-y-3">
-                                        <h3 className="font-semibold text-foreground flex items-center gap-2 text-lg">
-                                            <Users className="h-5 w-5 text-primary" />
-                                            Experience
-                                        </h3>
-                                        <p className="text-muted-foreground">{trainer.experience} years of professional training</p>
+                            <div className="grid gap-4 sm:grid-cols-2 pt-2 text-xs font-mono">
+                                <div className="space-y-1 bg-[#0d0d0e] p-3 rounded-xl border border-[#262626]">
+                                    <h3 className="font-bold text-neutral-500 uppercase text-[9px] tracking-widest flex items-center gap-1.5">
+                                        <Users className="h-3.5 w-3.5 text-[#22d3ee]" /> EXPERIENCE
+                                    </h3>
+                                    <p className="text-neutral-300 font-bold uppercase">{trainer.experience} years coaching</p>
+                                </div>
+                                <div className="space-y-1 bg-[#0d0d0e] p-3 rounded-xl border border-[#262626]">
+                                    <h3 className="font-bold text-neutral-500 uppercase text-[9px] tracking-widest flex items-center gap-1.5">
+                                        <Target className="h-3.5 w-3.5 text-[#22d3ee]" /> FOCUS
+                                    </h3>
+                                    <p className="text-neutral-300 font-bold uppercase">{trainer.specialization}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Certifications Section */}
+                        <div className="bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] p-6 rounded-2xl space-y-4">
+                            <h2 className="text-sm font-extrabold font-mono uppercase text-white tracking-wide">VERIFIED CREDENTIALS</h2>
+                            <button
+                                onClick={() => setIsOpen(true)}
+                                className="group flex items-center justify-between gap-3 p-4 bg-[#0d0d0e] border border-[#262626] rounded-xl hover:border-neutral-700 transition-colors w-full text-left"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-[#171717] border border-[#262626] rounded-lg text-[#22d3ee]">
+                                        <FileText className="h-4 w-4" />
                                     </div>
-                                    <div className="space-y-3">
-                                        <h3 className="font-semibold text-foreground flex items-center gap-2 text-lg">
-                                            <Target className="h-5 w-5 text-primary" />
-                                            Specialization
-                                        </h3>
-                                        <p className="text-muted-foreground">{trainer.specialization}</p>
+                                    <div className="font-mono text-xs">
+                                        <p className="font-bold text-white uppercase">Professional Certificate</p>
+                                        <p className="text-[10px] text-neutral-500 uppercase">Click to view credential dossier</p>
                                     </div>
                                 </div>
-
-                            </div>
-                        </SpotlightCard>
-
-                        <Card className="bg-card/40 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                            <CardHeader>
-                                <h2 className="text-2xl font-bold text-foreground">Certifications</h2>
-                            </CardHeader>
-                            <CardContent>
-                                <button
-                                    onClick={() => setIsOpen(true)}
-                                    className="group inline-flex items-center gap-3 p-4 bg-primary/5 hover:bg-primary/10 rounded-xl border border-primary/20 hover:border-primary/30 transition-all duration-300 w-full text-left"
-                                >
-                                    <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                        <FileText className="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-foreground">Professional Certificate</p>
-                                        <p className="text-sm text-muted-foreground">Click to view credentials</p>
-                                    </div>
-                                </button>
-                            </CardContent>
-                        </Card>
+                                <ChevronRight className="h-4 w-4 text-neutral-600" />
+                            </button>
+                        </div>
 
                         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                            <DialogContent className="max-w-3xl">
-                                <DialogHeader>
-                                    <DialogTitle className="flex items-center justify-between">
-                                        Professional Certificate
+                            <DialogContent className="max-w-2xl bg-[#171717] border-2 border-[#262626] rounded-2xl p-6 text-white font-mono">
+                                <DialogHeader className="mb-4">
+                                    <DialogTitle className="text-base font-extrabold text-white uppercase tracking-tight">
+                                        Professional Credentials
                                     </DialogTitle>
                                 </DialogHeader>
-                                <img
-                                    src={trainer.certificate}
-                                    alt="Professional Certificate"
-                                    className="w-full h-auto rounded-lg border border-border/50"
-                                />
+                                <div className="border border-[#262626] rounded-xl overflow-hidden bg-[#0d0d0e]">
+                                    <img
+                                        src={trainer.certificate}
+                                        alt="Professional Certificate"
+                                        className="w-full h-auto object-contain max-h-[70vh] opacity-90"
+                                    />
+                                </div>
                             </DialogContent>
                         </Dialog>
                     </div>
 
-                    <div className="mt-8">
-                        <TrainerReviews
-                            trainerId={trainer._id}
-                            onReviewAdded={handleReviewAdded}
-                            canReview={hasTrainer && isSameTrainer}
-                            currentUserPlan={user?.trainerPlan}
-                        />
+                    <div className="space-y-6">
+                        {/* Contact Widget */}
+                        <div className="bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] p-6 rounded-2xl space-y-4">
+                            <h3 className="text-sm font-extrabold font-mono uppercase text-white tracking-wide flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4 text-[#22d3ee]" /> Contact Channels
+                            </h3>
+                            
+                            <div className="space-y-3 font-mono text-xs">
+                                <div className="flex items-center gap-3 bg-[#0d0d0e] p-3 rounded-xl border border-[#262626]">
+                                    <Phone className="h-4 w-4 text-[#22d3ee]" />
+                                    <div>
+                                        <p className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">Phone</p>
+                                        <p className="text-xs font-bold text-white">{trainer.phone}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 bg-[#0d0d0e] p-3 rounded-xl border border-[#262626]">
+                                    <Mail className="h-4 w-4 text-[#22d3ee]" />
+                                    <div className="overflow-hidden">
+                                        <p className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">Email</p>
+                                        <p className="text-xs font-bold truncate text-white">{trainer.email}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {user?.trainerPlan && isSameTrainer && (
+                                <button
+                                    onClick={handleChat}
+                                    className="duo-btn-cyan w-full h-11 text-xs font-mono font-bold uppercase tracking-wider mt-2"
+                                >
+                                    <MessageSquare className="h-4 w-4 mr-1.5 inline-block" /> Chat with Coach
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Pricing Quick Info */}
+                        <div className="bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] p-6 rounded-2xl space-y-4 font-mono">
+                            <h3 className="text-sm font-extrabold uppercase text-white tracking-wide flex items-center gap-2">
+                                <Crown className="h-4 w-4 text-[#22d3ee]" /> Subscription Plans
+                            </h3>
+
+                            <div className="space-y-3">
+                                {[
+                                    { type: 'basic', label: 'Basic', price: trainer.price?.basic },
+                                    { type: 'premium', label: 'Premium', price: trainer.price?.premium, popular: true },
+                                    { type: 'pro', label: 'Pro', price: trainer.price?.pro }
+                                ].map((plan) => (
+                                    <div
+                                        key={plan.type}
+                                        className={`p-3.5 rounded-xl border-2 flex items-center justify-between transition-colors ${
+                                            plan.popular
+                                                ? 'bg-cyan-500/5 border-[#22d3ee]'
+                                                : 'bg-[#0d0d0e] border-[#262626]'
+                                        }`}
+                                    >
+                                        <div>
+                                            <h4 className="font-extrabold text-white uppercase text-[10px]">{plan.label}</h4>
+                                            <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Per Month</p>
+                                        </div>
+                                        <span className="font-extrabold text-[#22d3ee] text-xs">₹{(Number(plan.price) || 0).toLocaleString()}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="pt-2">
+                                {isSameTrainer ? (
+                                    <button
+                                        disabled
+                                        className="duo-btn-outline w-full h-11 text-xs font-bold uppercase tracking-wider opacity-60 cursor-not-allowed"
+                                    >
+                                        Active Enrollment
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={openSubscriptionModal}
+                                        disabled={hasTrainer}
+                                        className="duo-btn-cyan w-full h-11 text-xs font-bold uppercase tracking-wider"
+                                    >
+                                        Choose Plan
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div className="space-y-6">
-                    {/* Pricing Section */}
-                    <div className="space-y-6">
-                        <h3 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                            <Crown className="h-6 w-6 text-primary" />
-                            Subscription Plans
-                        </h3>
-
-                        <div className="space-y-4">
-                            {[
-                                { type: 'basic', label: 'Basic', price: trainer.price?.basic, color: 'blue' },
-                                { type: 'premium', label: 'Premium', price: trainer.price?.premium, color: 'amber', popular: true },
-                                { type: 'pro', label: 'Pro', price: trainer.price?.pro, color: 'purple' }
-                            ].map((plan) => (
-                                <div
-                                    key={plan.type}
-                                    className={`relative p-5 rounded-xl border transition-all duration-300 ${plan.popular
-                                        ? 'bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-primary/30 shadow-lg shadow-primary/5'
-                                        : 'bg-card border-border/50 hover:border-primary/20'
-                                        }`}
-                                >
-                                    {plan.popular && (
-                                        <div className="absolute -top-3 right-4 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full shadow-lg">
-                                            MOST POPULAR
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div>
-                                            <h4 className="font-bold text-lg">{plan.label}</h4>
-                                            <p className="text-xs text-muted-foreground">Per month subscription</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-2xl font-bold text-primary">₹{(Number(plan.price) || 0).toLocaleString()}</div>
-                                        </div>
-                                    </div>
-                                    <ul className="space-y-2 mt-4">
-                                        {plan.type === 'basic' && (
-                                            <>
-                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Personal workout plans</li>
-                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Custom diet plans</li>
-                                            </>
-                                        )}
-                                        {plan.type === 'premium' && (
-                                            <>
-                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Everything in Basic</li>
-                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Limited chat support</li>
-                                            </>
-                                        )}
-                                        {plan.type === 'pro' && (
-                                            <>
-                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Everything in Premium</li>
-                                                <li className="text-sm flex items-center gap-2 text-muted-foreground/80"><Check className="h-4 w-4 text-primary" /> Unlimited chat & calls</li>
-                                            </>
-                                        )}
-                                    </ul>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="pt-2">
-                            {isSameTrainer ? (
-                                <Button
-                                    disabled
-                                    className="w-full bg-gray-500/50 cursor-not-allowed font-semibold"
-                                    size="lg"
-                                >
-                                    <Check className="h-5 w-5 mr-2" />
-                                    Your Current Trainer
-                                </Button>
-                            ) : (
-                                <Button
-                                    onClick={openSubscriptionModal}
-                                    disabled={hasTrainer}
-                                    className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
-                                    size="lg"
-                                >
-                                    <Calendar className="h-5 w-5 mr-2" />
-                                    Choose Your Plan
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-
-                    <SpotlightCard className="p-6">
-                        <div className="space-y-6">
-                            <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-                                <MessageSquare className="h-5 w-5 text-primary" />
-                                Get In Touch
-                            </h3>
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                                    <Phone className="h-5 w-5 text-primary" />
-                                    <span className="text-sm font-medium">{trainer.phone}</span>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg hover:bg-muted/30 transition-all duration-300">
-                                    <Mail className="h-5 w-5 text-primary" />
-                                    <span className="text-sm font-medium">{trainer.email}</span>
-                                </div>
-                            </div>
-                            {user?.trainerPlan && isSameTrainer && (
-                                <Button
-                                    onClick={handleChat}
-                                    variant="outline"
-                                    className="w-full hover:bg-primary/5"
-                                >
-                                    <MessageSquare className="h-4 w-4 mr-2" />
-                                    Start Conversation
-                                </Button>
-                            )}
-                            <div className="mt-16 flex flex-col items-center gap-6 pb-12">
-                                <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                                <div className="text-center space-y-4">
-                                    <p className="text-muted-foreground">Not sure if {trainer.name} is the right fit for you?</p>
-                                    <Button
-                                        onClick={() => navigate('/trainers')}
-                                        variant="outline"
-                                        className="bg-white/5 border-white/10 hover:bg-white/10 text-white rounded-xl px-8 h-12 font-bold transition-all group"
-                                    >
-                                        <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                                        Browse More Trainers
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </SpotlightCard>
+                <div className="pt-4">
+                    <TrainerReviews
+                        trainerId={trainer._id}
+                        onReviewAdded={handleReviewAdded}
+                        canReview={hasTrainer && isSameTrainer}
+                        currentUserPlan={user?.trainerPlan}
+                    />
                 </div>
             </main>
-
 
             <SiteFooter />
         </div>

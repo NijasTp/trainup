@@ -100,11 +100,18 @@ export class UserProfileController {
                 age: dto.age ? Number(dto.age) : undefined,
                 todaysWeight: dto.todaysWeight ? Number(dto.todaysWeight) : undefined,
                 goalWeight: dto.goalWeight ? Number(dto.goalWeight) : undefined,
-                goals: dto.goals ? JSON.parse(dto.goals) : undefined,
+                goals: dto.goals ? (typeof dto.goals === 'string' && (dto.goals.startsWith('[') || dto.goals.startsWith('{')) ? JSON.parse(dto.goals) : dto.goals) : undefined,
                 activityLevel: dto.activityLevel || undefined,
                 gender: dto.gender || undefined,
                 equipment: dto.equipment === true || dto.equipment === 'true',
-                isPrivate: dto.isPrivate === true || dto.isPrivate === 'true'
+                isPrivate: dto.isPrivate === true || dto.isPrivate === 'true',
+                workoutExperience: dto.workoutExperience || undefined,
+                weeklyAvailability: dto.weeklyAvailability ? Number(dto.weeklyAvailability) : undefined,
+                workoutDuration: dto.workoutDuration ? Number(dto.workoutDuration) : undefined,
+                availableEquipment: dto.availableEquipment || undefined,
+                medicalConditions: dto.medicalConditions || undefined,
+                onboardingCompleted: dto.onboardingCompleted !== undefined ? (dto.onboardingCompleted === true || dto.onboardingCompleted === 'true') : undefined,
+                onboardingStep: dto.onboardingStep || undefined
             }
 
             const updatedUser = await this._userService.updateProfile(

@@ -523,7 +523,6 @@ const AdminAddWorkoutTemplate = ({ mode = "admin" }: { mode?: "admin" | "trainer
                                                 </div>
                                                 <div className="min-w-0">
                                                     <div className="font-black text-white italic uppercase tracking-tight text-sm truncate">{ex.name}</div>
-                                                    <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest italic mt-1 capitalize">Target: {ex.targetMuscles?.[0] || "General"}</div>
                                                 </div>
                                                 <div className="flex flex-col justify-center">
                                                     <span className="text-[8px] font-black text-gray-500 uppercase italic tracking-widest block mb-1">Sets</span>

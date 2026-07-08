@@ -14,6 +14,8 @@ export const ROUTES = {
   USER_DASHBOARD: '/dashboard',
   USER_VERIFY_OTP: "/verify-otp",
   USER_COMPLETE_PROFILE: "/complete-profile",
+  USER_ONBOARDING_ANALYSIS: "/onboarding/analysis",
+  USER_ONBOARDING_CHALLENGE: "/onboarding/challenge",
   USER_CHATS: "/chats",
   USER_TRAINER_PAGE: '/trainers',
   USER_INDIVIDUAL_TRAINER: '/trainers/:id',

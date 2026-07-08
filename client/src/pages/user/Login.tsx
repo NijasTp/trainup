@@ -30,7 +30,18 @@ const LoginPage = ({ initialRole = 'user' }: LoginPageProps) => {
 
   useEffect(() => {
     if (user) {
-      navigate('/home', { replace: true });
+      if (!user.onboardingCompleted) {
+        const onboardingStep = user.onboardingStep || 'profile';
+        if (onboardingStep === 'analysis') {
+          navigate('/onboarding/analysis', { replace: true });
+        } else if (onboardingStep === 'challenge') {
+          navigate('/onboarding/challenge', { replace: true });
+        } else {
+          navigate('/complete-profile', { replace: true });
+        }
+      } else {
+        navigate('/home', { replace: true });
+      }
     } else if (trainer) {
       if (trainer.profileStatus === 'approved') {
         navigate('/trainer/dashboard', { replace: true });

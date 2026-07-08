@@ -21,6 +21,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
   const [cpassword, setCPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isUsernameTaken, setIsUsernameTaken] = useState(false);
+  const [isLoading,setIsLoading] = useState(false)
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -47,46 +48,54 @@ const SignupForm = ({ setError }: SignupFormProps) => {
   useEffect(() => {
     checkUsername(name);
     return () => checkUsername.cancel();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name]);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-
+    setIsLoading(true)
     if (!name.trim()) {
       setError("Name is required");
+      setIsLoading(false)
       return;
     }
     if (isUsernameTaken) {
       setError("Username is already taken");
+      setIsLoading(false)
       return;
     }
     if (!email.trim()) {
       setError("Email is required");
+      setIsLoading(false)
       return;
     }
     if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
       setError("Invalid email format");
+      setIsLoading(false)
       return;
     }
     if (!password) {
       setError("Password is required");
+      setIsLoading(false)
       return;
     }
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
+      setIsLoading(false)
       return;
     }
     if (password !== cpassword) {
       setError("Passwords do not match");
+      setIsLoading(false)
       return;
     }
     if (!passwordValidation(password)) {
       setError("Password should have at least 8 chars, one uppercase, one lowercase, one number, one special char");
+      setIsLoading(false)
       return;
     }
     if (!agreeTerms) {
       setError("You must agree to the Terms and Conditions");
+      setIsLoading(false)
       return;
     }
 
@@ -95,8 +104,9 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       navigate("/verify-otp", {
         state: { name, email, password },
       });
+      setIsLoading(false)
     } catch (_err) {
-      // ignore
+      setIsLoading(false)
     }
   }
 
@@ -182,7 +192,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
 
         <ActionButton
           type="submit"
-          text="CREATE ACCOUNT"
+          text={isLoading ? 'Creating Account...':'Create Account'}
           icon={<FaUserPlus className="mr-2" />}
         />
       </form>

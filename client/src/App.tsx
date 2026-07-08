@@ -76,6 +76,8 @@ import TrainerChats from './pages/trainer/TrainerChats';
 import TrainerEditProfile from './pages/trainer/TrainerEditProfile';
 import TrainerJobs from './pages/trainer/TrainerJobs';
 import ProfileCompletion from './pages/user/ProfileCompletion';
+import OnboardingAnalysis from './pages/user/OnboardingAnalysis';
+import OnboardingChallenge from './pages/user/OnboardingChallenge';
 import TrainerAssignWorkouts from './pages/trainer/TrainerAssignWorkouts';
 import TrainerAssignDiets from './pages/trainer/TrainerAssignDiets';
 import TrainerClientProgress from './pages/trainer/TrainerClientProgress';
@@ -186,6 +188,8 @@ function App() {
         <Route path={ROUTES.USER_DASHBOARD} element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
         <Route path={ROUTES.USER_VERIFY_OTP} element={<PreventLoggedIn><VerifyOtp /></PreventLoggedIn>} />
         <Route path={ROUTES.USER_COMPLETE_PROFILE} element={<ProtectedRoute><ProfileCompletion /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_ONBOARDING_ANALYSIS} element={<ProtectedRoute><OnboardingAnalysis /></ProtectedRoute>} />
+        <Route path={ROUTES.USER_ONBOARDING_CHALLENGE} element={<ProtectedRoute><OnboardingChallenge /></ProtectedRoute>} />
         <Route path={ROUTES.USER_TRAINER_PAGE} element={<ProtectedRoute><Trainers /></ProtectedRoute>} />
         <Route path={ROUTES.USER_INDIVIDUAL_TRAINER} element={<ProtectedRoute><TrainerPage /></ProtectedRoute>} />
         <Route path={ROUTES.USER_INDIVIDUAL_GYM} element={<ProtectedRoute><IndividualGym /></ProtectedRoute>} />

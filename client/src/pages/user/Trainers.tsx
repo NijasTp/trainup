@@ -1,11 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { MapPin, Star, Search, Clock, Users, Award } from "lucide-react";
+import { MapPin, Star, Search, Users, Award, ChevronRight } from "lucide-react";
 import { getTrainers } from "@/services/userService";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { Link, useNavigate } from "react-router-dom";
@@ -15,7 +10,7 @@ import type { Trainer } from "@/interfaces/trainer/trainers";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import { toast } from "sonner";
 import io, { Socket } from "socket.io-client";
-import Aurora from "@/components/ui/Aurora";
+import { cn } from "@/lib/utils";
 
 const specialties = [
   "Weight Training",
@@ -63,7 +58,7 @@ export default function Trainers() {
         page,
         limit,
         search,
-        specialization,
+        specialization === "all" ? "" : specialization,
         experience === "all" ? "" : experience,
         minRating.toString(),
         minPrice,
@@ -150,75 +145,75 @@ export default function Trainers() {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
+    <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
       {/* Background Visuals */}
-      <div className="absolute inset-0 z-0">
-        <Aurora
-          colorStops={["#020617", "#0f172a", "#020617"]}
-          amplitude={1.1}
-          blend={0.6}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[30%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(34,211,238,0.03)_0%,transparent_75%)] rounded-full blur-[70px]" />
       </div>
 
       <SiteHeader />
-      <main className="relative container mx-auto px-4 py-12 space-y-8 flex-1">
+      
+      <main className="relative container mx-auto px-6 py-12 space-y-10 flex-1 z-10 max-w-6xl w-full">
         {/* Header Section */}
-        <div className="text-center space-y-6 mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
-            <Award className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Premium Certified Trainers</span>
+        <div className="text-center space-y-3 mb-10">
+          <div className="inline-flex items-center gap-2 bg-[#171717] border border-[#262626] text-[#22d3ee] font-mono px-3 py-1 rounded-full text-[10px] tracking-wider uppercase">
+            <Award className="h-3.5 w-3.5" />
+            <span>ELITE ATHLETE DIRECTORY</span>
           </div>
-          <div className="space-y-4">
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-              Find Your Perfect Trainer
+          <div className="space-y-2">
+            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white font-mono uppercase">
+              FIND YOUR COACH
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Connect with world-class fitness professionals who will transform your journey
+            <p className="text-xs font-mono text-[#a3a3a3] max-w-md mx-auto leading-relaxed">
+              Partner with certified experts to accelerate your progression and unlock potential.
             </p>
           </div>
         </div>
 
         {/* Filters Section */}
-        <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-6 shadow-lg space-y-6">
+        <div className="bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-2xl p-6 space-y-6 max-w-4xl mx-auto">
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex-1 min-w-[200px]">
+            {/* Search Input */}
+            <div className="flex-1 min-w-[240px]">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  placeholder={specialization === "Other" ? "Search by name, bio, or specialization..." : "Search by name or bio..."}
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a3a3a3]" />
+                <input
+                  type="text"
+                  placeholder={specialization === "Other" ? "Search by name, bio, specialty..." : "Search trainers..."}
                   value={search}
                   onChange={handleSearch}
-                  className="pl-12 pr-4 py-3 bg-transparent border border-border/50 rounded-lg"
+                  className="w-full pl-11 pr-4 py-3.5 text-xs font-mono bg-[#0d0d0e] border-2 border-[#262626] rounded-xl text-white placeholder-neutral-600 focus:outline-none focus:border-[#22d3ee] transition-colors"
                 />
               </div>
             </div>
-            <div className="flex-1 min-w-[200px]">
+            
+            {/* Specialization Select */}
+            <div className="flex-1 min-w-[200px] font-mono text-xs">
               <Select value={specialization} onValueChange={setSpecialization}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select specialization" />
+                <SelectTrigger className="w-full bg-[#0d0d0e] border-2 border-[#262626] rounded-xl text-white text-xs h-[46px] px-4 py-3 focus:outline-none focus:border-[#22d3ee] transition-all">
+                  <SelectValue placeholder="Select Specialization" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="select" disabled>
-                    Select a specialization
-                  </SelectItem>
+                <SelectContent className="bg-[#171717] border-2 border-[#262626] text-white font-mono text-xs rounded-xl">
+                  <SelectItem value="all" className="hover:bg-[#262626] focus:bg-[#262626] cursor-pointer">All Specializations</SelectItem>
                   {specialties.map((spec) => (
-                    <SelectItem key={spec} value={spec}>
+                    <SelectItem key={spec} value={spec} className="hover:bg-[#262626] focus:bg-[#262626] cursor-pointer">
                       {spec}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex-1 min-w-[200px]">
+
+            {/* Experience Select */}
+            <div className="flex-1 min-w-[200px] font-mono text-xs">
               <Select value={experience} onValueChange={setExperience}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select experience" />
+                <SelectTrigger className="w-full bg-[#0d0d0e] border-2 border-[#262626] rounded-xl text-white text-xs h-[46px] px-4 py-3 focus:outline-none focus:border-[#22d3ee] transition-all">
+                  <SelectValue placeholder="Select Experience" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Experience Levels</SelectItem>
+                <SelectContent className="bg-[#171717] border-2 border-[#262626] text-white font-mono text-xs rounded-xl">
+                  <SelectItem value="all" className="hover:bg-[#262626] focus:bg-[#262626] cursor-pointer">All Experience Tiers</SelectItem>
                   {experienceLevels.map((exp) => (
-                    <SelectItem key={exp} value={exp}>
+                    <SelectItem key={exp} value={exp} className="hover:bg-[#262626] focus:bg-[#262626] cursor-pointer">
                       {exp}
                     </SelectItem>
                   ))}
@@ -226,63 +221,78 @@ export default function Trainers() {
               </Select>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-foreground mb-2">Minimum Rating</label>
-              <Slider
-                value={[minRating]}
-                onValueChange={(value: number[]) => setMinRating(value[0])}
-                min={0}
-                max={5}
-                step={0.5}
-                className="w-full"
-              />
-              <span className="text-sm text-muted-foreground">{minRating} stars</span>
+
+          <div className="flex flex-wrap items-center justify-between gap-6 pt-5 border-t border-[#262626]">
+            {/* Minimum Rating Options */}
+            <div className="flex flex-col gap-1.5 flex-1 min-w-[250px] max-w-sm">
+              <label className="text-[9px] font-mono font-bold text-[#a3a3a3] uppercase tracking-wider">Minimum Rating</label>
+              <div className="flex flex-wrap gap-2">
+                {[0, 3, 4, 4.5].map((val) => {
+                  const isActive = minRating === val;
+                  const label = val === 0 ? "Any Rating" : `${val}+ Stars`;
+                  return (
+                    <button
+                      key={val}
+                      onClick={() => setMinRating(val)}
+                      className={cn(
+                        "px-3.5 py-2 text-[10px] font-mono font-bold uppercase tracking-wider rounded-xl border-2 border-b-[4px] active:translate-y-[2px] active:border-b-[2px] transition-all duration-100 cursor-pointer",
+                        isActive 
+                          ? "bg-cyan-500/10 text-[#22d3ee] border-[#22d3ee] border-b-[#06b6d4]" 
+                          : "bg-[#0d0d0e] text-[#a3a3a3] border-[#262626] border-b-[#1f1f1f] hover:border-[#404040]"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <Button
-              variant="outline"
+
+            {/* Reset Filters Button */}
+            <button
               onClick={handleResetFilters}
-              className="px-6 font-medium hover:bg-primary/5 border-border/50"
+              className="duo-btn-gray px-6 py-3 text-xs font-mono font-bold uppercase tracking-wider"
             >
               Reset Filters
-            </Button>
+            </button>
           </div>
         </div>
 
         {/* Loading State */}
         {isLoading && (
-          <div className="flex flex-col items-center justify-center py-16 space-y-4">
+          <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <div className="relative">
-              <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-              <div className="absolute inset-0 w-12 h-12 border-2 border-transparent border-t-accent rounded-full animate-pulse"></div>
+              <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-[#22d3ee] rounded-full animate-spin"></div>
             </div>
-            <p className="text-muted-foreground font-medium">Finding your perfect trainers...</p>
+            <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest">Searching directory...</p>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="text-center py-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-destructive/10 rounded-full border border-destructive/20 mb-4">
-              <span className="text-destructive font-medium">{error}</span>
+          <div className="text-center py-20">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-950/20 rounded-xl border border-red-900/30">
+              <span className="text-red-400 font-mono text-xs uppercase tracking-wider font-bold">{error}</span>
             </div>
           </div>
         )}
 
         {/* Empty State */}
         {!isLoading && !error && trainers.length === 0 && (
-          <div className="text-center py-16 space-y-4">
-            <div className="w-24 h-24 mx-auto bg-muted/30 rounded-full flex items-center justify-center mb-6">
-              <Search className="h-10 w-10 text-muted-foreground/50" />
+          <div className="text-center py-20 space-y-4 max-w-sm mx-auto">
+            <div className="w-16 h-16 mx-auto bg-[#171717] border-2 border-[#262626] rounded-2xl flex items-center justify-center text-neutral-600">
+              <Search className="h-6 w-6" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground">No trainers found</h3>
-            <p className="text-muted-foreground">Try adjusting your search or filter criteria</p>
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-white font-mono uppercase">No coaches found</h3>
+              <p className="text-xs text-neutral-500">Try broadening your specialization filter or search term</p>
+            </div>
           </div>
         )}
 
         {/* Trainer Grid */}
         {!isLoading && !error && trainers.length > 0 && (
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-w-6xl mx-auto">
             {trainers.map((trainer, index) => (
               <Link to={`/trainers/${trainer._id}`} key={trainer._id}>
                 <TrainerCard trainer={trainer} index={index} />
@@ -291,56 +301,58 @@ export default function Trainers() {
           </div>
         )}
 
-        {/* Pagination (Always Visible) */}
-        <div className="flex items-center justify-center gap-2 mt-12">
-          <Button
-            variant="outline"
-            size="default"
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page === 1}
-            className="px-6 font-medium hover:bg-primary/5 border-border/50"
-          >
-            Previous
-          </Button>
-          <div className="flex items-center gap-1 mx-4">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (page <= 3) {
-                pageNum = i + 1;
-              } else if (page >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = page - 2 + i;
-              }
-              return (
-                <Button
-                  key={pageNum}
-                  variant={pageNum === page ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => handlePageChange(pageNum)}
-                  className={`w-10 h-10 font-medium transition-all duration-200 ${pageNum === page
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                    : "hover:bg-secondary/80"
-                    }`}
-                >
-                  {pageNum}
-                </Button>
-              );
-            })}
+        {/* Pagination */}
+        {!isLoading && !error && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-16 font-mono">
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              className="duo-btn-gray px-5 py-3 text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:pointer-events-none"
+            >
+              Prev
+            </button>
+            
+            <div className="flex items-center gap-1.5 mx-2">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (page <= 3) {
+                  pageNum = i + 1;
+                } else if (page >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = page - 2 + i;
+                }
+                const isActive = pageNum === page;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={cn(
+                      "w-10 h-10 font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer",
+                      isActive 
+                        ? "duo-btn-cyan" 
+                        : "duo-btn-outline"
+                    )}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === totalPages}
+              className="duo-btn-gray px-5 py-3 text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:pointer-events-none"
+            >
+              Next
+            </button>
           </div>
-          <Button
-            variant="outline"
-            size="default"
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page === totalPages}
-            className="px-6 font-medium hover:bg-primary/5 border-border/50"
-          >
-            Next
-          </Button>
-        </div>
+        )}
       </main>
+      
       <SiteFooter />
     </div>
   );
@@ -350,67 +362,71 @@ function TrainerCard({ trainer, index }: { trainer: Trainer; index: number }) {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
-    <Card
-      className={`group relative overflow-hidden bg-card/40 backdrop-blur-sm border-border/50 hover:border-border transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2`}
+    <div
+      className="group relative duo-card-3d bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-2xl overflow-hidden flex flex-col justify-between h-[420px]"
       style={{
-        animationDelay: `${index * 100}ms`,
-        animation: "slideUp 0.6s ease-out forwards",
+        animationDelay: `${index * 80}ms`,
+        animation: "slideUp 0.5s ease-out forwards",
       }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-      <div className="relative w-full h-72 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
+      <div className="relative w-full h-56 bg-[#0d0d0e] overflow-hidden border-b border-[#262626]">
+        {/* Shimmer loading mask */}
         {!imageLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted/30 animate-pulse flex items-center justify-center">
-            <Users className="h-12 w-12 text-muted-foreground/30" />
+          <div className="absolute inset-0 bg-neutral-900 animate-pulse flex items-center justify-center">
+            <Users className="h-8 w-8 text-neutral-800" />
           </div>
         )}
         <img
           src={trainer.profileImage}
           alt={trainer.name}
-          className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${imageLoaded ? "opacity-100" : "opacity-0"
-            }`}
+          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+            imageLoaded ? "opacity-100" : "opacity-0"
+          }`}
           loading="lazy"
           onLoad={() => setImageLoaded(true)}
         />
-        <div className="absolute top-4 right-4 z-20">
-          <div className="flex items-center gap-1 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-full border border-white/20">
-            <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
-            <span className="text-white text-sm font-semibold">{trainer.rating}</span>
+        
+        {/* Rating Badge */}
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 bg-black/50 border border-white/10 backdrop-blur-md rounded-full">
+          <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+          <span className="text-white text-[10px] font-mono font-bold">{trainer.rating}</span>
+        </div>
+
+        {/* Specialization Badge */}
+        <div className="absolute top-3 left-3 z-10">
+          <span className="bg-[#171717] border border-[#262626] text-[#22d3ee] text-[9px] font-mono font-bold py-1 px-3 rounded-full uppercase tracking-wider">
+            {trainer.specialization}
+          </span>
+        </div>
+      </div>
+
+      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+        <div className="space-y-2">
+          <h3 className="text-base font-extrabold text-white font-mono uppercase tracking-wide group-hover:text-[#22d3ee] transition-colors line-clamp-1">
+            {trainer.name}
+          </h3>
+          <div className="flex items-center gap-1.5 text-[#a3a3a3]">
+            <MapPin className="h-3.5 w-3.5 text-neutral-500 flex-shrink-0" />
+            <span className="text-[11px] font-medium truncate">{trainer.location}</span>
           </div>
+          <p className="text-xs text-neutral-400 leading-relaxed line-clamp-2">
+            {trainer.bio}
+          </p>
         </div>
-        <div className="absolute top-4 left-4 z-20">
-          <Badge variant="secondary" className="bg-white/90 text-foreground border-0 shadow-lg font-medium">
-            <p className="text-black">{trainer.specialization}</p>
-          </Badge>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 z-20 p-6 space-y-3">
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold text-white drop-shadow-lg">{trainer.name}</h3>
-            <div className="flex items-center gap-2 text-white/90">
-              <MapPin className="h-4 w-4 text-accent drop-shadow" />
-              <span className="text-sm font-medium drop-shadow">{trainer.location}</span>
-            </div>
+
+        <div className="flex items-center justify-between pt-2 border-t border-[#262626] font-mono">
+          <div className="flex flex-col">
+            <span className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">Rate</span>
+            <span className="text-sm font-extrabold text-[#22d3ee]">
+              ₹{trainer.price?.basic || '0'} <span className="text-[9px] font-bold text-neutral-500">/MO</span>
+            </span>
+          </div>
+          <div className="inline-flex items-center gap-1 text-[9px] font-bold text-[#a3a3a3] uppercase group-hover:text-white transition-colors">
+            <span>Profile</span>
+            <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
           </div>
         </div>
       </div>
-      <CardContent className="p-6 space-y-4">
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">{trainer.bio}</p>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-lg font-bold text-primary">₹{trainer.price?.basic || '0'}</span>
-            </div>
-            <Button
-              size="sm"
-              className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-medium hidden group-hover:block"
-            >
-              View Profile
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

@@ -42,6 +42,12 @@ export class UserDto {
       gender: user.gender,
       medicalConditions: user.medicalConditions,
       dietaryPreferences: user.dietaryPreferences,
+      onboardingCompleted: user.onboardingCompleted || false,
+      onboardingStep: user.onboardingStep || 'profile',
+      workoutExperience: user.workoutExperience || '',
+      weeklyAvailability: user.weeklyAvailability || 0,
+      workoutDuration: user.workoutDuration || 0,
+      availableEquipment: user.availableEquipment || '',
       activeWorkoutTemplates: user.activeWorkoutTemplates?.map(t => ({
         templateId: t.templateId.toString(),
         startDate: t.startDate,
@@ -147,6 +153,12 @@ export class UserResponseDto {
   gender?: string;
   medicalConditions?: string;
   dietaryPreferences?: string;
+  onboardingCompleted?: boolean;
+  onboardingStep?: string;
+  workoutExperience?: string;
+  weeklyAvailability?: number;
+  workoutDuration?: number;
+  availableEquipment?: string;
   activeWorkoutTemplates?: ActiveTemplateDto[];
   activeWorkoutTemplate?: string;
   workoutTemplateStartDate?: Date;
@@ -191,6 +203,13 @@ export class UserUpdateProfileDto {
   height?: number;
   age?: number;
   gender?: string;
+  medicalConditions?: string;
+  onboardingCompleted?: boolean;
+  onboardingStep?: string;
+  workoutExperience?: string;
+  weeklyAvailability?: number;
+  workoutDuration?: number;
+  availableEquipment?: string;
 }
 
 export class GetTrainersQueryDto {
@@ -261,6 +280,13 @@ export class UpdateUserRequestDto {
   height?: number;
   age?: number;
   gender?: string;
+  medicalConditions?: string;
+  onboardingCompleted?: boolean;
+  onboardingStep?: string;
+  workoutExperience?: string;
+  weeklyAvailability?: number;
+  workoutDuration?: number;
+  availableEquipment?: string;
 }
 
 export class RefreshTokenResponseDto {

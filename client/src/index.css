@@ -148,8 +148,8 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground font-sans;
+  body, .bg-\[\#0d0d0e\], .bg-\[\#030303\] {
+    background-color: #0d0d0e !important;
   }
 }
 
@@ -182,3 +182,231 @@
 .font-inter {
   font-family: 'Inter', sans-serif;
 }
+
+/* Dark Cyber Fitness Onboarding UI Styles */
+.duo-btn-cyan {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #22d3ee;
+  color: #090909;
+  border: 2px solid #22d3ee;
+  border-bottom: 5px solid #0891b2;
+  border-radius: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.15s ease, 
+              border-color 0.15s ease, 
+              border-bottom-width 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              box-shadow 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+}
+.duo-btn-cyan:hover:not(:disabled) {
+  background-color: #67e8f9;
+  border-color: #67e8f9;
+  border-bottom-width: 7px;
+  border-bottom-color: #0891b2;
+  transform: translateY(-2px);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.4);
+}
+.duo-btn-cyan:active:not(:disabled) {
+  border-bottom-width: 2px;
+  transform: translateY(3px);
+  background-color: #06b6d4;
+  border-color: #06b6d4;
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
+}
+.duo-btn-cyan:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.duo-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #171717;
+  color: #22d3ee;
+  border: 2px solid #22d3ee;
+  border-bottom: 5px solid #06b6d4;
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.15s ease, 
+              border-color 0.15s ease, 
+              border-bottom-width 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              box-shadow 0.15s ease,
+              color 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+}
+.duo-btn-outline:hover:not(:disabled) {
+  background-color: rgba(34, 211, 238, 0.08);
+  color: #67e8f9;
+  border-color: #67e8f9;
+  border-bottom-width: 7px;
+  border-bottom-color: #0891b2;
+  transform: translateY(-2px);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.25);
+}
+.duo-btn-outline:active:not(:disabled) {
+  border-bottom-width: 2px;
+  transform: translateY(3px);
+  background-color: rgba(34, 211, 238, 0.15);
+  border-bottom-color: #06b6d4;
+}
+.duo-btn-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.duo-btn-gray {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #171717;
+  color: #d4d4d4;
+  border: 2px solid #262626;
+  border-bottom: 5px solid #1f1f1f;
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.15s ease, 
+              border-color 0.15s ease, 
+              border-bottom-width 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              box-shadow 0.15s ease,
+              color 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+}
+.duo-btn-gray:hover:not(:disabled) {
+  background-color: #1f1f1f;
+  color: #f5f5f5;
+  border-color: #404040;
+  border-bottom-width: 7px;
+  border-bottom-color: #262626;
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
+}
+.duo-btn-gray:active:not(:disabled) {
+  border-bottom-width: 2px;
+  transform: translateY(3px);
+  background-color: #171717;
+  border-bottom-color: #1f1f1f;
+}
+.duo-btn-gray:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Shimmer Sweep Animation on Hover */
+.duo-btn-cyan::after,
+.duo-btn-outline::after,
+.duo-btn-gray::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 80px;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+  transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.duo-btn-cyan:hover::after,
+.duo-btn-outline:hover::after,
+.duo-btn-gray:hover::after {
+  left: 150%;
+}
+
+.duo-selection-card {
+  background-color: #171717;
+  border: 2px solid #262626;
+  border-bottom: 5px solid #1f1f1f;
+  border-radius: 16px;
+  transition: background-color 0.15s ease, 
+              border-color 0.15s ease, 
+              border-bottom-width 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              box-shadow 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+}
+.duo-selection-card:hover {
+  border-color: #404040;
+  border-bottom-width: 7px;
+  border-bottom-color: #262626;
+  transform: translateY(-2px);
+}
+.duo-selection-card:active {
+  border-bottom-width: 2px;
+  transform: translateY(3px);
+}
+.duo-selection-card.selected {
+  border-color: #22d3ee;
+  border-bottom-color: #06b6d4;
+  background-color: rgba(34, 211, 238, 0.04);
+}
+.duo-selection-card.selected:hover {
+  border-color: #67e8f9;
+  border-bottom-color: #0891b2;
+}
+
+/* Helper utilities for 3D layout components */
+.border-bottom-5 {
+  border-bottom-width: 5px !important;
+  border-bottom-color: #1f1f1f !important;
+}
+
+/* Premium 3D tactile card container */
+.duo-card-3d {
+  transition: border-color 0.15s ease, 
+              border-bottom-width 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              box-shadow 0.15s ease,
+              background-color 0.15s ease;
+}
+.duo-card-3d:hover {
+  border-color: #404040;
+  border-bottom-width: 7px;
+  border-bottom-color: #262626;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.duo-card-3d:active {
+  border-bottom-width: 2px;
+  transform: translateY(3px);
+  border-bottom-color: #1f1f1f;
+}
+
+/* Animations for onboarding elements */
+@keyframes pulse-cyan {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.3; }
+}
+.animate-pulse-cyan {
+  animation: pulse-cyan 2s infinite ease-in-out;
+}
+

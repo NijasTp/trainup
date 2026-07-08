@@ -1,7 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { 
     Check, 
     Shield, 
@@ -15,7 +13,6 @@ import { toast } from "sonner";
 import API from "@/lib/axios";
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
-import Aurora from "@/components/ui/Aurora";
 import { motion, AnimatePresence } from "framer-motion";
 import { getGymForUser, getActiveSubscriptionPlans } from "@/services/gymService";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -84,7 +81,8 @@ export default function GymPlanSelection() {
             } else {
                 throw new Error("No checkout URL received");
             }
-        } catch (errorVal) { const error = errorVal as SafeAny;
+        } catch (errorVal) {
+            const error = errorVal as SafeAny;
             console.error("Failed to initiate payment:", error);
             const errorMessage = error.response?.data?.message || error.message || "Something went wrong. Please try again.";
             toast.error(errorMessage);
@@ -94,8 +92,13 @@ export default function GymPlanSelection() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-[#030303] flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
+                <SiteHeader />
+                <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+                    <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-[#22d3ee] rounded-full animate-spin" />
+                    <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest animate-pulse">Syncing payment gateways...</p>
+                </div>
+                <SiteFooter />
             </div>
         );
     }
@@ -103,165 +106,155 @@ export default function GymPlanSelection() {
     const selectedPlan = plans.find(p => p._id === selectedPlanId);
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-            <div className="absolute inset-0 z-0">
-                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
+        <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
+            {/* Background Visuals */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[35%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(34,211,238,0.03)_0%,transparent_75%)] rounded-full blur-[70px]" />
             </div>
 
             <SiteHeader />
 
-            <main className="relative container mx-auto px-4 py-12 flex-1 z-10">
-                <Link to={`/gym/${id}`}>
-                    <Button variant="ghost" className="mb-8 hover:bg-white/5 transition-all text-gray-400">
-                        <ArrowLeft className="h-4 w-4 mr-2" /> Back to {gym?.name}
-                    </Button>
-                </Link>
+            <main className="relative container mx-auto px-6 py-12 space-y-8 flex-1 z-10 max-w-5xl w-full">
+                <div className="flex justify-start">
+                    <Link to={`/gym/${id}`}>
+                        <button className="duo-btn-gray h-10 px-5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <ArrowLeft className="h-4 w-4" /> Back to {gym?.name}
+                        </button>
+                    </Link>
+                </div>
 
-                <div className="max-w-6xl mx-auto">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                        {/* Left: Plan Selection */}
-                        <div className="space-y-8">
-                            <div className="space-y-2">
-                                <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full border border-primary/20 text-xs font-black text-primary uppercase tracking-widest"
-                                >
-                                    <Sparkles size={12} /> Secure Checkout
-                                </motion.div>
-                                <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter">Choose Your <span className="text-primary text-glow-primary">Power Level</span></h1>
-                                <p className="text-gray-400 font-medium">Select the membership plan that best fits your fitness journey at {gym?.name}.</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    {/* Left: Plan Selection */}
+                    <div className="space-y-6">
+                        <div className="space-y-3">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-500/5 border border-[#22d3ee]/20 rounded-lg">
+                                <Sparkles size={12} className="text-[#22d3ee]" />
+                                <span className="text-[9px] font-mono font-bold text-[#22d3ee] uppercase tracking-wider">Secure Checkout</span>
                             </div>
-
-                            <div className="grid gap-4">
-                                {plans.map((plan) => (
-                                    <motion.div
-                                        key={plan._id}
-                                        whileHover={{ x: 10 }}
-                                        onClick={() => setSelectedPlanId(plan._id)}
-                                        className={`cursor-pointer p-6 rounded-[2rem] border-2 transition-all duration-300 flex items-center justify-between group ${
-                                            selectedPlanId === plan._id
-                                                ? "border-primary bg-primary/5 shadow-[0_0_30px_rgba(var(--primary-rgb),0.15)]"
-                                                : "border-white/5 bg-white/5 hover:bg-white/10"
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-6">
-                                            <div className={`p-4 rounded-2xl transition-all ${
-                                                selectedPlanId === plan._id ? "bg-primary text-black" : "bg-white/5 text-gray-500"
-                                            }`}>
-                                                <Zap className="h-6 w-6" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-xl font-black italic uppercase text-white">{plan.name}</h3>
-                                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">{plan.duration} {plan.durationUnit}(s)</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-2xl font-black text-white">₹{plan.price}</p>
-                                            {selectedPlanId === plan._id && (
-                                                <motion.div layoutId="check" className="flex justify-end text-primary">
-                                                    <CheckCircle2 size={16} />
-                                                </motion.div>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-
-                            <div className="space-y-4 pt-4">
-                                <label className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 flex items-center gap-2">
-                                    Preferred Training Time <span className="text-primary">*</span>
-                                </label>
-                                <Select value={preferredTime} onValueChange={setPreferredTime}>
-                                    <SelectTrigger className="h-16 bg-white/5 border-white/10 rounded-2xl text-white font-bold focus:ring-primary border-2 group hover:border-primary/50 transition-all">
-                                        <SelectValue placeholder="When will you hit the gym?" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-[#0f172a] border-white/10 text-white rounded-2xl max-h-[300px]">
-                                        {timeSlots.map((slot) => (
-                                            <SelectItem key={slot} value={slot} className="focus:bg-primary focus:text-black rounded-xl font-bold py-3">
-                                                {slot}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <p className="text-[10px] text-gray-500 font-bold italic uppercase tracking-widest">
-                                    We'll send you a reminder if you haven't checked in 10 minutes after your preferred time.
-                                </p>
-                            </div>
+                            <h1 className="text-2xl md:text-4xl font-extrabold font-mono text-white uppercase tracking-tight">CHOOSE YOUR SUBSCRIPTION</h1>
+                            <p className="text-xs font-mono text-neutral-400 uppercase tracking-wide">Select the membership plan that best fits your fitness journey at {gym?.name}.</p>
                         </div>
 
-                        {/* Right: Summary Card */}
-                        <div className="lg:pl-12">
-                            <Card className="bg-white/5 border-white/10 rounded-[3rem] p-8 lg:p-10 sticky top-12 shadow-2xl backdrop-blur-xl overflow-hidden group">
-                                <div className="absolute top-0 right-0 p-12 opacity-5 -mr-8 -mt-8 rotate-12">
-                                    <CreditCard size={200} />
-                                </div>
-                                <div className="relative space-y-8">
-                                    <h3 className="text-sm font-black uppercase tracking-[0.3em] text-gray-500 italic">Deployment Summary</h3>
-                                    
-                                    <AnimatePresence mode="wait">
-                                        {selectedPlan ? (
-                                            <motion.div
-                                                key={selectedPlan._id}
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -20 }}
-                                                className="space-y-8"
-                                            >
-                                                <div className="space-y-4">
-                                                    {selectedPlan.features.map((feature: string, i: number) => (
-                                                        <div key={i} className="flex items-start gap-4">
-                                                            <div className="mt-1 p-1 bg-primary/20 rounded-full">
-                                                                <Check className="h-3 w-3 text-primary" strokeWidth={4} />
-                                                            </div>
-                                                            <span className="text-sm text-gray-300 font-bold italic">{feature}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-
-                                                <div className="pt-8 border-t border-white/10 space-y-4">
-                                                    <div className="flex justify-between items-center text-gray-400 font-bold italic uppercase text-xs tracking-widest">
-                                                        <span>Membership Tier</span>
-                                                        <span className="text-white">₹{selectedPlan.price}</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center text-gray-400 font-bold italic uppercase text-xs tracking-widest">
-                                                        <span>System Taxes</span>
-                                                        <span className="text-white">Inclusive</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center pt-4">
-                                                        <span className="text-lg font-black text-white italic uppercase">Total Investment</span>
-                                                        <span className="text-4xl font-black text-primary text-glow-primary">₹{selectedPlan.price}</span>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        ) : (
-                                            <div className="h-48 flex items-center justify-center border-2 border-dashed border-white/10 rounded-[2rem]">
-                                                <p className="text-gray-500 font-black italic uppercase tracking-widest">Select a Protocol</p>
+                        <div className="grid gap-4">
+                            {plans.map((plan) => (
+                                <div
+                                    key={plan._id}
+                                    onClick={() => setSelectedPlanId(plan._id)}
+                                    className={`cursor-pointer p-5 rounded-2xl border-2 transition-all duration-300 flex items-center justify-between group ${
+                                        selectedPlanId === plan._id
+                                            ? "border-[#22d3ee] bg-cyan-500/5 border-bottom-[5px] border-b-[#06b6d4]"
+                                            : "border-[#262626] border-b-[5px] border-b-[#1f1f1f] bg-[#171717] hover:border-neutral-500"
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-2.5 rounded-xl transition-all ${
+                                            selectedPlanId === plan._id ? "bg-[#22d3ee] text-[#090909]" : "bg-[#0d0d0e] text-neutral-500 border border-[#262626]"
+                                        }`}>
+                                            <Zap className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-extrabold font-mono uppercase text-white">{plan.name}</h3>
+                                            <p className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-wider mt-0.5">{plan.duration} {plan.durationUnit}(s)</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right font-mono">
+                                        <p className="text-base font-extrabold text-white">₹{plan.price}</p>
+                                        {selectedPlanId === plan._id && (
+                                            <div className="flex justify-end text-[#22d3ee] mt-1">
+                                                <CheckCircle2 size={14} />
                                             </div>
                                         )}
-                                    </AnimatePresence>
-
-                                    <div className="space-y-4 pt-4">
-                                        <Button
-                                            onClick={handleSubscribe}
-                                            disabled={isProcessing || !selectedPlanId || !preferredTime}
-                                            className="w-full h-20 rounded-[2rem] bg-white text-black hover:bg-primary hover:text-white font-black uppercase italic tracking-widest text-lg shadow-[0_0_40px_rgba(255,255,255,0.1)] transition-all active:scale-95 flex items-center justify-center gap-4 group/btn"
-                                        >
-                                            {isProcessing ? (
-                                                <div className="w-6 h-6 border-4 border-black/20 border-t-black rounded-full animate-spin" />
-                                            ) : (
-                                                <>
-                                                    <CreditCard className="h-6 w-6 group-hover/btn:scale-110 transition-transform" />
-                                                    Initialize Access
-                                                </>
-                                            )}
-                                        </Button>
-                                        <p className="text-[10px] text-zinc-600 text-center font-black uppercase tracking-widest flex items-center justify-center gap-2 italic">
-                                            <Shield className="h-3 w-3 text-primary" /> End-to-End Encrypted Quantum Gateway
-                                        </p>
                                     </div>
                                 </div>
-                            </Card>
+                            ))}
+                        </div>
+
+                        <div className="space-y-3 pt-4">
+                            <label className="text-[9px] font-mono font-bold uppercase tracking-widest text-neutral-400 flex items-center gap-1.5">
+                                PREFERRED TRAINING HOUR <span className="text-[#22d3ee]">*</span>
+                            </label>
+                            <Select value={preferredTime} onValueChange={setPreferredTime}>
+                                <SelectTrigger className="h-12 bg-[#0d0d0e] border-2 border-[#262626] rounded-xl text-white font-mono text-xs uppercase tracking-wider focus:border-[#22d3ee] transition-all w-full px-4 flex items-center justify-between">
+                                    <SelectValue placeholder="When will you hit the gym?" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-[#171717] border-2 border-[#262626] text-white rounded-xl max-h-[250px] font-mono text-xs">
+                                    {timeSlots.map((slot) => (
+                                        <SelectItem key={slot} value={slot} className="focus:bg-[#22d3ee] focus:text-[#090909] rounded-lg py-2.5 font-bold uppercase cursor-pointer">
+                                            {slot}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-[9px] text-neutral-500 font-mono uppercase tracking-wide">
+                                We will send a reminder if you have not checked in within 10 minutes of your selected time.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Right: Summary Card */}
+                    <div>
+                        <div className="bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-2xl p-6 md:p-8 space-y-6 sticky top-12 shadow-lg">
+                            <h3 className="text-[9px] font-mono font-bold uppercase tracking-widest text-neutral-500">DEPARTURE DOSSIER</h3>
+                            
+                            <AnimatePresence mode="wait">
+                                {selectedPlan ? (
+                                    <motion.div
+                                        key={selectedPlan._id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="space-y-6"
+                                    >
+                                        <div className="space-y-3 font-mono text-xs text-neutral-300 uppercase">
+                                            {selectedPlan.features.map((feature: string, i: number) => (
+                                                <div key={i} className="flex items-start gap-2.5">
+                                                    <Check className="h-4 w-4 text-[#22d3ee] shrink-0 mt-0.5" />
+                                                    <span>{feature}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="pt-6 border-t border-[#262626] space-y-3 font-mono text-xs">
+                                            <div className="flex justify-between items-center text-neutral-400 font-bold uppercase">
+                                                <span>Membership Tier</span>
+                                                <span className="text-white font-extrabold">₹{selectedPlan.price}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-neutral-400 font-bold uppercase">
+                                                <span>System Taxes</span>
+                                                <span className="text-white font-extrabold text-[10px]">INCLUSIVE</span>
+                                            </div>
+                                            <div className="flex justify-between items-center pt-4 border-t border-[#262626]/60">
+                                                <span className="text-sm font-extrabold text-white uppercase">Total Investment</span>
+                                                <span className="text-2xl font-extrabold text-[#22d3ee]">₹{selectedPlan.price}</span>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ) : (
+                                    <div className="h-32 flex items-center justify-center border-2 border-dashed border-[#262626] rounded-xl bg-[#0d0d0e]">
+                                        <p className="text-neutral-500 font-mono text-xs uppercase tracking-wider">Select a Protocol</p>
+                                    </div>
+                                )}
+                            </AnimatePresence>
+
+                            <div className="space-y-4 pt-2">
+                                <button
+                                    onClick={handleSubscribe}
+                                    disabled={isProcessing || !selectedPlanId || !preferredTime}
+                                    className="duo-btn-cyan w-full h-14 text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+                                >
+                                    {isProcessing ? (
+                                        <div className="w-5 h-5 border-2 border-[#090909]/20 border-t-[#090909] rounded-full animate-spin" />
+                                    ) : (
+                                        <>
+                                            <CreditCard className="h-4 w-4" />
+                                            Initialize Access
+                                        </>
+                                    )}
+                                </button>
+                                <p className="text-[8px] text-neutral-500 font-mono uppercase tracking-widest flex items-center justify-center gap-1.5">
+                                    <Shield className="h-3.5 w-3.5 text-[#22d3ee]" /> Secured Encrypted Payment Gateway
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

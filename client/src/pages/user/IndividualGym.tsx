@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
     Star,
     Clock,
@@ -18,10 +16,9 @@ import { getGymForUser, getActiveSubscriptionPlans } from "@/services/gymService
 import { SiteHeader } from "@/components/user/home/UserSiteHeader";
 import { SiteFooter } from "@/components/user/home/UserSiteFooter";
 import GymReviews from "@/components/user/reviews/GymReviews";
-import Aurora from "@/components/ui/Aurora";
 import { motion, AnimatePresence } from "framer-motion";
 
-
+type SafeAny = any;
 
 export default function IndividualGym() {
     const { id } = useParams();
@@ -48,7 +45,8 @@ export default function IndividualGym() {
         try {
             const response = await getActiveSubscriptionPlans(id!);
             setPlans(response.plans || []);
-        } catch (errorVal) { const error = errorVal as SafeAny;
+        } catch (errorVal) {
+            const error = errorVal as SafeAny;
             console.error("Failed to fetch plans", error);
         }
     }, [id]);
@@ -60,49 +58,59 @@ export default function IndividualGym() {
         }
     }, [id, fetchGymDetails, fetchPlans]);
 
-
-
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-[#030303] flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
+                <SiteHeader />
+                <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+                    <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-[#22d3ee] rounded-full animate-spin" />
+                    <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest animate-pulse">Syncing facility specs...</p>
+                </div>
+                <SiteFooter />
             </div>
         );
     }
 
     if (!gym) {
         return (
-            <div className="min-h-screen bg-[#030303] flex items-center justify-center">
-                 <p className="text-gray-500 font-black uppercase tracking-widest italic animate-pulse">Loading Gym Identity...</p>
+            <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
+                <SiteHeader />
+                <div className="flex-1 flex flex-col items-center justify-center space-y-4 p-6 text-center">
+                    <p className="text-neutral-500 font-mono text-xs uppercase tracking-widest italic animate-pulse">Loading Gym Identity...</p>
+                </div>
+                <SiteFooter />
             </div>
         );
     }
+    
     const allImages = [gym.profileImage, ...(gym.images || [])].filter(Boolean);
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col bg-[#030303] text-white overflow-hidden font-outfit">
-            <div className="absolute inset-0 z-0">
-                <Aurora colorStops={["#020617", "#0f172a", "#020617"]} amplitude={1.1} blend={0.6} />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)] pointer-events-none" />
+        <div className="relative min-h-screen w-full flex flex-col bg-[#0d0d0e] text-[#f5f5f5] overflow-hidden font-sans">
+            {/* Background Visuals */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[35%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(34,211,238,0.03)_0%,transparent_75%)] rounded-full blur-[70px]" />
             </div>
 
             <SiteHeader />
 
-            <main className="relative container mx-auto px-4 py-8 space-y-12 flex-1 z-10">
-                <Link to="/gyms">
-                    <Button variant="ghost" className="mb-4 hover:bg-white/5 transition-all">
-                        <ArrowLeft className="h-4 w-4 mr-2" /> Back to Search
-                    </Button>
-                </Link>
+            <main className="relative container mx-auto px-6 py-12 space-y-10 flex-1 z-10 max-w-5xl w-full">
+                <div className="flex justify-start">
+                    <Link to="/gyms">
+                        <button className="duo-btn-gray h-10 px-5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <ArrowLeft className="h-4 w-4" /> Back to Search
+                        </button>
+                    </Link>
+                </div>
 
                 {/* Hero / Images Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    <div className="space-y-6">
-                        <div className="relative aspect-[4/3] rounded-[2.5rem] overflow-hidden border border-white/10 group shadow-2xl">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <div className="space-y-4">
+                        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border-2 border-[#262626] bg-[#171717] shadow-lg">
                             <AnimatePresence mode="wait">
                                 <motion.img
                                     key={selectedImage}
-                                    initial={{ opacity: 0, scale: 1.1 }}
+                                    initial={{ opacity: 0, scale: 1.05 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0 }}
                                     src={allImages[selectedImage] || "/placeholder.svg"}
@@ -111,24 +119,22 @@ export default function IndividualGym() {
                                 />
                             </AnimatePresence>
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                            <div className="absolute bottom-6 left-6 flex gap-2">
+                            <div className="absolute bottom-4 left-4 flex gap-1.5 z-20">
                                 {allImages.map((_, i) => (
                                     <button
                                         key={i}
                                         onClick={() => setSelectedImage(i)}
-                                        className={`h-2 rounded-full transition-all ${selectedImage === i ? "w-8 bg-primary" : "w-2 bg-white/30 hover:bg-white/50"
-                                            }`}
+                                        className={`h-1.5 rounded-full transition-all ${selectedImage === i ? "w-6 bg-[#22d3ee]" : "w-1.5 bg-white/30 hover:bg-white/50"}`}
                                     />
                                 ))}
                             </div>
                         </div>
-                        <div className="grid grid-cols-4 gap-4">
+                        <div className="grid grid-cols-4 gap-3">
                             {allImages.map((img, i) => (
                                 <button
                                     key={i}
                                     onClick={() => setSelectedImage(i)}
-                                    className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all ${selectedImage === i ? "border-primary scale-95" : "border-transparent opacity-50 hover:opacity-100"
-                                        }`}
+                                    className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${selectedImage === i ? "border-[#22d3ee] scale-95" : "border-transparent opacity-50 hover:opacity-100"}`}
                                 >
                                     <img src={img} className="w-full h-full object-cover" />
                                 </button>
@@ -136,57 +142,55 @@ export default function IndividualGym() {
                         </div>
                     </div>
 
-                    <div className="space-y-8 py-4">
-                        <div className="space-y-6">
-                            <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20"
-                            >
-                                <Sparkles className="h-4 w-4 text-primary" />
-                                <span className="text-sm font-black text-primary uppercase tracking-widest">Premium Facility</span>
-                            </motion.div>
-                            <h1 className="text-5xl md:text-6xl font-black text-white leading-tight">{gym.name}</h1>
+                    <div className="space-y-6 flex flex-col justify-between">
+                        <div className="space-y-4">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-500/5 border border-[#22d3ee]/20 rounded-lg">
+                                <Sparkles className="h-3.5 w-3.5 text-[#22d3ee]" />
+                                <span className="text-[9px] font-mono font-bold text-[#22d3ee] uppercase tracking-wider">Premium Facility</span>
+                            </div>
+                            
+                            <h1 className="text-3xl md:text-5xl font-extrabold font-mono text-white uppercase tracking-tight leading-tight">
+                                {gym.name}
+                            </h1>
 
-                            <div className="flex flex-wrap gap-6 text-gray-400 font-medium">
-                                <div className="flex items-center gap-2">
-                                    <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
-                                    <span className="text-white font-bold">{gym.avgRating || "0.0"}</span>
+                            <div className="flex flex-wrap gap-4 font-mono text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                                <div className="flex items-center gap-1.5">
+                                    <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                                    <span className="text-white">{gym.avgRating || "0.0"}</span>
                                     <span>({gym.reviews?.length || 0} reviews)</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Users className="h-5 w-5 text-primary" />
+                                <div className="flex items-center gap-1.5">
+                                    <Users className="h-4 w-4 text-[#22d3ee]" />
                                     <span>{gym.members?.length || 0} active members</span>
                                 </div>
                             </div>
 
-                            <p className="text-xl text-gray-400 leading-relaxed font-light">{gym.description || "Experience top-tier fitness at our state-of-the-art facility. We offer a range of modern equipment and professional coaching."}</p>
+                            <p className="text-xs font-mono text-neutral-400 uppercase leading-relaxed tracking-wide">
+                                {gym.description || "Experience top-tier fitness at our state-of-the-art facility. We offer a range of modern equipment and professional coaching."}
+                            </p>
                         </div>
 
-                        <div className="p-8 rounded-[2rem] bg-white/5 border border-white/10 space-y-6 shadow-2xl backdrop-blur-md">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <p className="text-xs text-gray-500 font-black uppercase tracking-widest">Starting Price</p>
-                                    <p className="text-4xl font-black text-white">
-                                        {plans.length > 0 ? `₹${plans[0].price}` : <span className="text-2xl text-gray-400 italic">Unavailable</span>}
-                                    </p>
-                                </div>
-                                <Button
-                                    onClick={() => navigate(`/gym/select-plan/${id}`)}
-                                    disabled={plans.length === 0}
-                                    size="lg"
-                                    className="h-16 px-10 rounded-2xl bg-primary text-black font-black shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] hover:scale-105 transition-all text-lg"
-                                >
-                                    Choose Your Plan <ChevronRight className="ml-2 h-5 w-5" />
-                                </Button>
+                        <div className="p-6 bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="space-y-0.5">
+                                <p className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-widest">STARTING RATE</p>
+                                <p className="text-2xl font-extrabold font-mono text-white">
+                                    {plans.length > 0 ? `₹${plans[0].price}` : <span className="text-base text-neutral-500 italic uppercase">Unavailable</span>}
+                                </p>
                             </div>
+                            <button
+                                onClick={() => navigate(`/gym/select-plan/${id}`)}
+                                disabled={plans.length === 0}
+                                className="duo-btn-cyan h-12 px-6 text-xs font-mono font-bold uppercase tracking-wider w-full sm:w-auto flex items-center justify-center gap-1.5"
+                            >
+                                Choose Your Plan <ChevronRight className="h-4 w-4" />
+                            </button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-2">
-                                <Clock className="h-6 w-6 text-primary mb-2" />
-                                <p className="font-black text-white">Opening Hours (Today)</p>
-                                <p className="text-sm text-gray-400">
+                        <div className="grid grid-cols-2 gap-4 font-mono text-xs">
+                            <div className="p-4 bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-2xl space-y-1">
+                                <Clock className="h-4 w-4 text-[#22d3ee] mb-1" />
+                                <p className="font-bold text-white uppercase text-[9px] text-neutral-400">Opening Hours (Today)</p>
+                                <p className="text-[11px] font-bold text-neutral-200 uppercase">
                                     {Array.isArray(gym.openingHours) && gym.openingHours.length > 0
                                         ? (() => {
                                             const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
@@ -196,79 +200,90 @@ export default function IndividualGym() {
                                         : (gym.openingHours || "06:00 AM - 10:00 PM")}
                                 </p>
                             </div>
-                            <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-2">
-                                <MapIcon className="h-6 w-6 text-primary mb-2" />
-                                <p className="font-black text-white">Location</p>
-                                <p className="text-sm text-gray-400 truncate">{gym.address || "Main City Center"}</p>
+                            <div className="p-4 bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-2xl space-y-1">
+                                <MapIcon className="h-4 w-4 text-[#22d3ee] mb-1" />
+                                <p className="font-bold text-white uppercase text-[9px] text-neutral-400">Location</p>
+                                <p className="text-[11px] font-bold text-neutral-200 uppercase truncate">{gym.address || "Main City Center"}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Features & Amenities */}
-                <section className="space-y-8">
-                    <h2 className="text-3xl font-black flex items-center gap-3">
-                        <Shield className="h-7 w-7 text-primary" /> World-Class Amenities
-                    </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <section className="space-y-6 pt-6">
+                    <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 bg-[#171717] border border-[#262626] rounded-lg text-[#22d3ee]">
+                            <Shield className="h-4 w-4" />
+                        </div>
+                        <h2 className="text-sm font-extrabold font-mono uppercase text-white tracking-wide">WORLD-CLASS AMENITIES</h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                         {["Cardio Zone", "Free Weights", "Yoga Studio", "Personal Training", "Sauna", "Group Classes"].map((amenity) => (
-                            <div key={amenity} className="p-6 rounded-3xl bg-white/5 border border-white/10 flex flex-col items-center gap-4 text-center group hover:bg-white/10 transition-all">
-                                <div className="p-3 bg-primary/10 rounded-2xl group-hover:scale-110 transition-all">
-                                    <Check className="h-6 w-6 text-primary" />
+                            <div key={amenity} className="p-4 rounded-xl bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] flex flex-col items-center gap-3 text-center">
+                                <div className="p-2 bg-[#0d0d0e] border border-[#262626] rounded-lg text-[#22d3ee]">
+                                    <Check className="h-4 w-4" />
                                 </div>
-                                <span className="text-sm font-bold text-gray-300">{amenity}</span>
+                                <span className="text-[10px] font-mono font-bold text-neutral-300 uppercase tracking-wide">{amenity}</span>
                             </div>
                         ))}
                     </div>
                 </section>
 
                 {/* Plans Deep Dive */}
-                <section className="space-y-8">
-                    <h2 className="text-3xl font-black">Membership Plans</h2>
+                <section className="space-y-6 pt-6">
+                    <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 bg-[#171717] border border-[#262626] rounded-lg text-[#22d3ee]">
+                            <Sparkles className="h-4 w-4" />
+                        </div>
+                        <h2 className="text-sm font-extrabold font-mono uppercase text-white tracking-wide">MEMBERSHIP PLANS</h2>
+                    </div>
+
                     {plans.length === 0 ? (
-                        <div className="py-12 text-center bg-white/5 border border-white/10 rounded-[2.5rem] shadow-2xl backdrop-blur-md">
-                            <h3 className="text-2xl font-bold text-gray-300">Plans Currently Unavailable</h3>
-                            <p className="text-gray-500 mt-2">This gym hasn't added any membership plans yet.</p>
+                        <div className="bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-2xl py-12 text-center flex flex-col items-center justify-center gap-3">
+                            <h3 className="text-base font-extrabold font-mono text-white uppercase tracking-tight">Plans Currently Unavailable</h3>
+                            <p className="text-xs font-mono text-neutral-400 uppercase">This gym hasn't configured any membership packages yet.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {plans.map((plan) => (
-                                <Card key={plan._id} className="bg-white/5 border-white/10 rounded-[2.5rem] p-8 flex flex-col h-full overflow-hidden relative group shadow-2xl">
-                                    <div className="space-y-2 mb-6">
-                                        <h3 className="text-2xl font-black text-white">{plan.name}</h3>
-                                        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">{plan.duration} {plan.durationUnit}(s)</p>
+                                <div key={plan._id} className="bg-[#171717] border-2 border-[#262626] border-b-[5px] border-b-[#1f1f1f] rounded-2xl p-6 flex flex-col justify-between h-full">
+                                    <div className="space-y-4">
+                                        <div className="border-b border-[#262626] pb-4">
+                                            <h3 className="text-lg font-extrabold font-mono text-white uppercase tracking-tight">{plan.name}</h3>
+                                            <p className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-widest mt-1">{plan.duration} {plan.durationUnit}(s)</p>
+                                        </div>
+                                        <div className="space-y-2.5 font-mono text-xs text-neutral-300 uppercase">
+                                            {plan.features.map((f: string, fi: number) => (
+                                                <div key={fi} className="flex items-start gap-2">
+                                                    <Check className="h-3.5 w-3.5 text-[#22d3ee] mt-0.5 flex-shrink-0" />
+                                                    <span>{f}</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div className="space-y-4 flex-grow mb-8">
-                                        {plan.features.map((f: string, fi: number) => (
-                                            <div key={fi} className="flex items-start gap-3">
-                                                <Check className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
-                                                <span className="text-gray-400 font-medium">{f}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="pt-8 border-t border-white/10 flex items-center justify-between mt-auto">
-                                        <p className="text-3xl font-black text-white">₹{plan.price}</p>
-                                        <Button
+                                    <div className="pt-6 border-t border-[#262626] flex items-center justify-between mt-6">
+                                        <p className="text-xl font-extrabold font-mono text-white">₹{plan.price}</p>
+                                        <button
                                             onClick={() => navigate(`/gym/select-plan/${id}`, { state: { selectedPlanId: plan._id } })}
-                                            className="rounded-2xl bg-white text-black font-black px-6 hover:bg-primary hover:text-white transition-all"
+                                            className="duo-btn-cyan h-10 px-5 text-xs font-mono font-bold uppercase tracking-wider"
                                         >
                                             Select
-                                        </Button>
+                                        </button>
                                     </div>
-                                </Card>
+                                </div>
                             ))}
                         </div>
                     )}
                 </section>
 
                 {/* Reviews */}
-                <section className="pt-12 pb-24 border-t border-white/10">
+                <section className="pt-6 border-t border-[#262626]">
                     <GymReviews 
                         gymId={id!} 
-                        canReview={false} // Only members can review on their dashboard
+                        canReview={false}
                     />
                 </section>
-
             </main>
 
             <SiteFooter />

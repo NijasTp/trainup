@@ -78,7 +78,6 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
             console.error("Failed to fetch my review:", error);
         }
     }, [trainerId]);
-
     useEffect(() => {
         if (trainerId) {
             fetchReviews();
@@ -286,13 +285,13 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
                     ) : (
                         <>
                             {reviews.filter(r => r._id !== userReview?._id).map((review) => (
-                                <div key={review._id} className="p-4 rounded-lg bg-muted/50 space-y-3">
+                                <div key={review._id} className="p-4 rounded-lg bg-[#171717] border border-[#262626] space-y-3">
                                     <div className="flex items-start gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center overflow-hidden">
-                                            {review.userId.profilePicture ? (
+                                        <div className="w-10 h-10 rounded-full bg-[#0d0d0e] border border-[#262626] flex items-center justify-center overflow-hidden">
+                                            {review.userId?.profilePicture ? (
                                                 <img
                                                     src={review.userId.profilePicture}
-                                                    alt={review.userId.name}
+                                                    alt={review.userId?.name || "User"}
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
@@ -302,8 +301,8 @@ export default function TrainerReviews({ trainerId, onReviewAdded, canReview = f
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between">
                                                 <div>
-                                                    <h4 className="font-semibold">
-                                                        {review.userId.name}
+                                                    <h4 className="font-semibold text-white">
+                                                        {review.userId?.name || "Anonymous User"}
                                                     </h4>
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-xs text-muted-foreground">
